@@ -86,7 +86,7 @@ class Camera(Thread):
         self.interval = self.config.getint("timelapse","interval")
         self.spool_directory = self.config.get("localfiles","spooling_dir")
         self.upload_directory = self.config.get("localfiles","upload_dir")
-        self.exposure_length = self.config.getint("camera","exposure")
+        #self.exposure_length = self.config.getint("camera","exposure")
 
         # get enabled
         if self.config.get("camera","enabled")=="on":
@@ -183,12 +183,13 @@ class Camera(Thread):
                     
                     # No conversion needed, just take 2 files, 1 jpeg and 1 raw
                     #if self.camera_port:
-                    is_bulbspeed = subprocess.check_output("gphoto2 --port "+self.camera_port+" --get-config shutterspeed", shell=True).splitlines() 
-                    bulb = is_bulbspeed[3][is_bulbspeed[3].find("Current: ")+9: len(is_bulbspeed[3])]
-                    if bulb.find("bulb") != -1:
-                        cmd = ["gphoto2 --port "+ self.camera_port+" --set-config capturetarget=sdram --set-config eosremoterelease=5 --wait-event="+str(self.exposure_length)+"ms --set-config eosremoterelease=11 --wait-event-and-download=2s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
-                    else:
-                        cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
+                    # stuff for checking bulb. not active yet
+                    #is_bulbspeed = subprocess.check_output("gphoto2 --port "+self.camera_port+" --get-config shutterspeed", shell=True).splitlines() 
+                    #bulb = is_bulbspeed[3][is_bulbspeed[3].find("Current: ")+9: len(is_bulbspeed[3])]
+                    #if bulb.find("bulb") != -1:
+                    #    cmd = ["gphoto2 --port "+ self.camera_port+" --set-config capturetarget=sdram --set-config eosremoterelease=5 --wait-event="+str(self.exposure_length)+"ms --set-config eosremoterelease=11 --wait-event-and-download=2s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
+                    #else:
+                    cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
                     
                     #else:
                     #    #cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
@@ -637,7 +638,6 @@ def detect_cameras(type):
         for port in re.finditer("usb:", a):
             cmdret = subprocess.check_output('gphoto2 --port "'+a[port.start():port.end()+7]+'" --get-config serialnumber', shell=True)
             cams[a[port.start():port.end()+7]] = cmdret[cmdret.find("Current: ")+9: len(cmdret)-1]
-            configlist = 
         return cams
     except Exception as e:
         print str(e)
