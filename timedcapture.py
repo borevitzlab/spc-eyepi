@@ -1,4 +1,4 @@
-import subprocess, sys
+import subprocess, sys, platform
 import datetime, time
 import eyepi
 import pysftp as sftp
@@ -8,7 +8,7 @@ from ConfigParser import SafeConfigParser
 from optparse import OptionParser
 
 # Global configuration variables
-camera_name = "SYDNEY"
+camera_name = platform.node()
 hostname = ""
 user = ""
 passwd = ""
@@ -86,8 +86,6 @@ if __name__ == "__main__":
 
     usage = "usage: %prog [options] arg"
     parser = OptionParser(usage)
-    parser.add_option("-f", "--file", dest="filename",
-                      help="write report to FILE", metavar="FILE")
 
     (options, args) = parser.parse_args()
 
@@ -130,4 +128,3 @@ if __name__ == "__main__":
         for s in range(0,timebetweenshots):
             print(timebetweenshots-s);
             time.sleep(1)
-
