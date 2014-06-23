@@ -37,7 +37,7 @@ def setup(dump_values = False):
     hostname = config.get("ftp","server")
     user = config.get("ftp","user")
     passwd = config.get("ftp","pass")
-    timebetweenshots = config.getint("timelapse","duration")
+    timebetweenshots = config.getint("timelapse","interval")
 
     if (dump_values):
         print(camera_name)
@@ -47,7 +47,7 @@ def setup(dump_values = False):
         print(timebetweenshots)
         sys.exit(0)
 
-def sftpUpload(filename):
+def sftpUpload(filenames):
    """ Secure upload the image file to the Server
    """
 
@@ -58,7 +58,8 @@ def sftpUpload(filename):
        link = sftp.Connection(host=hostname, username=user, password=passwd)
 
        logger.debug("Uploading")
-       link.put(filename)
+       for f in filenames:
+           link.put(f)
 
        logger.debug("Disconnecting")
        link.close()
@@ -81,6 +82,17 @@ def timestamped_imagename():
 
     return camera_name + '_' + timestamp() + default_extension
 
+def convertCR2Jpeg(filename):
+    """
+    Convert a .CR2 file to jpeg
+    """
+    raw_filename = filename
+    jpeg_filename = filename[:-4] + '.jpg'
+    
+    cmd1 = "dcraw -q 0 -w -H 5 -b 8 %s" % raw_filename
+    cmd2 = "convert %s %s" % (raw_filename,jpeg_filename)
+    
+    return ([raw_filename,jpeg_filename])
 
 if __name__ == "__main__":
 
@@ -119,7 +131,9 @@ if __name__ == "__main__":
 
             C.capture_image(image_file)
 
-            sftpUpload(image_file)
+            converted_files = convertCR2Jpeg(image_file)
+            
+            sftpUpload(converted_files)
 
         # If the user has specified 'once' then we can stop now
         if (len(args)>0) and (args[0].lower() == "once"):

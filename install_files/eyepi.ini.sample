@@ -7,7 +7,7 @@ user =
 pass = 
 
 [timelapse]
-duration = 300
+interval = 300
 starttime = 09:00
 stoptime = 18:00
 
