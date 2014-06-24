@@ -115,10 +115,6 @@ if __name__ == "__main__":
 
     setup()
 
-    C = eyepi.camera()
-
-    camera_fs_unmount()
-
     # Check command line arguments
     if (len(args)>0) and (args[0].lower() == "info"):
          # Display information on the camera
@@ -137,6 +133,10 @@ if __name__ == "__main__":
         if (datetime.datetime.now().time() > timestartfrom) and (datetime.datetime.now().time() < timestopat):
 
             try:
+
+                C = eyepi.camera()
+
+                camera_fs_unmount()
 
                 # The time now is within the operating times
                 logger.debug("Capturing Image")
