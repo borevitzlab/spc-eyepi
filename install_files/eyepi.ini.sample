@@ -11,6 +11,9 @@ interval = 300
 starttime = 09:00
 stoptime = 18:00
 
+[images]
+directory = images
+
 [mqtt]
 server = test.mosquitto.org
 channel = dslrusb
