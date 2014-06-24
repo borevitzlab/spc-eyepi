@@ -1,4 +1,4 @@
-import subprocess, sys, platform
+import os, subprocess, sys, platform
 import datetime, time
 import eyepi
 import pysftp as sftp
@@ -17,7 +17,15 @@ config_filename = 'eyepi.ini'
 timestartfrom = datetime.time.min
 timestopat = datetime.time.max
 default_extension = ".CR2"
+imagedir = "images"
 
+# We can't start if no config file
+if not os.path.exists(config_filename):
+    print("The configuration file %s was not found in the current directory. \nTry copying the one in the sample directory to %s"
+           % (config_filename,config_filename)) 
+    sys.exit(1)
+
+# Logging setup
 logging.config.fileConfig(config_filename)
 logger = logging.getLogger(__name__)
 
@@ -28,7 +36,7 @@ def setup(dump_values = False):
     """ Setup Global configuration variables
     """
 
-    global config, config_filename
+    global config, config_filename, imagedir
     global camera_name, hostname, user, passwd, timebetweenshots
 
     config.read(config_filename)
@@ -38,36 +46,21 @@ def setup(dump_values = False):
     user = config.get("ftp","user")
     passwd = config.get("ftp","pass")
     timebetweenshots = config.getint("timelapse","interval")
+    imagedir = config.get("images","directory","images")
+
+    if not os.path.exists(imagedir):
+        # All images stored in their own seperate directory
+        logger.info("Creating Image Storage directory %s" % imagedir)
+        os.makedirs(imagedir)
 
     if (dump_values):
-        print(camera_name)
-        print(hostname)
-        print(user)
-        print(passwd)
-        print(timebetweenshots)
+        # For debugging, we can dump some configuration values
+        logger.debug(camera_name)
+        logger.debug(hostname)
+        logger.debug(user)
+        logger.debug(passwd)
+        logger.debug(timebetweenshots)
         sys.exit(0)
-
-def sftpUpload(filenames):
-   """ Secure upload the image file to the Server
-   """
-
-   global hostname, user, passwd
-
-   try:
-       logger.debug("Connecting")
-       link = sftp.Connection(host=hostname, username=user, password=passwd)
-
-       logger.debug("Uploading")
-       for f in filenames:
-           link.put(f)
-
-       logger.debug("Disconnecting")
-       link.close()
-
-       logger.info("Successfuly uploaded %s" % filename)
-
-   except Exception, e:
-       logger.error(str(e))
 
 def timestamp():
     """ Build a timestamp in the required format
@@ -78,19 +71,38 @@ def timestamp():
 def timestamped_imagename():
     """ Build the pathname for a captured image.
     """
-    global camera_name
+    global camera_name, imagedir
 
-    return camera_name + '_' + timestamp() + default_extension
+    return os.path.join(imagedir, camera_name + '_' + timestamp() + default_extension)
 
 def convertCR2Jpeg(filename):
     """
     Convert a .CR2 file to jpeg
     """
-    raw_filename = filename
-    jpeg_filename = filename[:-4] + '.jpg'
+
+    try:    
+        raw_filename = filename
+        ppm_filename = filename[:-4] + '.ppm'
+        jpeg_filename = filename[:-4] + '.jpg'
     
-    cmd1 = "dcraw -q 0 -w -H 5 -b 8 %s" % raw_filename
-    cmd2 = "convert %s %s" % (raw_filename,jpeg_filename)
+        cmd1 = "dcraw -q 0 -w -H 5 -b 8 %s" % raw_filename
+        cmdresults = subprocess.check_output(cmd1.split(' '))
+        if cmdresults.lower().find('error:')!=-1:
+            logger.error(cmdresults)
+        else:
+            logger.debug(cmdresults)
+    
+        cmd2 = "convert %s %s" % (ppm_filename,jpeg_filename)
+        cmdresults = subprocess.check_output(cmd2.split(' '))
+        if cmdresults.lower().find('error:')!=-1:
+            logger.error(cmdresults)
+        else:
+            logger.debug(cmdresults)
+
+        os.remove(ppm_filename)
+        
+    except Exception, e:
+        logger.error(str(e))
     
     return ([raw_filename,jpeg_filename])
 
@@ -133,8 +145,6 @@ if __name__ == "__main__":
 
             converted_files = convertCR2Jpeg(image_file)
             
-            sftpUpload(converted_files)
-
         # If the user has specified 'once' then we can stop now
         if (len(args)>0) and (args[0].lower() == "once"):
             break
