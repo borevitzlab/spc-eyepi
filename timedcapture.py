@@ -136,15 +136,20 @@ if __name__ == "__main__":
 
         if (datetime.datetime.now().time() > timestartfrom) and (datetime.datetime.now().time() < timestopat):
 
-            # The time now is within the operating times
-            logger.debug("Capturing Image")
+            try:
 
-            image_file = timestamped_imagename()
+                # The time now is within the operating times
+                logger.debug("Capturing Image")
 
-            C.capture_image(image_file)
+                image_file = timestamped_imagename()
 
-            converted_files = convertCR2Jpeg(image_file)
+                C.capture_image(image_file)
+
+                converted_files = convertCR2Jpeg(image_file)
             
+            except Exception, e:
+                logger.error(str(e))
+
         # If the user has specified 'once' then we can stop now
         if (len(args)>0) and (args[0].lower() == "once"):
             break
