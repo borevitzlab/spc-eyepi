@@ -76,6 +76,8 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
 
+    logger.info("Program Startup")
+    
     setup()
 
     ok = True
@@ -85,11 +87,15 @@ if __name__ == "__main__":
         try:
 
             upload_list = glob.glob(os.path.join(imagedir,'*'))
-            logger.debug("Preparing to upload %d files" % len(upload_list))
           
-            r = sftpUpload(upload_list)
+            if len(upload_list) > 0:
+
+                logger.debug("Preparing to upload %d files" % len(upload_list))
+                r = sftpUpload(upload_list)
 
             time.sleep(timeinterval)
 
         except Exception, e:
            logger.error(str(e))
+
+    logger.info("Program Shutdown")
