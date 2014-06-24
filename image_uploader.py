@@ -56,11 +56,10 @@ def sftpUpload(filenames):
        for f in filenames:
            link.put(f)
            os.remove(f)
+           logger.info("Successfuly uploaded %s" % f)
 
        logger.debug("Disconnecting")
        link.close()
-
-       logger.info("Successfuly uploaded %s" % filename)
 
    except Exception, e:
        logger.error(str(e))
