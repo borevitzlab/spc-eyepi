@@ -127,28 +127,30 @@ if __name__ == "__main__":
         timestopat = datetime.time.max
 
     ok = True
-
+    c = None
     while (ok):
+
+        if c == None:
+            # Camera object not yet initialised
+            camera_fs_unmount()
+            c = eyepi.camera()
 
         if (datetime.datetime.now().time() > timestartfrom) and (datetime.datetime.now().time() < timestopat):
 
             try:
-
-                C = eyepi.camera()
-
-                camera_fs_unmount()
 
                 # The time now is within the operating times
                 logger.debug("Capturing Image")
 
                 image_file = timestamped_imagename()
 
-                C.capture_image(image_file)
+                c.capture_image(image_file)
 
                 converted_files = convertCR2Jpeg(image_file)
             
             except Exception, e:
                 logger.error(str(e))
+                c = None
 
         # If the user has specified 'once' then we can stop now
         if (len(args)>0) and (args[0].lower() == "once"):
