@@ -89,20 +89,20 @@ def convertCR2Jpeg(filename):
         cmdresults = subprocess.check_output(cmd1.split(' '))
         if cmdresults.lower().find('error:')!=-1:
             logger.error(cmdresults)
-        else:
+        elif len(cmdresults)!=0:
             logger.debug(cmdresults)
     
         cmd2 = "convert %s %s" % (ppm_filename,jpeg_filename)
         cmdresults = subprocess.check_output(cmd2.split(' '))
         if cmdresults.lower().find('error:')!=-1:
             logger.error(cmdresults)
-        else:
+        elif len(cmdresults)!=0:
             logger.debug(cmdresults)
 
         os.remove(ppm_filename)
         
     except Exception, e:
-        logger.error(str(e))
+        logger.error("Image file Converion error - %s" % str(e))
     
     return ([raw_filename,jpeg_filename])
 
@@ -161,6 +161,7 @@ if __name__ == "__main__":
         if (len(args)>0) and (args[0].lower() == "once"):
             break
 
+        # Delay between shots
         for s in range(0,timebetweenshots):
             print(timebetweenshots-s);
             time.sleep(1)
