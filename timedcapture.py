@@ -131,9 +131,12 @@ if __name__ == "__main__":
     while (ok):
 
         if c == None:
-            # Camera object not yet initialised
-            camera_fs_unmount()
-            c = eyepi.camera()
+            try:
+                # Camera object not yet initialised
+                camera_fs_unmount()
+                c = eyepi.camera()
+            except Exception, e:
+                logger.error("Camera Mounting error - " + str(e))
 
         if (datetime.datetime.now().time() > timestartfrom) and (datetime.datetime.now().time() < timestopat):
 
@@ -147,9 +150,11 @@ if __name__ == "__main__":
                 c.capture_image(image_file)
 
                 converted_files = convertCR2Jpeg(image_file)
+                
+                logger.info("Snapshot taken")
             
             except Exception, e:
-                logger.error(str(e))
+                logger.error("Snapshot error - " + str(e))
                 c = None
 
         # If the user has specified 'once' then we can stop now
