@@ -27,7 +27,7 @@ if not os.path.exists(config_filename):
 
 # Logging setup
 logging.config.fileConfig(config_filename)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('timedcapture')
 
 # Configuration variables
 config = SafeConfigParser()
@@ -150,11 +150,11 @@ if __name__ == "__main__":
                 c.capture_image(image_file)
 
                 converted_files = convertCR2Jpeg(image_file)
-                
-                logger.info("Snapshot taken")
-            
+
+                logger.info("Image Captured and stored - %s" % os.path.basename(image_file))
+
             except Exception, e:
-                logger.error("Snapshot error - " + str(e))
+                logger.error("Image Capture error - " + str(e))
                 c = None
 
         # If the user has specified 'once' then we can stop now
