@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import subprocess, os, sys, platform
 import datetime, time, glob
 import eyepi
