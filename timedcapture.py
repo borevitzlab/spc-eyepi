@@ -150,18 +150,22 @@ if __name__ == "__main__":
     c = None
     while (ok):
 
+        tn = datetime.datetime.now().time()
+
         if c == None:
             try:
                 # Camera object not yet initialised
                 camera_fs_unmount()
                 c = eyepi.camera()
             except Exception, e:
-                logger.error("Camera Mounting error - " + str(e))
+                if (tn > timestartfrom) and (tn < timestopat):
+                    logger.error("Camera not connected/powered - " + str(e))
+                else:
+                    logger.debug("Camera not connected/powered - " + str(e))
 
-        tn = datetime.datetime.now().time()
+
         if (tn > timestartfrom) and (tn < timestopat):
 
-            print "Times:", tn, timestartfrom, timestopat
             try:
 
                 # The time now is within the operating times
