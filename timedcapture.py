@@ -39,6 +39,7 @@ def setup(dump_values = False):
 
     global config, config_filename, imagedir
     global camera_name, hostname, user, passwd, timebetweenshots
+    global timestartfrom, timestopat
 
     config.read(config_filename)
 
@@ -49,6 +50,24 @@ def setup(dump_values = False):
     timebetweenshots = config.getint("timelapse","interval")
     imagedir = config.get("images","directory","images")
 
+    try:
+        tval = config.get('timelapse','starttime')
+        if len(tval)==5:
+            if tval[2]==':':
+                timestartfrom = datetime.time(int(tval[:2]),int(tval[3:]))
+                logger.debug("Starting at %s" % timestartfrom.isoformat())
+    except Exception, e:
+        logger.error("Time conversion error startime - %s" % str(e))
+
+    try:
+        tval = config.get('timelapse','stoptime')
+        if len(tval)==5:
+            if tval[2]==':':
+                timestopat = datetime.time(int(tval[:2]),int(tval[3:]))
+                logger.debug("Stopping at %s" % timestopat.isoformat())
+    except Exception, e:
+        logger.error("Time conversion error stoptime - %s" % str(e))
+    
     if not os.path.exists(imagedir):
         # All images stored in their own seperate directory
         logger.info("Creating Image Storage directory %s" % imagedir)
@@ -139,8 +158,10 @@ if __name__ == "__main__":
             except Exception, e:
                 logger.error("Camera Mounting error - " + str(e))
 
-        if (datetime.datetime.now().time() > timestartfrom) and (datetime.datetime.now().time() < timestopat):
+        tn = datetime.datetime.now().time()
+        if (tn > timestartfrom) and (tn < timestopat):
 
+            print "Times:", tn, timestartfrom, timestopat
             try:
 
                 # The time now is within the operating times
@@ -157,6 +178,11 @@ if __name__ == "__main__":
             except Exception, e:
                 logger.error("Image Capture error - " + str(e))
                 c = None
+                
+        else:
+            print('.')
+            time.sleep(30)
+            continue
 
         # If the user has specified 'once' then we can stop now
         if (len(args)>0) and (args[0].lower() == "once"):
