@@ -19,6 +19,8 @@ timestartfrom = datetime.time.min
 timestopat = datetime.time.max
 default_extension = ".CR2"
 imagedir = "images"
+convertcmdline1 = "dcraw -q 0 -w -H 5 -b 8 %s"
+convertcmdline2 = "convert %s %s"
 
 # We can't start if no config file
 if not os.path.exists(config_filename):
@@ -39,7 +41,7 @@ def setup(dump_values = False):
 
     global config, config_filename, imagedir
     global camera_name, hostname, user, passwd, timebetweenshots
-    global timestartfrom, timestopat
+    global timestartfrom, timestopat, convertcmdline1, convertcmdline2
 
     config.read(config_filename)
 
@@ -49,7 +51,9 @@ def setup(dump_values = False):
     passwd = config.get("ftp","pass")
     timebetweenshots = config.getint("timelapse","interval")
     imagedir = config.get("images","directory","images")
-
+    if config.has_option("convertor","commandline"):
+        convertcmdline = config.get("convertor","commandline")
+    
     try:
         tval = config.get('timelapse','starttime')
         if len(tval)==5:
@@ -100,19 +104,23 @@ def convertCR2Jpeg(filename):
     Convert a .CR2 file to jpeg
     """
 
+    global convertcmdline1, convertcmdline2
+    
     try:    
         raw_filename = filename
         ppm_filename = filename[:-4] + '.ppm'
         jpeg_filename = filename[:-4] + '.jpg'
     
-        cmd1 = "dcraw -q 0 -w -H 5 -b 8 %s" % raw_filename
+        # Here we convert from .cr2 to .ppm
+        cmd1 =  convertcmdline1 % raw_filename
         cmdresults = subprocess.check_output(cmd1.split(' '))
         if cmdresults.lower().find('error:')!=-1:
             logger.error(cmdresults)
         elif len(cmdresults)!=0:
             logger.debug(cmdresults)
     
-        cmd2 = "convert %s %s" % (ppm_filename,jpeg_filename)
+        # Next we convert from ppm to jpeg
+        cmd2 = convertcmdline2 % (ppm_filename,jpeg_filename)
         cmdresults = subprocess.check_output(cmd2.split(' '))
         if cmdresults.lower().find('error:')!=-1:
             logger.error(cmdresults)
