@@ -51,7 +51,7 @@ def sftpUpload(filenames):
 
    try:
        logger.debug("Connecting")
-       link = sftp.Connection(host=hostname, username=user, password=passwd)
+       link = sftp.Connection(host=hostname, username=user, password=passwd, ciphers=['arcfour128',])
 
        logger.debug("Uploading")
        for f in filenames:
