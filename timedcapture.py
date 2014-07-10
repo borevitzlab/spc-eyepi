@@ -139,68 +139,73 @@ if __name__ == "__main__":
     usage = "usage: %prog [options] arg"
     parser = OptionParser(usage)
 
-    (options, args) = parser.parse_args()
+    try:
+        (options, args) = parser.parse_args()
 
-    setup()
+        setup()
 
-    # Check command line arguments
-    if (len(args)>0) and (args[0].lower() == "info"):
-         # Display information on the camera
-         print C.abilities
-         sys.exit(0)
+        # Check command line arguments
+        if (len(args)>0) and (args[0].lower() == "info"):
+             # Display information on the camera
+             print C.abilities
+             sys.exit(0)
 
-    if (len(args)>0) and (args[0].lower() == "once"):
-        # Override the operating times
-        timestartfrom = datetime.time.min
-        timestopat = datetime.time.max
-
-    ok = True
-    c = None
-    while (ok):
-
-        tn = datetime.datetime.now().time()
-
-        if c == None:
-            try:
-                # Camera object not yet initialised
-                camera_fs_unmount()
-                c = eyepi.camera()
-            except Exception, e:
-                if (tn > timestartfrom) and (tn < timestopat):
-                    logger.error("Camera not connected/powered - " + str(e))
-                else:
-                    logger.debug("Camera not connected/powered - " + str(e))
-
-
-        if (tn > timestartfrom) and (tn < timestopat):
-
-            try:
-
-                # The time now is within the operating times
-                logger.debug("Capturing Image")
-
-                image_file = timestamped_imagename()
-
-                c.capture_image(image_file)
-
-                converted_files = convertCR2Jpeg(image_file)
-
-                logger.info("Image Captured and stored - %s" % os.path.basename(image_file))
-
-            except Exception, e:
-                logger.error("Image Capture error - " + str(e))
-                c = None
-                
-        else:
-            print('.')
-            time.sleep(30)
-            continue
-
-        # If the user has specified 'once' then we can stop now
         if (len(args)>0) and (args[0].lower() == "once"):
-            break
+            # Override the operating times
+            timestartfrom = datetime.time.min
+            timestopat = datetime.time.max
 
-        # Delay between shots
-        for s in range(0,timebetweenshots):
-            print(timebetweenshots-s);
-            time.sleep(1)
+        ok = True
+        c = None
+        while (ok):
+
+            tn = datetime.datetime.now().time()
+
+            if c == None:
+                try:
+                    # Camera object not yet initialised
+                    camera_fs_unmount()
+                    c = eyepi.camera()
+                except Exception, e:
+                    if (tn > timestartfrom) and (tn < timestopat):
+                        logger.error("Camera not connected/powered - " + str(e))
+                    else:
+                        logger.debug("Camera not connected/powered - " + str(e))
+
+
+            if (tn > timestartfrom) and (tn < timestopat):
+
+                try:
+
+                    # The time now is within the operating times
+                    logger.debug("Capturing Image")
+
+                    image_file = timestamped_imagename()
+
+                    c.capture_image(image_file)
+
+                    converted_files = convertCR2Jpeg(image_file)
+
+                    logger.info("Image Captured and stored - %s" % os.path.basename(image_file))
+
+                except Exception, e:
+                    logger.error("Image Capture error - " + str(e))
+                    c = None
+                    
+            else:
+                print('.')
+                time.sleep(30)
+                continue
+
+            # If the user has specified 'once' then we can stop now
+            if (len(args)>0) and (args[0].lower() == "once"):
+                break
+
+            # Delay between shots
+            for s in range(0,timebetweenshots):
+                print(timebetweenshots-s);
+                time.sleep(1)
+
+    except KeyboardInterrupt:
+        sys.exit(0)
+        
