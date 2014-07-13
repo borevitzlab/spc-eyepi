@@ -15,6 +15,7 @@ passwd = ""
 config_filename = 'eyepi.ini'
 imagedir = "images"
 timeinterval = 30
+uploadtimedelay = 5
 
 # We can't start if no config file
 if not os.path.exists(config_filename):
@@ -51,7 +52,7 @@ def sftpUpload(filenames):
 
    try:
        logger.debug("Connecting")
-       link = sftp.Connection(host=hostname, username=user, password=passwd, ciphers=['arcfour128',])
+       link = sftp.Connection(host=hostname, username=user, password=passwd, ciphers=['arcfour128', 'aes256'])
 
        logger.debug("Uploading")
        for f in filenames:
@@ -89,6 +90,9 @@ if __name__ == "__main__":
             upload_list = glob.glob(os.path.join(imagedir,'*'))
           
             if len(upload_list) > 0:
+
+                logger.debug("Pausing %d seconds to wait for files to be closed" % uploadtimedelay)
+                time.sleep(uploadtimedelay)
 
                 logger.debug("Preparing to upload %d files" % len(upload_list))
                 r = sftpUpload(upload_list)
