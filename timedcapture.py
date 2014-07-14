@@ -181,8 +181,8 @@ if __name__ == "__main__":
                     
                     # Save the jpeg to the web servers directory
                     for i in converted_files:
-                        if i.endswith('.jpg')
-                            shutil.copy_file(i,os.path.join('static',os.path.basename(i))
+                        if i.endswith('.jpg'):
+                            shutil.copy_file(i,os.path.join('static',os.path.basename(i)))
 
                 except Exception, e:
                     logger.error("Image Capture error - " + str(e))
