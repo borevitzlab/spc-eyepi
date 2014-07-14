@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import os, subprocess, sys, platform
-import datetime, time
+import datetime, time, shutil
 import eyepi
 import pysftp as sftp
 import logging, logging.config
@@ -10,9 +10,6 @@ from optparse import OptionParser
 
 # Global configuration variables
 camera_name = platform.node()
-hostname = ""
-user = ""
-passwd = ""
 timebetweenshots = 0
 config_filename = 'eyepi.ini'
 timestartfrom = datetime.time.min
@@ -40,15 +37,12 @@ def setup(dump_values = False):
     """
 
     global config, config_filename, imagedir
-    global camera_name, hostname, user, passwd, timebetweenshots
+    global camera_name, timebetweenshots
     global timestartfrom, timestopat, convertcmdline1, convertcmdline2
 
     config.read(config_filename)
 
     camera_name = config.get("camera","name")
-    hostname = config.get("ftp","server")
-    user = config.get("ftp","user")
-    passwd = config.get("ftp","pass")
     timebetweenshots = config.getint("timelapse","interval")
     imagedir = config.get("images","directory","images")
     if config.has_option("convertor","commandline"):
@@ -80,9 +74,6 @@ def setup(dump_values = False):
     if (dump_values):
         # For debugging, we can dump some configuration values
         logger.debug(camera_name)
-        logger.debug(hostname)
-        logger.debug(user)
-        logger.debug(passwd)
         logger.debug(timebetweenshots)
         sys.exit(0)
 
@@ -187,6 +178,11 @@ if __name__ == "__main__":
                     converted_files = convertCR2Jpeg(image_file)
 
                     logger.info("Image Captured and stored - %s" % os.path.basename(image_file))
+                    
+                    # Save the jpeg to the web servers directory
+                    for i in converted_files:
+                        if i.endswith('.jpg')
+                            shutil.copy_file(i,os.path.join('static',os.path.basename(i))
 
                 except Exception, e:
                     logger.error("Image Capture error - " + str(e))
