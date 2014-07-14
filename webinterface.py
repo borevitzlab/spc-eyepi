@@ -7,4 +7,4 @@ def index():
     return '<img src=' + url_for('static',filename='last_image.jpg') + '>' 
       
 if __name__ == "__main__":
-    app.run()     
+    app.run(host='0.0.0.0') 
