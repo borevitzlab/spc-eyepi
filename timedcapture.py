@@ -98,6 +98,9 @@ def convertCR2Jpeg(filename):
     global convertcmdline1, convertcmdline2
     
     try:    
+
+        logger.debug("Converting .CR2 Image")
+
         raw_filename = filename
         ppm_filename = filename[:-4] + '.ppm'
         jpeg_filename = filename[:-4] + '.jpg'
@@ -185,7 +188,7 @@ if __name__ == "__main__":
                     # Save the jpeg to the web servers directory
                     for i in converted_files:
                         if i.endswith('.jpg'):
-                            shutil.copy(i,os.path.join('static',os.path.basename(i)))
+                            shutil.copy(i,os.path.join('static','last_image.jpg'))
 
                 except Exception, e:
                     logger.error("Image Capture error - " + str(e))
