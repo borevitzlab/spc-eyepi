@@ -148,6 +148,8 @@ if __name__ == "__main__":
 
         ok = True
         c = None
+        next_capture = None
+        
         while (ok):
 
             tn = datetime.datetime.now().time()
@@ -163,8 +165,9 @@ if __name__ == "__main__":
                     else:
                         logger.debug("Camera not connected/powered - " + str(e))
 
-
             if (tn > timestartfrom) and (tn < timestopat):
+
+                next_capture = datetime.datetime.now() + datetime.timedelta(seconds = timebetweenshots)
 
                 try:
 
@@ -198,8 +201,7 @@ if __name__ == "__main__":
                 break
 
             # Delay between shots
-            for s in range(0,timebetweenshots):
-                print(timebetweenshots-s);
+            while datetime.datetime.now() < next_capture:
                 time.sleep(1)
 
     except KeyboardInterrupt:
