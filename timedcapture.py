@@ -23,7 +23,7 @@ convertcmdline3 = "convert %s -resize 800x600 %s"
 # We can't start if no config file
 if not os.path.exists(config_filename):
     print("The configuration file %s was not found in the current directory. \nTry copying the one in the sample directory to %s"
-           % (config_filename,config_filename)) 
+           % (config_filename,config_filename))
     sys.exit(1)
 
 # Logging setup
@@ -48,7 +48,7 @@ def setup(dump_values = False):
     imagedir = config.get("images","directory","images")
     if config.has_option("convertor","commandline"):
         convertcmdline = config.get("convertor","commandline")
-    
+
     try:
         tval = config.get('timelapse','starttime')
         if len(tval)==5:
@@ -66,7 +66,7 @@ def setup(dump_values = False):
                 logger.debug("Stopping at %s" % timestopat.isoformat())
     except Exception, e:
         logger.error("Time conversion error stoptime - %s" % str(e))
-    
+
     if not os.path.exists(imagedir):
         # All images stored in their own seperate directory
         logger.info("Creating Image Storage directory %s" % imagedir)
@@ -97,15 +97,15 @@ def convertCR2Jpeg(filename):
     """
 
     global convertcmdline1, convertcmdline2
-    
-    try:    
+
+    try:
 
         logger.debug("Converting .CR2 Image")
 
         raw_filename = filename
         ppm_filename = filename[:-4] + '.ppm'
         jpeg_filename = filename[:-4] + '.jpg'
-    
+
         # Here we convert from .cr2 to .ppm
         cmd1 =  convertcmdline1 % raw_filename
         cmdresults = subprocess.check_output(cmd1.split(' '))
@@ -113,7 +113,7 @@ def convertCR2Jpeg(filename):
             logger.error(cmdresults)
         elif len(cmdresults)!=0:
             logger.debug(cmdresults)
-    
+
         # Next we convert from ppm to jpeg
         cmd2 = convertcmdline2 % (ppm_filename,jpeg_filename)
         cmdresults = subprocess.check_output(cmd2.split(' '))
@@ -134,7 +134,7 @@ def convertCR2Jpeg(filename):
 
     except Exception, e:
         logger.error("Image file Converion error - %s" % str(e))
-    
+
     return ([raw_filename,jpeg_filename])
 
 if __name__ == "__main__":
@@ -161,7 +161,7 @@ if __name__ == "__main__":
         ok = True
         c = None
         next_capture = None
-        
+
         while (ok):
 
             tn = datetime.datetime.now().time()
@@ -215,4 +215,4 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         sys.exit(0)
-        
+
