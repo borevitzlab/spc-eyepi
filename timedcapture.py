@@ -188,7 +188,11 @@ if __name__ == "__main__":
                     # Save the jpeg to the web servers directory
                     for i in converted_files:
                         if i.endswith('.jpg'):
-                            shutil.copy(i,os.path.join('static','last_image.jpg'))
+                            # Rescale the jpeg
+                            cmd = "convert %s -size 800x600 %s" % (i,os.path.join('static','last_image.jpg'))
+                            cmdresults = subprocess.check_output(cmd.split(' '))
+                            if cmdresults.lower().find('error:')!=-1:
+                                logger.error(cmdresults)
 
                 except Exception, e:
                     logger.error("Image Capture error - " + str(e))
