@@ -13,14 +13,9 @@ retries = 1
 # This is run if gp_camera_init returns -60 (Could not lock the device) and retries >= 1.
 unmount_cmd = 'gvfs-mount -s gphoto2'
 
-#libgphoto2dll = 'libgphoto2.so.2.4.0'
-libgphoto2dll = 'libgphoto2.so'
-# 2.4.6
-#libgphoto2dll = '/usr/lib/libgphoto2.so'
-# 2.4.8
-#libgphoto2dll = '/usr/local/lib/libgphoto2.so.2'
-# SVN
-#libgphoto2dll = '/usr/local/lib/libgphoto2.so.6'
+# Raspian gphoto2 .so
+libgphoto2dll = '/usr/lib/arm-linux-gnueabihf/libgphoto2.so.2'
+
 
 import re
 import ctypes
