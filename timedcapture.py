@@ -16,8 +16,9 @@ timestartfrom = datetime.time.min
 timestopat = datetime.time.max
 default_extension = ".CR2"
 imagedir = "images"
-convertcmdline1 = "dcraw -q 0 -w -H 5 -b 8 %s"
+convertcmdline1 = "./dcraw -q 0 -w -H 5 -b 8 %s"
 convertcmdline2 = "convert %s %s"
+convertcmdline3 = "convert %s -resize 800x600 %s"
 
 # We can't start if no config file
 if not os.path.exists(config_filename):
@@ -121,8 +122,16 @@ def convertCR2Jpeg(filename):
         elif len(cmdresults)!=0:
             logger.debug(cmdresults)
 
+        # Save the jpeg to the web servers directory
+        cmd3 = convertcmdline3 % (ppm_filename,os.path.join("static","last_image.jpg"))
+        cmdresults = subprocess.check_output(cmd3.split(' '))
+        if cmdresults.lower().find('error:')!=-1:
+            logger.error(cmdresults)
+        elif len(cmdresults)!=0:
+            logger.debug(cmdresults)
+
         os.remove(ppm_filename)
-        
+
     except Exception, e:
         logger.error("Image file Converion error - %s" % str(e))
     
@@ -184,20 +193,12 @@ if __name__ == "__main__":
                     converted_files = convertCR2Jpeg(image_file)
 
                     logger.info("Image Captured and stored - %s" % os.path.basename(image_file))
-                    
-                    # Save the jpeg to the web servers directory
-                    for i in converted_files:
-                        if i.endswith('.jpg'):
-                            # Rescale the jpeg
-                            cmd = "convert %s -size 800x600 %s" % (i,os.path.join('static','last_image.jpg'))
-                            cmdresults = subprocess.check_output(cmd.split(' '))
-                            if cmdresults.lower().find('error:')!=-1:
-                                logger.error(cmdresults)
+
 
                 except Exception, e:
                     logger.error("Image Capture error - " + str(e))
                     c = None
-                    
+
             else:
                 print('.')
                 time.sleep(30)
@@ -209,6 +210,7 @@ if __name__ == "__main__":
 
             # Delay between shots
             while datetime.datetime.now() < next_capture:
+                print next_capture - datetime.datetime.now()
                 time.sleep(1)
 
     except KeyboardInterrupt:
