@@ -20,8 +20,8 @@ def camera_fs_mounted():
                 # Look for -> gphoto2://[usb:002,018]/\n
                 print( "Camera-FS is mounted at >> %s << " % l )
                 camera_usb_mountpoint = 'gphoto2://[' + l[l.find('usb:'):l.find(']')] + ']'
-    else:
-        print("Camera-FS is not mounted (Good)")
+#    else:
+#        print("Camera-FS is not mounted (Good)")
         
     return camera_usb_mountpoint
     
