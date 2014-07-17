@@ -16,6 +16,8 @@ Installation
 
  - Copy install_files/sample.ini to eyepi.ini
 
+ - set the system date and time using dpkg-reconfigure tzdata
+
 Runninng the program
 
  - Run the command "sudo python timedcapture.py"
