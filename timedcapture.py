@@ -200,7 +200,8 @@ if __name__ == "__main__":
                     c = None
 
             else:
-                print('.')
+                start_str = timestartfrom.strftime("%H:%M")
+                print('Waiting until start time (at {})'.format(start_str))
                 time.sleep(30)
                 continue
 
@@ -209,6 +210,8 @@ if __name__ == "__main__":
                 break
 
             # Delay between shots
+            tdiff = next_capture - datetime.datetime.now()
+            print("Sleeping {} seconds.".format(tdiff.seconds))
             while datetime.datetime.now() < next_capture:
                 time.sleep(0.1)
 
