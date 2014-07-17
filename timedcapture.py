@@ -228,8 +228,4 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         sys.exit(0)
-#    except Exception as e:
-#        import traceback, os.path
-#        top = traceback.extract_tb(-1)
-#        print ', '.join([type(e).__name__, os.path.basename(top[0]), str(top[1])])
 
