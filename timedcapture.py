@@ -150,7 +150,7 @@ if __name__ == "__main__":
         # Check command line arguments
         if (len(args)>0) and (args[0].lower() == "info"):
              # Display information on the camera
-             print C.abilities
+             print(C.abilities)
              sys.exit(0)
 
         if (len(args)>0) and (args[0].lower() == "once"):
@@ -210,8 +210,7 @@ if __name__ == "__main__":
 
             # Delay between shots
             while datetime.datetime.now() < next_capture:
-                print next_capture - datetime.datetime.now()
-                time.sleep(1)
+                time.sleep(0.1)
 
     except KeyboardInterrupt:
         sys.exit(0)
