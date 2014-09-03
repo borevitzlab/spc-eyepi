@@ -23,7 +23,7 @@ convertcmdline3 = "convert %s -resize 800x600 %s"
 # We can't start if no config file
 if not os.path.exists(config_filename):
     print("The configuration file %s was not found in the current directory. \nTry copying the one in the sample directory to %s"
-           % (config_filename,config_filename)) 
+           % (config_filename,config_filename))
     sys.exit(1)
 
 # Logging setup
@@ -150,7 +150,7 @@ if __name__ == "__main__":
         # Check command line arguments
         if (len(args)>0) and (args[0].lower() == "info"):
              # Display information on the camera
-             print C.abilities
+             print(C.abilities)
              sys.exit(0)
 
         if (len(args)>0) and (args[0].lower() == "once"):
@@ -201,10 +201,9 @@ if __name__ == "__main__":
 
             else:
                 tdiff = datetime.datetime.combine(datetime.datetime.today(),timestartfrom) - datetime.datetime.combine(datetime.datetime.today(),tn)
-#               print tdiff
                 if tdiff.seconds > 40:
                     time.sleep(30)
-#                    print '.',
+                    print '.',
                 else:
                     time.sleep(0.1)
                 continue
