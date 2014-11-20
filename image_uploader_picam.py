@@ -13,8 +13,8 @@ from optparse import OptionParser
 
 
 # Global configuration variables
-config_filename = 'eyepi.ini'
-imagedir = "images"
+config_filename = 'picam.ini'
+imagedir = "picamimages"
 timeinterval = 1
 uploadtimedelay = 1
 
@@ -225,7 +225,7 @@ if __name__ == "__main__":
 
             upload_list = glob.glob(os.path.join(imagedir,'*'))
           
-            if (len(upload_list) > 0) and config.get("ftp","uploaderenabled")=="on":
+            if (len(upload_list) > 0) and config.get("ftp","uploaderenabled")=="on":            if len(upload_list) > 0:
                 s = socket(AF_INET, SOCK_DGRAM)
                 s.connect(("www.google.com",0))
                 ipaddress = s.getsockname()[0]
