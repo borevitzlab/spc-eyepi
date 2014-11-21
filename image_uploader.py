@@ -123,7 +123,7 @@ def ftpUpload(filenames, hostname, cameraname, uploaddir, user, passwd):
         logger.debug("Connecting ftp")
         ftp = ftplib.FTP(hostname)
         ftp.login(user,passwd)
-        mkdir_p_ftp(ftp, uploaddir+cameraname)
+        mkdir_p_ftp(ftp, os.path.join(uploaddir,cameraname))
         logger.debug("Uploading")                
         for f in filenames:
             totalSize = os.path.getsize(f)
