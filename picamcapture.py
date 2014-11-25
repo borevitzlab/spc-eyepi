@@ -99,18 +99,17 @@ def setup(dump_values = False):
         logger.debug(timebetweenshots)
         sys.exit(0)
 
-def timestamp():
+def timestamp(tn):
     """ Build a timestamp in the required format
     """
-    st = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')
+    st = tn.strftime('%Y_%m_%d_%H_%M_%S')
     return st
 
-def timestamped_imagename():
+def timestamped_imagename(timen):
     """ Build the pathname for a captured image.
     """
     global camera_name, imagedir
-
-    return os.path.join(imagedir, camera_name + '_' + timestamp() + default_extension)
+    return os.path.join(imagedir, camera_name + '_' + timestamp(timen) + default_extension)
 
 if __name__ == "__main__":
 
@@ -139,14 +138,14 @@ if __name__ == "__main__":
 
             tn = datetime.datetime.now()
             birthday = datetime.datetime(1990, 07,17,12,12,12,13)
-            if tn-next_capture > datetime.timedelta(seconds = timebetweenshots*2):
+            if tn-next_capture > datetime.timedelta(seconds = timebetweenshots*4):
                 next_capture=tn+datetime.timedelta(seconds=timebetweenshots)
             if tn<birthday:
                 logger.info("my creator hasnt been born yet")
                 
             if (tn>birthday) and (tn>=next_capture) and (tn.time() > timestartfrom) and (tn.time() < timestopat) and (config.get("camera","enabled")=="on"):
 
-                next_capture = datetime.datetime.now() + datetime.timedelta(seconds = timebetweenshots)
+                next_capture += datetime.timedelta(seconds = timebetweenshots)
 
                 try:
 
@@ -157,7 +156,7 @@ if __name__ == "__main__":
                     
                     os.system("raspistill --nopreview -o "+image_file)
                     logger.info("Copying the image to the web service, buddy") 
-                    shutil.copy(image_file,os.path.join("static","temp","pi_last_image.jpg"))
+                    shutil.copy(image_file,os.path.join("static","pi_last_image.jpg"))
                
                     if config.get("ftp","uploadwebcam") == "on":
                         shutil.copy(image_file,os.path.join(copydir, "pi_last_image.jpg"))

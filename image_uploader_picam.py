@@ -123,7 +123,7 @@ def ftpUpload(filenames, hostname, cameraname, uploaddir, user, passwd):
         logger.debug("Connecting ftp")
         ftp = ftplib.FTP(hostname)
         ftp.login(user,passwd)
-        mkdir_p_ftp(ftp, uploaddir+cameraname)
+        mkdir_p_ftp(ftp, os.path.join(uploaddir,cameraname))
         logger.debug("Uploading")                
         for f in filenames:
             totalSize = os.path.getsize(f)
@@ -204,28 +204,20 @@ if __name__ == "__main__":
     parser = OptionParser(usage)
 
     (options, args) = parser.parse_args()
-    
 
-    
     logger.info("Program Startup")
     config = SafeConfigParser()
     config.read(config_filename)
     hostname = config.get("ftp","server")
     user = config.get("ftp","user")
     passwd = config.get("ftp","pass")
-
     uploaddir = config.get("ftp", "directory")# + config.get("camera","name")
     cameraname = config.get("camera","name")
     imagedir = config.get("copying","directory")
-
-        
     while True:
-        
         try:
-
             upload_list = glob.glob(os.path.join(imagedir,'*'))
-          
-            if (len(upload_list) > 0) and config.get("ftp","uploaderenabled")=="on":            if len(upload_list) > 0:
+            if (len(upload_list) > 0) and config.get("ftp","uploaderenabled")=="on":
                 s = socket(AF_INET, SOCK_DGRAM)
                 s.connect(("www.google.com",0))
                 ipaddress = s.getsockname()[0]
@@ -238,11 +230,8 @@ if __name__ == "__main__":
                     ftpUpload(upload_list, hostname, cameraname, uploaddir, user, passwd)
                 logger.debug("checking ip address on server, eh")
                 checkipaddressonserver(ipaddress, hostname,cameraname,uploaddir,user,passwd)
-
             time.sleep(timeinterval)
-
         except Exception as e:
            logger.error(str(e))
-
     logger.info("Program Shutdown")
 

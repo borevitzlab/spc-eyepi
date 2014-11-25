@@ -117,7 +117,7 @@ def timestamped_imagename(timen):
     """
     global camera_name, imagedir
 
-    return os.path.join(imagedir, camera_name + '_' + timestamp(tn) + default_extension)
+    return os.path.join(imagedir, camera_name + '_' + timestamp(timen) + default_extension)
 
 def convertCR2Jpeg(filename):
     """
@@ -150,7 +150,7 @@ def convertCR2Jpeg(filename):
         elif len(cmdresults)!=0:
             logger.debug(cmdresults)
         
-        cmd3 = convercmdline3 % (ppm_filename, os.path.join("static","temp", "dslr_last_image.jpg"))
+        cmd3 = convercmdline3 % (ppm_filename, os.path.join("static", "dslr_last_image.jpg"))
         cmdresults = subprocess.check_output(cmd3.split(' '))
         if smdresults.lower().find('error')!=-1:
             logger.error(cmdresults)
@@ -208,7 +208,7 @@ if __name__ == "__main__":
 
             tn = datetime.datetime.now()
             birthday = datetime.datetime(1990, 07,17,12,12,12,13)
-            if tn-next_capture > datetime.timedelta(seconds = timebetweenshots*2):
+            if tn-next_capture > datetime.timedelta(seconds = timebetweenshots*4):
                 next_capture=tn+datetime.timedelta(seconds=timebetweenshots)
             if tn<birthday:
                 logger.info("my creator hasnt been born yet")
@@ -227,6 +227,7 @@ if __name__ == "__main__":
                     # using this way of capturing is more risky than just calling "gphoto --capture-and-download"
 
                     cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(imagedir, os.path.splitext(raw_image)[0])+".%C'"]
+                    #cmd for RAW+JPEG
                     #cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image --wait-event-and-download=13s --filename='"+os.path.join(imagedir, os.path.splitext(raw_image)[0])+".%C'"]
                     subprocess.call(cmd, shell=True)
                     logger.info("Capture Complete")
@@ -239,7 +240,7 @@ if __name__ == "__main__":
                         ext = os.path.splitext(file)[-1].lower()
                         name = os.path.splitext(raw_image)[0]
                         if ext == ".jpeg" or ".jpg":
-                            shutil.copy(file,os.path.join("static","temp", "dslr_last_image.jpg"))
+                            shutil.copy(file,os.path.join("static", "dslr_last_image.jpg"))
                             if config.get("ftp","uploadwebcam") == "on":
                                 shutil.copy(file,os.path.join(copydir, "dslr_last_image.jpg"))
                         if config.get("ftp","uploadtimestamped")=="on":
