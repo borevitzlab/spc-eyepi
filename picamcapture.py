@@ -2,7 +2,6 @@
 import os, subprocess, sys, platform
 import datetime, time, shutil
 import shutil
-import eyepi
 import pysftp as sftp
 import logging, logging.config
 from mounting import *
