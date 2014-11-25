@@ -22,7 +22,7 @@ copydir = "copying"
 convertcmdline1 = "dcraw -q 0 -w -H 5 -b 8 %s"
 convertcmdline2 = "convert %s %s"
 convertcmdline3 = "convert %s -resize 800x600 %s"
-filetypes = ["JPG", "jpeg","jpg","CR2","RAW","NEF"]
+filetypes = ["CR2","RAW","NEF"]
 
 
 # We can't start if no config file
@@ -150,7 +150,7 @@ def convertCR2Jpeg(filename):
         elif len(cmdresults)!=0:
             logger.debug(cmdresults)
         
-        cmd3 = convercmdline3 % (ppm_filename, os.path.join("static", "dslr_last_image.jpg"))
+        cmd3 = convercmdline3 % (ppm_filename, os.path.join("static","temp", "dslr_last_image.jpg"))
         cmdresults = subprocess.check_output(cmd3.split(' '))
         if smdresults.lower().find('error')!=-1:
             logger.error(cmdresults)
@@ -201,13 +201,18 @@ if __name__ == "__main__":
                     #c = eyepi.camera()
                 except Exception, e:
                     if (tn > timestartfrom) and (tn < timestopat):
-                        logger.error("Camera not connected/powered - " + str(e))
+                        logger.error("Camera not conneted/powered - " + str(e))
                     else:
                         logger.debug("Camera not connected/powered - " + str(e))
-                        
+
+
             tn = datetime.datetime.now()
-            
-            if (tn>=next_capture) and (tn.time() > timestartfrom) and (tn.time() < timestopat) and (config.get("camera","enabled")=="on"):
+            birthday = datetime.datetime(1990, 07,17,12,12,12,13)
+            if tn-next_capture > datetime.timedelta(seconds = timebetweenshots*2):
+                next_capture=tn+datetime.timedelta(seconds=timebetweenshots)
+            if tn<birthday:
+                logger.info("my creator hasnt been born yet")
+            if (tn>birthday) and (tn>=next_capture) and (tn.time() > timestartfrom) and (tn.time() < timestopat) and (config.get("camera","enabled")=="on"):
                 try:
                      # The time now is within the operating times
                     logger.info("Capturing Image")
@@ -221,12 +226,12 @@ if __name__ == "__main__":
                     #No conversion needed, just take 2 files, 1 jpeg and 1 raw
                     # using this way of capturing is more risky than just calling "gphoto --capture-and-download"
 
-                    #subprocess.call(["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename "+raw_image+"%C"] , shell=True)
-                    cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image --wait-event-and-download=13s --filename='"+os.path.join(imagedir, os.path.splitext(raw_image)[0])+".%C'"]
+                    cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(imagedir, os.path.splitext(raw_image)[0])+".%C'"]
+                    #cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image --wait-event-and-download=13s --filename='"+os.path.join(imagedir, os.path.splitext(raw_image)[0])+".%C'"]
                     subprocess.call(cmd, shell=True)
                     logger.info("Capture Complete")
                     logger.info("Moving and renaming image files, buddy");
-                    files = glob(os.path.join(imagedir,'*.jpg'))
+                    files = glob(os.path.join(imagedir,"*.jpg"))
                     for filetype in filetypes:
                         files.extend(glob(os.path.join(imagedir,"*."+filetype)))
 
@@ -234,12 +239,12 @@ if __name__ == "__main__":
                         ext = os.path.splitext(file)[-1].lower()
                         name = os.path.splitext(raw_image)[0]
                         if ext == ".jpeg" or ".jpg":
-                            shutil.copy(file,os.path.join("static", "dslr_last_image.jpg"))
+                            shutil.copy(file,os.path.join("static","temp", "dslr_last_image.jpg"))
                             if config.get("ftp","uploadwebcam") == "on":
                                 shutil.copy(file,os.path.join(copydir, "dslr_last_image.jpg"))
                         if config.get("ftp","uploadtimestamped")=="on":
                             logger.info("saving timestamped image for you, buddy")
-                            os.rename(file,os.path.join(copydir, os.path.basename(name+ext)))
+                            os.rename(file, os.path.join(copydir, os.path.basename(name+ext)))
                         else:
                             logger.info("deleting file")
                             os.remove(file)
@@ -249,11 +254,12 @@ if __name__ == "__main__":
                     #try:
                     #   os.system(convertcmdline3 % (jpeg_image, os.path.join("static", "dslr_last_imag$
                     #except Exception as e:
-                    #    logger.error("Sorry, I had an error: %s" % str(e))
+                    #   x logger.error("Sorry, I had an error: %s" % str(e))
 
                     logger.info("Waiting until next capture at %s" % next_capture.isoformat())
 
                 except Exception, e:
+                    next_capture = datetime.datetime.now()
                     logger.error("Image Capture error - " + str(e))
                     c = None
 
@@ -266,7 +272,7 @@ if __name__ == "__main__":
                 logger.debug("Next capture at %s" % next_capture.isoformat())
             else:
                 logger.info("Capture will stop at %s" % timestopat.isoformat())
-
+           time.sleep(0.01)
 
     except KeyboardInterrupt:
         sys.exit(0)

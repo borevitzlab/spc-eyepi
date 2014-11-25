@@ -137,10 +137,15 @@ if __name__ == "__main__":
         next_capture = None
 
         while (ok):
-            #if not config.get("camera","enabled") == "off"
-            tn = datetime.datetime.now().time()
 
-            if (tn > timestartfrom) and (tn < timestopat):
+            tn = datetime.datetime.now()
+            birthday = datetime.datetime(1990, 07,17,12,12,12,13)
+            if tn-next_capture > datetime.timedelta(seconds = timebetweenshots*2):
+                next_capture=tn+datetime.timedelta(seconds=timebetweenshots)
+            if tn<birthday:
+                logger.info("my creator hasnt been born yet")
+                
+            if (tn>birthday) and (tn>=next_capture) and (tn.time() > timestartfrom) and (tn.time() < timestopat) and (config.get("camera","enabled")=="on"):
 
                 next_capture = datetime.datetime.now() + datetime.timedelta(seconds = timebetweenshots)
 
@@ -152,27 +157,22 @@ if __name__ == "__main__":
                     image_file = timestamped_imagename()
                     
                     os.system("raspistill --nopreview -o "+image_file)
-                    tb = datetime.datetime.now()
                     logger.info("Copying the image to the web service, buddy") 
-                    shutil.copy(image_file,os.path.join("static","pi_last_image.jpg"))
-                    logger.info("Copying the image to the constant, buddy") 
-                    shutil.copy(image_file,os.path.join(copydir,"pi_last_image.jpg"))
-                    logger.info("Moving image file");
-                    os.rename(image_file ,os.path.join(copydir,os.path.basename(image_file)))                    
-                    logger.info("Image Captured and stored - %s" % os.path.basename(image_file))
+                    shutil.copy(image_file,os.path.join("static","temp","pi_last_image.jpg"))
+               
+                    if config.get("ftp","uploadwebcam") == "on":
+                        shutil.copy(image_file,os.path.join(copydir, "pi_last_image.jpg"))
+                    if config.get("ftp","uploadtimestamped")=="on":
+                        logger.info("saving timestamped image for you, buddy")
+                        os.rename(image_file ,os.path.join(copydir,os.path.basename(image_file))) 
+                    else:
+                        logger.info("deleting file")
+                        os.remove(file)
+                     logger.info("Image Captured and stored - %s" % os.path.basename(image_file))
                     
                 except Exception, e:
                     logger.error("Image Capture error - " + str(e))
                     c = None
-
-            else:
-                tdiff = datetime.datetime.combine(datetime.datetime.today(),timestartfrom) - datetime.datetime.combine(datetime.datetime.today(),tn)
-                if tdiff.seconds > 40:
-                    time.sleep(30)
-                    print '.',
-                else:
-                    time.sleep(0.1)
-                continue
 
             # If the user has specified 'once' then we can stop now
             if (len(args)>0) and (args[0].lower() == "once"):
@@ -183,13 +183,7 @@ if __name__ == "__main__":
                 logger.debug("Next capture at %s" % next_capture.isoformat())
             else:
                 logger.info("Capture will stop at %s" % timestopat.isoformat())
-
-            while datetime.datetime.now() < next_capture:
-                tdiff = next_capture - datetime.datetime.now()
-                if tdiff.seconds > 10:
-                    time.sleep(5)
-                else:
-                    time.sleep(0.1)
+            time.sleep(0.01)
 
     except KeyboardInterrupt:
         sys.exit(0)
