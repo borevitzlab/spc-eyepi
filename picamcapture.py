@@ -134,8 +134,7 @@ if __name__ == "__main__":
             timestopat = datetime.time.max
 
         ok = True
-        next_capture = None
-
+        next_capture = datetime.datetime.now()
         while (ok):
 
             tn = datetime.datetime.now()
@@ -168,7 +167,7 @@ if __name__ == "__main__":
                     else:
                         logger.info("deleting file")
                         os.remove(file)
-                     logger.info("Image Captured and stored - %s" % os.path.basename(image_file))
+                    logger.info("Image Captured and stored - %s" % os.path.basename(image_file))
                     
                 except Exception, e:
                     logger.error("Image Capture error - " + str(e))

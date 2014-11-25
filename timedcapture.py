@@ -272,7 +272,7 @@ if __name__ == "__main__":
                 logger.debug("Next capture at %s" % next_capture.isoformat())
             else:
                 logger.info("Capture will stop at %s" % timestopat.isoformat())
-           time.sleep(0.01)
+            time.sleep(0.01)
 
     except KeyboardInterrupt:
         sys.exit(0)
