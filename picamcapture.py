@@ -151,7 +151,7 @@ if __name__ == "__main__":
                     # The time now is within the operating times
                     logger.info("Capturing Image")
 
-                    image_file = timestamped_imagename()
+                    image_file = timestamped_imagename(tn)
                     
                     os.system("raspistill --nopreview -o "+image_file)
                     logger.info("Copying the image to the web service, buddy") 
