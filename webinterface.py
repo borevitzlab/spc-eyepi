@@ -52,9 +52,9 @@ def right():
     aconfig = SafeConfigParser()
     aconfig.read(otherconfig_filename)
     aconfig.set("camera","enabled","off")
-    aconfig.set("uploaderenabled","enabled","off")
-    aconfig.set("uploadwebcam","enabled","off")
-    aconfig.set("uploadtimestamped","enabled","off")
+    aconfig.set("ftp","uploaderenabled","off")
+    aconfig.set("ftp","uploadwebcam","off")
+    aconfig.set("ftp","uploadtimestamped","off")
     if request.method == 'POST':
         for key, value in request.form.iteritems(multi=True):
             print "key:" + key +"  value:"+value
@@ -73,6 +73,9 @@ def left():
     aconfig = SafeConfigParser()
     aconfig.read(config_filename)
     aconfig.set("camera","enabled","off")
+    aconfig.set("ftp","uploaderenabled","off")
+    aconfig.set("ftp","uploadwebcam","off")
+    aconfig.set("ftp","uploadtimestamped","off")
     if request.method == 'POST':
         for key, value in request.form.iteritems(multi=True):
             if value != "":
