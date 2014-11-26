@@ -15,8 +15,9 @@ from optparse import OptionParser
 # Global configuration variables
 config_filename = 'eyepi.ini'
 imagedir = "images"
-timeinterval = 1
+timeinterval = 30
 uploadtimedelay = 1
+
 
 # We can't start if no config file
 if not os.path.exists(config_filename):
@@ -28,9 +29,11 @@ if not os.path.exists(config_filename):
 logging.config.fileConfig(config_filename)
 logger = logging.getLogger(__name__)
 
-def checkipaddressonserver(thisip, hostname, cameraname, uploaddir, user, passwd):
-    if not getmakeserveripaddressSFTP(thisip, hostname, cameraname, uploaddir, user, passwd):
-        getmakeserveripaddressFTP(thisip, hostname, cameraname, uploaddir, user, passwd)
+def checkipaddressonserver(last_upload, thisip, hostname, cameraname, uploaddir, user, passwd):
+    fullstr = "Last upload at: " + last_upload.strftime("%y-%m-%d %H:%M:%S") + "<br> Ip address: "+ thisip + "<br><a href='http://" + thisip + ":5000'>Config</a>"
+    
+    if not getmakeserveripaddressSFTP(fullstr, hostname, cameraname, uploaddir, user, passwd):
+        getmakeserveripaddressFTP(fullstr, hostname, cameraname, uploaddir, user, passwd)
 
 def getmakeserveripaddressSFTP(thisip,hostname,cameraname,uploaddir,user,passwd):
     try:
@@ -39,18 +42,18 @@ def getmakeserveripaddressSFTP(thisip,hostname,cameraname,uploaddir,user,passwd)
         link.chdir("/")
         mkdir_p_sftp(link, os.path.join(uploaddir,cameraname) )
         try:
-       	    serversip = link.get("ipaddress", preserve_mtime=True)
+       	    serversip = link.get("ipaddress.html", preserve_mtime=True)
             logger.debug("IP on server %s" % serversip)
         except Exception as e:
             logger.debug("Storing new ip on server")
-            f = link.open(os.path.join(uploaddir,cameraname,"ipaddress"), mode='w')
+            f = link.open(os.path.join(uploaddir,cameraname,"ipaddress.html"), mode='w')
             f.write(thisip)
             f.close()
             serversip=thisip
             return serversip
         if serversip != thisip:
             logger.debug("new IP, updating the ip, eh")
-            f = link.open(os.path.join(uploaddir,cameraname,"ipaddress"), mode='w')
+            f = link.open(os.path.join(uploaddir,cameraname,"ipaddress.html"), mode='w')
             f.write(thisip)
             f.close()
             serversip=thisip
@@ -67,23 +70,23 @@ def getmakeserveripaddressFTP(thisip,hostname,cameraname,uploaddir,user,passwd):
         mkdir_p_ftp(ftp, os.path.join(uploaddir,cameraname))
         try:
             files = []
-            ftp.retrlines('RETR ipaddress', files.append)
+            ftp.retrlines('RETR ipaddress.html', files.append)
             serversip = files[0]
-            logger.debug("IP on server %s" % serversip)
+            logger.info("IP on server %s" % serversip)
         except Exception as e:
-            logger.debug("Storing new ip on server")
-            unicodeip = unicode(ipaddress)
+            logger.info("Storing new ip on server")
+            unicodeip = unicode(thisip)
             assert isinstance(unicodeip, unicode)
             file = io.BytesIO(unicodeip.encode("utf-8"))
-            ftp.storbinary('STOR ipaddress',file)
+            ftp.storbinary('STOR ipaddress.html',file)
             serversip = thisip
             return serversip
         if serversip != thisip:
-            logger.debug("new IP, updating the ip, eh")
-            unicodeip = unicode(ipaddress)
+            logger.info("new IP, updating the ip, eh")
+            unicodeip = unicode(thisip)
             assert isinstance(unicodeip, unicode)
             file = io.BytesIO(unicodeip.encode("utf-8"))
-            ftp.storbinary('STOR ipaddress',file)
+            ftp.storbinary('STOR ipaddress.html',file)
             serversip = thisip
             return serversip
     except Exception as e:
@@ -218,17 +221,17 @@ if __name__ == "__main__":
     cameraname = config.get("camera","name")
     imagedir = config.get("copying","directory")
 
-        
+    last_upload = None
     while True:
         
         try:
 
             upload_list = glob.glob(os.path.join(imagedir,'*'))
-          
+            s = socket(AF_INET, SOCK_DGRAM)
+            s.connect(("www.google.com",0))
+            ipaddress = s.getsockname()[0]
             if (len(upload_list) > 0) and config.get("ftp","uploaderenabled")=="on":
-                s = socket(AF_INET, SOCK_DGRAM)
-                s.connect(("www.google.com",0))
-                ipaddress = s.getsockname()[0]
+                
 
                 logger.debug("Pausing %d seconds to wait for files to be closed" % uploadtimedelay)
                 time.sleep(uploadtimedelay)
@@ -237,8 +240,7 @@ if __name__ == "__main__":
                 if not sftpUpload(upload_list, hostname, cameraname, uploaddir, user, passwd):
                     ftpUpload(upload_list, hostname, cameraname, uploaddir, user, passwd)
                 logger.debug("checking ip address on server, eh")
-                checkipaddressonserver(ipaddress, hostname,cameraname,uploaddir,user,passwd)
-
+                checkipaddressonserver(datetime.datetime.now(),ipaddress, hostname,cameraname,uploaddir,user,passwd)
             time.sleep(timeinterval)
 
         except Exception as e:

@@ -102,14 +102,14 @@ def index():
 def lastimage():
     config = SafeConfigParser()
     config.read(config_filename)
-    return '<META HTTP-EQUIV="EXPIRES" CONTENT="Mon, 22 Jul, 2002 12:00:00 GMT"><script type="text/javascript">window.setTimeout(function(){document.location.reload(true);},'+str(float(config.get("timelapse","interval"))*1000)+');</script><div style="background-image:url('+ url_for('static',filename='dslr_last_image.jpg') + ');width:100%;height:100%;background-size:cover;"></div>'
+    return '<META HTTP-EQUIV="EXPIRES" CONTENT="Mon, 22 Jul, 2002 12:00:00 GMT"><script type="text/javascript">window.setTimeout(function(){document.location.reload(true);},'+str(float(config.get("timelapse","interval"))*1000)+');</script><img src="'+url_for('static',filename='dslr_last_image.jpg')+"></div>'
 
 
 @app.route("/lastpicam")
 def lastpicam():
     config = SafeConfigParser()
     config.read(otherconfig_filename)
-    return '<META HTTP-EQUIV="EXPIRES" CONTENT="Mon, 22 Jul, 2002 12:00:00 GMT"><script type="text/javascript">window.setTimeout(function(){document.location.reload(true);},'+str(float(config.get("timelapse","interval"))*1000)+');</script><div style="background-image:url('+ url_for('static',filename='pi_last_image.jpg') + ');width:100%;height:100%;background-size:cover;"></div>'
+    return '<META HTTP-EQUIV="EXPIRES" CONTENT="Mon, 22 Jul, 2002 12:00:00 GMT"><script type="text/javascript">window.setTimeout(function(){document.location.reload(true);},'+str(float(config.get("timelapse","interval"))*1000)+');</script><img src="'+url_for('static',filename='pi_last_image.jpg')+"></div>'
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
