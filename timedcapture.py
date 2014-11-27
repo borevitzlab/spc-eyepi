@@ -256,9 +256,12 @@ if __name__ == "__main__":
                     #   os.system(convertcmdline3 % (jpeg_image, os.path.join("static", "dslr_last_imag$
                     #except Exception as e:
                     #   x logger.error("Sorry, I had an error: %s" % str(e))
-
-                    logger.info("Waiting until next capture at %s" % next_capture.isoformat())
-
+                    
+                    # Delay between shots
+                    if next_capture.time() < timestopat:
+                        logger.debug("Next capture at %s" % next_capture.isoformat())
+                    else:
+                        logger.info("Capture will stop at %s" % timestopat.isoformat())
                 except Exception, e:
                     next_capture = datetime.datetime.now()
                     logger.error("Image Capture error - " + str(e))
@@ -268,11 +271,7 @@ if __name__ == "__main__":
             if (len(args)>0) and (args[0].lower() == "once"):
                 break
 
-            # Delay between shots
-            if next_capture.time() < timestopat:
-                logger.debug("Next capture at %s" % next_capture.isoformat())
-            else:
-                logger.info("Capture will stop at %s" % timestopat.isoformat())
+            
             time.sleep(0.01)
 
     except KeyboardInterrupt:

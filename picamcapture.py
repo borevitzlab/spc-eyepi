@@ -155,7 +155,7 @@ if __name__ == "__main__":
                     
                     os.system("raspistill --nopreview -o "+image_file)
                     logger.info("Copying the image to the web service, buddy") 
-                    shutil.copy(image_file,os.path.join("static","pi_last_image.jpg"))
+                    shutil.copy(image_file,os.path.join("static","temp","pi_last_image.jpg"))
                
                     if config.get("ftp","uploadwebcam") == "on":
                         shutil.copy(image_file,os.path.join(copydir, "pi_last_image.jpg"))
@@ -166,7 +166,11 @@ if __name__ == "__main__":
                         logger.info("deleting file")
                         os.remove(file)
                     logger.info("Image Captured and stored - %s" % os.path.basename(image_file))
-                    
+                    # Delay between shots
+                    if next_capture.time() < timestopat:
+                        logger.debug("Next capture at %s" % next_capture.isoformat())
+                   else:
+                        logger.info("Capture will stop at %s" % timestopat.isoformat())
                 except Exception, e:
                     logger.error("Image Capture error - " + str(e))
                     c = None
@@ -175,11 +179,7 @@ if __name__ == "__main__":
             if (len(args)>0) and (args[0].lower() == "once"):
                 break
 
-            # Delay between shots
-            if next_capture.time() < timestopat:
-                logger.debug("Next capture at %s" % next_capture.isoformat())
-            else:
-                logger.info("Capture will stop at %s" % timestopat.isoformat())
+            
             time.sleep(0.01)
 
     except KeyboardInterrupt:

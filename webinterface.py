@@ -19,7 +19,6 @@ def sanitizeconfig(towriteconfig):
     with open(config_filename, 'wb') as configfile:
         towriteconfig.write(configfile)
 
-    
 def check_auth(username, password):
     db = anydbm.open('db', 'r')
     if str(username) in db:
@@ -35,11 +34,9 @@ def add_user(username, password):
     hash = Crypto.Protocol.KDF.PBKDF2(password=str(password),salt=str(username),count=100)
     db = anydbm.open('db', 'c')
     if str(username) not in db:
-        print "Assdfasfdasdf"
         db[str(username)] = hash
         return True
-    else:
-        return False
+    return False
 
 def requires_auth(f):
     @wraps(f)
@@ -56,6 +53,7 @@ def authenticate():
 @app.route('/rotatelogfile')
 @requires_auth
 def rotatelogfile():
+    #do log file rotation here
     open("static/logfile.txt","w").close()
     return redirect(url_for('logfile'))
 
