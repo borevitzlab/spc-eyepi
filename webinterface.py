@@ -69,7 +69,7 @@ def restart():
 def update():
     os.system("git fetch --all")
     os.system("git reset --hard origin/master")
-    return '<script type="text/javascript" function(){document.location.reload(true);},120000);</script>updating...'
+    return '<html><head><script type="text/javascript" function(){document.location.reload(true);},60000);</script></head><body>UPDATING!! WAIT PLEASE!!</body></html>'
 
 @app.route("/adduser", methods=['GET','POST'])
 @requires_auth
