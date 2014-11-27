@@ -12,11 +12,10 @@ example_filename = 'example.ini'
 
 app = Flask(__name__, static_url_path='/static')
 app.debug = True
-"""This is to test my new method of updating!!!"""
 
-def sanitizeconfig(towriteconfig):
+def sanitizeconfig(towriteconfig, filename):
     print "do checking here"
-    with open(config_filename, 'wb') as configfile:
+    with open(filename, 'wb') as configfile:
         towriteconfig.write(configfile)
 
 def check_auth(username, password):
@@ -159,7 +158,7 @@ def right():
                 aconfig.set(sect,opt,value)
                 print "changed: "+sect+':'+opt+':'+value
         try:
-            sanitizeconfig(aconfig)
+            sanitizeconfig(aconfig, otherconfig_filename)
             return redirect(url_for('index'))
         except Exception as e:
             abort(400)
@@ -181,11 +180,11 @@ def left():
                 aconfig.set(sect,opt,value)
                 print "changed: "+sect+':'+opt+':'+value
         try:
-            sanitizeconfig(aconfig)
+            sanitizeconfig(aconfig, config_filename)
             return redirect(url_for('index'))
         except Exception as e:
             abort(400)
-    
+
 @app.route('/', methods=['GET','POST'])
 @requires_auth
 def index():
