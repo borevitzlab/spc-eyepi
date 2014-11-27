@@ -22,11 +22,24 @@ def sanitizeconfig(towriteconfig):
     
 def check_auth(username, password):
     db = anydbm.open('db', 'r')
-    m = Crypto.Protocol.KDF.PBKDF2(password=str(password),salt=str(username),count=100)
-    if m==db[username]:
-        return True
-        db.close()
+    if str(username) in db:
+        m = Crypto.Protocol.KDF.PBKDF2(password=str(password),salt=str(username),count=100)
+        if m==db[str(username)]:
+            db.close()
+            return True
+        else:
+            return False
     db.close()
+
+def add_user(username, password):
+    hash = Crypto.Protocol.KDF.PBKDF2(password=str(password),salt=str(username),count=100)
+    db = anydbm.open('db', 'c')
+    if str(username) not in db:
+        print "Assdfasfdasdf"
+        db[str(username)] = hash
+        return True
+    else:
+        return False
 
 def requires_auth(f):
     @wraps(f)
@@ -59,10 +72,42 @@ def update():
     os.system("git fetch --all")
     os.system("git reset --hard origin/master")
     return '<script type="text/javascript" function(){document.location.reload(true);},120000);</script>updating...'
-    
+
+@app.route("/adduser", methods=['GET','POST'])
+@requires_auth
+def adduser():
+    returnstring = "<html><head><link rel='shortcut icon' href='/static/favicon.ico' type='image/x-icon'> <link rel='icon' href='/static/favicon.ico' type='image/x-icon'></head>\
+<body style='color:yellow;width:100%;font-family:\"Times New Roman\"\, Times, serif;' bgcolor=\"#0000FF\"><div style='display:block;'><img src='/static/fpimg.png' style='float:left;width:10%;'></img><h1 style='display:inline;float:left;width:79%;'><marquee behaviour='alternate'>Configuration Page for "+socket.gethostname()+"</marquee></h1><img src='/static/fpimg.png' style='float:right;width:10%;'></img></div>\
+<br><br>"
+    returnstring+="<form action=/adduser method=POST>"
+    returnstring+="<br><input type='text' name='username' placeholder='username:'>"
+    returnstring+="<br><input type='password' name='password' placeholder='password:'>"
+    returnstring += "<button>SUBMIT</button></form>"
+    if request.method == 'POST':
+        username = None
+        password = None
+        for key, value in request.form.iteritems(multi=True):
+            print "key:" + key + "   value: "+ value
+            if key == "username":
+                username = value
+            if key == "password":
+                password = value
+        if len(username)>0 and len(password)>5:
+            if add_user(username, password):
+                returnstring += "SUCCESS"
+            else:
+                returnstring += "Something went wrong. Are you trying to change a user that already exists?"
+        else:
+            returnstring+="<p>you didnt enter something, try again<p>"
+            
+
+    returnstring += "</body></html>"
+    return returnstring
+
+
 def createform(position, configfile, example):
     returnstring = "<script type='text/javascript'>function sa(s){var d=document.getElementById('h'+s);d.style.display=d.style.display!='none'?'none':'block';};</script> \
-<div style='background-color:#2E9AFE; padding:1%;border:2px solid; box-shadow:0px 0px 30px black;border-radius:3px;width:47%;float:"+position+";'>"
+<div style='background-color:#2E9AFE; padding:1%;border:2px solid; box-shadow:0px 0px 30px black;margin:5px;border-radius:3px;width:45%;float:"+position+";'>"
     returnstring +="<h3>"+configfile +"</h3>"
     if position == "left":returnstring += "<a href="+ url_for('lastimage')+">"+"LAST IMAGE</a>"
     else: returnstring += "<a href="+ url_for('lastpicam')+">"+"LAST IMAGE</a>"
@@ -149,7 +194,7 @@ def index():
     example = SafeConfigParser()
     example.read(example_filename)
     returnstring = "<html><head><link rel='shortcut icon' href='/static/favicon.ico' type='image/x-icon'> <link rel='icon' href='/static/favicon.ico' type='image/x-icon'></head> \
-<body style='color:yellow;width:100%;font-family:\"Times New Roman\"\, Times, serif;' bgcolor=\"#0000FF\"><div style='display:block;'><img src='/static/fpimg.png' style='float:left;width:10%;'></img><h1 style='display:inline;float:left;width:79%;'><marquee behaviour='alternate'>Configuration Page for "+socket.gethostname()+"</marquee></h1><img src='/static/fpimg.png' style='float:right;width:10%;'></img></div>\
+<body style='margin-left:auto;margin-right:auto;color:yellow;width:98%;font-family:\"Times New Roman\"\, Times, serif;' bgcolor=\"#0000FF\"><div style='display:block;'><img src='/static/fpimg.png' style='float:left;width:10%;'></img><h1 style='display:inline;float:left;width:79%;'><marquee behaviour='alternate'>Configuration Page for "+socket.gethostname()+"</marquee></h1><img src='/static/fpimg.png' style='float:right;width:10%;'></img></div>\
 <br><br><form style='text-align:center;' action=restart><button>REBOOT</button></form><br><a style='text-align:center;' href="+ url_for('logfile')+">"+"LOG</a><br><br>"
     returnstring += createform("left", config_filename, example)
     returnstring += createform("right", otherconfig_filename, example)
