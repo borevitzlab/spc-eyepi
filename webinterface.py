@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import socket, os, hashlib
+import socket, os, hashlib, subprocess
 import Crypto.Protocol.KDF
 import anydbm
 from functools import wraps
@@ -10,17 +10,18 @@ config_filename = 'eyepi.ini'
 otherconfig_filename = 'picam.ini'
 example_filename = 'example.ini'
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 app.debug = True
 
 def sanitizeconfig(towriteconfig):
     print "do checking here"
     with open(config_filename, 'wb') as configfile:
         towriteconfig.write(configfile)
-        
+
+    
 def check_auth(username, password):
     db = anydbm.open('db', 'r')
-    m = Crypto.Protocol.KDF.PBKDF2(password=str(password),salt=str(username),count=10000)
+    m = Crypto.Protocol.KDF.PBKDF2(password=str(password),salt=str(username),count=100)
     if m==db[username]:
         return True
         db.close()
@@ -36,18 +37,31 @@ def requires_auth(f):
     return decorated
         
 def authenticate():
-    return Response('Access DENIED!, Please log in:',401,{'WWW-Authenticate':'Basic realm="Login Required"'})
+    return Response('Access DENIED!',401,{'WWW-Authenticate':'Basic realm="Login Required"'})
 
+@app.route('/rotatelogfile')
+@requires_auth
+def rotatelogfile():
+    open("static/logfile.txt","w").close()
+    return redirect(url_for('logfile'))
 
 @app.route('/restart')
+@requires_auth
 def restart():
-            #
     print "shutting down"
     os.system("reboot")
     return redirect(url_for('index'))
 
+@app.route("/update")
+@requires_auth
+def update():
+    os.system("git fetch --all")
+    os.system("git reset --hard origin/master")
+    return '<script type="text/javascript" function(){document.location.reload(true);},120000);</script>updating...'
+    
 def createform(position, configfile, example):
-    returnstring = "<script type='text/javascript'> function sa(s){var d=document.getElementById('h'+s);d.style.display=d.style.display!='none'?'none':'block';};</script> <div style='padding:10px;border:2px solid;border-radius:3px;width:47%;float:"+position+";'>"
+    returnstring = "<script type='text/javascript'>function sa(s){var d=document.getElementById('h'+s);d.style.display=d.style.display!='none'?'none':'block';};</script> \
+<div style='background-color:#2E9AFE; padding:1%;border:2px solid; box-shadow:0px 0px 30px black;border-radius:3px;width:47%;float:"+position+";'>"
     returnstring +="<h3>"+configfile +"</h3>"
     if position == "left":returnstring += "<a href="+ url_for('lastimage')+">"+"LAST IMAGE</a>"
     else: returnstring += "<a href="+ url_for('lastpicam')+">"+"LAST IMAGE</a>"
@@ -84,8 +98,8 @@ def createform(position, configfile, example):
     return returnstring
 
 @app.route('/right', methods=['GET','POST'])
+@requires_auth
 def right():
-    
     aconfig = SafeConfigParser()
     aconfig.read(otherconfig_filename)
     aconfig.set("camera","enabled","off")
@@ -107,6 +121,7 @@ def right():
             abort(400)
 
 @app.route('/left', methods=['GET','POST'])
+@requires_auth
 def left():
     aconfig = SafeConfigParser()
     aconfig.read(config_filename)
@@ -126,35 +141,39 @@ def left():
             return redirect(url_for('index'))
         except Exception as e:
             abort(400)
-
     
 @app.route('/', methods=['GET','POST'])
 @requires_auth
 def index():
     example = SafeConfigParser()
     example.read(example_filename)
-    returnstring = "<html><body><h1><marquee behaviour='alternate'>Configuration Page for "+socket.gethostname()+"</marquee></h1><form action=restart><button>REBOOT</button></form><br>"
+    returnstring = "<html><head><link rel='shortcut icon' href='/static/favicon.ico' type='image/x-icon'> <link rel='icon' href='/static/favicon.ico' type='image/x-icon'></head> \
+<body style='color:yellow;width:100%;font-family:\"Times New Roman\"\, Times, serif;' bgcolor=\"#0000FF\"><div style='display:block;'><img src='/static/fpimg.png' style='float:left;width:10%;'></img><h1 style='display:inline;float:left;width:79%;'><marquee behaviour='alternate'>Configuration Page for "+socket.gethostname()+"</marquee></h1><img src='/static/fpimg.png' style='float:right;width:10%;'></img></div>\
+<br><br><form style='text-align:center;' action=restart><button>REBOOT</button></form><br><a style='text-align:center;' href="+ url_for('logfile')+">"+"LOG</a><br><br>"
     returnstring += createform("left", config_filename, example)
     returnstring += createform("right", otherconfig_filename, example)
+    returnstring += "</body></html>"
     return returnstring
 
 @app.route("/lastimage")
 def lastimage():
     config = SafeConfigParser()
     config.read(config_filename)
-    return '<META HTTP-EQUIV="EXPIRES" CONTENT="Mon, 22 Jul, 2002 12:00:00 GMT"><html><script type="text/javascript">window.setTimeout(function(){document.location.reload(true);},'+str(float(config.get("timelapse","interval"))*1000)+');</script><body><img src='+ url_for("static",filename="dslr_last_image.jpg")+'></img></body></html>'
+    return '<META HTTP-EQUIV="EXPIRES" CONTENT="Mon, 22 Jul, 2002 12:00:00 GMT"><html>\
+<script type="text/javascript">window.setTimeout(function(){document.location.reload(true);},'+str(float(config.get("timelapse","interval"))*1000)+');</script>\
+<body><img src='+ url_for("static",filename="temp/dslr_last_image.jpg")+'></img></body></html>'
 
 @app.route("/dslr_last_image.jpg")
 def DSLR_last_image():
-    if os.path.isfile("static/dslr_last_image.jpg"):
-        return send_file("static/dslr_last_image.jpg")
+    if os.path.isfile("static/temp/dslr_last_image.jpg"):
+        return send_file("static/temp/dslr_last_image.jpg")
     else:
         abort(404)
 
 @app.route("/pi_last_image.jpg")
 def PI_last_image():
-    if os.path.isfile("static/pi_last_image.jpg"):
-        return send_file("static/pi_last_image.jpg")
+    if os.path.isfile("static/temp/pi_last_image.jpg"):
+        return send_file("static/temp/pi_last_image.jpg")
     else:
         abort(404)
 
@@ -162,9 +181,21 @@ def PI_last_image():
 def lastpicam():
     config = SafeConfigParser()
     config.read(otherconfig_filename)
-    return '<META HTTP-EQUIV="EXPIRES" CONTENT="Mon, 22 Jul, 2002 12:00:00 GMT"><script type="text/javascript">window.setTimeout(function(){document.location.reload(true);},'+str(float(config.get("timelapse","interval"))*1000)+');</script><img src="' + url_for("static",filename="pi_last_image.jpg")+'></div>'
+    return '<META HTTP-EQUIV="EXPIRES" CONTENT="Mon, 22 Jul, 2002 12:00:00 GMT"><html>\
+<script type="text/javascript">window.setTimeout(function(){document.location.reload(true);},'+str(float(config.get("timelapse","interval"))*1000)+');</script>\
+<body><img src='+ url_for("static",filename="temp/pi_last_image.jpg")+'></img></body></html>'
 
-
+@app.route("/logfile")
+def logfile():
+    returnstring = "<html><head><link rel='shortcut icon' href='/static/favicon.ico' type='image/x-icon'> <link rel='icon' href='/static/favicon.ico' type='image/x-icon'></head> \
+<body style='color:yellow;width:100%;font-family:\"Times New Roman\"\, Times, serif;' bgcolor=\"#0000FF\"><div style='display:block;'><img src='/static/fpimg.png' style='float:left;width:10%;'></img><h1 style='display:inline;float:left;width:79%;'><marquee behaviour='alternate'>Configuration Page for "+socket.gethostname()+"</marquee></h1><img src='/static/fpimg.png' style='float:right;width:10%;'></img></div>\
+<br><br><form style='text-align:center;' action=restart><button>ROTATE</button></form><br>"
+    with open("static/logfile.txt",'r') as file:
+        for line in file:
+            returnstring += line.strip() + '<br>\n'
+    returnstring += "</body></html>"
+    
+    return returnstring
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
 
