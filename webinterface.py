@@ -12,6 +12,7 @@ example_filename = 'example.ini'
 
 app = Flask(__name__, static_url_path='/static')
 app.debug = True
+"""This is to test my new method of updating!!!"""
 
 def sanitizeconfig(towriteconfig):
     print "do checking here"
