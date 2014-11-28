@@ -234,18 +234,27 @@ def lastpicam():
 <script type="text/javascript">window.setTimeout(function(){document.location.reload(true);},'+str(float(config.get("timelapse","interval"))*1000)+');</script>\
 <body><img src='+ url_for("static",filename="temp/pi_last_image.jpg")+'></img></body></html>'
 
-@app.route("/logfile")
-def logfile():
-    returnstring = "<html><head><link rel='shortcut icon' href='/static/favicon.ico' type='image/x-icon'> <link rel='icon' href='/static/favicon.ico' type='image/x-icon'></head> \
-<body style='color:yellow;width:100%;font-family:\"Times New Roman\"\, Times, serif;' bgcolor=\"#0000FF\"><div style='display:block;'><img src='/static/fpimg.png' style='float:left;width:10%;'></img><h1 style='display:inline;float:left;width:79%;'><marquee behaviour='alternate'>Configuration Page for "+socket.gethostname()+"</marquee></h1><img src='/static/fpimg.png' style='float:right;width:10%;'></img></div>\
-<br><br><form style='text-align:center;' action=rotatelogfile><button>ROTATE</button></form><br>"
+@app.route("/getlog")
+def getlog():
+    returnstring = ""
     with open("static/logfile.txt",'r') as file:
         lines=[]
         for line in file:
             lines.append(line)
         for line in reversed(lines):
             returnstring += line.strip() + '<br>\n'
-    returnstring += "</body></html>"
+    return returnstring
+
+@app.route("/logfile")
+def logfile():
+    returnstring = "<html><head><link rel='shortcut icon' href='/static/favicon.ico' type='image/x-icon'> <link rel='icon' href='/static/favicon.ico' type='image/x-icon'></head> \
+<body style='color:yellow;width:100%;font-family:\"Times New Roman\"\, Times, serif;' bgcolor=\"#0000FF\"><div style='display:block;'><img src='/static/fpimg.png' style='float:left;width:10%;'></img><h1 style='display:inline;float:left;width:79%;'><marquee behaviour='alternate'>Configuration Page for "+socket.gethostname()+"</marquee></h1><img src='/static/fpimg.png' style='float:right;width:10%;'></img></div>\
+<br><br><form style='text-align:center;' action=rotatelogfile><button>ROTATE</button></form><br><script type='text/javascript>\
+window.setInterval(function(){\
+$('#changeme').load('getlog'); \
+},5000);\
+</script>'<div id='changme'>"
+    returnstring += "</div<</body></html>"
     
     return returnstring
 if __name__ == "__main__":

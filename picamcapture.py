@@ -169,7 +169,7 @@ if __name__ == "__main__":
                     # Delay between shots
                     if next_capture.time() < timestopat:
                         logger.debug("Next capture at %s" % next_capture.isoformat())
-                   else:
+                    else:
                         logger.info("Capture will stop at %s" % timestopat.isoformat())
                 except Exception, e:
                     logger.error("Image Capture error - " + str(e))
