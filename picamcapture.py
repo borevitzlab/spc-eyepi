@@ -66,7 +66,7 @@ def setup(dump_values = False):
 
     if not os.path.exists(imagedir):
         # All images stored in their own seperate directory
-        logger.info("Creating Image Storage directory %s" % imagedir)
+        logger.debug("Creating spooler storage directory %s" % imagedir)
         os.makedirs(imagedir)
     else:
         for the_file in os.listdir(imagedir):
@@ -80,7 +80,7 @@ def setup(dump_values = False):
 
 
     if not os.path.exists(copydir):
-        logger.info("creating copyfrom dir %s" % copydir)
+        logger.debug("creating copyfrom dir %s" % copydir)
         os.makedirs(copydir)
     else:
         for the_file in os.listdir(copydir):
@@ -117,7 +117,7 @@ if __name__ == "__main__":
 
     try:
         (options, args) = parser.parse_args()
-
+        configmodify = None
         setup()
 
         # Check command line arguments
@@ -141,7 +141,10 @@ if __name__ == "__main__":
                 next_capture=tn+datetime.timedelta(seconds=timebetweenshots)
             if tn<birthday:
                 logger.info("my creator hasnt been born yet")
-                
+            if os.stat(config_filename).st_mtime!=configmodify:
+                configmodify = os.stat(config_filename).st_mtime
+                setup()
+                logger.debug("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
             if (tn>birthday) and (tn>=next_capture) and (tn.time() > timestartfrom) and (tn.time() < timestopat) and (config.get("camera","enabled")=="on"):
 
                 next_capture += datetime.timedelta(seconds = timebetweenshots)
@@ -163,7 +166,7 @@ if __name__ == "__main__":
                         logger.info("saving timestamped image for you, buddy")
                         os.rename(image_file ,os.path.join(copydir,os.path.basename(image_file))) 
                     else:
-                        logger.info("deleting file")
+                        logger.info("deleting filew buddy")
                         os.remove(file)
                     logger.info("Image Captured and stored - %s" % os.path.basename(image_file))
                     # Delay between shots

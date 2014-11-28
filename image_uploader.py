@@ -15,7 +15,7 @@ from optparse import OptionParser
 # Global configuration variables
 config_filename = 'eyepi.ini'
 imagedir = "images"
-timeinterval = 30
+timeinterval = 10
 uploadtimedelay = 1
 
 
@@ -198,8 +198,6 @@ def sftpuploadtracker(transferred, total):
         percentage = round((transferred / total)*100)
         sys.stderr.write('\r[{0}] {1}%'.format('.'*int(percentage),int(percentage)))
         sys.stderr.flush()
-            
-    
 
 if __name__ == "__main__":
     usage = "usage: %prog [options] arg"
@@ -208,7 +206,7 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
     
-
+    configmodify = None
     
     logger.info("Program Startup")
     config = SafeConfigParser()
@@ -217,15 +215,24 @@ if __name__ == "__main__":
     user = config.get("ftp","user")
     passwd = config.get("ftp","pass")
 
-    uploaddir = config.get("ftp", "directory")# + config.get("camera","name")
+    uploaddir = config.get("ftp", "directory")
     cameraname = config.get("camera","name")
     imagedir = config.get("copying","directory")
 
     last_upload = None
     while True:
-        
         try:
-
+            
+            if os.stat(config_filename).st_mtime!=configmodify:
+                configmodify = os.stat(config_filename).st_mtime
+                config.read(config_filename)
+                hostname = config.get("ftp","server")
+                user = config.get("ftp","user")
+                passwd = config.get("ftp","pass")
+                uploaddir = config.get("ftp", "directory")
+                cameraname = config.get("camera","name")
+                imagedir = config.get("copying","directory")
+                logger.debug("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
             upload_list = glob.glob(os.path.join(imagedir,'*'))
             s = socket(AF_INET, SOCK_DGRAM)
             s.connect(("www.google.com",0))

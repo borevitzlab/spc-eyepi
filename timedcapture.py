@@ -190,7 +190,7 @@ if __name__ == "__main__":
         ok = True
         c = None
         next_capture = datetime.datetime.now()
-
+        configmodify = None
         while (ok):
             
             if c == None:
@@ -205,7 +205,11 @@ if __name__ == "__main__":
                     else:
                         logger.debug("Camera not connected/powered - " + str(e))
 
-
+            if os.stat(config_filename).st_mtime!=configmodify:
+                configmodify = os.stat(config_filename).st_mtime
+                setup()
+                logger.debug("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
+                
             tn = datetime.datetime.now()
             birthday = datetime.datetime(1990, 07,17,12,12,12,13)
             if tn-next_capture > datetime.timedelta(seconds = timebetweenshots*4):

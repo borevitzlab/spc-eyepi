@@ -202,7 +202,7 @@ def sftpuploadtracker(transferred, total):
 
 if __name__ == "__main__":
     usage = "usage: %prog [options] arg"
-
+    configmodify = None
     parser = OptionParser(usage)
 
     (options, args) = parser.parse_args()
@@ -213,11 +213,23 @@ if __name__ == "__main__":
     hostname = config.get("ftp","server")
     user = config.get("ftp","user")
     passwd = config.get("ftp","pass")
-    uploaddir = config.get("ftp", "directory")# + config.get("camera","name")
+    uploaddir = config.get("ftp", "directory")
     cameraname = config.get("camera","name")
     imagedir = config.get("copying","directory")
+    configmodify = None
     while True:
         try:
+            if os.stat(config_filename).st_mtime != configmodify:
+                configmodify = os.stat(config_filename).st_mtime
+                config.read(config_filename)
+                hostname = config.get("ftp","server")
+                user = config.get("ftp","user")
+                passwd = config.get("ftp","pass")
+                uploaddir = config.get("ftp", "directory")
+                cameraname = config.get("camera","name")
+                imagedir = config.get("copying","directory")
+                logger.debug("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
+
             upload_list = glob.glob(os.path.join(imagedir,'*'))
             if (len(upload_list) > 0) and config.get("ftp","uploaderenabled")=="on":
                 s = socket(AF_INET, SOCK_DGRAM)
