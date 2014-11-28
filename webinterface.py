@@ -14,7 +14,7 @@ app = Flask(__name__, static_url_path='/static')
 app.debug = True
 
 global version
-version = "1.6.2"
+version = "1.6.3"
 
 def sanitizeconfig(towriteconfig, filename):
     print "do checking here"
@@ -247,18 +247,18 @@ def getlog():
 
 @app.route("/logfile")
 def logfile():
-    returnstring = "<html><head><link rel='shortcut icon' href='/static/favicon.ico' type='image/x-icon'> <link rel='icon' href='/static/favicon.ico' type='image/x-icon'></head> \
+    returnstring = "<html><head><script type='text/javascript' src='//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'></script><link rel='shortcut icon' href='/static/favicon.ico' type='image/x-icon'> <link rel='icon' href='/static/favicon.ico' type='image/x-icon'></head> \
 <body style='color:yellow;width:100%;font-family:\"Times New Roman\"\, Times, serif;' bgcolor=\"#0000FF\"><div style='display:block;'><img src='/static/fpimg.png' style='float:left;width:10%;'></img><h1 style='display:inline;float:left;width:79%;'><marquee behaviour='alternate'>Configuration Page for "+socket.gethostname()+"</marquee></h1><img src='/static/fpimg.png' style='float:right;width:10%;'></img></div>\
 <br><br><form style='text-align:center;' action=rotatelogfile><button>ROTATE</button></form><br>"
-    returnstring += "<div id='changeme'></div>"
+    returnstring += "<br><br><div id='changeme'></div>"
     returnstring += "<script type='text/javascript'>\
 window.setInterval(function(){\
- document.getElementById('changeme').innerHTML = \'"+getlog()+"\'\
+ $.get('getlog').then(function(responseData){$('#changeme').html(responseData);});\
 },2000);\
 </script>"
     returnstring += "</body></html>"
-    
     return returnstring
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
 
