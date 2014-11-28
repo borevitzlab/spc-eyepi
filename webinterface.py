@@ -13,9 +13,6 @@ example_filename = 'example.ini'
 app = Flask(__name__, static_url_path='/static')
 app.debug = True
 
-global version
-version = "1.6.3"
-
 def sanitizeconfig(towriteconfig, filename):
     print "do checking here"
     with open(filename, 'wb') as configfile:
@@ -192,6 +189,7 @@ def left():
 @requires_auth
 def index():
     example = SafeConfigParser()
+    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
     example.read(example_filename)
     returnstring = "<html><head><link rel='shortcut icon' href='/static/favicon.ico' type='image/x-icon'> <link rel='icon' href='/static/favicon.ico' type='image/x-icon'></head> \
 <body style='margin-left:auto;margin-right:auto;color:yellow;width:98%;font-family:\"Times New Roman\"\, Times, serif;' bgcolor=\"#0000FF\"><div style='display:block;'><img src='/static/fpimg.png' style='float:left;width:10%;'></img><h1 style='display:inline;float:left;width:79%;'><marquee behaviour='alternate'>Configuration Page for "+socket.gethostname()+"</marquee></h1><img src='/static/fpimg.png' style='float:right;width:10%;'></img></div>\
