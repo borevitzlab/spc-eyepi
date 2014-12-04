@@ -1,7 +1,6 @@
 #!/usr/bin/python
 import os, subprocess, sys, platform
 import datetime, time, shutil
-
 import pysftp as sftp
 import logging, logging.config
 import shutil
@@ -22,6 +21,7 @@ copydir = "copying"
 convertcmdline1 = "dcraw -q 0 -w -H 5 -b 8 %s"
 convertcmdline2 = "convert %s %s"
 convertcmdline3 = "convert %s -resize 800x600 %s"
+#Acceptable filtypes, DONT INCLUDE JPG!!!
 filetypes = ["CR2","RAW","NEF"]
 
 
@@ -122,6 +122,8 @@ def timestamped_imagename(timen):
 def convertCR2Jpeg(filename):
     """
     Convert a .CR2 file to jpeg
+    This process is impractical due to the raspberry pis low processing power
+    This code is left in, legacy. Will be removed soon.
     """
 
     global convertcmdline1, convertcmdline2
@@ -168,7 +170,10 @@ def convertCR2Jpeg(filename):
 
 
 if __name__ == "__main__":
-
+    """
+    The main loop for capture 
+    TODO: Objectify camera object and incorporate picam, threading etc.
+    """
     usage = "usage: %prog [options] arg"
     parser = OptionParser(usage)
     try:
@@ -189,33 +194,30 @@ if __name__ == "__main__":
 
         ok = True
         c = None
+        # need to set next capture time to now for increments.
         next_capture = datetime.datetime.now()
-        configmodify = None
+        # this is to test and see if the config has been modified
+        configmodified = None
         while (ok):
-            
-            if c == None:
-                try:
-                    a = 0
-                    # Camera object not yet initialised
-                    #camera_fs_unmount()
-                    #c = eyepi.camera()
-                except Exception, e:
-                    if (tn > timestartfrom) and (tn < timestopat):
-                        logger.error("Camera not conneted/powered - " + str(e))
-                    else:
-                        logger.debug("Camera not connected/powered - " + str(e))
 
-            if os.stat(config_filename).st_mtime!=configmodify:
-                configmodify = os.stat(config_filename).st_mtime
+            # testing for the config modification
+            if os.stat(config_filename).st_mtime!=configmodified:
+                configmodified = os.stat(config_filename).st_mtime
+                # Resetup()
                 setup()
                 logger.debug("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
-                
+            
+            # set a timenow
             tn = datetime.datetime.now()
+            # This is used to check and see if the date is smething ridiculous.
             birthday = datetime.datetime(1990, 07,17,12,12,12,13)
+            # check if the next capture period is within 4 intervals of the time now, if not set it to timenow + interval.
             if tn-next_capture > datetime.timedelta(seconds = timebetweenshots*4):
-                next_capture=tn+datetime.timedelta(seconds=timebetweenshots)
+                next_capture=tn+datetime.timedelta(seconds = timebetweenshots)
+            # Log if the time isn't sane yet (needs to get it from ntpdate)
             if tn<birthday:
                 logger.info("my creator hasnt been born yet")
+            # checking if enabled and other stuff
             if (tn>birthday) and (tn>=next_capture) and (tn.time() > timestartfrom) and (tn.time() < timestopat) and (config.get("camera","enabled")=="on"):
                 try:
                      # The time now is within the operating times
@@ -223,59 +225,85 @@ if __name__ == "__main__":
                     if next_capture:
                         logger.info("time now %s" % tn.isoformat())
                         logger.info("this capture at - %s" % next_capture.isoformat())
+
+                    # increment next_capture by increment
+                    # this causes less drift than adding increment to datetime.datetime.now() 
                     next_capture += datetime.timedelta(seconds = timebetweenshots)
-                    logger.info("next capture at - %s" % next_capture.isoformat())
+
+                    # setting variables for saving files
                     raw_image = timestamped_imagename(tn)
                     jpeg_image = timestamped_imagename(tn)[:-4]+".jpg"
-                    #No conversion needed, just take 2 files, 1 jpeg and 1 raw
-                    # using this way of capturing is more risky than just calling "gphoto --capture-and-download"
+                    
+                    """
+                    TODO:
+                    1. check for the camera capture settings/config file and set cmd accordingly to JPEG+RAW or JPEG or RAW
+                    1.1 look at "--capture-tethered" to do either
+                    2. put other camera settings in another call to setup camera (iso, aperture etc) using gphoto2 --set-config
+                    """
 
+                    # use this command to capture only jpeg/only raw (can only download one file, apparently)
+                                         
                     cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(imagedir, os.path.splitext(raw_image)[0])+".%C'"]
-                    #cmd for RAW+JPEG
+                    
+                    """
+                     No conversion needed, just take 2 files, 1 jpeg and 1 raw
+                     using this way of capturing is more risky than just calling "gphoto --capture-and-download"
+                     cmd for RAW+JPEG
+                    """
                     #cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image --wait-event-and-download=13s --filename='"+os.path.join(imagedir, os.path.splitext(raw_image)[0])+".%C'"]
+                    # subprocess.call. shell=True is hellishly insecure and doesn't throw an error if it fails. Needs to be fixed somehow <shrug>
                     subprocess.call(cmd, shell=True)
+
+
                     logger.info("Capture Complete")
-                    logger.info("Moving and renaming image files, buddy");
+                    logger.info("Moving and renaming image files, buddy")
+
+                    # glob together all filetypes in filetypes array
                     files = glob(os.path.join(imagedir,"*.jpg"))
                     for filetype in filetypes:
                         files.extend(glob(os.path.join(imagedir,"*."+filetype)))
 
+                    # copying/renaming for files
                     for file in files:
+                        # get the extension and basename
                         ext = os.path.splitext(file)[-1].lower()
                         name = os.path.splitext(raw_image)[0]
+                        # copy jpegs to the static web dir, and to the upload dir (if upload webcam flag is set)
                         if ext == ".jpeg" or ".jpg":
+                            # best to create a symlink to /dev/shm/ from static/
                             shutil.copy(file,os.path.join("static", "dslr_last_image.jpg"))
                             if config.get("ftp","uploadwebcam") == "on":
                                 shutil.copy(file,os.path.join(copydir, "dslr_last_image.jpg"))
+                        # move timestamped image te be uploaded
                         if config.get("ftp","uploadtimestamped")=="on":
                             logger.info("saving timestamped image for you, buddy")
                             os.rename(file, os.path.join(copydir, os.path.basename(name+ext)))
                         else:
-                            logger.info("deleting file")
+                            logger.info("deleting file, eh")
                             os.remove(file)
                         logger.info("Captured and stored - %s" % os.path.basename(name+ext))
                         
-                    # image resizing, too processor intensive to do on a pi
+                    # image resizing, too processor intensive to do on a pi, code left in for legacy for now.
                     #try:
                     #   os.system(convertcmdline3 % (jpeg_image, os.path.join("static", "dslr_last_imag$
                     #except Exception as e:
                     #   x logger.error("Sorry, I had an error: %s" % str(e))
                     
-                    # Delay between shots
+                    # Log Delay/next shots
                     if next_capture.time() < timestopat:
                         logger.debug("Next capture at %s" % next_capture.isoformat())
                     else:
                         logger.info("Capture will stop at %s" % timestopat.isoformat())
+
                 except Exception, e:
                     next_capture = datetime.datetime.now()
+                    # TODO: This needs to catch errors from subprocess.call because it doesn't
                     logger.error("Image Capture error - " + str(e))
-                    c = None
 
             # If the user has specified 'once' then we can stop now
             if (len(args)>0) and (args[0].lower() == "once"):
                 break
 
-            
             time.sleep(0.01)
 
     except KeyboardInterrupt:
