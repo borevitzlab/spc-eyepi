@@ -73,6 +73,7 @@ def getmakeserveripaddressFTP(thisip,hostname,cameraname,uploaddir,user,passwd):
             ftp.retrlines('RETR ipaddress.html', files.append)
             serversip = files[0]
             logger.info("IP on server %s" % serversip)
+            ftp.quit()
         except Exception as e:
             logger.info("Storing new ip on server")
             unicodeip = unicode(thisip)
@@ -80,6 +81,7 @@ def getmakeserveripaddressFTP(thisip,hostname,cameraname,uploaddir,user,passwd):
             file = io.BytesIO(unicodeip.encode("utf-8"))
             ftp.storbinary('STOR ipaddress.html',file)
             serversip = thisip
+            ftp.quit()
             return serversip
         if serversip != thisip:
             logger.info("new IP, updating the ip, eh")
@@ -88,6 +90,7 @@ def getmakeserveripaddressFTP(thisip,hostname,cameraname,uploaddir,user,passwd):
             file = io.BytesIO(unicodeip.encode("utf-8"))
             ftp.storbinary('STOR ipaddress.html',file)
             serversip = thisip
+            ftp.quit()
             return serversip
     except Exception as e:
         logger.error(str(e))
@@ -111,7 +114,6 @@ def sftpUpload(filenames, hostname, cameraname, uploaddir, user, passwd):
             sys.stderr.write("\n")
         logger.debug("Disconnecting, eh")
         link.close()
-        
     except Exception as e:
         logger.error(str(e))
         return False
