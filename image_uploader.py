@@ -223,7 +223,6 @@ if __name__ == "__main__":
     last_upload = None
     while True:
         try:
-            
             if os.stat(config_filename).st_mtime!=configmodify:
                 configmodify = os.stat(config_filename).st_mtime
                 config.read(config_filename)
@@ -232,23 +231,24 @@ if __name__ == "__main__":
                 passwd = config.get("ftp","pass")
                 target_directory = config.get("ftp", "directory")
                 cameraname = config.get("camera","name")
-                upload_directory = config.get("copying","directory")
+                upload_directory = config.get("localfiles","upload_dir")
                 logger.debug("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
-            upload_list = glob.glob(os.path.join(imagedir,'*'))
+            upload_list = glob.glob(os.path.join(upload_directory,'*'))
             s = socket(AF_INET, SOCK_DGRAM)
             s.connect(("www.google.com",0))
             ipaddress = s.getsockname()[0]
+            if (len(upload_list)==0):
+                logger.info("no files in upload directory")
             if (len(upload_list) > 0) and config.get("ftp","uploaderenabled")=="on":
-                
-
                 logger.debug("Pausing %d seconds to wait for files to be closed" % uploadtimedelay)
                 time.sleep(uploadtimedelay)
 
                 logger.debug("Preparing to upload %d files" % len(upload_list))
-                if not sftpUpload(upload_list, hostname, cameraname, uploaddir, user, passwd):
-                    ftpUpload(upload_list, hostname, cameraname, uploaddir, user, passwd)
+                if not sftpUpload(upload_list, hostname, cameraname, target_directory, user, passwd):
+                    ftpUpload(upload_list, hostname, cameraname, target_directory, user, passwd)
                 logger.debug("checking ip address on server, eh")
-                checkipaddressonserver(datetime.datetime.now(),ipaddress, hostname,cameraname,uploaddir,user,passwd)
+                checkipaddressonserver(datetime.datetime.now(),ipaddress, hostname,cameraname,target_directory,user,passwd)
+            logger.info("Waiting %d secs to check directories again" % timeinterval)
             time.sleep(timeinterval)
 
         except Exception as e:

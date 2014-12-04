@@ -20,7 +20,7 @@ convertcmdline1 = "dcraw -q 0 -w -H 5 -b 8 %s"
 convertcmdline2 = "convert %s %s"
 convertcmdline3 = "convert %s -resize 800x600 %s"
 #Acceptable filtypes, DONT INCLUDE JPG!!!
-filetypes = ["CR2","RAW","NEF"]
+filetypes = ["CR2","RAW","NEF","JPG"]
 
 
 # We can't start if no config file
@@ -76,8 +76,8 @@ def setup(dump_values = False):
         logger.info("Creating Image Storage directory %s" % spool_dir)
         os.makedirs(spool_dir)
     else:
-        for the_file in os.listdir(imagedir):
-            file_path =os.path.join(imagedir, the_file)
+        for the_file in os.listdir(spool_dir):
+            file_path =os.path.join(spool_dir, the_file)
             try:
                 if os.path.isfile(file_path):
                     os.unlink(file_path)
@@ -85,12 +85,12 @@ def setup(dump_values = False):
             except Exception, e:
                 logger.error("Sorry, buddy! Couldn't delete the files in spool, eh! Error: %s" % e)
 
-    if not os.path.exists(copydir):
+    if not os.path.exists(upload_dir):
         logger.info("creating copyfrom dir %s" % copydir)
         os.makedirs(copydir)
     else:
-        for the_file in os.listdir(copydir):
-            file_path =os.path.join(copydir, the_file)
+        for the_file in os.listdir(upload_dir):
+            file_path =os.path.join(upload_dir, the_file)
             try:
                 if os.path.isfile(file_path):
                     #os.unlink(file_path)
@@ -113,9 +113,9 @@ def timestamp(tn):
 def timestamped_imagename(timen):
     """ Build the pathname for a captured image.
     """
-    global camera_name, imagedir
+    global camera_name, spool_dir
 
-    return os.path.join(imagedir, camera_name + '_' + timestamp(timen) + default_extension)
+    return os.path.join(spool_dir, camera_name + '_' + timestamp(timen) + default_extension)
 
 if __name__ == "__main__":
     
@@ -184,32 +184,23 @@ if __name__ == "__main__":
                     
                     
                     #TODO:
-                    #1. check for the camera capture settings/config file and set cmd accordingly to JPEG+RAW or JPEG or RAW
-                    #1.1 look at "--capture-tethered" to do either
+                    #1. check for the camera capture settings/config file
                     #2. put other camera settings in another call to setup camera (iso, aperture etc) using gphoto2 --set-config
-                    
 
-                    # use this command to capture only jpeg/only raw (can only download one file, apparently)
-                                         
+                    # No conversion needed, just take 2 files, 1 jpeg and 1 raw
                     cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(spool_dir, os.path.splitext(raw_image)[0])+".%C'"]
                     
-                    
-                    # No conversion needed, just take 2 files, 1 jpeg and 1 raw
-                    # using this way of capturing is more risky than just calling "gphoto --capture-and-download"
-                    # cmd for RAW+JPEG
-                    
-                    #cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image --wait-event-and-download=13s --filename='"+os.path.join(spool_dir, os.path.splitext(raw_image)[0])+".%C'"]
                     # subprocess.call. shell=True is hellishly insecure and doesn't throw an error if it fails. Needs to be fixed somehow <shrug>
                     subprocess.call(cmd, shell=True)
-
 
                     logger.info("Capture Complete")
                     logger.info("Moving and renaming image files, buddy")
 
                     # glob together all filetypes in filetypes array
-                    files = glob(os.path.join(spool_dir,"*.jpg"))
+                    files = []
                     for filetype in filetypes:
-                        files.extend(glob(os.path.join(spool_dir,"*."+filetype)))
+                        files.extend(glob(os.path.join(spool_dir,"*."+filetype.upper())))
+                        files.extend(glob(os.path.join(spool_dir,"*."+filetype.lower())))
 
                     # copying/renaming for files
                     for file in files:
