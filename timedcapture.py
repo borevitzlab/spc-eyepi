@@ -86,8 +86,8 @@ def setup(dump_values = False):
                 logger.error("Sorry, buddy! Couldn't delete the files in spool, eh! Error: %s" % e)
 
     if not os.path.exists(upload_dir):
-        logger.info("creating copyfrom dir %s" % copydir)
-        os.makedirs(copydir)
+        logger.info("creating copyfrom dir %s" % upload_dir)
+        os.makedirs(upload_dir)
     else:
         for the_file in os.listdir(upload_dir):
             file_path =os.path.join(upload_dir, the_file)
