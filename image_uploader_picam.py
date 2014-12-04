@@ -14,9 +14,9 @@ from optparse import OptionParser
 
 # Global configuration variables
 config_filename = 'picam.ini'
-imagedir = "picamimages"
-timeinterval = 1
+timeinterval = 10
 uploadtimedelay = 1
+
 
 # We can't start if no config file
 if not os.path.exists(config_filename):
@@ -72,6 +72,7 @@ def getmakeserveripaddressFTP(thisip,hostname,cameraname,uploaddir,user,passwd):
             ftp.retrlines('RETR ipaddress.html', files.append)
             serversip = files[0]
             logger.info("IP on server %s" % serversip)
+            ftp.quit()
         except Exception as e:
             logger.info("Storing new ip on server")
             unicodeip = unicode(thisip)
@@ -79,6 +80,7 @@ def getmakeserveripaddressFTP(thisip,hostname,cameraname,uploaddir,user,passwd):
             file = io.BytesIO(unicodeip.encode("utf-8"))
             ftp.storbinary('STOR ipaddress.html',file)
             serversip = thisip
+            ftp.quit()
             return serversip
         if serversip != thisip:
             logger.info("new IP, updating the ip, eh")
@@ -87,6 +89,7 @@ def getmakeserveripaddressFTP(thisip,hostname,cameraname,uploaddir,user,passwd):
             file = io.BytesIO(unicodeip.encode("utf-8"))
             ftp.storbinary('STOR ipaddress.html',file)
             serversip = thisip
+            ftp.quit()
             return serversip
     except Exception as e:
         logger.error(str(e))
@@ -110,7 +113,6 @@ def sftpUpload(filenames, hostname, cameraname, uploaddir, user, passwd):
             sys.stderr.write("\n")
         logger.debug("Disconnecting, eh")
         link.close()
-        
     except Exception as e:
         logger.error(str(e))
         return False
@@ -197,55 +199,60 @@ def sftpuploadtracker(transferred, total):
         percentage = round((transferred / total)*100)
         sys.stderr.write('\r[{0}] {1}%'.format('.'*int(percentage),int(percentage)))
         sys.stderr.flush()
-            
-    
 
 if __name__ == "__main__":
     usage = "usage: %prog [options] arg"
-    configmodify = None
+
     parser = OptionParser(usage)
 
     (options, args) = parser.parse_args()
-
+    
+    configmodify = None
+    
     logger.info("Program Startup")
     config = SafeConfigParser()
     config.read(config_filename)
     hostname = config.get("ftp","server")
     user = config.get("ftp","user")
     passwd = config.get("ftp","pass")
-    uploaddir = config.get("ftp", "directory")
+
+    target_directory = config.get("ftp", "directory")
     cameraname = config.get("camera","name")
-    imagedir = config.get("copying","directory")
-    configmodify = None
+    upload_directory = config.get("localfiles","upload_dir")
+
+    last_upload = None
     while True:
         try:
-            if os.stat(config_filename).st_mtime != configmodify:
+            if os.stat(config_filename).st_mtime!=configmodify:
                 configmodify = os.stat(config_filename).st_mtime
                 config.read(config_filename)
                 hostname = config.get("ftp","server")
                 user = config.get("ftp","user")
                 passwd = config.get("ftp","pass")
-                uploaddir = config.get("ftp", "directory")
+                target_directory = config.get("ftp", "directory")
                 cameraname = config.get("camera","name")
-                imagedir = config.get("copying","directory")
+                upload_directory = config.get("localfiles","upload_dir")
                 logger.debug("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
-
-            upload_list = glob.glob(os.path.join(imagedir,'*'))
+            upload_list = glob.glob(os.path.join(upload_directory,'*'))
+            s = socket(AF_INET, SOCK_DGRAM)
+            s.connect(("www.google.com",0))
+            ipaddress = s.getsockname()[0]
+            if (len(upload_list)==0):
+                logger.info("no files in upload directory")
             if (len(upload_list) > 0) and config.get("ftp","uploaderenabled")=="on":
-                s = socket(AF_INET, SOCK_DGRAM)
-                s.connect(("www.google.com",0))
-                ipaddress = s.getsockname()[0]
-
                 logger.debug("Pausing %d seconds to wait for files to be closed" % uploadtimedelay)
                 time.sleep(uploadtimedelay)
 
                 logger.debug("Preparing to upload %d files" % len(upload_list))
-                if not sftpUpload(upload_list, hostname, cameraname, uploaddir, user, passwd):
-                    ftpUpload(upload_list, hostname, cameraname, uploaddir, user, passwd)
+                if not sftpUpload(upload_list, hostname, cameraname, target_directory, user, passwd):
+                    ftpUpload(upload_list, hostname, cameraname, target_directory, user, passwd)
                 logger.debug("checking ip address on server, eh")
-                checkipaddressonserver(datetime.datetime.now(),ipaddress, hostname,cameraname,uploaddir,user,passwd)
+                checkipaddressonserver(datetime.datetime.now(),ipaddress, hostname,cameraname,target_directory,user,passwd)
+            logger.info("Waiting %d secs to check directories again" % timeinterval)
             time.sleep(timeinterval)
+
         except Exception as e:
            logger.error(str(e))
+
     logger.info("Program Shutdown")
 

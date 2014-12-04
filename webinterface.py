@@ -58,11 +58,9 @@ def rotatelogfile():
     config2 = SafeConfigParser()
     config2.read(otherconfig_filename)
     with open("static/logfile.txt",'r') as log:
-        with open(os.path.join(config.get("copying","directory"),datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')+".log"),'w' ) as writeout:
+        with open(os.path.join(config.get("localfiles","upload_dir"),datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')+".log"),'w' ) as writeout:
             writeout.write(log.read())
-        with open(os.path.join(config2.get("copying","directory"),datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')+".log"),'w' ) as writeout:
-            writeout.write(log.read())
-                  
+
     open("static/logfile.txt","w").close()
     return redirect(url_for('logfile'))
 
