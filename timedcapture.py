@@ -16,8 +16,6 @@ config_filename = 'eyepi.ini'
 timestartfrom = datetime.time.min
 timestopat = datetime.time.max
 default_extension = ".CR2"
-imagedir = "images"
-copydir = "copying"
 convertcmdline1 = "dcraw -q 0 -w -H 5 -b 8 %s"
 convertcmdline2 = "convert %s %s"
 convertcmdline3 = "convert %s -resize 800x600 %s"
@@ -42,7 +40,7 @@ def setup(dump_values = False):
     """ Setup Global configuration variables
     """
 
-    global config, config_filename, imagedir, copydir
+    global config, config_filename, spool_dir, upload_dir
     global camera_name, timebetweenshots
     global timestartfrom, timestopat, convertcmdline1, convertcmdline2
 
@@ -50,8 +48,8 @@ def setup(dump_values = False):
 
     camera_name = config.get("camera","name")
     timebetweenshots = config.getint("timelapse","interval")
-    imagedir = config.get("images","directory","images")
-    copydir = config.get("copying","directory","copying")
+    spool_dir = config.get("localfiles","spooling_dir")
+    upload_dir = config.get("localfiles","upload_dir")
     if config.has_option("convertor","commandline"):
         convertcmdline = config.get("convertor","commandline")
 
@@ -73,10 +71,10 @@ def setup(dump_values = False):
     except Exception, e:
         logger.error("Time conversion error stoptime - %s" % str(e))
 
-    if not os.path.exists(imagedir):
+    if not os.path.exists(spool_dir):
         # All images stored in their own seperate directory
-        logger.info("Creating Image Storage directory %s" % imagedir)
-        os.makedirs(imagedir)
+        logger.info("Creating Image Storage directory %s" % spool_dir)
+        os.makedirs(spool_dir)
     else:
         for the_file in os.listdir(imagedir):
             file_path =os.path.join(imagedir, the_file)
@@ -119,61 +117,11 @@ def timestamped_imagename(timen):
 
     return os.path.join(imagedir, camera_name + '_' + timestamp(timen) + default_extension)
 
-def convertCR2Jpeg(filename):
-    """
-    Convert a .CR2 file to jpeg
-    This process is impractical due to the raspberry pis low processing power
-    This code is left in, legacy. Will be removed soon.
-    """
-
-    global convertcmdline1, convertcmdline2
-
-    try:
-
-        logger.debug("Converting .CR2 Image")
-
-        raw_filename = filename
-        ppm_filename = filename[:-4] + '.ppm'
-        jpeg_filename = filename[:-4] + '.jpg'
-
-        # Here we convert from .cr2 to .ppm
-        cmd1 = os.system(convertcmdline1 % raw_filename)
-        cmdresults = subprocess.check_output(cmd1.split(' '))
-        if cmdresults.lower().find('error:')!=-1:
-            logger.error(cmdresults)
-        elif len(cmdresults)!=0:
-            logger.debug(cmdresults)
-
-        # Next we convert from ppm to jpeg
-        cmd2 = convertcmdline2 % (ppm_filename,jpeg_filename)
-        cmdresults = subprocess.check_output(cmd2.split(' '))
-        if cmdresults.lower().find('error:')!=-1:
-            logger.error(cmdresults)
-        elif len(cmdresults)!=0:
-            logger.debug(cmdresults)
-        
-        cmd3 = convercmdline3 % (ppm_filename, os.path.join("static", "dslr_last_image.jpg"))
-        cmdresults = subprocess.check_output(cmd3.split(' '))
-        if smdresults.lower().find('error')!=-1:
-            logger.error(cmdresults)
-        elif len(cmdresults)!=0:
-            logger.debug(cmdresults)
-
-        os.remove(ppm_filename)
-
-    except Exception, e:
-        logger.error("Image file Converion error - %s" % str(e))
-        logger.error("filename: %s" % filename)
-
-    return ([raw_filename,jpeg_filename])
-
-
-
 if __name__ == "__main__":
-    """
-    The main loop for capture 
-    TODO: Objectify camera object and incorporate picam, threading etc.
-    """
+    
+    #The main loop for capture 
+    #TODO: Objectify camera object and incorporate picam, threading etc.
+    
     usage = "usage: %prog [options] arg"
     parser = OptionParser(usage)
     try:
@@ -234,23 +182,23 @@ if __name__ == "__main__":
                     raw_image = timestamped_imagename(tn)
                     jpeg_image = timestamped_imagename(tn)[:-4]+".jpg"
                     
-                    """
-                    TODO:
-                    1. check for the camera capture settings/config file and set cmd accordingly to JPEG+RAW or JPEG or RAW
-                    1.1 look at "--capture-tethered" to do either
-                    2. put other camera settings in another call to setup camera (iso, aperture etc) using gphoto2 --set-config
-                    """
+                    
+                    #TODO:
+                    #1. check for the camera capture settings/config file and set cmd accordingly to JPEG+RAW or JPEG or RAW
+                    #1.1 look at "--capture-tethered" to do either
+                    #2. put other camera settings in another call to setup camera (iso, aperture etc) using gphoto2 --set-config
+                    
 
                     # use this command to capture only jpeg/only raw (can only download one file, apparently)
                                          
-                    cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(imagedir, os.path.splitext(raw_image)[0])+".%C'"]
+                    cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(spool_dir, os.path.splitext(raw_image)[0])+".%C'"]
                     
-                    """
-                     No conversion needed, just take 2 files, 1 jpeg and 1 raw
-                     using this way of capturing is more risky than just calling "gphoto --capture-and-download"
-                     cmd for RAW+JPEG
-                    """
-                    #cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image --wait-event-and-download=13s --filename='"+os.path.join(imagedir, os.path.splitext(raw_image)[0])+".%C'"]
+                    
+                    # No conversion needed, just take 2 files, 1 jpeg and 1 raw
+                    # using this way of capturing is more risky than just calling "gphoto --capture-and-download"
+                    # cmd for RAW+JPEG
+                    
+                    #cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image --wait-event-and-download=13s --filename='"+os.path.join(spool_dir, os.path.splitext(raw_image)[0])+".%C'"]
                     # subprocess.call. shell=True is hellishly insecure and doesn't throw an error if it fails. Needs to be fixed somehow <shrug>
                     subprocess.call(cmd, shell=True)
 
@@ -259,9 +207,9 @@ if __name__ == "__main__":
                     logger.info("Moving and renaming image files, buddy")
 
                     # glob together all filetypes in filetypes array
-                    files = glob(os.path.join(imagedir,"*.jpg"))
+                    files = glob(os.path.join(spool_dir,"*.jpg"))
                     for filetype in filetypes:
-                        files.extend(glob(os.path.join(imagedir,"*."+filetype)))
+                        files.extend(glob(os.path.join(spool_dir,"*."+filetype)))
 
                     # copying/renaming for files
                     for file in files:
@@ -273,22 +221,15 @@ if __name__ == "__main__":
                             # best to create a symlink to /dev/shm/ from static/
                             shutil.copy(file,os.path.join("static", "dslr_last_image.jpg"))
                             if config.get("ftp","uploadwebcam") == "on":
-                                shutil.copy(file,os.path.join(copydir, "dslr_last_image.jpg"))
+                                shutil.copy(file,os.path.join(upload_dir, "dslr_last_image.jpg"))
                         # move timestamped image te be uploaded
                         if config.get("ftp","uploadtimestamped")=="on":
                             logger.info("saving timestamped image for you, buddy")
-                            os.rename(file, os.path.join(copydir, os.path.basename(name+ext)))
+                            os.rename(file, os.path.join(upload_dir, os.path.basename(name+ext)))
                         else:
                             logger.info("deleting file, eh")
                             os.remove(file)
                         logger.info("Captured and stored - %s" % os.path.basename(name+ext))
-                        
-                    # image resizing, too processor intensive to do on a pi, code left in for legacy for now.
-                    #try:
-                    #   os.system(convertcmdline3 % (jpeg_image, os.path.join("static", "dslr_last_imag$
-                    #except Exception as e:
-                    #   x logger.error("Sorry, I had an error: %s" % str(e))
-                    
                     # Log Delay/next shots
                     if next_capture.time() < timestopat:
                         logger.debug("Next capture at %s" % next_capture.isoformat())

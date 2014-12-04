@@ -14,7 +14,6 @@ from optparse import OptionParser
 
 # Global configuration variables
 config_filename = 'eyepi.ini'
-imagedir = "images"
 timeinterval = 10
 uploadtimedelay = 1
 
@@ -217,9 +216,9 @@ if __name__ == "__main__":
     user = config.get("ftp","user")
     passwd = config.get("ftp","pass")
 
-    uploaddir = config.get("ftp", "directory")
+    target_directory = config.get("ftp", "directory")
     cameraname = config.get("camera","name")
-    imagedir = config.get("copying","directory")
+    upload_directory = config.get("localfiles","upload_dir")
 
     last_upload = None
     while True:
@@ -231,9 +230,9 @@ if __name__ == "__main__":
                 hostname = config.get("ftp","server")
                 user = config.get("ftp","user")
                 passwd = config.get("ftp","pass")
-                uploaddir = config.get("ftp", "directory")
+                target_directory = config.get("ftp", "directory")
                 cameraname = config.get("camera","name")
-                imagedir = config.get("copying","directory")
+                upload_directory = config.get("copying","directory")
                 logger.debug("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
             upload_list = glob.glob(os.path.join(imagedir,'*'))
             s = socket(AF_INET, SOCK_DGRAM)
