@@ -41,7 +41,7 @@ def getmakeserveripaddressSFTP(thisip,hostname,cameraname,uploaddir,user,passwd)
         link.chdir("/")
         mkdir_p_sftp(link, os.path.join(uploaddir,cameraname) )
         try:
-       	    serversip = link.get("ipaddress.html", preserve_mtime=True)
+            serversip = link.get("ipaddress.html", preserve_mtime=True)
             logger.debug("IP on server %s" % serversip)
         except Exception as e:
             logger.debug("Storing new ip on server")
@@ -56,7 +56,7 @@ def getmakeserveripaddressSFTP(thisip,hostname,cameraname,uploaddir,user,passwd)
             f.write(thisip)
             f.close()
             serversip=thisip
-            return serversip	    
+            return serversip        
     except Exception as e:
         logger.error(str(e))
         return False
@@ -141,6 +141,7 @@ def ftpUpload(filenames, hostname, cameraname, uploaddir, user, passwd):
         ftp.quit()
     except Exception as e:
         logger.error(str(e))
+        return False
     return True
 
 def mkdir_p_sftp(sftp, remote_directory):

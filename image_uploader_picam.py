@@ -42,7 +42,7 @@ def getmakeserveripaddressSFTP(thisip,hostname,cameraname,uploaddir,user,passwd)
         mkdir_p_sftp(link, os.path.join(uploaddir,cameraname) )
         try:
        	    serversip = link.get("ipaddress.html", preserve_mtime=True)
-            logger.debug("IP on server %s" % serversip)
+       	    logger.debug("IP on server %s" % serversip)
         except Exception as e:
             logger.debug("Storing new ip on server")
             f = link.open(os.path.join(uploaddir,cameraname,"ipaddress.html"), mode='w')
