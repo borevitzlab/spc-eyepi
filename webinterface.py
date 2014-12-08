@@ -76,7 +76,7 @@ def restart():
 def update():
     os.system("git fetch --all")
     os.system("git reset --hard origin/master")
-    return '<html><head><script type="text/javascript" function(){document.location.reload(true);},60000);</script></head><body>UPDATING!! WAIT PLEASE!!</body></html>'
+    return redirect(url_for('index'))#'<html><head><script type="text/javascript" //function(){document.location.reload(true);},60000);</script></head><body>UPDATING!! WAIT PLEASE!!</body></html>'
 
 @app.route("/adduser", methods=['GET','POST'])
 @requires_auth
@@ -116,7 +116,7 @@ def createform(position, configfile, example):
     returnstring +="<h3>"+configfile +"</h3>"
     if position == "left":returnstring += "<a href="+ url_for('lastimage')+">"+"LAST IMAGE</a>"
     else: returnstring += "<a href="+ url_for('lastpicam')+">"+"LAST IMAGE</a>"
-    returnstring += "<form action=/"+position+" method=POST><button>SUBMIT</button>"
+    returnstring += "<form action=/"+position+" method=POST><button>Apply settings</button>"
 
     config = SafeConfigParser()
     config.read(configfile)
@@ -204,7 +204,7 @@ def index():
 <br><br><form style='text-align:center;' action=restart><br><button>REBOOT</button></form>\
 <br><p style='display:block;text-align:center;'>version "+version+"</p>\
 <br><a style='text-align:center;display:block;' href="+ url_for('logfile')+">LOG</a><br>\
-<br><br><form style='text-align:center;' action=update><br><button>UPDATE</button></form>"
+<br><br><form style='text-align:center;' action=update><br><button>Update Software (requires reboot)</button></form>"
     returnstring += createform("left", config_filename, example)
     returnstring += createform("right", otherconfig_filename, example)
     returnstring += "</body></html>"
