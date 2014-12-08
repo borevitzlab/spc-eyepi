@@ -41,38 +41,36 @@ def getmakeserveripaddressSFTP(thisip,hostname,cameraname,uploaddir,user,passwd)
         link.chdir("/")
         mkdir_p_sftp(link, os.path.join(uploaddir,cameraname) )
         try:
-       	    serversip = link.get("ipaddress.html", preserve_mtime=True)
-       	    logger.debug("IP on server %s" % serversip)
+            serversip = link.get("ipaddress.html", preserve_mtime=True)
+            logger.debug("IP on server %s" % serversip)
         except Exception as e:
             logger.debug("Storing new ip on server")
             f = link.open(os.path.join(uploaddir,cameraname,"ipaddress.html"), mode='w')
             f.write(thisip)
-            f.close()
             serversip=thisip
             return serversip
         if serversip != thisip:
             logger.debug("new IP, updating the ip, eh")
             f = link.open(os.path.join(uploaddir,cameraname,"ipaddress.html"), mode='w')
             f.write(thisip)
-            f.close()
             serversip=thisip
-            return serversip	    
+        f.close()
+        return serversip
     except Exception as e:
         logger.error(str(e))
+        f.close()
         return False
 
-def getmakeserveripaddressFTP(thisip,hostname,cameraname,uploaddir,user,passwd):
+def getmakeserveripaddressFTP(ftp,thisip,hostname,cameraname,uploaddir,user,passwd):
     try:
         logger.debug("Checking and matching ip using FTP, eh...")
-        ftp = ftplib.FTP(hostname)
-        ftp.login(user,passwd)
+        
         mkdir_p_ftp(ftp, os.path.join(uploaddir,cameraname))
         try:
             files = []
             ftp.retrlines('RETR ipaddress.html', files.append)
             serversip = files[0]
             logger.info("IP on server %s" % serversip)
-            ftp.quit()
         except Exception as e:
             logger.info("Storing new ip on server")
             unicodeip = unicode(thisip)
@@ -80,8 +78,6 @@ def getmakeserveripaddressFTP(thisip,hostname,cameraname,uploaddir,user,passwd):
             file = io.BytesIO(unicodeip.encode("utf-8"))
             ftp.storbinary('STOR ipaddress.html',file)
             serversip = thisip
-            ftp.quit()
-            return serversip
         if serversip != thisip:
             logger.info("new IP, updating the ip, eh")
             unicodeip = unicode(thisip)
@@ -89,8 +85,8 @@ def getmakeserveripaddressFTP(thisip,hostname,cameraname,uploaddir,user,passwd):
             file = io.BytesIO(unicodeip.encode("utf-8"))
             ftp.storbinary('STOR ipaddress.html',file)
             serversip = thisip
-            ftp.quit()
-            return serversip
+        ftp.quit()
+        return serversip
     except Exception as e:
         logger.error(str(e))
         return False
@@ -137,10 +133,9 @@ def ftpUpload(filenames, hostname, cameraname, uploaddir, user, passwd):
             logger.info("Successfuly uploaded %s through ftp and removed from local filesystem" % f)
             sys.stderr.write("\n")
             os.remove(f)
-        logger.debug("Disconnecting, eh")
-        ftp.quit()
     except Exception as e:
         logger.error(str(e))
+        return False
     return True
 
 def mkdir_p_sftp(sftp, remote_directory):
