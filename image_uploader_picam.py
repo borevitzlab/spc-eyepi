@@ -240,7 +240,11 @@ if __name__ == "__main__":
 
                 logger.debug("Preparing to upload %d files" % len(upload_list))
                 if not sftpUpload(upload_list, hostname, cameraname, target_directory, user, passwd):
-                    ftpUpload(upload_list, hostname, cameraname, target_directory, user, passwd)
+                    ftp = ftplib.FTP(hostname)
+                    ftp.login(user,passwd)
+                    ftpUpload(ftp, upload_list, hostname, cameraname, target_directory, user, passwd)
+                    ftp.quit()
+                    logger.debug("Disconnecting, eh")
                 logger.debug("checking ip address on server, eh")
                 checkipaddressonserver(datetime.datetime.now(),ipaddress, hostname,cameraname,target_directory,user,passwd)
             logger.info("Waiting %d secs to check directories again" % timeinterval)
