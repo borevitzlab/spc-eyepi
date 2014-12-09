@@ -48,7 +48,6 @@ def getmakeserveripaddressSFTP(thisip,hostname,cameraname,uploaddir,user,passwd)
             f = link.open(os.path.join(uploaddir,cameraname,"ipaddress.html"), mode='w')
             f.write(thisip)
             serversip=thisip
-            return serversip
         if serversip != thisip:
             logger.debug("new IP, updating the ip, eh")
             f = link.open(os.path.join(uploaddir,cameraname,"ipaddress.html"), mode='w')
