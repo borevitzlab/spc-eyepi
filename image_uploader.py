@@ -188,11 +188,11 @@ class FtpUploadTracker:
             sys.stderr.flush()
             
 def sftpuploadtracker(transferred, total):
-    
-    if (transferred % (total/100)):
-        percentage = round((transferred / total)*100)
-        sys.stderr.write('\r[{0}] {1}%'.format('.'*int(percentage),int(percentage)))
-        sys.stderr.flush()
+    if total/100 != 0:
+        if (transferred % (total/100)):
+            percentage = round((transferred / total)*100)
+            sys.stderr.write('\r[{0}] {1}%'.format('.'*int(percentage),int(percentage)))
+            sys.stderr.flush()
 
 if __name__ == "__main__":
     usage = "usage: %prog [options] arg"
@@ -204,6 +204,7 @@ if __name__ == "__main__":
     configmodify = None
     
     logger.info("Program Startup")
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
     config = SafeConfigParser()
     config.read(config_filename)
     hostname = config.get("ftp","server")
