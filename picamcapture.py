@@ -79,15 +79,15 @@ def setup(dump_values = False):
     if not os.path.exists(upload_dir):
         logger.info("creating copyfrom dir %s" % upload_dir)
         os.makedirs(upload_dir)
-    else:
-        for the_file in os.listdir(upload_dir):
-            file_path =os.path.join(upload_dir, the_file)
-            try:
-                if os.path.isfile(file_path):
-                    #os.unlink(file_path)
-                    logger.debug("Deleting previous file ready for copy, Sorry.")
-            except Exception, e:
-                logger.error("Sorry, buddy! Couldn't delete the files ready for copy, eh! Error: %s, eh." % e)
+    #else:
+    #    for the_file in os.listdir(upload_dir):
+    #        file_path =os.path.join(upload_dir, the_file)
+    #        try:
+    #            if os.path.isfile(file_path):
+    #                #os.unlink(file_path)
+    #                logger.debug("Deleting previous file ready for copy, Sorry.")
+    #        except Exception, e:
+    #            logger.error("Sorry, buddy! Couldn't delete the files ready for copy, eh! Error: %s, eh." % e)
 
     if (dump_values):
         # For debugging, we can dump some configuration values
