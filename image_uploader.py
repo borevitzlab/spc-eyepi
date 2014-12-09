@@ -26,7 +26,7 @@ if not os.path.exists(config_filename):
 
 # Logging setup
 logging.config.fileConfig(config_filename)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("DSLR_image_uploader")
 
 def checkipaddressonserver(last_upload, thisip, hostname, cameraname, uploaddir, user, passwd):
     fullstr = "Last upload at: " + last_upload.strftime("%y-%m-%d %H:%M:%S") + "<br> Ip address: "+ thisip + "<br><a href='http://" + thisip + ":5000'>Config</a>"
@@ -246,7 +246,8 @@ if __name__ == "__main__":
                     logger.debug("Disconnecting, eh")
                 logger.debug("checking ip address on server, eh")
                 checkipaddressonserver(datetime.datetime.now(),ipaddress, hostname,cameraname,target_directory,user,passwd)
-            logger.info("Waiting %d secs to check directories again" % timeinterval)
+            if config.get("ftp","uploaderenabled")=="on":
+                logger.info("Waiting %d secs to check directories again" % timeinterval)
             time.sleep(timeinterval)
 
         except Exception as e:
