@@ -4,7 +4,6 @@ import datetime, time, shutil
 import shutil
 import pysftp as sftp
 import logging, logging.config
-from mounting import *
 from ConfigParser import SafeConfigParser
 from optparse import OptionParser
 

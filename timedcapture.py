@@ -5,7 +5,6 @@ import pysftp as sftp
 import logging, logging.config
 import shutil
 from glob import glob
-from mounting import *
 from ConfigParser import SafeConfigParser
 from optparse import OptionParser
 #import eyepi

@@ -7,7 +7,6 @@ import ftplib
 import logging, logging.config
 import io
 from socket import socket, SOCK_DGRAM, AF_INET 
-from mounting import *
 from ConfigParser import SafeConfigParser
 from optparse import OptionParser
 
