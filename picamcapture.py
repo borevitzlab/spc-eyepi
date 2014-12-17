@@ -149,6 +149,7 @@ if __name__ == "__main__":
             # Log if the time isn't sane yet (needs to get it from ntpdate)
             if tn<birthday:
                 logger.error("my creator hasnt been born yet")
+                time.sleep(60)
             # checking if enabled and other stuff
             if (tn>birthday) and (tn>=next_capture) and (tn.time() > timestartfrom) and (tn.time() < timestopat) and (config.get("camera","enabled")=="on"):
                 # increment next_capture by increment

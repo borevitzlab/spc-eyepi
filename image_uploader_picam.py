@@ -218,6 +218,7 @@ if __name__ == "__main__":
     last_upload = None
     while True:
         try:
+            time.sleep(timeinterval)
             if os.stat(config_filename).st_mtime!=configmodify:
                 configmodify = os.stat(config_filename).st_mtime
                 config.read(config_filename)
@@ -249,7 +250,7 @@ if __name__ == "__main__":
                 checkipaddressonserver(datetime.datetime.now(),ipaddress, hostname,cameraname,target_directory,user,passwd)
             if config.get("ftp","uploaderenabled")=="on":
                 logger.info("Waiting %d secs to check directories again" % timeinterval)
-            time.sleep(timeinterval)
+            
 
         except Exception as e:
            logger.error(str(e))
