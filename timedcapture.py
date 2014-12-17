@@ -159,7 +159,7 @@ if __name__ == "__main__":
             # This is used to check and see if the date is smething ridiculous.
             birthday = datetime.datetime(1990, 07,17,12,12,12,13)
             # check if the next capture period is within 4 intervals of the time now, if not set it to timenow + interval.
-            if tn-next_capture > datetime.timedelta(seconds = timebetweenshots*4):
+            if next_capture-tn > datetime.timedelta(seconds = timebetweenshots*4):
                 next_capture=tn+datetime.timedelta(seconds = timebetweenshots)
             # Log if the time isn't sane yet (needs to get it from ntpdate)
             if tn<birthday:
