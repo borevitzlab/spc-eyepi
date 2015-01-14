@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from __future__ import division
 import os, subprocess, sys, platform, io
-import datetime, time, shutil
+import datetime, time, shutil, re
 import pysftp, ftplib
 import logging, logging.config
 from glob import glob
@@ -28,21 +28,39 @@ def timestamp(tn):
     st = tn.strftime('%Y_%m_%d_%H_%M_%S')
     return st
 
+def create_config(serialnumber):
+    if not os.path.exists("configs_byserial"):
+       os.makedirs("configs_byserial")
+    thiscfg = SafeConfigParser()
+    thiscfg.read("eyepi.ini")
+    thiscfg.set("localfiles","spooling_dir",os.path.join(thiscfg.get("localfiles","spooling_dir"),serialnumber))
+    thiscfg.set("localfiles","upload_dir",os.path.join(thiscfg.get("localfiles","upload_dir"),serialnumber))
+    thiscfg.set("camera","name",thiscfg.get("camera","name") +"-"+serialnumber)
+    with open(os.path.join("configs_byserial",serialnumber+'.ini'), 'wb') as configfile:
+        thiscfg.write(configfile)
+
 
 class Camera(Thread):
     """ Big Camera Class,
         PiCamera extends this class
     """
-    def __init__(self, config_filename, name = None):
+    def __init__(self, config_filename, name = None, serialnumber = None, camera_port = None):
         # init with name or not, just extending some of the functionality of Thread 
         if name == None:
             Thread.__init__(self)
         else:
             Thread.__init__(self, name=name)
-
+        
+        if serialnumber != None:
+            self.serialnumber = serialnumber
+        if camera_port!=None:
+            self.camera_port = camera_port
         # variable setting and config file jiggery.
         self.last_config_modify_time = None
         self.config_filename = config_filename
+        if not os.path.isfile(self.config_filename):
+            create_config(name)
+            self.config_filename = os.path.join("configs_byserial",serialnumber+".ini")
         self.logger = logging.getLogger(self.getName())
         # run setup(), there is a separate setup() function so that it can be called again in the event of settings changing
         self.setup()
@@ -112,7 +130,6 @@ class Camera(Thread):
         """
         return t.hour*60*60+t.minute*60+t.second
 
-    
     def run(self):
         # set the next capture time to now just because
         self.next_capture = datetime.datetime.now()
@@ -121,14 +138,13 @@ class Camera(Thread):
         while (True):
             # testing for the config modification
             if os.stat(self.config_filename).st_mtime!=self.last_config_modify_time:
-                self.last_config_modify_time = os.stat(config_filename).st_mtime
+                self.last_config_modify_time = os.stat(self.config_filename).st_mtime
                 # Resetup()
                 self.setup()
                 self.logger.debug("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
             
             # set a timenow, this is used everywhere ahead, do not remove.
             tn = datetime.datetime.now()
-            
             # This is used to check and see if the date is smething ridiculous.
             # Log if the time isn't sane yet (needs to get it from ntpdate)
             if tn<birthday:
@@ -155,8 +171,10 @@ class Camera(Thread):
                     # 3. put other camera settings in another call to setup camera (iso, aperture etc) using gphoto2 --set-config
                     
                     # No conversion needed, just take 2 files, 1 jpeg and 1 raw
-                    cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
-                    
+                    #if self.camera_port:
+                    cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
+                    #else:
+                    #    #cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
                     # subprocess.call. shell=True is hellishly insecure and doesn't throw an error if it fails. Needs to be fixed somehow <shrug>
                     output = subprocess.check_output(cmd,stderr=subprocess.STDOUT, shell=True)
                     self.logger.info("GPHOTO2: "+ output)
@@ -458,7 +476,6 @@ class Uploader(Thread):
         except Exception as e:
             self.logger.error(str(e))
             time.sleep(5)
-                              
 
     def run(self):
         """ Main upload loop
@@ -510,36 +527,69 @@ class FtpUploadTracker:
             sys.stderr.flush()
             
 
-
-
+def detect_cameras(type):
+    try:
+        a = subprocess.check_output("gphoto2 --auto-detect", shell=True)
+        cams = {}
+        for port in re.finditer("usb:", a):
+            cmdret = subprocess.check_output('gphoto2 --port "'+a[port.start():port.end()+7]+'" --get-config serialnumber', shell=True)
+            cams[a[port.start():port.end()+7]] = cmdret[cmdret.find("Current: ")+9: len(cmdret)-1]
+        #if len(cams)<1:
+        #    raise 
+        return cams
+    except Exception as e:
+        print str(e)
+        #logger.error("Could not detect camera for some reason: " + str(e))
 
 if __name__ == "__main__":
     
     #The main loop for capture 
-    #TODO: Objectify camera object and incorporate picam, threading etc.
-    
+    #TODO: Fix storage for multiple cameras, add the picam detection in.
     try:
-        camera1 = Camera("eyepi.ini", name="DSLR1")  
-        upload1 = Uploader("eyepi.ini", name="DSLR1-Uploader")
-        #raspberrycam = PiCamera("picam.ini", name="PiCamera")
-        #raspberryupload = Uploader("picam.ini", name="PiCamera-Uploader")
-                                
-        #raspberrycam.daemon = True
-        #raspberryupload.daemon = True
-        upload1.daemon = True
-        camera1.daemon = True
-                                
-        #raspberrycam.start()
-        #raspberryupload.start()                  
-        upload1.start()
-        camera1.start()
-                                
+        camobjects = []
+        uploadobjects = []
+        cameras = detect_cameras("usb")
+        for port,serialnumber in cameras.items():
+            camobjects.append(Camera(os.path.join("configs_byserial",serialnumber+".ini"), camera_port=port,serialnumber=serialnumber,name=serialnumber))
+            uploadobjects.append(Uploader(os.path.join("configs_byserial", serialnumber+".ini"), name=serialnumber+"-Uploader"))
+        for thread in camobjects:
+            thread.daemon = True
+            thread.start()
+        for thread in uploadobjects:
+            thread.daemon = True
+            thread.start()
+        print len(camobjects)
         while True:time.sleep(100)
-    except (KeyboardInterrupt, SystemExit):
-        sys.exit()
-        camera1.join()
-        upload1.join()
-        raspberrycam.join()
-        raspberryupload.join()
+    except (Exception, KeyboardInterrupt, SystemExit) as e:
+        print str(e)
+        for thread in camobjects:
+            thread.join()
+        for thread in uploadobjects:
+            thread.join()
+        """#print str(e)
+        try:
+            camera1 = Camera("eyepi.ini", name="DSLR1")  
+            upload1 = Uploader("eyepi.ini", name="DSLR1-Uploader")
+            #raspberrycam = PiCamera("picam.ini", name="PiCamera")
+            #raspberryupload = Uploader("picam.ini", name="PiCamera-Uploader")
+                                    
+            #raspberrycam.daemon = True
+            #raspberryupload.daemon = True
+            upload1.daemon = True
+            camera1.daemon = True
+                                    
+            #raspberrycam.start()
+            #raspberryupload.start()                  
+            upload1.start()
+            camera1.start()
+                                    
+            while True:time.sleep(100)
+        except (KeyboardInterrupt, SystemExit):
+            sys.exit()
+            camera1.join()
+            upload1.join()
+            raspberrycam.join()
+            raspberryupload.join()
+        """
     
 
