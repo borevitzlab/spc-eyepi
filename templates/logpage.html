@@ -1,0 +1,30 @@
+{% extends "layout.html" -%}
+{% set active_page="logfile" -%}
+{% block body %}
+<h2>Log</h2>
+<div class="btn-group" data-toggle="buttons">
+	<label class="btn btn-primary">
+		<input type="checkbox" id="autoup" autocomplete="off">Auto Update
+	</label>
+</div>
+<div class="btn-group">
+	<button class="btn btn-default" href="/rotatelogfile"> Rotate Log</button>
+</div>
+<br>
+<div id="changeme"></div>
+
+<script type='text/javascript'>
+window.setInterval(
+function(){
+if($("#autoup").is(":checked")){
+ $.get('getlog').then(
+	function(responseData){
+		$('#changeme').html(responseData)
+		}
+	); 
+}
+}
+,2000);
+</script>
+
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends "layout.html" -%}
+{% set active_page="cameras" -%}
+{% block body %}
+
+
+<h2>Cameras</h2>
+<!-- buttons for modals -->
+{% for name, config in configs.iteritems() %}
+<div class="btn-group-vertical col-md-8" role="group" aria-label="{{config.get("camera","name")}}">
+	<button class="btn btn-primary btn-md" data-toggle="modal" data-target="#{{name}}-modal">{{config.get("camera","name")}}</button>
+        <button class="btn btn-danger btn-md" data-toggle="modal" data-target="#{{name}}-delete-modal">Remove Config</button>
+</div>
+{% endfor %}
+
+<!-- modals -->	
+{% for name, config in configs.iteritems() %}
+<!-- Modal -->
+<div class="modal fade" id="{{name}}-modal" tabindex="-1" role="dialog" aria-labelledby="{{name}}-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3 class="modal-title" id="{{name}}-modal-label">{{config.get("camera","name")}}</h3>
+		<h6 class="modal-title pull-right">{% if not config.get("eosserialnumber","value") == "0" %}
+			{{config.get("eosserialnumber","value")}}
+				{% else %}
+			{{name}}
+				{% endif %}
+			</h6>
+        </div>
+        <div class="modal-body col-md-12">
+            <form id="{{name}}-form">
+            <input type="text" style="display:none;" name="config-name" value="{{name}}"></input>
+            {% for section in config.sections() %}
+                {% if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter" and not section == "eosserialnumber" %}
+                    <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">{{section}}</h4>
+                    </div>
+                    <div class="panel-body">
+                        {% for option in config.options(section) %}
+                        {{option}} 
+                         {% if option == "enabled" or option == "uploadwebcam" or option == "uploadtimestamped" or option == "uploaderenabled" %}
+                                <input class="col-md-3 pull-right" type='checkbox' name="{{section}}.{{option}}" placeholder="{{config.get(section, option)}}" {% if config.get(section,option)=="on"%}checked{% endif %}> 
+                         {% else %}
+                                <input class="col-md-4 pull-right" type='text' title=example:"{{config.get(section,option)}}" name="{{section}}.{{option}}" placeholder="{{config.get(section, option)}}">
+                         {% endif %}
+                       <br><br>
+                         {% endfor %}
+                    </div>
+                    </div>
+                {% endif %}
+            {% endfor %} 
+        </div>
+        <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close/Discard</button>
+        <button type="button" id="{{name}}-save-button" class="btn btn-primary">Save changes</button>
+        </div>
+        </form>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->	
+
+<!-- deletion modals -->
+
+<div class="modal fade" id="{{name}}-delete-modal" tabindex="-1" role="dialog" aria-labelledby="{{name}}-delete-modal-label" aria-hidden="true">
+   <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="{{name}}-delete-modal-label">Are You SURE?</h4>
+        </div>
+        <div class="modal-body">
+        <p>This cannot be undone</p>
+        </div>
+        <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">No, I'm not sure...</button>
+        <button id="{{name}}-delete-button" type="button" class="btn btn-danger">Delete it</button>
+        </div>    
+      </div>
+   </div>
+</div>
+
+{% endfor %}
+
+{% for name, config in configs.iteritems() %}
+<script type="text/javascript">
+$("#{{name}}-save-button").click(function(e){
+      e.preventDefault();
+      $.post('/writecfg', 
+         $("#{{name}}-form").serialize(), 
+         function(data, status, xhr){
+           console.log(data);
+           if(data =="success"){
+		console.log("changing button");
+		$("#{{name}}-save-button").toggleClass("btn-success")
+  
+		setTimeout(function(){
+			$("#{{name}}-save-button").toggleClass("btn-success")	
+		},2000)
+	   }
+         });
+});
+</script>
+
+<script type="text/javascript">
+$("#{{name}}-delete-button").click(function(e){
+      e.preventDefault();
+      $.post('/delcfg', 
+         {name: "{{name}}"},
+         function(data, status, xhr){
+           if(data =="success"){
+                console.log("changing button");
+                $("#{{name}}-delete-button").toggleClass("btn-success")
+  
+                setTimeout(function(){
+                        $("#{{name}}-delete-modal").modal("hide")
+                },2000)
+           }
+         });
+});
+</script>
+{% endfor %}
+
+
+{% endblock %}
+

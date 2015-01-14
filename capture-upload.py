@@ -28,7 +28,7 @@ def timestamp(tn):
     st = tn.strftime('%Y_%m_%d_%H_%M_%S')
     return st
 
-def create_config(serialnumber):
+def create_config(serialnumber, eosserial = 0):
     if not os.path.exists("configs_byserial"):
        os.makedirs("configs_byserial")
     thiscfg = SafeConfigParser()
@@ -36,9 +36,16 @@ def create_config(serialnumber):
     thiscfg.set("localfiles","spooling_dir",os.path.join(thiscfg.get("localfiles","spooling_dir"),serialnumber))
     thiscfg.set("localfiles","upload_dir",os.path.join(thiscfg.get("localfiles","upload_dir"),serialnumber))
     thiscfg.set("camera","name",thiscfg.get("camera","name") +"-"+serialnumber)
+    thiscfg.set("eosserialnumber","value", eosserial)
     with open(os.path.join("configs_byserial",serialnumber+'.ini'), 'wb') as configfile:
         thiscfg.write(configfile)
 
+def geteosserialnumber(port):
+    try:
+        cmdret = subprocess.check_output('gphoto2 --port "'+port+'" --get-config eosserialnumber', shell=True)
+        return cmdret[cmdret.find("Current: ")+9: len(cmdret)-1]
+    except:
+        return 0
 
 class Camera(Thread):
     """ Big Camera Class,
@@ -59,7 +66,8 @@ class Camera(Thread):
         self.last_config_modify_time = None
         self.config_filename = config_filename
         if not os.path.isfile(self.config_filename):
-            create_config(name)
+            eosserial = geteosserialnumber(self.camera_port) 
+            create_config(name, eosserial = eosserial)
             self.config_filename = os.path.join("configs_byserial",serialnumber+".ini")
         self.logger = logging.getLogger(self.getName())
         # run setup(), there is a separate setup() function so that it can be called again in the event of settings changing
@@ -526,7 +534,6 @@ class FtpUploadTracker:
             self.lastShownPercent+=self.multiple
             sys.stderr.flush()
             
-
 def detect_cameras(type):
     try:
         a = subprocess.check_output("gphoto2 --auto-detect", shell=True)
