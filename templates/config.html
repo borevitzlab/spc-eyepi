@@ -4,15 +4,69 @@
 
 
 <h2>Cameras</h2>
+<!-- detect cameras button -->
+<div class="btn-group col-md-4 role="group" aria-label="detect-camera-button-group">
+	<button class="btn btn-info btn-md" data-toggle="modal" data-target="#detect-camera-modal" id="detect-camera-button">Detect Cameras</button>
+</div>
 <!-- buttons for modals -->
+<div class="btn-group-vertical col-md-4" role="group" aria-label="picam-modal-button-group-label">
+	<button class="btn btn-primary btn-md" data-toggle="modal" data-target="#picam-modal">RPI Camera</button>
+</div>
+<br>
+<hr>
 {% for name, config in configs.iteritems() %}
-<div class="btn-group-vertical col-md-8" role="group" aria-label="{{config.get("camera","name")}}">
+<div class="btn-group-vertical col-md-4" role="group" aria-label="{{config.get("camera","name")}}">
 	<button class="btn btn-primary btn-md" data-toggle="modal" data-target="#{{name}}-modal">{{config.get("camera","name")}}</button>
         <button class="btn btn-danger btn-md" data-toggle="modal" data-target="#{{name}}-delete-modal">Remove Config</button>
 </div>
 {% endfor %}
 
 <!-- modals -->	
+
+<!-- picam modal -->
+
+<!-- Modal -->
+<div class="modal fade" id="picam-modal" tabindex="-1" role="dialog" aria-labelledby="picam-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3 class="modal-title" id="picam-modal-label">Raspberry Pi Camera</h3>
+        </div>
+        <div class="modal-body col-md-12">
+            <form id="picam-form">
+            <input type="text" style="display:none;" name="config-name" value="picam"></input>
+            {% for section in rpiconfig.sections() %}
+                {% if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter" %}
+                    <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">{{section}}</h4>
+                    </div>
+                    <div class="panel-body">
+                        {% for option in rpiconfig.options(section) %}
+                        {{option}}
+                         {% if option == "enabled" or option == "uploadwebcam" or option == "uploadtimestamped" or option == "uploaderenabled" %}
+                                <input class="col-md-3 pull-right" type='checkbox' name="{{section}}.{{option}}" placeholder="{{rpiconfig.get(section, option)}}" {% if rpiconfig.get(section,option)=="on"%}checked{% endif %}>
+                         {% else %}
+                                <input class="col-md-4 pull-right" type='text' title=example:"{{rpiconfig.get(section,option)}}" name="{{section}}.{{option}}" placeholder="{{rpiconfig.get(section, option)}}">
+                         {% endif %}
+                       <br><br>
+                         {% endfor %}
+                    </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close/Discard</button>
+        	<button type="button" id="picam-save-button" class="btn btn-primary">Save changes</button>
+        </div>
+        </form>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
 {% for name, config in configs.iteritems() %}
 <!-- Modal -->
 <div class="modal fade" id="{{name}}-modal" tabindex="-1" role="dialog" aria-labelledby="{{name}}-modal-label" aria-hidden="true">
@@ -83,6 +137,26 @@
 
 {% endfor %}
 
+
+<div class="modal fade" id="detect-camera-modal" tabindex="-1" role="dialog" aria-labelledby="detect-camera-modal-label" aria-hidden="true">
+   <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="detect-camera-modal-label">Camera Detection</h4>
+        </div>
+        <div class="modal-body">
+        <p id="detect-return-area"></p>
+        </div>
+        <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Go away!</button>
+        <button id="detect-camera-modal-button" type="button" class="btn btn-info">Detect</button>
+        </div>
+      </div>
+   </div>
+</div>
+
+
 {% for name, config in configs.iteritems() %}
 <script type="text/javascript">
 $("#{{name}}-save-button").click(function(e){
@@ -121,6 +195,46 @@ $("#{{name}}-delete-button").click(function(e){
 });
 </script>
 {% endfor %}
+<script type="text/javascript">
+$("#detect-camera-modal-button").click(function(e){
+      e.preventDefault();
+      $.post('/detectcams',
+         {nothing:"nothing"},
+         function(data, status, xhr){
+           if(data !="No cameras detected, are they turned on?"){
+                console.log("changing button");
+                $("#detect-camera-modal-button").toggleClass("btn-success")
+		$("#detect-return-area").html(data)
+                setTimeout(function(){
+                        $("#detect-camera-modal").modal("hide")
+                },5000)
+           }else{
+		$("#detect-return-area").html(data)
+		}	
+         });
+});
+</script>
+<script type="text/javascript">
+
+$("#picam-save-button").click(function(e){
+      e.preventDefault();
+      $.post('/writecfg',
+         $("#picam-form").serialize(),
+         function(data, status, xhr){
+           console.log(data);
+           if(data =="success"){
+                console.log("changing button");
+                $("#picam-save-button").toggleClass("btn-success")
+
+                setTimeout(function(){
+                        $("#picam-save-button").toggleClass("btn-success")
+                },2000)
+           }
+         });
+});
+
+
+</script>
 
 
 {% endblock %}

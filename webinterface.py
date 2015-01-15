@@ -2,7 +2,7 @@
 import socket, os, hashlib, subprocess
 import Crypto.Protocol.KDF
 import anydbm
-import datetime
+import datetime, re
 from glob import glob
 from functools import wraps
 from flask import Flask, redirect, url_for, request, send_file, abort, Response, render_template
@@ -23,6 +23,39 @@ def sanitizeconfig(towriteconfig, filename):
     with open(filename, 'wb') as configfile:
         towriteconfig.write(configfile)
 
+def geteosserialnumber(port):
+    try:
+        cmdret = subprocess.check_output('gphoto2 --port "'+port+'" --get-config eosserialnumber', shell=True)
+        return cmdret[cmdret.find("Current: ")+9: len(cmdret)-1]
+    except:
+        return 0
+
+def create_config(serialnumber, eosserial = 0):
+    if not os.path.exists("configs_byserial"):
+       os.makedirs("configs_byserial")
+    thiscfg = SafeConfigParser()
+    thiscfg.read("eyepi.ini")
+    thiscfg.set("localfiles","spooling_dir",os.path.join(thiscfg.get("localfiles","spooling_dir"),serialnumber))
+    thiscfg.set("localfiles","upload_dir",os.path.join(thiscfg.get("localfiles","upload_dir"),serialnumber))
+    thiscfg.set("camera","name",thiscfg.get("camera","name") +"-"+serialnumber)
+    thiscfg.set("eosserialnumber","value", eosserial)
+    with open(os.path.join("configs_byserial",serialnumber+'.ini'), 'wb') as configfile:
+        thiscfg.write(configfile)
+
+def detect_cameras(type):
+    try:
+        a = subprocess.check_output("gphoto2 --auto-detect", shell=True)
+        cams = {}
+        for port in re.finditer("usb:", a):
+            cmdret = subprocess.check_output('gphoto2 --port "'+a[port.start():port.end()+7]+'" --get-config serialnumber', shell=True)
+            cams[a[port.start():port.end()+7]] = cmdret[cmdret.find("Current: ")+9: len(cmdret)-1]
+        #if len(cams)<1:
+        #    raise 
+        return cams
+    except Exception as e:
+        print str(e)
+        #logger.error("Could not detect camera for some reason: " + str(e))
+        
 def check_auth(username, password):
     db = anydbm.open('db', 'r')
     if str(username) in db:
@@ -129,14 +162,41 @@ def delcfg():
             return "FAILURE"
 
 
+@app.route('/detectcams', methods=['POST'])
+@requires_auth
+def detectcams():
+    if request.method == 'POST':
+        post_return_string = ""
+        try:
+            cameras = detect_cameras("usb")
+            if len(cameras) == 0:
+                return "No cameras detected, are they turned on?"
+            for port, serial_number in cameras.iteritems():
+                if not os.path.isfile(os.path.join("configs_byserial", serial_number+".ini")):
+                    eos_serial = geteosserialnumber(port)
+                    create_config(serial_number, eos_serial)
+                    post_return_string+="Added new config for S#" + (serial_number if eos_serial==0 else eos_serial) +"<br>"
+            return post_return_string
+        except Exception as e:
+            return "Something went horribly wrong! :"+str(e)
+                    
+                    
+                    
+
 @app.route('/writecfg', methods=['POST'])
 @requires_auth
 def writecfg():
 
     if request.method == 'POST':
         aconfig = SafeConfigParser()
+        config_name=request.form["config-name"]+".ini"
+        if not config_name == "picam.ini":
+            config_path = os.path.join("configs_byserial",config_name) 
+        else:
+            config_path = config_name
+                         
+        aconfig.read(config_path)
         
-        aconfig.read(os.path.join("configs_byserial",request.form["config-name"]+".ini"))
         aconfig.set("camera","enabled","off")
         aconfig.set("ftp","uploaderenabled","off")
         aconfig.set("ftp","uploadwebcam","off")
@@ -149,7 +209,7 @@ def writecfg():
                 aconfig.set(sect,opt,value)
                 print "changed: "+sect+':'+opt+':'+value
         try:
-            sanitizeconfig(aconfig, os.path.join("configs_byserial",request.form["config-name"]+".ini"))
+            sanitizeconfig(aconfig, config_path)
             return "success"
         except Exception as e:
             abort(400)
@@ -160,10 +220,12 @@ def config():
     example = SafeConfigParser()
     version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
     configs = {}
+    rpiconfig = SafeConfigParser()
+    rpiconfig.read("picam.ini")
     for file in glob(os.path.join("configs_byserial","*.ini")):
         configs[os.path.basename(file)[:-4]] = SafeConfigParser()
         configs[os.path.basename(file)[:-4]].read(file)
-    return render_template("config.html", version=version, configs = configs)
+    return render_template("config.html", version=version, configs = configs, rpiconfig = rpiconfig)
 
 @app.route("/lastimage")
 def lastimage():

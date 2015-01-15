@@ -565,7 +565,14 @@ if __name__ == "__main__":
         for thread in uploadobjects:
             thread.daemon = True
             thread.start()
-        print len(camobjects)
+
+        raspberrycam = PiCamera("picam.ini", name="PiCam")
+        raspberryupload = Uploader("picam.ini", name="PiCam-Uploader")
+        raspberrycam.daemon = True
+        raspberryupload.daemon = True
+        raspberrycam.start()
+        raspberryupload.start() 
+        
         while True:time.sleep(100)
     except (Exception, KeyboardInterrupt, SystemExit) as e:
         print str(e)
@@ -573,30 +580,6 @@ if __name__ == "__main__":
             thread.join()
         for thread in uploadobjects:
             thread.join()
-        """#print str(e)
-        try:
-            camera1 = Camera("eyepi.ini", name="DSLR1")  
-            upload1 = Uploader("eyepi.ini", name="DSLR1-Uploader")
-            #raspberrycam = PiCamera("picam.ini", name="PiCamera")
-            #raspberryupload = Uploader("picam.ini", name="PiCamera-Uploader")
-                                    
-            #raspberrycam.daemon = True
-            #raspberryupload.daemon = True
-            upload1.daemon = True
-            camera1.daemon = True
-                                    
-            #raspberrycam.start()
-            #raspberryupload.start()                  
-            upload1.start()
-            camera1.start()
-                                    
-            while True:time.sleep(100)
-        except (KeyboardInterrupt, SystemExit):
-            sys.exit()
-            camera1.join()
-            upload1.join()
-            raspberrycam.join()
-            raspberryupload.join()
-        """
-    
 
+        raspberrycam.join()
+        raspberryupload.join()
