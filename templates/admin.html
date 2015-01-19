@@ -3,8 +3,14 @@
 {% block body %}
 <h2>Administration</h2>
 <hr>
+<div class="col-md-12">
+<div class="col-md-3">
+<h3>Management:</h3>
+<button class="btn btn-default" ><a href="/update" role="button">Update Spc-Eyepi</a></button>
+<button class="btn btn-danger" ><a href="/reboot" role="button">Reboot</a></button>
+</div>
 <h3>Users:</h3>
-<div class="panel panel-default col-md-10">
+<div class="panel panel-default col-md-9">
 <table class="table">
 {% for username in usernames %}
 <tr>
@@ -14,6 +20,7 @@
 <tr>
 {% endfor %}
 </table>
+</div>
 </div>
 <div class="modal fade" id="{{username}}-confirm-modal" tabindex="-1" role="dialog" aria-labelledby="{{username}}-confirm-modal-label" aria-hidden="true">
    <div class="modal-dialog">
