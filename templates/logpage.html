@@ -2,29 +2,67 @@
 {% set active_page="logfile" -%}
 {% block body %}
 <h2>Log</h2>
-<div class="btn-group" data-toggle="buttons">
-	<label class="btn btn-primary">
-		<input type="checkbox" id="autoup" autocomplete="off">Auto Update
-	</label>
+<hr>
+<div class="col-md-5">
+<input type="search" class="form-control" placeholder="Filter" id="log-search-box"> 
 </div>
-<div class="btn-group">
-	<button class="btn btn-default" href="/rotatelogfile"> Rotate Log</button>
+<div class="btn-group col-md-5 pull-right" role="button">
+	<div class="col-md-3">
+		<div class="form-group">
+			<input type="number" class="form-control col-md-2" value="4" id="updateinterval" min="1" max="3600"></input>
+		</div>
+	</div>
+	<div class="btn-group" data-toggle="buttons">
+		<label class="btn btn-primary">
+			<input type="checkbox" id="autoup" autocomplete="off">Auto Update</input>
+		</label>
+	</div>
+		<button class="btn btn-default" ><a href="/rotatelogfile" role="button"> Rotate</a></button>
+		<button class="btn btn-default" ><a href="/log.log" role="button"> Download </a></button>
 </div>
 <br>
-<div id="changeme"></div>
+<hr>
+<div class="col-md-12 panel panel-default">
+        <table class="table" id="changeme">
 
+        </table>
+</div>
+
+<script type='text/javascript'>
+$(document).ready(function(){
+               $('#log-search-box').bind('input',function(){
+                      if($(this).val().length > 4){
+                        var squery = $('#log-search-box').val()
+                          $.post('/getfilteredlog',
+                                {query:squery},
+                                function(data, status, xhr){
+                                        $('#changeme').html(data)
+                        });
+                       }else if($(this).val()=="*"){
+                        var squery = $('#log-search-box').val()
+                          $.post('/getfilteredlog',
+                                {query:squery},
+                                function(data, status, xhr){
+                                        $('#changeme').html(data)
+                        });
+                      }
+	       });
+});
+</script>
 <script type='text/javascript'>
 window.setInterval(
 function(){
 if($("#autoup").is(":checked")){
- $.get('getlog').then(
-	function(responseData){
-		$('#changeme').html(responseData)
+        var squery = $('#log-search-box').val()
+        $.post('/getfilteredlog',
+         {query:squery},
+         function(data, status, xhr){
+		$('#changeme').html(data)
 		}
 	); 
 }
 }
-,2000);
+,$("#updateinterval").val()*1000 );
 </script>
 
 {% endblock %}

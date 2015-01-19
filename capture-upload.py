@@ -95,7 +95,7 @@ class Camera(Thread):
             if len(tval)==5:
                 if tval[2]==':':
                     self.timestartfrom = datetime.time(int(tval[:2]),int(tval[3:]))
-                    self.logger.debug("Starting at %s" % self.timestartfrom.isoformat())
+                    self.logger.info("Starting at %s" % self.timestartfrom.isoformat())
         except Exception, e:
             self.logger.error("Time conversion error startime - %s" % str(e))
         try:
@@ -103,7 +103,7 @@ class Camera(Thread):
             if len(tval)==5:
                 if tval[2]==':':
                     self.timestopat = datetime.time(int(tval[:2]),int(tval[3:]))
-                    self.logger.debug("Stopping at %s" % self.timestopat.isoformat())
+                    self.logger.info("Stopping at %s" % self.timestopat.isoformat())
         except Exception, e:
             self.logger.error("Time conversion error stoptime - %s" % str(e))
 
@@ -118,7 +118,7 @@ class Camera(Thread):
                 try:
                     if os.path.isfile(file_path):
                         os.unlink(file_path)
-                        self.logger.debug("Deleting previous file in the spool eh, Sorry.")
+                        self.logger.info("Deleting previous file in the spool eh, Sorry.")
                 except Exception, e:
                     self.logger.error("Sorry, buddy! Couldn't delete the files in spool, eh! Error: %s" % e)
         if not os.path.exists(self.upload_directory):
@@ -130,7 +130,7 @@ class Camera(Thread):
             TODO: Remove the need for a default extension!
             Its useless in our extension agnostic capture.
         """
-        return os.path.join(self.upload_directory, self.cameraname + '_' + timestamp(timen) + default_extension)
+        return os.path.join(self.cameraname + '_' + timestamp(timen) + default_extension)
 
     def time2seconds(self, t):
         """ Convert the time to seconds
@@ -149,7 +149,7 @@ class Camera(Thread):
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
                 # Resetup()
                 self.setup()
-                self.logger.debug("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
+                self.logger.info("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
             
             # set a timenow, this is used everywhere ahead, do not remove.
             tn = datetime.datetime.now()
@@ -164,7 +164,7 @@ class Camera(Thread):
                     # set the next capture period to print to the log (not used anymore, really due to time modulo) 
                     self.next_capture = tn + datetime.timedelta(seconds = self.interval)
                     # The time now is within the operating times
-                    self.logger.info("Capturing Image, now: %s"  % tn.isoformat())
+                    self.logger.info("Capturing Image now")
                     
                     # setting variables for saving files
                     # TODO:
@@ -185,16 +185,16 @@ class Camera(Thread):
                     #    #cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
                     # subprocess.call. shell=True is hellishly insecure and doesn't throw an error if it fails. Needs to be fixed somehow <shrug>
                     output = subprocess.check_output(cmd,stderr=subprocess.STDOUT, shell=True)
-                    self.logger.info("GPHOTO2: "+ output)
-                    self.logger.info("Capture Complete")
-                    self.logger.info("Moving and renaming image files, buddy")
+                    self.logger.debug("GPHOTO2: "+ output)
+                    self.logger.debug("Capture Complete")
+                    self.logger.debug("Moving and renaming image files, buddy")
 
                     # glob together all filetypes in filetypes array
                     files = []
                     for filetype in filetypes:
                         files.extend(glob(os.path.join(self.spool_directory,"*."+filetype.upper())))
                         files.extend(glob(os.path.join(self.spool_directory,"*."+filetype.lower())))
-
+                        
                     # copying/renaming for files
                     for file in files:
                         # get the extension and basename
@@ -204,15 +204,15 @@ class Camera(Thread):
                         if ext == ".jpeg" or ".jpg":
                             # best to create a symlink to /dev/shm/ from static/temp
                             # TODO: multicamera support will need changes here!!
-                            shutil.copy(file,os.path.join("static","temp", "dslr_last_image.jpg"))
+                            shutil.copy(file,os.path.join("static","temp", self.serialnumber+".jpg"))
                             if self.config.get("ftp","uploadwebcam") == "on":
                                 shutil.copy(file,os.path.join(self.upload_directory, "dslr_last_image.jpg"))
                         # move timestamped image te be uploaded
-                        if config.get("ftp","uploadtimestamped")=="on":
-                            self.logger.info("saving timestamped image for you, buddy")
+                        if self.config.get("ftp","uploadtimestamped")=="on":
+                            self.logger.debug("saving timestamped image for you, buddy")
                             os.rename(file, os.path.join(self.upload_directory, os.path.basename(name+ext)))
                         else:
-                            self.logger.info("deleting file, eh")
+                            self.logger.debug("deleting file, eh")
                             os.remove(file)
                         self.logger.info("Captured and stored - %s" % os.path.basename(name+ext))
                     # Log Delay/next shots
@@ -243,7 +243,7 @@ class PiCamera(Camera):
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
                 # Resetup()
                 self.setup()
-                self.logger.debug("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
+                self.logger.info("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
             
             # set a timenow
             tn = datetime.datetime.now()
@@ -259,15 +259,15 @@ class PiCamera(Camera):
                     self.next_capture = tn + datetime.timedelta(seconds = self.interval)
                         
                     # The time now is within the operating times
-                    self.logger.info("Capturing Image, now: %s"  % tn.isoformat())
+                    self.logger.info("Capturing Image now")
 
                     # TODO: once timestamped imagename is more agnostic this will require a jpeg append.
                     image_file = self.timestamped_imagename(tn)
 
                     # take the image using os.system(), pretty hacky but it cant exactly be run on windows.
                     os.system("raspistill --nopreview -o " + image_file)
-                    self.logger.info("Capture Complete")
-                    self.logger.info("Copying the image to the web service, buddy")
+                    self.logger.debug("Capture Complete")
+                    self.logger.debug("Copying the image to the web service, buddy")
                     # Copy the image file to the static webdir 
                     shutil.copy(image_file,os.path.join("static","temp","pi_last_image.jpg"))
                     # webcam copying
@@ -275,10 +275,10 @@ class PiCamera(Camera):
                         shutil.copy(image_file,os.path.join(self.upload_directory, "pi_last_image.jpg"))
                     # rename for timestamped upload
                     if self.config.get("ftp","uploadtimestamped")=="on":
-                        self.logger.info("saving timestamped image for you, buddy")
+                        self.logger.debug("saving timestamped image for you, buddy")
                         os.rename(image_file ,os.path.join(self.upload_directory,os.path.basename(image_file))) 
                     else:
-                        self.logger.info("deleting file buddy")
+                        self.logger.debug("deleting file buddy")
                         os.remove(file)
                     # Do some logging.
                     if self.next_capture.time() < self.timestopat:
@@ -331,7 +331,7 @@ class Uploader(Thread):
         """ Stores IP address on server using SecureFTP
         """
         try:
-            self.logger.info("trying to store new ip on server using SFTP, friend!")
+            self.logger.debug("trying to store new ip on server using SFTP, friend!")
             # create new link and create directory if it doesnt exist already
             link = pysftp.Connection(host=self.hostname, username=self.user, password=self.passwd)
             link.chdir("/")
@@ -351,7 +351,7 @@ class Uploader(Thread):
         """ Stores IP address on server using FTP
         """
         try:
-            self.logger.info("trying to store new ip on server using FTP, friend!")
+            self.logger.debug("trying to store new ip on server using FTP, friend!")
             # similar to the SFTP
             ftp = ftplib.FTP(self.hostname)
             ftp.login(self.user,self.passwd)
@@ -374,19 +374,19 @@ class Uploader(Thread):
         """ Secure upload the image file to the Server
         """
         try:
-            self.logger.info("Connecting sftp and uploading buddy")
+            self.logger.debug("Connecting sftp and uploading buddy")
             # open link and create directory if for some reason it doesnt exist
             link = pysftp.Connection(host=self.hostname, username=self.user, password=self.passwd)
             link.chdir("/")
             self.mkdir_p_sftp(link, os.path.join(self.target_directory,self.cameraname))
-            self.logger.info("Uploading")
+            self.logger.debug("Uploading")
             # dump ze files.
             for f in filenames:
                 # use sftpuloadtracker to handle the progress
                 link.put(f,os.path.basename(f), callback=self.sftpuploadtracker)
                 os.remove(f)
                 self.logger.debug("Successfuly uploaded %s through sftp and removed from local filesystem" % f)
-            self.logger.info("Disconnecting, eh")
+            self.logger.debug("Disconnecting, eh")
             link.close()
         except Exception as e:
             # log a warning if fail because SFTP is meant to fail to allow FTP fallback
@@ -433,7 +433,7 @@ class Uploader(Thread):
         try:
             sftp.chdir(basename)
         except IOError:
-            self.logger.debug("Sorry, just have to make some new directories, eh. (sftp)")
+            self.logger.info("Sorry, just have to make some new directories, eh. (sftp)")
             sftp.mkdir(basename)
             sftp.chdir(basename)
 
@@ -450,7 +450,7 @@ class Uploader(Thread):
         try:
             ftp.cwd(basename)
         except ftplib.error_perm as e:
-            self.logger.debug("Sorry, just have to make some new directories, eh. (ftp)")
+            self.logger.info("Sorry, just have to make some new directories, eh. (ftp)")
             ftp.mkd(basename)
             ftp.cwd(basename)
 
@@ -477,7 +477,7 @@ class Uploader(Thread):
                 fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Havent uploaded yet<br> Ip address: "+ self.ipaddress + "<br><a href='http://" + self.ipaddress + ":5000'>Config</a>" 
             else:
                 fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Last upload at: " + l_last_upload_time.strftime("%y-%m-%d %H:%M:%S") + "<br> Ip address: "+ self.ipaddress + "<br><a href='http://" + self.ipaddress + ":5000'>Config</a>"
-            self.logger.info("my IP address:" + str(self.ipaddress))
+            self.logger.debug("my IP address:" + str(self.ipaddress))
             # upload ze ipaddress.html
             if not self.makeserveripaddressSFTP(fullstr):
                 self.makeserveripaddressFTP(fullstr)
@@ -491,7 +491,7 @@ class Uploader(Thread):
         while(True):
             # check and see if enabled
             if self.config.get("ftp","uploaderenabled")=="on":
-                self.logger.info("Waiting %d secs to check directories again" % self.timeinterval)
+                self.logger.debug("Waiting %d secs to check directories again" % self.timeinterval)
             # sleep for a while
             time.sleep(self.timeinterval)
             # check and see if config has changed.
@@ -504,7 +504,7 @@ class Uploader(Thread):
             upload_list = glob(os.path.join(self.upload_directory,'*'))
             
             if (len(upload_list)==0):
-                self.logger.info("no files in upload directory")
+                self.logger.debug("no files in upload directory")
                 
             if (len(upload_list) > 0) and self.config.get("ftp","uploaderenabled")=="on":
                 self.logger.debug("Pausing %d seconds to wait for files to be closed" % self.uploadtimedelay)
@@ -548,38 +548,61 @@ def detect_cameras(type):
         print str(e)
         #logger.error("Could not detect camera for some reason: " + str(e))
 
+def detect_picam():
+    try:
+        cmdret = subprocess.check_output("vcgencmd get_camera", shell=True)
+        if cmdret[cmdret.find("detected=")+9 : len(cmdret)-1] == "1":
+            return True
+        else:
+            return False
+    except subprocess.CalledProcessError:
+        return False
+
+def create_workers(cameras):
+    camobjects = []
+    uploadobjects = []
+    for port,serialnumber in cameras.iteritems():
+        camobjects.append(Camera(os.path.join("configs_byserial",serialnumber+".ini"), camera_port=port,serialnumber=serialnumber,name=serialnumber))
+        uploadobjects.append(Uploader(os.path.join("configs_byserial", serialnumber+".ini"), name=serialnumber+"-Uploader"))
+    return (camobjects, uploadobjects)
+
+def start_workers(objects):
+    for thread in objects:
+        thread.daemon = True
+        thread.start()
+
+def kill_workers(objects):
+    for thread in objects:
+        thread.join()
+
 if __name__ == "__main__":
-    
+    logger = logging.getLogger("Worker_dispatch")
+    logger.debug("Program startup")
     #The main loop for capture 
     #TODO: Fix storage for multiple cameras, add the picam detection in.
     try:
-        camobjects = []
-        uploadobjects = []
-        cameras = detect_cameras("usb")
-        for port,serialnumber in cameras.items():
-            camobjects.append(Camera(os.path.join("configs_byserial",serialnumber+".ini"), camera_port=port,serialnumber=serialnumber,name=serialnumber))
-            uploadobjects.append(Uploader(os.path.join("configs_byserial", serialnumber+".ini"), name=serialnumber+"-Uploader"))
-        for thread in camobjects:
-            thread.daemon = True
-            thread.start()
-        for thread in uploadobjects:
-            thread.daemon = True
-            thread.start()
-
-        raspberrycam = PiCamera("picam.ini", name="PiCam")
-        raspberryupload = Uploader("picam.ini", name="PiCam-Uploader")
-        raspberrycam.daemon = True
-        raspberryupload.daemon = True
-        raspberrycam.start()
-        raspberryupload.start() 
+        tries = 0
+        cameras = None
+        has_picam = detect_picam()
+        while cameras == None and tries < 10:
+            logger.debug("detecting Cameras")
+            cameras= detect_cameras("usb")
+            
+        if not cameras == None:
+            camsnuploads = create_workers(cameras)
+            start_workers(camsnuploads[0])
+            #start_workers(camsnuploads[1])
+        
+        if has_picam:
+            raspberry = [PiCamera("picam.ini", name="PiCam"), Uploader("picam.ini", name="PiCam-Uploader")]
+            start_workers(raspberry)
         
         while True:time.sleep(100)
-    except (Exception, KeyboardInterrupt, SystemExit) as e:
-        print str(e)
-        for thread in camobjects:
-            thread.join()
-        for thread in uploadobjects:
-            thread.join()
-
-        raspberrycam.join()
-        raspberryupload.join()
+    except (KeyboardInterrupt, SystemExit):
+        if not cameras == None:
+            kill_workers(camsnuploads[0])
+            #kill_workers(camsnuploads[1])
+        if has_picam:
+            kill_workers(raspberry)
+            
+        sys.exit()

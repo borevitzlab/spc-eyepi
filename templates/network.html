@@ -1,0 +1,53 @@
+{% extends "layout.html" -%}
+{% set active_page="net" -%}
+{% block body %}
+<h2>Network</h2>
+<hr>
+<div class="col-md-12">
+	<div class="col-md-7">
+		<textarea class="form-control" id="interfaces" name="interfaces">{{netcfg.read()}}</textarea>
+	</div>
+</div>
+<div class="col-md-2">
+	<br>
+	<button class="btn btn-warning btn-md" data-toggle="modal" data-target="#write-confirm-modal">Save</button>
+</div>
+<div class="modal fade" id="write-confirm-modal" tabindex="-1" role="dialog" aria-labelledby="write-confirm-modal-label" aria-hidden="true">
+   <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="{{username}}-confirm-modal-label">Are You SURE?</h4>
+        </div>
+        <div class="modal-body">
+        <p> This could potentially make this site inaccessible</p>
+	</div>
+        <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">I'm not sure...</button>
+        <button id="write-confirm-save-button" type="button" class="btn btn-danger">Do it</button>
+        </div>
+      </div>
+   </div>
+</div>
+
+<script type="text/javascript">
+$("#write-confirm-save-button").click(function(e){
+      e.preventDefault();
+      $.post('/savenet',
+        {interfaces:$("#interfaces").val()},
+        function(data, status, xhr){ 
+        console.log(data)
+        if(data == "success"){
+                $("#write-confirm-save-button").removeClass("btn-danger")
+                $("#write-confirm-save-button").addClass("btn-success")
+                setTimeout(function(){
+                        $("#write-confirm-save-button").removeClass("btn-success")
+                        $("#write-confirm-save-button").addClass("btn-dannger")
+                        $("#write-confirm-modal").modal("hide")
+                },2000)
+           }
+        });
+});
+</script>
+
+{% endblock %}

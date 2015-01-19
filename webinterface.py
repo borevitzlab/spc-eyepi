@@ -2,10 +2,10 @@
 import socket, os, hashlib, subprocess
 import Crypto.Protocol.KDF
 import anydbm
-import datetime, re
+import datetime, re, fnmatch
 from glob import glob
 from functools import wraps
-from flask import Flask, redirect, url_for, request, send_file, abort, Response, render_template
+from flask import Flask, redirect, url_for, request, send_file, abort, Response, render_template, jsonify
 from ConfigParser import SafeConfigParser
 
 config_filename = 'eyepi.ini'
@@ -49,12 +49,9 @@ def detect_cameras(type):
         for port in re.finditer("usb:", a):
             cmdret = subprocess.check_output('gphoto2 --port "'+a[port.start():port.end()+7]+'" --get-config serialnumber', shell=True)
             cams[a[port.start():port.end()+7]] = cmdret[cmdret.find("Current: ")+9: len(cmdret)-1]
-        #if len(cams)<1:
-        #    raise 
         return cams
     except Exception as e:
         print str(e)
-        #logger.error("Could not detect camera for some reason: " + str(e))
         
 def check_auth(username, password):
     db = anydbm.open('db', 'r')
@@ -67,13 +64,34 @@ def check_auth(username, password):
             return False
     db.close()
 
-def add_user(username, password):
+@app.errorhandler(404)
+def not_found(error):
+    return render_template('page_not_found.html'), 404
+
+@app.errorhandler(500)
+def server_error(error):
+    return render_template('server_error.html'), 500
+
+@app.errorhandler(401)
+def bad_auth(error):
+    return render_template('bad_auth.html'), 401
+
+def add_user(username, password, adminpass):
     hash = Crypto.Protocol.KDF.PBKDF2(password=str(password),salt=str(username),count=100)
+    adminpasshash = Crypto.Protocol.KDF.PBKDF2(password=str(password),salt="admin",count=100)
     db = anydbm.open('db', 'c')
+    # later only allow users control over their own password and admin to add later.
     if str(username) not in db:
-        db[str(username)] = hash
-        return True
-    return False
+        if adminpasshash == db["admin"]:
+           db[str(username)] = hash
+        else:
+            return False
+    else:
+        if adminpasshash == db["admin"] or adminpasshash==db[str(username)]:
+            db[str(username)] = hash
+        else:
+            return False
+    return True
 
 def requires_auth(f):
     @wraps(f)
@@ -86,6 +104,13 @@ def requires_auth(f):
         
 def authenticate():
     return Response('Access DENIED!',401,{'WWW-Authenticate':'Basic realm="Login Required"'})
+
+@app.route("/imgs/<path:path>")
+def get_image(path):
+    if '..' in path or path.startswith('/'):
+        abort(404)
+    return send_file(os.path.join("static","temp",path+".jpg"))
+
 
 @app.route('/rotatelogfile')
 @requires_auth
@@ -111,45 +136,69 @@ def rotatelogfile():
 def restart():
     print "shutting down"
     os.system("reboot")
-    return redirect(url_for('cameras'))
+    return redirect(url_for('admin'))
 
 @app.route("/update")
 @requires_auth
 def update():
     os.system("git fetch --all")
     os.system("git reset --hard origin/master")
-    return redirect(url_for('cameras'))#'<html><head><script type="text/javascript" //function(){document.location.reload(true);},60000);</script></head><body>UPDATING!! WAIT PLEASE!!</body></html>'
+    return redirect(url_for('admin'))#'<html><head><script type="text/javascript" //function(){document.location.reload(true);},60000);</script></head><body>UPDATING!! WAIT PLEASE!!</body></html>'
 
-@app.route("/adduser", methods=['GET','POST'])
+@app.route("/newuser", methods=['POST'])
 @requires_auth
-def adduser():
-    returnstring = "<html><head><link rel='shortcut icon' href='/static/favicon.ico' type='image/x-icon'> <link rel='icon' href='/static/favicon.ico' type='image/x-icon'></head>\
-<body style='color:yellow;width:100%;font-family:\"Times New Roman\"\, Times, serif;' bgcolor=\"#0000FF\"><div style='display:block;'><img src='/static/fpimg.png' style='float:left;width:10%;'></img><h1 style='display:inline;float:left;width:79%;'><marquee behaviour='alternate'>Configuration Page for "+socket.gethostname()+"</marquee></h1><img src='/static/fpimg.png' style='float:right;width:10%;'></img></div>\
-<br><br>"
-    returnstring+="<form action=/adduser method=POST>"
-    returnstring+="<br><input type='text' name='username' placeholder='username:'>"
-    returnstring+="<br><input type='password' name='password' placeholder='password:'>"
-    returnstring += "<button>SUBMIT</button></form>"
-    if request.method == 'POST':
-        username = None
-        password = None
-        for key, value in request.form.iteritems(multi=True):
-            print "key:" + key + "   value: "+ value
-            if key == "username":
-                username = value
-            if key == "password":
-                password = value
-        if len(username)>0 and len(password)>5:
-            if add_user(username, password):
-                returnstring += "SUCCESS"
-            else:
-                returnstring += "Something went wrong. Are you trying to change a user that already exists?"
+def newuser():
+    #if request.method == 'POST':
+    username = request.form["username"]
+    password = request.form["password"]
+    adminpass = request.form["adminpass"]
+    print username + password + adminpass
+    if len(username)>0 and len(password)>5:
+        if add_user(username, password, adminpass) == True:
+            return "success"
         else:
-            returnstring+="<p>you didnt enter something, try again<p>"
-            
+            return "auth_error"
+    else:
+         return "invalid"
+    #else:
+    #    abort(400)
 
-    returnstring += "</body></html>"
-    return returnstring
+@app.route('/admin')
+@requires_auth
+def admin():
+    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+    db = anydbm.open('db', 'r')
+    usernames = []
+    for key,value in db.iteritems():
+        usernames.append(key)
+    return render_template("admin.html", version=version, usernames=usernames)
+
+@app.route('/net')
+@requires_auth
+def network():
+    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+    try:
+        if os.path.isfile("interfaces"):
+            netcfg = open("interfaces",'r')
+        else:
+            os.symlink("/etc/network/interfaces")
+            netcfg = open("interfaces",'r')
+    except:
+        abort(500)
+    return render_template("network.html", version=version, netcfg = netcfg)
+
+@app.route('/savenet', methods=['POST'])
+@requires_auth
+def savenet():
+    if request.method == 'POST':
+        try:
+            with open("interfaces",'w') as file:
+                file.write(request.form["interfaces"])
+            return "success"
+        except: 
+            abort(500)
+    else:
+        abort(400)
 
 @app.route('/delcfg', methods=['POST'])
 @requires_auth
@@ -160,7 +209,6 @@ def delcfg():
             return "success"
         except:
             return "FAILURE"
-
 
 @app.route('/detectcams', methods=['POST'])
 @requires_auth
@@ -179,14 +227,10 @@ def detectcams():
             return post_return_string
         except Exception as e:
             return "Something went horribly wrong! :"+str(e)
-                    
-                    
-                    
 
 @app.route('/writecfg', methods=['POST'])
 @requires_auth
 def writecfg():
-
     if request.method == 'POST':
         aconfig = SafeConfigParser()
         config_name=request.form["config-name"]+".ini"
@@ -196,13 +240,12 @@ def writecfg():
             config_path = config_name
                          
         aconfig.read(config_path)
-        
         aconfig.set("camera","enabled","off")
         aconfig.set("ftp","uploaderenabled","off")
         aconfig.set("ftp","uploadwebcam","off")
         aconfig.set("ftp","uploadtimestamped","off")
         for key, value in request.form.iteritems(multi=True):
-            print "key:" + key +"  value:"+value
+            #print "key:" + key +"  value:"+value
             if value != "" and key != "config-name":
                 sect = key.split('.')[0]
                 opt = key.split(".")[1]
@@ -214,10 +257,71 @@ def writecfg():
         except Exception as e:
             abort(400)
 
-@app.route('/', methods=['GET','POST'])
+@app.route('/')
 @requires_auth
 def config():
     example = SafeConfigParser()
+    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+    
+    rpiconfig = SafeConfigParser()
+    rpiconfig.read("picam.ini")
+    configs = {}
+    for file in glob(os.path.join("configs_byserial","*.ini")):
+        configs[os.path.basename(file)[:-4]] = SafeConfigParser()
+        configs[os.path.basename(file)[:-4]].read(file)
+    return render_template("config.html", version=version, configs = configs, rpiconfig = rpiconfig)
+
+@app.route('/filemanagement')
+@requires_auth
+def filemanagement():
+    a = subprocess.check_output("df -h", shell=True)
+    fsinfolines = a.splitlines()
+    fsinfo = []
+    for line in fsinfolines:
+        fsinfo.append(line.split())
+    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+    rpiconfig = SafeConfigParser()
+    rpiconfig.read("picam.ini")
+    configs = {}
+    filelists = {}
+    for file in glob(os.path.join("configs_byserial","*.ini")):
+        configs[os.path.basename(file)[:-4]] = SafeConfigParser()
+        configs[os.path.basename(file)[:-4]].read(file)
+        thisglob = glob(os.path.join(configs[os.path.basename(file)[:-4]].get("localfiles","upload_dir"),"*.*"))[-1000:]
+        dictglob = {}
+        for path in thisglob:
+            dictglob[os.path.basename(path)] = path
+        filelists[os.path.basename(file)[:-4]] = dictglob
+
+    
+    filelists["picam"] = glob(os.path.join(rpiconfig.get("localfiles","upload_dir"),"*.*"))[-1000:]    
+    return render_template("filemgmt.html",version=version, fsinfo = fsinfo, configs=configs, rpiconfig=rpiconfig, filelists=filelists)
+
+
+@app.route('/filelist', methods=['POST'])
+@requires_auth
+def filelist():
+    if request.method == 'POST':
+        config = SafeConfigParser()
+        config_name=request.form["name"]+".ini"
+        if not config_name == "picam.ini":
+            config_path = os.path.join("configs_byserial",config_name) 
+        else:
+            config_path = config_name
+                         
+        config.read(config_path)
+        list=glob(os.path.join(config.get("localfiles","upload_dir"),"*.*") )
+        if len(list) > 1000:
+            return jsonify(results=list[-1000:])
+        else:
+            return jsonify(results=list)
+    else:
+        abort(400)
+        #return request.form["name"]
+        
+
+@app.route("/images")
+def images():
     version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
     configs = {}
     rpiconfig = SafeConfigParser()
@@ -225,51 +329,52 @@ def config():
     for file in glob(os.path.join("configs_byserial","*.ini")):
         configs[os.path.basename(file)[:-4]] = SafeConfigParser()
         configs[os.path.basename(file)[:-4]].read(file)
-    return render_template("config.html", version=version, configs = configs, rpiconfig = rpiconfig)
+    urls = []
+    for file in glob(os.path.join("static","temp","*.jpg")):
+        urls.append(os.path.basename(file)[:-4])
+    return render_template("images.html", version=version, configs=configs, rpiconfig=rpiconfig, image_urls=urls)
 
-@app.route("/lastimage")
-def lastimage():
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
-    config = SafeConfigParser()
-    config.read(config_filename)
-    return '<META HTTP-EQUIV="EXPIRES" CONTENT="Mon, 22 Jul, 2002 12:00:00 GMT"><html>\
-<script type="text/javascript">window.setTimeout(function(){document.location.reload(true);},'+str(float(config.get("timelapse","interval"))*1000)+');</script>\
-<body><img src='+ url_for("static",filename="temp/dslr_last_image.jpg")+'></img></body></html>'
-
-@app.route("/dslr_last_image.jpg")
-def DSLR_last_image():
-    if os.path.isfile("static/temp/dslr_last_image.jpg"):
-        return send_file("static/temp/dslr_last_image.jpg")
-    else:
-        abort(404)
-
-@app.route("/pi_last_image.jpg")
-def PI_last_image():
-    if os.path.isfile("static/temp/pi_last_image.jpg"):
-        return send_file("static/temp/pi_last_image.jpg")
-    else:
-        abort(404)
-
-@app.route("/lastpicam")
-def lastpicam():
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
-    config = SafeConfigParser()
-    config.read(otherconfig_filename)
-    return '<META HTTP-EQUIV="EXPIRES" CONTENT="Mon, 22 Jul, 2002 12:00:00 GMT"><html>\
-<script type="text/javascript">window.setTimeout(function(){document.location.reload(true);},'+str(float(config.get("timelapse","interval"))*1000)+');</script>\
-<body><img src='+ url_for("static",filename="temp/pi_last_image.jpg")+'></img></body></html>'
-
-@app.route("/getlog")
+@app.route("/getfilteredlog", methods=["POST"])
 @requires_auth
-def getlog():
-    returnstring = ""
-    with open("static/logfile.txt",'r') as file:
-        lines=[]
-        for line in file:
-            lines.append(line.strip() + '<br>')
-        for line in reversed(lines):
-            returnstring += line
-    return returnstring
+def getfilteredlog():
+    if request.method == 'POST':
+        query = request.form["query"].lower()
+        returnstring = ''
+        
+        with open("static/logfile.txt",'r') as file:
+            istoolong = False
+            lines=[]
+            for line in file:
+                lines.append(line.strip() + '<br>')
+                
+            for line in reversed(lines):
+                if fnmatch.fnmatch(line.lower(),"*"+query.lower()+"*") and len(returnstring.splitlines()) <= 500:
+                    returnstring += "<tr><td>"+line+"</td></tr>"+'\n'
+            if len(returnstring.splitlines())==500:
+                returnstring+="<tr><td><h3>Truncated at 500 results</h3></td></tr>"
+        return returnstring
+    else:
+        abort(400)
+
+@app.route("/log.log")
+@requires_auth
+def log():
+    return send_file("spc-eyepi.log")
+
+@app.route("/deletefiles", methods=['POST'])
+@requires_auth
+def deletefiles():
+    if request.method == "POST":
+        retstr = "success"
+        for key, value in request.form.iteritems(multi=True):
+            if value == "on" and not any(x in os.path.dirname(key) for x in
+                                         ["/bin","/dev","/mnt","/proc","/run","/srv","/tmp","/var","/boot","/etc","/lib","/opt","/root","/sbin","/sys","/usr"]):
+                os.remove(key)
+            else:
+                retstr="DO NOT DELETE THINGS YOU SHOULDNT!!! GRRRR!"
+        return retstr
+    else:
+        abort(400)
 
 @app.route("/logfile")
 @requires_auth

@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-{% set navigation_bar = [("/","cameras","Cameras"),("/logfile","logfile", "Log")]  -%}
+{% set navigation_bar = [("/","cameras","Cameras"),("/images","images", "Live Images"), ("/filemanagement","filemgmt","Files"),("/logfile","logfile", "Log"),
+("/net","net","Network"),
+("/admin","admin","Administration")
+]  -%}
 {% set active_page = active_page|default("index") -%}
 <html lang="en">
   <head>
@@ -19,14 +22,17 @@
 
 	<!-- Latest compiled and minified JavaScript -->
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
-	
-	
 	<style>
 		body{
 			padding-top 50px;
 			margin-left: 5%;
 		}
 		#vers{float:right;}
+		img {
+          	display: block;
+          	height: auto;
+         	max-width: 100%;
+   		}
 	</style>
 
 </head>

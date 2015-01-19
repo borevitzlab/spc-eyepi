@@ -1,0 +1,88 @@
+{% extends "layout.html" -%}
+{% set active_page="images" -%}
+{% block body %}
+<h2>Live Images</h2>
+<hr>
+{% for image in image_urls %}
+{% if image == "pi_last_image" %}
+<div class="col-md-12">
+	<br>
+	<h4>{{ rpiconfig.get("camera","name") }} </h4>
+	<br>
+	<div class="btn-group col-md-4" data-toggle="buttons">
+	        <label class="btn btn-primary">
+       	        <input type="checkbox" id="{{image}}-autoup" autocomplete="off">Auto Update</input>
+	        </label>
+		<button class="btn btn-default"><a role="button" href="/imgs/{{image}}">Link</a></button> 
+	</div>
+
+	<div class="col-md-8 pull-right">
+        <div id="{{image}}-a"><img class="img-responsive" src="/imgs/{{image}}"</div>
+	</div>
+<hr> 
+</div>
+</div>
+<br>  
+{% endif %}
+
+{% if image in configs %}
+<div class="col-md-12">
+	<br>
+	<h4>{{ configs[image].get("camera","name") }} </h4>
+	<br>
+	<div class="btn-group col-md-4" data-toggle="buttons">
+		<label class="btn btn-primary">
+			<input type="checkbox" id="{{image}}-autoup" autocomplete="off">Auto Update</input>
+		</label>
+		<button class="btn btn-default"><a role="button" href="/imgs/{{image}}">Link</a></button> 
+
+	</div>
+
+	<div class="col-md-8 pull-right">
+		<div id="{{image}}-a"><img class="img-responsive" src="/imgs/{{image}}"</div>
+	</div>
+	<hr>
+</div>
+</div>
+<br>
+{% endif %}
+
+{% endfor %}
+{% for image in image_urls %}
+{% if image =="pi_last_image" %}
+
+<script type='text/javascript'>
+window.setInterval(
+function(){
+        if($("#{{image}}-autoup").is(":checked")){
+                var imageobject = new Image()
+                imageobject.src = "/imgs/"+"{{image}}?t=" + new Date().getTime();
+                imageobject.class = "img-responsive"
+                imageobject.onload= function(){
+                        console.log("replaced")
+                        $("#{{image}}-a").empty().append(imageobject)
+                }
+        }
+}
+,{{rpiconfig.get("timelapse","interval")}}*1000);
+</script>
+{% else %}
+<script type='text/javascript'>
+window.setInterval(
+function(){
+	if($("#{{image}}-autoup").is(":checked")){
+
+		var imageobject = new Image()
+		imageobject.src = "/imgs/"+"{{image}}?t=" + new Date().getTime();
+		imageobject.class = "img-responsive"
+		imageobject.onload= function(){
+			console.log("replaced")
+			$("#{{image}}-a").empty().append(imageobject)
+		}		
+	}
+}
+,{{configs[image].get("timelapse","interval")}}*1000);
+</script>
+{% endif %}
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "layout.html" -%}
+{% set active_page="filemgmt" -%}
+{% block body %}
+<h2>Filesystem Management</h2>
+<hr>
+<div class="panel panel-default col-md-6 pull-right">
+<table class="table">
+{% for line in fsinfo %}
+	<tr>
+	{% for data in line %}
+		{% if not data == "on" %}
+		<td>{{ data }}</td>
+		{% endif %}
+	{% endfor %}
+	</tr>
+{% endfor %}
+</table>
+</div>
+
+{% for name, config in configs.iteritems() %}
+<div class="btn-group-vertical col-md-4" role="group" aria-label="files-modal-button-group-label">
+        <button class="btn btn-primary btn-md" data-toggle="modal" data-target="#{{name}}-files-modal">{{ config.get("camera","name") }}Files</button>
+</div>
+<br>
+<hr>
+<!-- Modal -->
+<div class="modal fade" id="{{name}}-files-modal" tabindex="-1" role="dialog" aria-labelledby="picam-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3 class="modal-title" id="files-modal-label"> {{ config.get("camera","name") }} Files</h3>
+        </div>
+        <div class="modal-body col-md-12">
+              <form method="POST" id="{{name}}-filelist-form">
+                    <div class="panel panel-default">
+        	         <div class="panel-heading">
+	                     <h4 class="panel-title">{{ config.get("camera","name") }} Files</h4>
+                		 <div class="btn-group col-md-6 pull-right">
+					<button class="btn btn-danger" id="{{name}}-files-modal-delete-button"> Delete Selected </button>
+					<button class="btn btn-default" id="{{name}}-toggle-checkboxes", >Toggle All</button>
+			 	</div>
+			 </div>
+                    	 <div class="panel-body">
+				<ul class="list-group">
+				{% for basename,path in filelists[name].iteritems() %}
+				<li class="list-group-item col-md-11">{{basename}}
+					<div class="btn-group col-md-1 pull-right" data-toggle="buttons">
+        					<label class="btn btn-sm btn-default">
+                					<input class='{{name}}-checkboxes' type="checkbox" name="{{path}}" autocomplete="off">&times;</input>
+        					</label>
+					</div>
+				</li>
+				{% endfor %}
+				</ul>
+                   	 </div>
+                    </div>
+		</form>
+      	</div>
+        <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close/Discard</button>
+                <button type="button" id="files-modal-get-button" class="btn btn-primary">get list</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<script type='text/javascript'>
+$("#{{name}}-files-modal-get-button").click(function(e){
+      e.preventDefault();
+      $.post('/filelist',
+         {name: "{{name}}"},
+         function(data, status, xhr){
+           console.log(data);
+           if(data){
+                console.log("changing button");
+                $("#{{name}}-files-modal-get-button").toggleClass("btn-success")
+
+                setTimeout(function(){
+                        $("#{{name}}-files-modal-get-button").toggleClass("btn-success")
+                },2000)
+           }
+         });
+});
+</script>
+<script type='text/javascript'>
+$("#{{name}}-files-modal-delete-button").click(function(e){
+      e.preventDefault();
+      $.post('/deletefiles',
+         $("#{{name}}-filelist-form").serialize(),
+         function(data, status, xhr){
+           console.log($("#{{name}}-filelist-form"));
+           if(data=="success"){
+                setTimeout(function(){
+			$("#{{name}}-files-modal").modal("hide")
+                },1000)
+           }
+         });
+});
+
+</script>
+
+<script type='text/javascript'>
+$("#{{name}}-toggle-checkboxes").click(function(e){
+      e.preventDefault();
+	console.log("check")
+	$('.{{name}}-checkboxes').each(function(){
+	if($(this).is(':checked')){
+		$(this).prop("checked",false)
+		$(this).parent().removeClass("active")
+	}else{
+		$(this).prop("checked",true)
+		$(this).parent().addClass("active")
+	}
+});
+});
+
+</script>
+
+
+{% endfor %}
+
+{% endblock %}
