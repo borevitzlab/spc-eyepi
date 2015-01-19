@@ -591,7 +591,7 @@ if __name__ == "__main__":
         if not cameras == None:
             camsnuploads = create_workers(cameras)
             start_workers(camsnuploads[0])
-            #start_workers(camsnuploads[1])
+            start_workers(camsnuploads[1])
         
         if has_picam:
             raspberry = [PiCamera("picam.ini", name="PiCam"), Uploader("picam.ini", name="PiCam-Uploader")]
@@ -601,7 +601,7 @@ if __name__ == "__main__":
     except (KeyboardInterrupt, SystemExit):
         if not cameras == None:
             kill_workers(camsnuploads[0])
-            #kill_workers(camsnuploads[1])
+            kill_workers(camsnuploads[1])
         if has_picam:
             kill_workers(raspberry)
             
