@@ -2,7 +2,7 @@
 import socket, os, hashlib, subprocess
 import Crypto.Protocol.KDF
 import anydbm
-import datetime, re, fnmatch
+import datetime, re, fnmatch, shutil
 from glob import glob
 from functools import wraps
 from flask import Flask, redirect, url_for, request, send_file, abort, Response, render_template, jsonify
@@ -130,6 +130,25 @@ def rotatelogfile():
 
     open("static/logfile.txt","w").close()
     return redirect(url_for('logfile'))
+
+@app.route('/savetousb', methods=["POST"])
+@requires_auth
+def savetousb():
+    
+    config = SafeConfigParser()
+    if request.form["name"] == "picam":
+        config.read("picam.ini")
+    else:
+        config.read(os.path.join("configs_byserial",request.form["name"]+'.ini'))
+    try:
+        subprocess.call("mount /dev/sda1 /mnt/", shell=True)
+        shutil.copytree(config.get("localfiles","upload_dir"),os.path.join("/mnt/", config.get("camera","name")))
+    except Exception as e:
+        subprocess.call("umount /mnt", shell=True)
+        print str(e)
+        return "failure"
+    subprocess.call("umount /mnt", shell=True)
+    return "success"
 
 @app.route('/restart')
 @requires_auth
@@ -262,7 +281,6 @@ def writecfg():
 def config():
     example = SafeConfigParser()
     version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
-    
     rpiconfig = SafeConfigParser()
     rpiconfig.read("picam.ini")
     configs = {}
@@ -317,7 +335,6 @@ def filelist():
             return jsonify(results=list)
     else:
         abort(400)
-        #return request.form["name"]
         
 
 @app.route("/images")

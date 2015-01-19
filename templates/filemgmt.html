@@ -37,7 +37,8 @@
         	         <div class="panel-heading">
 	                     <h4 class="panel-title">{{ config.get("camera","name") }} Files</h4>
                 		 <div class="btn-group col-md-6 pull-right">
-					<button class="btn btn-danger" id="{{name}}-files-modal-delete-button"> Delete Selected </button>
+					<button class="btn btn-warning" data-loading-text="Copying..."  id="{{name}}-files-modal-savetousb-button">Copy to usb</button> 
+					<button class="btn btn-danger" data-loading-text="Deleting..." id="{{name}}-files-modal-delete-button">Delete Selected</button>
 					<button class="btn btn-default" id="{{name}}-toggle-checkboxes", >Toggle All</button>
 			 	</div>
 			 </div>
@@ -83,6 +84,28 @@ $("#{{name}}-files-modal-get-button").click(function(e){
          });
 });
 </script>
+<script type='text/javascript'>
+$("#{{name}}-files-modal-savetousb-button").click(function(e){
+      e.preventDefault();
+      $("#{{name}}-files-modal-savetousb-button").button("loading")
+      $.post('/savetousb',
+         {name: "{{name}}"},
+         function(data, status, xhr){
+           console.log(data);
+           if(data=="success"){
+		$("#{{name}}-files-modal-savetousb-button").button("reset")
+                console.log("changing button");
+                $("#{{name}}-files-modal-get-button").toggleClass("btn-success")
+		setTimeout(function(){$("#{{name}}-files-modal-get-button").toggleClass("btn-success")},2000)
+		
+           }else{
+		$("#{{name}}-files-modal-savetousb-button").toggleClass("btn-danger").html("Failed")
+		setTimeout(function(){ $("#{{name}}-files-modal-savetousb-button").button("reset").toggleClass("btn-danger").html("Save to usb")},5000)
+		}
+         });
+});
+</script>
+
 <script type='text/javascript'>
 $("#{{name}}-files-modal-delete-button").click(function(e){
       e.preventDefault();
