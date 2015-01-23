@@ -4,6 +4,7 @@ import os, subprocess, sys, platform, io
 import datetime, time, shutil, re
 import pysftp, ftplib
 import logging, logging.config
+import cPickle
 from glob import glob
 from ConfigParser import SafeConfigParser
 from optparse import OptionParser
@@ -45,6 +46,7 @@ def geteosserialnumber(port):
         cmdret = subprocess.check_output('gphoto2 --port "'+port+'" --get-config eosserialnumber', shell=True)
         return cmdret[cmdret.find("Current: ")+9: len(cmdret)-1]
     except:
+
         return 0
 
 class Camera(Thread):
@@ -84,6 +86,7 @@ class Camera(Thread):
         self.interval = self.config.getint("timelapse","interval")
         self.spool_directory = self.config.get("localfiles","spooling_dir")
         self.upload_directory = self.config.get("localfiles","upload_dir")
+        self.exposure_length = self.config.getint("camera","exposure")
 
         # get enabled
         if self.config.get("camera","enabled")=="on":
@@ -180,7 +183,13 @@ class Camera(Thread):
                     
                     # No conversion needed, just take 2 files, 1 jpeg and 1 raw
                     #if self.camera_port:
-                    cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
+                    is_bulbspeed = subprocess.check_output("gphoto2 --port "+self.camera_port+" --get-config shutterspeed", shell=True).splitlines() 
+                    bulb = is_bulbspeed[3][is_bulbspeed[3].find("Current: ")+9: len(is_bulbspeed[3])]
+                    if bulb.find("bulb") != -1:
+                        cmd = ["gphoto2 --port "+ self.camera_port+" --set-config capturetarget=sdram --set-config eosremoterelease=5 --wait-event="+str(self.exposure_length)+"ms --set-config eosremoterelease=11 --wait-event-and-download=2s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
+                    else:
+                        cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
+                    
                     #else:
                     #    #cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
                     # subprocess.call. shell=True is hellishly insecure and doesn't throw an error if it fails. Needs to be fixed somehow <shrug>
@@ -225,7 +234,6 @@ class Camera(Thread):
                     self.next_capture = datetime.datetime.now()
                     # TODO: This needs to catch errors from subprocess.call because it doesn't
                     self.logger.error("Image Capture error - " + str(e))
-
             time.sleep(0.01)
 
 class PiCamera(Camera):
@@ -514,8 +522,6 @@ class Uploader(Thread):
                     self.ftpUpload(upload_list)
                 self.last_upload_time = datetime.datetime.now()
 
-        
-
 class FtpUploadTracker:
     sizeWritten = 0
     totalSize = 0
@@ -533,7 +539,97 @@ class FtpUploadTracker:
             sys.stderr.write('\r[{0}] {1}%'.format('.'*int(percentage),int(percentage)))
             self.lastShownPercent+=self.multiple
             sys.stderr.flush()
-            
+
+
+
+class Scheduler(Thread):
+    """ Uploader class,
+        used to upload,
+    """
+    def __init__(self,config, port, name = None):
+        # same thread name hackery that the Camera threads use
+        if name == None:
+            Thread.__init__(self)
+        else:
+            Thread.__init__(self, name=name)
+        # get a logger first
+        self.logger = logging.getLogger(self.getName())
+        self.last_schedule_mod_time = ""
+        # and the same setup stuff that they use as well.
+        self.logger.info("Starting up scheduler")
+        self.port = port
+        self.schedule_file_name = "schedules/"+self.name+".p"
+        self.config = SafeConfigParser()
+        self.config.read(config)
+        if not os.path.isfile(self.schedule_file_name):
+            cPickle.dump([],open(self.schedule_file_name,'w'))
+            self.logger.info("Creating new pickle")
+        self.setup()
+
+    def setup(self):
+        # load data
+        self.unordered_sched = cPickle.load(open(self.schedule_file_name,'rb'))
+        self.ordered_sched = sorted(self.unordered_sched)
+        self.logger.info(str(len(self.ordered_sched))+" jobs to do")
+        # set job number to 0 and cycle through the joblist until we get to the time now.
+        self.job_number = 0
+        tn = datetime.datetime.now()
+        for time, value in self.ordered_sched:
+            if datetime.time(int(time[:2]),int(time[3:])) < tn.time():
+                self.job_number += 1
+
+    def do_job(self):
+        self.logger.info("Beginning job #"+str(self.job_number))
+        config_string = ""
+        for st,val in self.ordered_sched[self.job_number][1]:
+            config_string+=" --set-config "+st+"="+val
+        self.logger.info("Current job parameters: %s" % config_string) 
+        results = subprocess.check_output("gphoto2"+config_string, shell=True)
+
+    def time2seconds(self, t):
+        """ Convert the time to seconds
+            TODO: a better implementation of this such as datetime.timesinceepoch or some sorcery
+        """
+        return t.hour*60*60+t.minute*60+t.second
+        
+    def run(self):
+        while True:
+            try:
+                midnight = datetime.time(23,59)
+                next_time_obj = midnight
+                tn = datetime.datetime.now()
+                # sleep through the midnight minute.
+                if tn.time() >datetime.time(23,59):
+                    self.logger.info("Its Midnight, sleeping until tomorrow morning")
+                    sleep(60)
+                
+                if os.stat(self.schedule_file_name).st_mtime!=self.last_schedule_mod_time:
+                        # reset last change time to last and setup()
+                        self.logger.info("change in schedule, setting up again, last" + str(os.stat(self.schedule_file_name).st_mtime) + str(self.last_schedule_mod_time))
+                        self.last_schedule_mod_time = os.stat(self.schedule_file_name).st_mtime
+                        self.setup()
+                
+                if self.job_number<len(self.ordered_sched) and self.job_number >=0:
+                    next_time_string = self.ordered_sched[self.job_number][0]
+                    next_time_obj = datetime.time(int(next_time_string[:2]),int(next_time_string[3:]))
+
+                if self.job_number>=len(self.ordered_sched):
+                    next_time_obj = midnight
+                    self.job_number = -1
+                    self.logger.info("Last job for the period, setting job number to minus one.")
+                
+                if tn.time() > next_time_obj:
+                    if self.job_number >= 0:
+                        self.logger.info("waiting so that i dont start at the same time as the other")
+                        time.sleep(self.config.getint("timelapse","interval")/2)
+                        self.do_job()
+                    self.job_number += 1
+                time.sleep(1)
+                    
+            except Exception as e:
+                self.logger.error("Something went wrong: %s" % str(e))
+
+      
 def detect_cameras(type):
     try:
         a = subprocess.check_output("gphoto2 --auto-detect", shell=True)
@@ -541,8 +637,7 @@ def detect_cameras(type):
         for port in re.finditer("usb:", a):
             cmdret = subprocess.check_output('gphoto2 --port "'+a[port.start():port.end()+7]+'" --get-config serialnumber', shell=True)
             cams[a[port.start():port.end()+7]] = cmdret[cmdret.find("Current: ")+9: len(cmdret)-1]
-        #if len(cams)<1:
-        #    raise 
+            configlist = 
         return cams
     except Exception as e:
         print str(e)
@@ -561,10 +656,12 @@ def detect_picam():
 def create_workers(cameras):
     camobjects = []
     uploadobjects = []
+    schedulerobjects = []
     for port,serialnumber in cameras.iteritems():
         camobjects.append(Camera(os.path.join("configs_byserial",serialnumber+".ini"), camera_port=port,serialnumber=serialnumber,name=serialnumber))
         uploadobjects.append(Uploader(os.path.join("configs_byserial", serialnumber+".ini"), name=serialnumber+"-Uploader"))
-    return (camobjects, uploadobjects)
+        schedulerobjects.append(Scheduler(os.path.join("configs_byserial", serialnumber+".ini"),port,name=serialnumber+"-Scheduler"))
+    return (camobjects, uploadobjects, schedulerobjects)
 
 def start_workers(objects):
     for thread in objects:
@@ -592,6 +689,7 @@ if __name__ == "__main__":
             camsnuploads = create_workers(cameras)
             start_workers(camsnuploads[0])
             start_workers(camsnuploads[1])
+            start_workers(camsnuploads[2])
         
         if has_picam:
             raspberry = [PiCamera("picam.ini", name="PiCam"), Uploader("picam.ini", name="PiCam-Uploader")]
@@ -602,6 +700,7 @@ if __name__ == "__main__":
         if not cameras == None:
             kill_workers(camsnuploads[0])
             kill_workers(camsnuploads[1])
+            kill_workers(camsnuploads[2])
         if has_picam:
             kill_workers(raspberry)
             
