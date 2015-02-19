@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 from __future__ import division
 import os, subprocess, sys, platform, io
 import datetime, time, shutil, re
@@ -189,12 +189,15 @@ class Camera(Thread):
                     #if bulb.find("bulb") != -1:
                     #    cmd = ["gphoto2 --port "+ self.camera_port+" --set-config capturetarget=sdram --set-config eosremoterelease=5 --wait-event="+str(self.exposure_length)+"ms --set-config eosremoterelease=11 --wait-event-and-download=2s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
                     #else:
-                    cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
+                    cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --wait-event-and-download=36s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
                     
                     #else:
                     #    #cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
                     # subprocess.call. shell=True is hellishly insecure and doesn't throw an error if it fails. Needs to be fixed somehow <shrug>
-                    output = subprocess.check_output(cmd,stderr=subprocess.STDOUT, shell=True)
+                    try:
+                        output = subprocess.check_output(cmd,stderr=subprocess.STDOUT, shell=True)
+                    except subprocess.CalledProcessError as e:
+                        self.logger.error("Something went wrong!!! %s "% str(e))
                     self.logger.debug("GPHOTO2: "+ output)
                     self.logger.debug("Capture Complete")
                     self.logger.debug("Moving and renaming image files, buddy")
@@ -544,8 +547,8 @@ class FtpUploadTracker:
 
 
 class Scheduler(Thread):
-    """ Uploader class,
-        used to upload,
+    """ Scheduler class,
+        used to schedule events,
     """
     def __init__(self,config, port, name = None):
         # same thread name hackery that the Camera threads use
@@ -558,7 +561,7 @@ class Scheduler(Thread):
         self.last_schedule_mod_time = ""
         # and the same setup stuff that they use as well.
         self.logger.info("Starting up scheduler")
-        self.port = port
+        self.camera_port = port
         self.schedule_file_name = "schedules/"+self.name+".p"
         self.config = SafeConfigParser()
         self.config.read(config)
@@ -575,17 +578,39 @@ class Scheduler(Thread):
         # set job number to 0 and cycle through the joblist until we get to the time now.
         self.job_number = 0
         tn = datetime.datetime.now()
-        for time, value in self.ordered_sched:
-            if datetime.time(int(time[:2]),int(time[3:])) < tn.time():
+        self.interval = self.config.getint("timelapse","interval")
+        for a_time, value in self.ordered_sched:
+            if datetime.time(int(a_time[:2]),int(a_time[3:])) < tn.time():
                 self.job_number += 1
+        tries = 0
+        if len(self.ordered_sched)>0:
+            self.job_number -=1 
+            while not self.do_job() and not tries > 5:
+                time.sleep(15)
+                tries += 1
+            self.job_number +=1
+
+
+        with open(os.path.join("schedules",self.name + ".cfglist"),'wb') as file:
+            try:
+                cfg_list = subprocess.check_output("gphoto2 --port "+self.camera_port+" --list-all-config",shell=True)
+                file.write(cfg_list)
+            except subprocess.CalledProcessError as error:
+                self.logger.error("Couldnt get the current config state for the webui, is the camera connected? : %s" % str(error))
 
     def do_job(self):
-        self.logger.info("Beginning job #"+str(self.job_number))
-        config_string = ""
-        for st,val in self.ordered_sched[self.job_number][1]:
-            config_string+=" --set-config "+st+"="+val
-        self.logger.info("Current job parameters: %s" % config_string) 
-        results = subprocess.check_output("gphoto2"+config_string, shell=True)
+        try:
+            self.logger.info("Beginning job #"+str(self.job_number))
+            config_string = ""
+            for st,val in self.ordered_sched[self.job_number][1]:
+                config_string+=" --set-config-index "+st+"="+val
+            self.logger.info("Current job parameters: %s" % config_string)
+            results = subprocess.check_output("gphoto2 --port "+self.camera_port +" "+config_string, shell=True)
+            return True
+        except subprocess.CalledProcessError as error:
+            self.logger.error("Couldnt do job, gonna try again: %s" % str(error))
+            return False
+            
 
     def time2seconds(self, t):
         """ Convert the time to seconds
@@ -602,7 +627,7 @@ class Scheduler(Thread):
                 # sleep through the midnight minute.
                 if tn.time() >datetime.time(23,59):
                     self.logger.info("Its Midnight, sleeping until tomorrow morning")
-                    sleep(60)
+                    time.sleep(130)
                 
                 if os.stat(self.schedule_file_name).st_mtime!=self.last_schedule_mod_time:
                         # reset last change time to last and setup()
@@ -622,8 +647,10 @@ class Scheduler(Thread):
                 if tn.time() > next_time_obj:
                     if self.job_number >= 0:
                         self.logger.info("waiting so that i dont start at the same time as the other")
-                        time.sleep(self.config.getint("timelapse","interval")/2)
-                        self.do_job()
+                        if self.time2seconds(next_time_obj) % self.interval < 5:
+                            time.sleep(50)
+                        while not self.do_job():
+                            time.sleep(10)
                     self.job_number += 1
                 time.sleep(1)
                     
@@ -641,7 +668,7 @@ def detect_cameras(type):
         return cams
     except Exception as e:
         print str(e)
-        #logger.error("Could not detect camera for some reason: " + str(e))
+        logger.error("Could not detect camera for some reason: " + str(e))
 
 def detect_picam():
     try:
