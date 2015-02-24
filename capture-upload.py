@@ -177,9 +177,7 @@ class Camera(Thread):
                     
                     
                     # TODO:
-                    # 1. change the filetype to more agnostic behaviour (see the parameter for filename for gphoto2)
-                    # 2. check for the camera capture settings/config file
-                    # 3. put other camera settings in another call to setup camera (iso, aperture etc) using gphoto2 --set-config
+                    # 3. put other camera settings in another call to setup camera (iso, aperture etc) using gphoto2 --set-config (nearly done)
                     
                     # No conversion needed, just take 2 files, 1 jpeg and 1 raw
                     #if self.camera_port:

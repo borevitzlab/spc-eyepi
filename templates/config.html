@@ -16,13 +16,33 @@
 <br>
 <hr>
 {% for name, config in configs.iteritems() %}
-<div class="btn-group-vertical col-md-4" role="group" aria-label="{{config.get("camera","name")}}">
+<div class="btn-group-vertical col-md-4 panel panel-default" role="group" aria-label="{{config.get("camera","name")}}">
+  <br>
 	<button class="btn btn-primary btn-md" data-toggle="modal" data-target="#{{name}}-modal">{{config.get("camera","name")}}</button>
         <button class="btn btn-danger btn-md" data-toggle="modal" data-target="#{{name}}-delete-modal">Remove Config</button>
+  <br>
+  <p>
+    <h4>
+    {% if config.get("camera","enabled")=="on"%}
+
+    Camera Enabled <br><br>
+    {% else %}
+    Camera Disabled <br><br>
+    {% endif %}
+
+    {% if config.get("ftp","uploaderenabled")=="on"%}
+
+    Uploader Enabled <br><br>
+    {% else %}
+    Uploader Disabled <br><br>
+    {% endif %}
+
+    </h4>
+  </p>
 </div>
 <!-- Modal -->
 <div class="modal fade" id="{{name}}-modal" tabindex="-1" role="dialog" aria-labelledby="{{name}}-modal-label" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -39,28 +59,38 @@
             <input type="text" style="display:none;" name="config-name" value="{{name}}"></input>
             {% for section in config.sections() %}
                 {% if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter" and not section == "eosserialnumber" %}
+                    {% if section not in ["camera","timelapse","ftp"] %}
+                    <div class="panel panel-default hidden {{name}}-advanced">
+                    {% else %}
                     <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">{{section}}</h4>
-                    </div>
-                    <div class="panel-body">
-                        {% for option in config.options(section) %}
-                        {{option}} 
-                         {% if option == "enabled" or option == "uploadwebcam" or option == "uploadtimestamped" or option == "uploaderenabled" %}
-                                <input class="col-md-3 pull-right" type='checkbox' name="{{section}}.{{option}}" placeholder="{{config.get(section, option)}}" {% if config.get(section,option)=="on"%}checked{% endif %}> 
-                         {% else %}
-                                <input class="col-md-4 pull-right" type='text' title=example:"{{config.get(section,option)}}" name="{{section}}.{{option}}" placeholder="{{config.get(section, option)}}">
-                         {% endif %}
-                       <br><br>
-                         {% endfor %}
-                    </div>
+                    {% endif %}
+                      <div class="panel-heading">
+                          <h4 class="panel-title">{{section}}</h4>
+                      </div>
+                      <div class="panel-body">
+                          {% for option in config.options(section) %}
+                          {{option}} 
+                          
+                           {% if option == "enabled" or option == "uploadwebcam" or option == "uploadtimestamped" or option == "uploaderenabled" %}
+                                  
+                                  <input class="col-md-4 pull-right" type='checkbox' name="{{section}}.{{option}}" placeholder="{{config.get(section, option)}}" {% if config.get(section,option)=="on"%}checked{% endif %}> 
+                           {% else %}
+                                  <input class="col-md-4 pull-right" type='text' title=example:"{{example.get(section,option)}}" name="{{section}}.{{option}}" value="{{config.get(section, option)}}">
+                           {% endif %}
+                           <div class="col-md-4 pull-right" style="text-align:right">{{example.get(section,option)}}</div>
+                         <br><br>
+                           {% endfor %}
+                      </div>
                     </div>
                 {% endif %}
             {% endfor %} 
         </div>
         <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close/Discard</button>
-        <button type="button" id="{{name}}-save-button" class="btn btn-primary">Save changes</button>
+           <button type="button" id="{{name}}-advanced-button" class="btn btn-warning">Advanced</button>
+           <br><br>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close/Discard</button>
+            <button type="button" id="{{name}}-save-button" class="btn btn-primary">Save changes</button>
+
         </div>
         </form>
       </div><!-- /.modal-content -->
@@ -123,6 +153,12 @@ $("#{{name}}-delete-button").click(function(e){
          });
 });
 </script>
+<script type="text/javascript">
+$("#{{name}}-advanced-button").click(function(e){
+      e.preventDefault();
+      $(".{{name}}-advanced").toggleClass("hidden");
+});
+</script>
 
 {% endfor %}
 
@@ -132,7 +168,7 @@ $("#{{name}}-delete-button").click(function(e){
 
 <!-- Modal -->
 <div class="modal fade" id="picam-modal" tabindex="-1" role="dialog" aria-labelledby="picam-modal-label" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -143,7 +179,11 @@ $("#{{name}}-delete-button").click(function(e){
             <input type="text" style="display:none;" name="config-name" value="picam"></input>
             {% for section in rpiconfig.sections() %}
                 {% if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter" %}
+                    {% if section not in ["camera","timelapse","ftp"] %}
+                    <div class="panel panel-default hidden picam-advanced">
+                    {% else %}
                     <div class="panel panel-default">
+                    {% endif %}
                     <div class="panel-heading">
                         <h4 class="panel-title">{{section}}</h4>
                     </div>
@@ -155,6 +195,7 @@ $("#{{name}}-delete-button").click(function(e){
                          {% else %}
                                 <input class="col-md-4 pull-right" type='text' title=example:"{{rpiconfig.get(section,option)}}" name="{{section}}.{{option}}" placeholder="{{rpiconfig.get(section, option)}}">
                          {% endif %}
+                         <div class="col-md-4 pull-right" style="text-align:right">{{example.get(section,option)}}</div>
                        <br><br>
                          {% endfor %}
                     </div>
@@ -163,6 +204,8 @@ $("#{{name}}-delete-button").click(function(e){
             {% endfor %}
         </div>
         <div class="modal-footer">
+          <button type="button" id="picam-advanced-button" class="btn btn-warning">Advanced</button>
+           <br><br>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close/Discard</button>
         	<button type="button" id="picam-save-button" class="btn btn-primary">Save changes</button>
         </div>
@@ -227,6 +270,12 @@ $("#picam-save-button").click(function(e){
                 },2000)
            }
          });
+});
+</script>
+<script type="text/javascript">
+$("#picam-advanced-button").click(function(e){
+      e.preventDefault();
+      $(".picam-advanced").toggleClass("hidden");
 });
 </script>
 
