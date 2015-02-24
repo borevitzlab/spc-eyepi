@@ -35,6 +35,31 @@
 			<input type="checkbox" id="{{image}}-autoup" autocomplete="off">Auto Update</input>
 		</label>
 		<button class="btn btn-default"><a role="button" href="/imgs/{{image}}">Link</a></button> 
+		<button class="btn btn-warning btn-md" data-toggle="modal" data-target="#{{image}}-modal">Config</button>
+	</div>
+  <br>
+  <br>
+</div>
+<div class="col-md-12">
+  <p>
+    <h4>
+    {% if configs[image].get("camera","enabled")=="on"%}
+
+    Camera Enabled <br><br>
+    {% else %}
+    Camera Disabled <br><br>
+    {% endif %}
+
+    {% if configs[image].get("ftp","uploaderenabled")=="on"%}
+
+    Uploader Enabled <br><br>
+    {% else %}
+    Uploader Disabled <br><br>
+    {% endif %}
+
+    </h4>
+  </p>
+
 
 	</div>
 
@@ -44,7 +69,91 @@
 	<hr>
 </div>
 </div>
+
+<!-- Modal -->
+<div class="modal fade" id="{{image}}-modal" tabindex="-1" role="dialog" aria-labelledby="{{image}}-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3 class="modal-title" id="{{image}}-modal-label">{{configs[image].get("camera","name")}}</h3>
+		<h6 class="modal-title pull-right">{% if not configs[image].get("eosserialnumber","value") == "0" %}
+			{{configs[image].get("eosserialnumber","value")}}
+				{% else %}
+			{{image}}
+				{% endif %}
+			</h6>
+        </div>
+        <div class="modal-body col-md-12">
+            <form id="{{image}}-form">
+            <input type="text" style="display:none;" name="config-name" value="{{image}}"></input>
+            {% for section in configs[image].sections() %}
+                {% if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter" and not section == "eosserialnumber" %}
+                    {% if section not in ["camera","timelapse","ftp"] %}
+                    <div class="panel panel-default hidden {{image}}-advanced">
+                    {% else %}
+                    <div class="panel panel-default">
+                    {% endif %}
+                      <div class="panel-heading">
+                          <h4 class="panel-title">{{section}}</h4>
+                      </div>
+                      <div class="panel-body">
+                          {% for option in configs[image].options(section) %}
+                          {{option}} 
+                          
+                           {% if option == "enabled" or option == "uploadwebcam" or option == "uploadtimestamped" or option == "uploaderenabled" %}
+                                  
+                                  <input class="col-md-4 pull-right" type='checkbox' name="{{section}}.{{option}}" placeholder="{{configs[image].get(section, option)}}" {% if configs[image].get(section,option)=="on"%}checked{% endif %}> 
+                           {% else %}
+                                  <input class="col-md-4 pull-right" type='text' title=example:"{{example.get(section,option)}}" name="{{section}}.{{option}}" value="{{configs[image].get(section, option)}}">
+                           {% endif %}
+                           <div class="col-md-4 pull-right" style="text-align:right">{{example.get(section,option)}}</div>
+                         <br><br>
+                           {% endfor %}
+                      </div>
+                    </div>
+                {% endif %}
+            {% endfor %} 
+        </div>
+        <div class="modal-footer">
+           <button type="button" id="{{image}}-advanced-button" class="btn btn-warning">Advanced</button>
+           <br><br>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close/Discard</button>
+            <button type="button" id="{{image}}-save-button" class="btn btn-primary">Save changes</button>
+
+        </div>
+        </form>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div>
 <br>
+
+<script type="text/javascript">
+$("#{{image}}-save-button").click(function(e){
+      e.preventDefault();
+      $.post('/writecfg', 
+         $("#{{image}}-form").serialize(), 
+         function(data, status, xhr){
+           console.log(data);
+           if(data =="success"){
+		console.log("changing button");
+		$("#{{image}}-save-button").toggleClass("btn-success")
+  
+		setTimeout(function(){
+			$("#{{image}}-save-button").toggleClass("btn-success")	
+		},2000)
+	   }
+         });
+});
+</script>
+
+<script type="text/javascript">
+$("#{{image}}-advanced-button").click(function(e){
+      e.preventDefault();
+      $(".{{image}}-advanced").toggleClass("hidden");
+});
+</script>
+
 {% endif %}
 
 {% endfor %}
@@ -63,8 +172,7 @@ function(){
                         $("#{{image}}-a").empty().append(imageobject)
                 }
         }
-}
-,{{rpiconfig.get("timelapse","interval")}}*1000);
+},{{rpiconfig.get("timelapse","interval")}}*1000);
 </script>
 {% else %}
 <script type='text/javascript'>

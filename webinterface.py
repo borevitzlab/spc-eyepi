@@ -669,6 +669,10 @@ def filelist():
 @app.route("/images")
 def images():
 	version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+	example = SafeConfigParser()
+	version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+	example.read("example.ini")
+
 	configs = {}
 	rpiconfig = SafeConfigParser()
 	rpiconfig.read("picam.ini")
@@ -678,7 +682,7 @@ def images():
 	urls = []
 	for file in glob(os.path.join("static","temp","*.jpg")):
 		urls.append(os.path.basename(file)[:-4])
-	return render_template("images.html", version=version, configs=configs, rpiconfig=rpiconfig, image_urls=urls)
+	return render_template("images.html", version=version, configs=configs, rpiconfig=rpiconfig, image_urls=urls,example=example)
 """                                                                                                                                             
           d8                                       ad88  88  88                                                        88  88                            
         ,8P'                             ,d       d8"    ""  88    ,d                                                  88  88                            
