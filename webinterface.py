@@ -701,55 +701,16 @@ def getfilteredlog():
 	if request.method == 'POST':
 		query = request.form["query"].lower()
 		returnstring = ''
-		
-		fsize = os.stat("spc-eyepi.log")
-		bufsize = 8192
-		def tail( f, lines=20 ):
-			total_lines_wanted = lines
-
-			BLOCK_SIZE = 1024
-			f.seek(0, 2)
-			block_end_byte = f.tell()
-			lines_to_go = total_lines_wanted
-			block_number = -1
-			blocks = [] # blocks of size BLOCK_SIZE, in reverse order starting
-						# from the end of the file
-			while lines_to_go > 0 and block_end_byte > 0:
-				if (block_end_byte - BLOCK_SIZE > 0):
-					# read the last block we haven't yet read
-					f.seek(block_number*BLOCK_SIZE, 2)
-					blocks.append(f.read(BLOCK_SIZE))
-				else:
-					# file too small, start from begining
-					f.seek(0,0)
-					# only read what was not read
-					blocks.append(f.read(block_end_byte))
-				lines_found = blocks[-1].count('\n')
-				lines_to_go -= lines_found
-				block_end_byte -= BLOCK_SIZE
-				block_number -= 1
-			all_read_text = ''.join(blocks)
-			return '\n'.join(all_read_text.splitlines()[-total_lines_wanted:])
-
-		with open("spc-eyepi.log") as f:
-			a = tail(f,2000)
-		for line in a.splitlines():
-			if fnmatch.fnmatch(line.lower(),"*"+query.lower()+"*") and len(returnstring.splitlines())<100:
-					returnstring += "<tr><td>"+line+"</td></tr>"+'\n'
-		returnstring+="<tr><td><h3>Truncated at 100/2000 lines into the past</h3></td></tr>"
-
-		"""
-		with open("static/logfile.txt",'r') as file:
-			istoolong = False
-			lines=[]
-			for line in file:
-				lines.append(line.strip() + '<br>')
-			for line in reversed(lines):
-				if fnmatch.fnmatch(line.lower(),"*"+query.lower()+"*") and len(returnstring.splitlines()) <= 500:
-					returnstring += "<tr><td>"+line+"</td></tr>"+'\n'
-			if len(returnstring.splitlines())==500:
-				returnstring+="<tr><td><h3>Truncated at 500 results</h3></td></tr>"
-			return returnstring"""
+		with open("spc-eyepi.log",'rb') as f:
+			f.seek (0, 2)
+			fsize = f.tell()
+			f.seek (max (fsize-10.24**6, 0), 0)
+			lines = f.readlines() 
+			a = reversed(lines)
+		for line in a:
+			if fnmatch.fnmatch(line.lower(),"*"+query.lower()+"*") and len(returnstring.splitlines())<250:
+				returnstring += "<tr><td>"+line+"</td></tr>"+'\n'
+		returnstring+="<tr><td><h3>Truncated at 250 lines of 1Mb into the past</h3></td></tr>"
 		return returnstring
 	else:
 		abort(400)
