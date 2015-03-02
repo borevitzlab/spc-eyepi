@@ -195,7 +195,7 @@ class Camera(Thread):
                     try:
                         output = subprocess.check_output(cmd,stderr=subprocess.STDOUT,universal_newlines=True,shell=True)
                         for line in output.splitlines():
-                            self.logger.debug("GPHOTO2: "+ line)
+                            self.logger.info("GPHOTO2: "+ line)
                         self.logger.debug("Capture Complete")
                         self.logger.debug("Moving and renaming image files, buddy")
                     except subprocess.CalledProcessError as e:
