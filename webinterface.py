@@ -732,10 +732,24 @@ def getfilteredlog():
 			return '\n'.join(all_read_text.splitlines()[-total_lines_wanted:])
 
 		with open("spc-eyepi.log") as f:
-			a = tail(f,100)
+			a = tail(f,2000)
 		for line in a.splitlines():
-			returnstring += "<tr><td>"+line+"</td></tr>"+'\n'
-		returnstring+="<tr><td><h3>Truncated at 100 results</h3></td></tr>"
+			if fnmatch.fnmatch(line.lower(),"*"+query.lower()+"*") and len(returnstring.splitlines())<100:
+					returnstring += "<tr><td>"+line+"</td></tr>"+'\n'
+		returnstring+="<tr><td><h3>Truncated at 100/2000 lines into the past</h3></td></tr>"
+
+		"""
+		with open("static/logfile.txt",'r') as file:
+			istoolong = False
+			lines=[]
+			for line in file:
+				lines.append(line.strip() + '<br>')
+			for line in reversed(lines):
+				if fnmatch.fnmatch(line.lower(),"*"+query.lower()+"*") and len(returnstring.splitlines()) <= 500:
+					returnstring += "<tr><td>"+line+"</td></tr>"+'\n'
+			if len(returnstring.splitlines())==500:
+				returnstring+="<tr><td><h3>Truncated at 500 results</h3></td></tr>"
+			return returnstring"""
 		return returnstring
 	else:
 		abort(400)
