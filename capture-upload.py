@@ -200,7 +200,7 @@ class Camera(Thread):
                         self.logger.error("Something went wrong!")
                         for line in e.output.splitlines():
                             if not line.strip() == "" and not "***" in line:
-                                self.logger.error(line.strip)
+                                self.logger.error(line.strip())
                         time.sleep(7)
 
 
