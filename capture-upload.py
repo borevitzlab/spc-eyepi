@@ -193,10 +193,12 @@ class Camera(Thread):
                     #    #cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
                     # subprocess.call. shell=True is hellishly insecure and doesn't throw an error if it fails. Needs to be fixed somehow <shrug>
                     try:
-                        output = subprocess.check_output(cmd,stderr=subprocess.STDOUT, shell=True)
+                        output = subprocess.check_output(cmd,stderr=subprocess.STDERR, shell=True)
                     except subprocess.CalledProcessError as e:
                         self.logger.error("Something went wrong!!! %s "% str(e))
-                    self.logger.debug("GPHOTO2: "+ output)
+                    for line in output.splitlines():
+                        self.logger.debug("GPHOTO2: "+ line)
+
                     self.logger.debug("Capture Complete")
                     self.logger.debug("Moving and renaming image files, buddy")
 
