@@ -402,6 +402,7 @@ class Uploader(Thread):
             for f in filenames:
                 # use sftpuloadtracker to handle the progress
                 link.put(f,os.path.basename(f), callback=self.sftpuploadtracker)
+                link.chmod(os.path.basename(f), mode=775)
                 os.remove(f)
                 self.logger.debug("Successfuly uploaded %s through sftp and removed from local filesystem" % f)
             self.logger.debug("Disconnecting, eh")
@@ -678,7 +679,7 @@ def detect_cameras(type):
 
 def detect_picam():
     try:
-        cmdret = subprocess.check_output("vcgencmd get_camera", shell=True)
+        cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True)
         if cmdret[cmdret.find("detected=")+9 : len(cmdret)-1] == "1":
             return True
         else:
