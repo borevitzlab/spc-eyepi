@@ -172,7 +172,7 @@ def add_user(username, password_to_set, adminpass):
 	# later only allow users control over their own password and admin to add later.
 
 	# allow global admin password to change everything.
-	if adminpasshash == db["admin"]
+	if adminpasshash == db["admin"]:
 		db[str(username)] = hash
 		return True
 
@@ -398,20 +398,19 @@ def update():
 @app.route("/newuser", methods=['POST'])
 @requires_auth
 def newuser():
-	#if request.method == 'POST':
-	username = request.form["username"]
-	password = request.form["password"]
-	adminpass = request.form["adminpass"]
-	print username + password + adminpass
-	if len(username)>0 and len(password)>5:
-		if add_user(username, password, adminpass) == True:
-			return "success"
+	if request.method == 'POST':
+		username = request.form["username"]
+		password = request.form["pass"]
+		adminpass = request.form["adminpass"]
+		if len(username) > 0 and len(password) > 5:
+			if add_user(username, password, adminpass) == True:
+				return "success"
+			else:
+				return "auth_error"
 		else:
-			return "auth_error"
+			 return "invalid"
 	else:
-		 return "invalid"
-	#else:
-	#	abort(400)
+		return abort(400)
 
 """
           d8                       88                      88               
