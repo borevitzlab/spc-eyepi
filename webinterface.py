@@ -165,22 +165,24 @@ def bad_auth(error):
                                                                                                     
                                       888888888888                                                  
 """
-def add_user(username, password, adminpass):
-	hash = Crypto.Protocol.KDF.PBKDF2(password=str(password),salt=str(username),count=100)
-	adminpasshash = Crypto.Protocol.KDF.PBKDF2(password=str(password),salt="admin",count=100)
+def add_user(username, password_to_set, adminpass):
+	hash = Crypto.Protocol.KDF.PBKDF2(password=str(password_to_set),salt=str(username),count=100)
+	adminpasshash = Crypto.Protocol.KDF.PBKDF2(password=str(adminpass),salt="admin",count=100)
 	db = anydbm.open('db', 'c')
 	# later only allow users control over their own password and admin to add later.
-	if str(username) not in db:
-		if adminpasshash == db["admin"]:
-		   db[str(username)] = hash
-		else:
-			return False
-	else:
-		if adminpasshash == db["admin"] or adminpasshash==db[str(username)]:
+
+	# allow global admin password to change everything.
+	if adminpasshash == db["admin"]
+		db[str(username)] = hash
+		return True
+
+	# for each username, only allow the correct hash to change the password
+	for username_, hash_ in db.iteritems():
+		if username_ == username and adminpasshash == db[str(username)]:
 			db[str(username)] = hash
-		else:
-			return False
-	return True
+			return True
+
+	return False
 
 """                                                                                                
                                                   88                                                                                     88           
