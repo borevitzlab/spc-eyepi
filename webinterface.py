@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python2
 import socket, os, hashlib, subprocess
 import Crypto.Protocol.KDF
 import anydbm

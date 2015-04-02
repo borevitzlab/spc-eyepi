@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python2
 from __future__ import division
 import os, subprocess, sys, platform, io
 import datetime, time, shutil, re
