@@ -282,8 +282,9 @@ class PiCamera(Camera):
                     # TODO: once timestamped imagename is more agnostic this will require a jpeg append.
                     image_file = self.timestamped_imagename(tn)
 
+                    image_file_path = os.path.join(self.spool_directory, image_file)
                     # take the image using os.system(), pretty hacky but it cant exactly be run on windows.
-                    os.system("raspistill --nopreview -o " + image_file)
+                    os.system("/opt/vc/bin/raspistill --nopreview -o " + image_file)
                     self.logger.debug("Capture Complete")
                     self.logger.debug("Copying the image to the web service, buddy")
                     # Copy the image file to the static webdir 
@@ -297,7 +298,7 @@ class PiCamera(Camera):
                         os.rename(image_file ,os.path.join(self.upload_directory,os.path.basename(image_file))) 
                     else:
                         self.logger.debug("deleting file buddy")
-                        os.remove(file)
+                        os.remove(image_file)
                     # Do some logging.
                     if self.next_capture.time() < self.timestopat:
                         self.logger.info("Next capture at %s" % self.next_capture.isoformat())
