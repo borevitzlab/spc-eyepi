@@ -285,6 +285,7 @@ class PiCamera(Camera):
                     image_file_path = os.path.join(self.spool_directory, image_file)
                     # take the image using os.system(), pretty hacky but it cant exactly be run on windows.
                     os.system("/opt/vc/bin/raspistill --nopreview -o " + image_file)
+                    os.chmod(image_file,0755)
                     self.logger.debug("Capture Complete")
                     self.logger.debug("Copying the image to the web service, buddy")
                     # Copy the image file to the static webdir 
@@ -492,11 +493,13 @@ class Uploader(Thread):
             s = socket(AF_INET, SOCK_DGRAM)
             s.connect(("8.8.8.8",0))
             self.ipaddress = s.getsockname()[0]
-            # check if the uploader has not uploaded this run.
+            onion_address = ""
+            with open("/home/tor_private/hostname") as f:
+                onion_address=f.read().replace('\n', '')
             if l_last_upload_time == None:
-                fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Havent uploaded yet<br> Ip address: "+ self.ipaddress + "<br><a href='http://" + self.ipaddress + ":5000'>Config</a>" 
+                fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Havent uploaded yet<br> Ip address: "+ self.ipaddress + "<br>onion_address: "+onion_address+"<br><a href='http://" + self.ipaddress + ":5000'>Config</a>" 
             else:
-                fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Last upload at: " + l_last_upload_time.strftime("%y-%m-%d %H:%M:%S") + "<br> Ip address: "+ self.ipaddress + "<br><a href='http://" + self.ipaddress + ":5000'>Config</a>"
+                fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Last upload at: " + l_last_upload_time.strftime("%y-%m-%d %H:%M:%S") + "<br> Ip address: "+ self.ipaddress + "<br>onion_address: "+onion_address+"<br><a href='http://" + self.ipaddress + ":5000'>Config</a>"
             self.logger.debug("my IP address:" + str(self.ipaddress))
             # upload ze ipaddress.html
             if not self.makeserveripaddressSFTP(fullstr):
