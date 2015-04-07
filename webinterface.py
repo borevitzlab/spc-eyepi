@@ -469,6 +469,12 @@ def savenet():
 			abort(500)
 	else:
 		abort(400)
+
+
+@app.route('/break_the_interface')
+@requires_auth
+def break_the_interface():
+	return render_template("bljdg.html")
 """                                                        
           d8           88              88                 ad88               
         ,8P'           88              88                d8"                 
