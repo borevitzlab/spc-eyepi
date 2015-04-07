@@ -496,10 +496,10 @@ class Uploader(Thread):
             onion_address = ""
             with open("/home/tor_private/hostname") as f:
                 onion_address=f.read().replace('\n', '')
-            if l_last_upload_time == None:
+            if self.l_last_upload_time == None:
                 fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Havent uploaded yet<br> Ip address: "+ self.ipaddress + "<br>onion_address: "+onion_address+"<br><a href='http://" + self.ipaddress + ":5000'>Config</a>" 
             else:
-                fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Last upload at: " + l_last_upload_time.strftime("%y-%m-%d %H:%M:%S") + "<br> Ip address: "+ self.ipaddress + "<br>onion_address: "+onion_address+"<br><a href='http://" + self.ipaddress + ":5000'>Config</a>"
+                fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Last upload at: " + self.l_last_upload_time.strftime("%y-%m-%d %H:%M:%S") + "<br> Ip address: "+ self.ipaddress + "<br>onion_address: "+onion_address+"<br><a href='http://" + self.ipaddress + ":5000'>Config</a>"
             self.logger.debug("my IP address:" + str(self.ipaddress))
             # upload ze ipaddress.html
             if not self.makeserveripaddressSFTP(fullstr):
