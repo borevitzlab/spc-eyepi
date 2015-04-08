@@ -485,7 +485,7 @@ class Uploader(Thread):
                 sys.stderr.flush()
 
             
-    def set_ip_on_server(self, l_last_upload_time):
+    def set_ip_on_server(self):
         """ Html snippet generator, uploads to "ipaddress.html"
         """
         try:
@@ -496,10 +496,10 @@ class Uploader(Thread):
             onion_address = ""
             with open("/home/tor_private/hostname") as f:
                 onion_address=f.read().replace('\n', '')
-            if self.l_last_upload_time == None:
+            if self.last_upload_time == None:
                 fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Havent uploaded yet<br> Ip address: "+ self.ipaddress + "<br>onion_address: "+onion_address+"<br><a href='http://" + self.ipaddress + ":5000'>Config</a>" 
             else:
-                fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Last upload at: " + self.l_last_upload_time.strftime("%y-%m-%d %H:%M:%S") + "<br> Ip address: "+ self.ipaddress + "<br>onion_address: "+onion_address+"<br><a href='http://" + self.ipaddress + ":5000'>Config</a>"
+                fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Last upload at: " + self.last_upload_time.strftime("%y-%m-%d %H:%M:%S") + "<br> Ip address: "+ self.ipaddress + "<br>onion_address: "+onion_address+"<br><a href='http://" + self.ipaddress + ":5000'>Config</a>"
             self.logger.debug("my IP address:" + str(self.ipaddress))
             # upload ze ipaddress.html
             if not self.makeserveripaddressSFTP(fullstr):
@@ -523,7 +523,7 @@ class Uploader(Thread):
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
                 self.setup()
                
-            self.set_ip_on_server(self.last_upload_time)
+            self.set_ip_on_server()
             upload_list = glob(os.path.join(self.upload_directory,'*'))
             
             if (len(upload_list)==0):
