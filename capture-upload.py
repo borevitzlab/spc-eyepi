@@ -362,6 +362,7 @@ class Uploader(Thread):
             self.mkdir_p_sftp(link, os.path.join(self.target_directory,self.cameraname) )
             # open a file and write the html snippet.
             for name,data in datas.iteritems():
+                self.logger.info("Dumping "+name)
                 f = link.open(os.path.join(self.target_directory,self.cameraname,name), mode='w')
                 f.write(data)
                 f.close()
@@ -502,7 +503,7 @@ class Uploader(Thread):
 
             
     def set_metadata_on_server(self, list_of_uploads):
-        """ Html snippet generator, uploads to "ipaddress.html"
+        """ Metadata collector
         """
         def sizeof_fmt(num, suffix='B'):
             for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
@@ -518,10 +519,14 @@ class Uploader(Thread):
             s.connect(("8.8.8.8",0))
             self.ipaddress = s.getsockname()[0]
             onion_address = ""
-            self.logger.info("Sending metadata to server now")
+            self.logger.debug("Collecting metadata")
+            jsondata = {}
             try:
                 with open("/home/tor_private/hostname") as f:
                     onion_address=f.read().replace('\n', '')
+                jsondata["onion_address"] = onion_address.split(" ")[0]
+                jsondata["onion_cookie_auth"] = onion_address.split(" ")[1]
+                jsondata["onion_cookie_client"] = onion_address.split(" ")[-1]
             except Exception as e:
                 self.logger.warning(str(e))
             if self.last_upload_time == None:
@@ -531,21 +536,19 @@ class Uploader(Thread):
             a_statvfs = os.statvfs("/")
             free_space = sizeof_fmt(a_statvfs.f_frsize*a_statvfs.f_bavail)
             total_space = sizeof_fmt(a_statvfs.f_frsize*a_statvfs.f_blocks)
-            jsondata = {}
             jsondata["name"]=self.cameraname
+            jsondata["tb_uploaded"] = self.total_data_uploaded_tb
+            jsondata["smaller_uploaded"] = sizeof_fmt(self.total_data_uploaded_b)
             jsondata["interval"]=self.config.get("timelapse","interval")
             jsondata["upload_check_interval"] = self.timeinterval
             jsondata["free_space"]=free_space
             jsondata["total_space"]=total_space
-            jsondata["onion_address"] = onion_address.split(" ")[0]
-            jsondata["onion_cookie_auth"] = onion_address.split(" ")[1]
-            jsondata["onion_cookie_client"] = onion_address.split(" ")[-1]
-            jsondata["serialnumber"] = self.config_filename[:-4]
+            jsondata["serialnumber"] = self.config_filename[:-4].split("/")[-1]
             jsondata["ip_address"] = self.ipaddress
             jsondata["list_of_uploads"]=list_of_uploads
             data["metadata.json"] = json.dumps(jsondata, indent=4, sort_keys=True)
             data["ipaddress.html"] = fullstr
-            
+            self.logger.debug("Sending metadata to server now")
             if not self.sendMetadataSFTP(data):
                 self.sendMetadataFTP(data)
         except Exception as e:
