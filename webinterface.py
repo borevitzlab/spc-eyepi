@@ -454,19 +454,42 @@ def network():
 	except:
 		abort(500)
 	return render_template("network.html", version=version, netcfg = netcfg)
-"""
 
-"""
-@app.route('/savenet', methods=['POST'])
+
+def set_ip(ipaddress=None,subnet=None,gateway=None):
+	if ipaddress not None and subnet not None and gateway not None:
+		dev = "eth0"
+		if not os.path.exists("/etc/conf.d/"):
+    		os.makedirs("/etc/conf.d/")
+		with open("/etc/conf.d/net-conf-"+dev) as f:
+			f.write("address="+ipaddress+"\nnetmask")
+
+
+
+@app.route('/static-ip', methods=['POST'])
 @requires_auth
-def savenet():
+def static_ip():
 	if request.method == 'POST':
 		try:
-			with open("interfaces",'w') as file:
-				file.write(request.form["interfaces"])
-			return "success"
-		except: 
-			abort(500)
+			if "ip-form-dynamic" in request.form.keys():
+				if request.form['ip-form-dynamic']=="on":
+					set_ip()
+				else:
+					return "fail"
+			else:
+				try:
+					socket.inet_aton(request.form["ip-form-ipaddress"])
+					socket.inet_aton(request.form["ip-form-subnet"])
+					socket.inet_aton(request.form["ip-form-gateway"])
+
+					return 'success'
+					set_ip(ipaddress=request.form["ip-form-ipaddress"],
+							subnet=request.form["ip-form-subnet"],
+							gateway=request.form["ip-form-gateway"])
+				except Exception as e:
+					return "fail"
+		except:
+			return "fail"
 	else:
 		abort(400)
 

@@ -1,53 +1,126 @@
 {% extends "layout.html" -%}
 {% set active_page="net" -%}
+{% block javascript_h %}
+
+{% endblock %}
 {% block body %}
 <h2>Network</h2>
 <hr>
 <div class="col-md-12">
 	<div class="col-md-7">
-		<textarea class="form-control" id="interfaces" name="interfaces">{{netcfg.read()}}</textarea>
 	</div>
 </div>
 <div class="col-md-2">
 	<br>
-	<button class="btn btn-warning btn-md" data-toggle="modal" data-target="#write-confirm-modal">Save</button>
+	<button class="btn btn-warning btn-md" data-toggle="modal" data-target="#static-ip-modal">IP Addressing</button>
 </div>
-<div class="modal fade" id="write-confirm-modal" tabindex="-1" role="dialog" aria-labelledby="write-confirm-modal-label" aria-hidden="true">
+
+<div class="modal fade" id="static-ip-modal" tabindex="-1" role="dialog" aria-labelledby="static-ip-modal-label" aria-hidden="true">
    <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="{{username}}-confirm-modal-label">Are You SURE?</h4>
+            <h4 class="modal-title" id="static-ip-modal-label">IP Addressing Setup</h4>
         </div>
         <div class="modal-body">
-        <p> This could potentially make this site inaccessible</p>
-	</div>
+         <p> This is where you will set up your IP address.</p>
+         <form id="ip-form" class='form-horizontal'>
+         <div class="form-group">
+            <label class='col-md-2' for="ip-form-dynamic">Dynamic IP</label>
+            <div class="col-md-6">
+              <input type="checkbox" id="ip-form-dynamic" name="ip-form-dynamic"></input> 
+            </div>
+         </div>
+         <br>
+         <div class="form-group">
+          <label class='col-md-2' for="ip-form-ipaddress">IP Address</label>
+         <div class="col-md-6">
+            <input type='text' placeholder='xxx.xxx.xxx.xxx' class="form-control ip_address" id="ip-form-ipaddress" name="ip-form-ipaddress"></input>
+          </div>
+         </div>
+         <br> 
+          <div class="form-group">
+              <label class='col-md-2' for="ip-form-subnet">Subnet</label>
+                <div class="col-md-6">
+                <input type='text' placeholder='xxx.xxx.xxx.xxx' class="form-control ip_address" id="ip-form-subnet" name="ip-form-subnet"></input>
+              </div>
+          </div>
+         <br>
+         <div class="form-group">
+         <label class='col-md-2' for="ip-form-gateway">Gateway</label>
+         <div class="col-md-6">
+         <input type='text' placeholder='xxx.xxx.xxx.xxx' class="form-control ip_address" id="ip-form-gateway" name="ip-form-gateway"></input>
+          </div>
+        </div>
+        </form>
+	      </div>
         <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">I'm not sure...</button>
-        <button id="write-confirm-save-button" type="button" class="btn btn-danger">Do it</button>
+        <button id="static-ip-write-button" type="button" class="btn btn-danger">Do it</button>
+        </div>
+      </div>
+   </div>
+</div>
+
+<div class="modal fade" id="fail-modal" tabindex="-1" role="dialog" aria-labelledby="fail-modal-label" aria-hidden="true">
+   <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="fail-modal-label">Failed</h4>
+        </div>
+        <div class="modal-body">
+         <p>Something went wrong.<br> are you sure you entered valid data?</p>
+        </div>
+        <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Go Away!!</button>
         </div>
       </div>
    </div>
 </div>
 
 <script type="text/javascript">
-$("#write-confirm-save-button").click(function(e){
+$('#ip-form-dynamic').click(function(e){
+  console.log(this.checked);
+   $('.ip_address').attr('disabled',this.checked)
+})
+
+$("#static-ip-write-button").click(function(e){
       e.preventDefault();
-      $.post('/savenet',
-        {interfaces:$("#interfaces").val()},
+      $.post('/static-ip',
+        $("#ip-form").serialize(),
         function(data, status, xhr){ 
-        console.log(data)
+          console.log(data);
         if(data == "success"){
-                $("#write-confirm-save-button").removeClass("btn-danger")
-                $("#write-confirm-save-button").addClass("btn-success")
+                $("#static-ip-write-button").removeClass("btn-danger")
+                $("#static-ip-write-button").addClass("btn-success")
                 setTimeout(function(){
-                        $("#write-confirm-save-button").removeClass("btn-success")
-                        $("#write-confirm-save-button").addClass("btn-dannger")
-                        $("#write-confirm-modal").modal("hide")
+                  $("#static-ip-write-button").removeClass("btn-success")
+                  $("#static-ip-write-button").addClass("btn-danger")
+                  $("#static-ip-modal").modal("hide")
                 },2000)
+           }else if(data =="fail"){
+            $("#static-ip-modal").modal("hide")
+            $("#fail-modal").modal("show")
+            setTimeout(function(){                    
+                $("#fails-modal").modal("show")
+              },10000)
            }
         });
 });
 </script>
 
+<script type="text/javascript">
+(function(g){"function"===typeof define&&define.amd?define(["jquery"],g):g(window.jQuery||window.Zepto)})(function(g){var y=function(a,f,d){var k=this,x;a=g(a);f="function"===typeof f?f(a.val(),void 0,a,d):f;k.init=function(){d=d||{};k.byPassKeys=[9,16,17,18,36,37,38,39,40,91];k.translation={0:{pattern:/\d/},9:{pattern:/\d/,optional:!0},"#":{pattern:/\d/,recursive:!0},A:{pattern:/[a-zA-Z0-9]/},S:{pattern:/[a-zA-Z]/}};k.translation=g.extend({},k.translation,d.translation);k=g.extend(!0,{},k,d);a.each(function(){!1!==
+d.maxlength&&a.attr("maxlength",f.length);d.placeholder&&a.attr("placeholder",d.placeholder);a.attr("autocomplete","off");c.destroyEvents();c.events();var b=c.getCaret();c.val(c.getMasked());c.setCaret(b+c.getMaskCharactersBeforeCount(b,!0))})};var c={getCaret:function(){var b;b=0;var e=a.get(0),c=document.selection,e=e.selectionStart;if(c&&!~navigator.appVersion.indexOf("MSIE 10"))b=c.createRange(),b.moveStart("character",a.is("input")?-a.val().length:-a.text().length),b=b.text.length;else if(e||
+"0"===e)b=e;return b},setCaret:function(b){if(a.is(":focus")){var e;e=a.get(0);e.setSelectionRange?e.setSelectionRange(b,b):e.createTextRange&&(e=e.createTextRange(),e.collapse(!0),e.moveEnd("character",b),e.moveStart("character",b),e.select())}},events:function(){a.on("keydown.mask",function(){x=c.val()});a.on("keyup.mask",c.behaviour);a.on("paste.mask drop.mask",function(){setTimeout(function(){a.keydown().keyup()},100)});a.on("change.mask",function(){a.data("changeCalled",!0)});a.on("blur.mask",
+function(b){b=g(b.target);b.prop("defaultValue")!==b.val()&&(b.prop("defaultValue",b.val()),b.data("changeCalled")||b.trigger("change"));b.data("changeCalled",!1)});a.on("focusout.mask",function(){d.clearIfNotMatch&&c.val().length<f.length&&c.val("")})},destroyEvents:function(){a.off("keydown.mask keyup.mask paste.mask drop.mask change.mask blur.mask focusout.mask").removeData("changeCalled")},val:function(b){var e=a.is("input");return 0<arguments.length?e?a.val(b):a.text(b):e?a.val():a.text()},getMaskCharactersBeforeCount:function(b,
+e){for(var a=0,c=0,d=f.length;c<d&&c<b;c++)k.translation[f.charAt(c)]||(b=e?b+1:b,a++);return a},determineCaretPos:function(b,a,d,h){return k.translation[f.charAt(Math.min(b-1,f.length-1))]?Math.min(b+d-a-h,d):c.determineCaretPos(b+1,a,d,h)},behaviour:function(b){b=b||window.event;var a=b.keyCode||b.which;if(-1===g.inArray(a,k.byPassKeys)){var d=c.getCaret(),f=c.val(),n=f.length,l=d<n,p=c.getMasked(),m=p.length,q=c.getMaskCharactersBeforeCount(m-1)-c.getMaskCharactersBeforeCount(n-1);p!==f&&c.val(p);
+!l||65===a&&b.ctrlKey||(8!==a&&46!==a&&(d=c.determineCaretPos(d,n,m,q)),c.setCaret(d));return c.callbacks(b)}},getMasked:function(b){var a=[],g=c.val(),h=0,n=f.length,l=0,p=g.length,m=1,q="push",s=-1,r,u;d.reverse?(q="unshift",m=-1,r=0,h=n-1,l=p-1,u=function(){return-1<h&&-1<l}):(r=n-1,u=function(){return h<n&&l<p});for(;u();){var v=f.charAt(h),w=g.charAt(l),t=k.translation[v];if(t)w.match(t.pattern)?(a[q](w),t.recursive&&(-1===s?s=h:h===r&&(h=s-m),r===s&&(h-=m)),h+=m):t.optional&&(h+=m,l-=m),l+=
+m;else{if(!b)a[q](v);w===v&&(l+=m);h+=m}}b=f.charAt(r);n!==p+1||k.translation[b]||a.push(b);return a.join("")},callbacks:function(b){var e=c.val(),g=c.val()!==x;if(!0===g&&"function"===typeof d.onChange)d.onChange(e,b,a,d);if(!0===g&&"function"===typeof d.onKeyPress)d.onKeyPress(e,b,a,d);if("function"===typeof d.onComplete&&e.length===f.length)d.onComplete(e,b,a,d)}};k.remove=function(){var a=c.getCaret(),d=c.getMaskCharactersBeforeCount(a);c.destroyEvents();c.val(k.getCleanVal()).removeAttr("maxlength");
+c.setCaret(a-d)};k.getCleanVal=function(){return c.getMasked(!0)};k.init()};g.fn.mask=function(a,f){this.unmask();return this.each(function(){g(this).data("mask",new y(this,a,f))})};g.fn.unmask=function(){return this.each(function(){try{g(this).data("mask").remove()}catch(a){}})};g.fn.cleanVal=function(){return g(this).data("mask").getCleanVal()};g("*[data-mask]").each(function(){var a=g(this),f={};"true"===a.attr("data-mask-reverse")&&(f.reverse=!0);"false"===a.attr("data-mask-maxlength")&&(f.maxlength=
+!1);"true"===a.attr("data-mask-clearifnotmatch")&&(f.clearIfNotMatch=!0);a.mask(a.attr("data-mask"),f)})});
+
+$('.ip_address').mask('099.099.099.099');
+</script>
 {% endblock %}
