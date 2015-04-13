@@ -56,7 +56,8 @@
 	      </div>
         <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">I'm not sure...</button>
-        <button id="static-ip-write-button" type="button" class="btn btn-danger">Do it</button>
+        <button id="static-ip-write-button" type="button" class="btn btn-warning">Set</button>
+        <button id="static-ip-commit-button" type="button" class="btn btn-danger">Commit</button>
         </div>
       </div>
    </div>
@@ -87,7 +88,7 @@ $('#ip-form-dynamic').click(function(e){
 
 $("#static-ip-write-button").click(function(e){
       e.preventDefault();
-      $.post('/static-ip',
+      $.post('/set-ip',
         $("#ip-form").serialize(),
         function(data, status, xhr){ 
           console.log(data);
@@ -103,7 +104,30 @@ $("#static-ip-write-button").click(function(e){
             $("#static-ip-modal").modal("hide")
             $("#fail-modal").modal("show")
             setTimeout(function(){                    
-                $("#fails-modal").modal("show")
+                $("#fail-modal").modal("hide")
+              },10000)
+           }
+        });
+});
+$("#static-ip-commit-button").click(function(e){
+      e.preventDefault();
+      $.post('/commit-ip',
+        $("#ip-form").serialize(),
+        function(data, status, xhr){ 
+          console.log(data);
+        if(data == "success"){
+                $("#static-ip-commit-button").removeClass("btn-danger")
+                $("#static-ip-commit-button").addClass("btn-success")
+                setTimeout(function(){
+                  $("#static-ip-commit-button").removeClass("btn-success")
+                  $("#static-ip-commit-button").addClass("btn-danger")
+                  $("#static-ip-modal").modal("hide")
+                },2000)
+           }else if(data =="fail"){
+            $("#static-ip-modal").modal("hide")
+            $("#fail-modal").modal("show")
+            setTimeout(function(){                    
+                $("#fail-modal").modal("hide")
               },10000)
            }
         });

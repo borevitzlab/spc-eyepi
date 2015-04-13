@@ -284,7 +284,7 @@ class PiCamera(Camera):
 
                     image_file_path = os.path.join(self.spool_directory, image_file)
                     # take the image using os.system(), pretty hacky but it cant exactly be run on windows.
-                    if "picam_size" in self.config.sections():
+                    if self.config.has_section("picam_size"):
                         os.system("/opt/vc/bin/raspistill -w "+self.config.get("picam_size","width")+" -h "+self.config.get("picam_size","height")+" --nopreview -o " + image_file)    
                     else:
                         os.system("/opt/vc/bin/raspistill --nopreview -o " + image_file)
@@ -407,7 +407,10 @@ class Uploader(Thread):
             for f in filenames:
                 # use sftpuloadtracker to handle the progress
                 link.put(f,os.path.basename(f)+".tmp", callback=self.sftpuploadtracker)
+                if link.exists(os.path.basename(f)):
+                    link.remove(os.path.basename(f))
                 link.rename(os.path.basename(f)+".tmp",os.path.basename(f))
+
                 link.chmod(os.path.basename(f), mode=775)
                 os.remove(f)
                 self.logger.debug("Successfuly uploaded %s through sftp and removed from local filesystem" % f)
