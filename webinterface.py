@@ -455,20 +455,108 @@ def network():
 		abort(500)
 	return render_template("network.html", version=version, netcfg = netcfg)
 
+def trunc_at(s, d, n):
+	"Returns s truncated at the n'th occurrence of the delimiter, d."
+	return d.join(s.split(d)[:n])
 
-def set_ip(ipaddress=None,subnet=None,gateway=None):
-	if ipaddress not None and subnet not None and gateway not None:
+def get_net_size(netmask):
+	binary_str = ''
+	for octet in netmask:
+		binary_str += bin(int(octet))[2:].zfill(8)
+	return str(len(binary_str.rstrip('0')))
+
+def commit_ip(ipaddress=None,subnet=None,gateway=None,dev="eth0"):
+	if ipaddress is not None and subnet is not None and gateway is not None:
 		dev = "eth0"
+
+		broadcast=trunc_at(ipaddress,".")+".255"
+		netmask=get_net_size(subnet)
 		if not os.path.exists("/etc/conf.d/"):
-    		os.makedirs("/etc/conf.d/")
+   			os.makedirs("/etc/conf.d/")
 		with open("/etc/conf.d/net-conf-"+dev) as f:
-			f.write("address="+ipaddress+"\nnetmask")
+			f.write("address="+ipaddress+"\nnetmask="+netmask+"\nbroadcast="+broadcast+"\ngateway="+gateway)
+		with open("/usr/local/bin/net-up.sh") as f:
+			script ="""#!/bin/bash
+						ip link set dev "$1" up
+						ip addr add ${address}/${netmask} broadcast ${broadcast} dev "$1"
+						[[ -z ${gateway} ]] || { 
+						  ip route add default via ${gateway}
+						}
+					"""
+			f.write(script)
+		with open("/usr/local/bin/net-down.sh") as f:
+			script ="""#!/bin/bash
+						ip addr flush dev "$1"
+						ip route flush dev "$1"
+						ip link set dev "$1" down
+					"""
+			f.write(script)
+		os.system("chmod +x /usr/local/bin/net-{up,down}.sh")
+		with open("/etc/systemd/system/network@.service") as f:
+			script ="""[Unit]
+						Description=Network connectivity (%i)
+						Wants=network.target
+						Before=network.target
+						BindsTo=sys-subsystem-net-devices-%i.device
+						After=sys-subsystem-net-devices-%i.device
+
+						[Service]
+						Type=oneshot
+						RemainAfterExit=yes
+						EnvironmentFile=/etc/conf.d/net-conf-%i
+						ExecStart=/usr/local/bin/net-up.sh %i
+						ExecStop=/usr/local/bin/net-down.sh %i
+
+						[Install]
+						WantedBy=multi-user.target
+					"""
+			f.write(script)
+		os.system("systemctl enable network@"+dev)
+
+def make_dynamic(dev):
+	os.system("systemctl disable network@"+dev)
+	# do some other crazy stuff here
+
+def set_ip(ipaddress=None,subnet=None,gateway=None,dev="eth0"):
+	if ipaddress is not None and subnet is not None and gateway is not None:
+		os.system("ip addr add "+ipaddress+"/"+get_net_size(subnet)+" broadcast "+trunc_at(ipaddress,".")+".255 dev "+dev)
+		os.system("ip route add default via "+gateway)
+	else:
+		make_dynamic(dev)
 
 
 
-@app.route('/static-ip', methods=['POST'])
+@app.route('/set-ip', methods=['POST'])
 @requires_auth
-def static_ip():
+def set_ip():
+	if request.method == 'POST':
+		try:
+			if "ip-form-dynamic" in request.form.keys():
+				if request.form['ip-form-dynamic']=="on":
+					set_ip()
+				else:
+					return "fail"
+			else:
+				try:
+					socket.inet_aton(request.form["ip-form-ipaddress"])
+					socket.inet_aton(request.form["ip-form-subnet"])
+					socket.inet_aton(request.form["ip-form-gateway"])
+
+					commit_ip(ipaddress=request.form["ip-form-ipaddress"],
+							subnet=request.form["ip-form-subnet"],
+							gateway=request.form["ip-form-gateway"])
+					return 'success'
+				except Exception as e:
+					return "fail"
+		except:
+			return "fail"
+	else:
+		abort(400)
+
+
+@app.route('/commit-ip', methods=['POST'])
+@requires_auth
+def commit_ip():
 	if request.method == 'POST':
 		try:
 			if "ip-form-dynamic" in request.form.keys():
@@ -492,7 +580,6 @@ def static_ip():
 			return "fail"
 	else:
 		abort(400)
-
 
 @app.route('/break_the_interface')
 @requires_auth

@@ -284,7 +284,10 @@ class PiCamera(Camera):
 
                     image_file_path = os.path.join(self.spool_directory, image_file)
                     # take the image using os.system(), pretty hacky but it cant exactly be run on windows.
-                    os.system("/opt/vc/bin/raspistill --nopreview -o " + image_file)
+                    if "picam_size" in self.config.sections():
+                        os.system("/opt/vc/bin/raspistill -w "+self.config.get("picam_size","width")+" -h "+self.config.get("picam_size","height")+" --nopreview -o " + image_file)    
+                    else:
+                        os.system("/opt/vc/bin/raspistill --nopreview -o " + image_file)
                     os.chmod(image_file,0755)
                     self.logger.debug("Capture Complete")
                     self.logger.debug("Copying the image to the web service, buddy")
