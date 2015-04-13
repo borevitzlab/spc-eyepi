@@ -533,19 +533,25 @@ class Uploader(Thread):
                 fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Havent uploaded yet<br> Ip address: "+ self.ipaddress + "<br>onion_address: "+onion_address+"<br><a href='http://" + self.ipaddress + ":5000'>Config</a>" 
             else:
                 fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Last upload at: " + self.last_upload_time.strftime("%y-%m-%d %H:%M:%S") + "<br> Ip address: "+ self.ipaddress + "<br>onion_address: "+onion_address+"<br><a href='http://" + self.ipaddress + ":5000'>Config</a>"
-            a_statvfs = os.statvfs("/")
-            free_space = sizeof_fmt(a_statvfs.f_frsize*a_statvfs.f_bavail)
-            total_space = sizeof_fmt(a_statvfs.f_frsize*a_statvfs.f_blocks)
-            jsondata["name"]=self.cameraname
-            jsondata["tb_uploaded"] = self.total_data_uploaded_tb
-            jsondata["smaller_uploaded"] = sizeof_fmt(self.total_data_uploaded_b)
-            jsondata["interval"]=self.config.get("timelapse","interval")
-            jsondata["upload_check_interval"] = self.timeinterval
-            jsondata["free_space"]=free_space
-            jsondata["total_space"]=total_space
-            jsondata["serialnumber"] = self.config_filename[:-4].split("/")[-1]
-            jsondata["ip_address"] = self.ipaddress
-            jsondata["list_of_uploads"]=list_of_uploads
+            try:
+                a_statvfs = os.statvfs("/")
+                free_space = sizeof_fmt(a_statvfs.f_frsize*a_statvfs.f_bavail)
+                total_space = sizeof_fmt(a_statvfs.f_frsize*a_statvfs.f_blocks)
+                jsondata["name"]=self.cameraname
+                jsondata["tb_uploaded"] = self.total_data_uploaded_tb
+                jsondata["smaller_uploaded"] = sizeof_fmt(self.total_data_uploaded_b)
+                jsondata["interval"]=self.config.get("timelapse","interval")
+                jsondata["upload_check_interval"] = self.timeinterval
+                jsondata["free_space"]=free_space
+                jsondata["total_space"]=total_space
+                jsondata["serialnumber"] = self.config_filename[:-4].split("/")[-1]
+                jsondata["ip_address"] = self.ipaddress
+                jsondata["list_of_uploads"] = list_of_uploads
+                epoch = datetime.datetime.utcfromtimestamp(0)
+                delta = self.last_upload_time - epoch
+                jsondata["last_upload_time"] = delta.total_seconds()
+            except Exception as e:
+                self.logger.info(str(e))
             data["metadata.json"] = json.dumps(jsondata, indent=4, sort_keys=True)
             data["ipaddress.html"] = fullstr
             self.logger.debug("Sending metadata to server now")
