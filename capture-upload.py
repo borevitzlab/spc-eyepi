@@ -1,6 +1,6 @@
 #!/usr/bin/python2
 from __future__ import division
-import os, subprocess, sys, platform, io
+import os, subprocess, sys, platform, io, json
 import datetime, time, shutil, re
 import pysftp, ftplib
 import logging, logging.config
@@ -204,8 +204,6 @@ class Camera(Thread):
                             if not line.strip() == "" and not "***" in line:
                                 self.logger.error(line.strip())
                         time.sleep(7)
-
-
                     
 
                     # glob together all filetypes in filetypes array
@@ -331,7 +329,9 @@ class Uploader(Thread):
         self.last_config_modify_time = None
         self.config_filename = config_filename
         self.logger = logging.getLogger(self.getName())
-        
+        self.startup_time = datetime.datetime.now()
+        self.total_data_uploaded_tb = 0
+        self.total_data_uploaded_b = 0
         self.setup()
 
     def setup(self):
@@ -350,8 +350,9 @@ class Uploader(Thread):
         self.last_upload_time = None
         self.ipaddress = None
 
-    def makeserveripaddressSFTP(self,thisip):
+    def sendMetadataSFTP(self,datas):
         """ Stores IP address on server using SecureFTP
+            *datas is a dictionary of metadata files as datas[fname]=data
         """
         try:
             self.logger.debug("trying to store new ip on server using SFTP, friend!")
@@ -360,32 +361,34 @@ class Uploader(Thread):
             link.chdir("/")
             self.mkdir_p_sftp(link, os.path.join(self.target_directory,self.cameraname) )
             # open a file and write the html snippet.
-            f = link.open(os.path.join(self.target_directory,self.cameraname,"ipaddress.html"), mode='w')
-            f.write(thisip)
-            f.close()
+            for name,data in datas.iteritems():
+                f = link.open(os.path.join(self.target_directory,self.cameraname,name), mode='w')
+                f.write(data)
+                f.close()
         except Exception as e:
             # this is going to trigger if the user provided cannot log into SFTP (ie they give an ftp user/pass
             self.logger.warning("SFTP:  "+ str(e))
             return False
-        return True
-        
+        return True    
 
-    def makeserveripaddressFTP(self,thisip):
+    def sendMetadataFTP(self,datas):
         """ Stores IP address on server using FTP
+            *datas is a dictionary of metadata files as datas[fname]=data
         """
         try:
-            self.logger.debug("trying to store new ip on server using FTP, friend!")
+            self.logger.debug("trying to store metadata on server using FTP, friend!")
             # similar to the SFTP
             ftp = ftplib.FTP(self.hostname)
             ftp.login(self.user,self.passwd)
             self.mkdir_p_ftp(ftp, os.path.join(self.target_directory,self.cameraname))
-            # some sorcery that I dont understand:
-            unicodeip = unicode(thisip)
-            assert isinstance(unicodeip, unicode)
-            # I think this makes it into a file-like object?
-            file = io.BytesIO(unicodeip.encode("utf-8"))
-            # upload it
-            ftp.storbinary('STOR ipaddress.html',file)
+            for name,data in datas.iteritems():
+                # some sorcery that I dont understand:
+                unicodestring = unicode(data)
+                assert isinstance(unicodestring, unicode)
+                # I think this makes it into a file-like object?
+                file = io.BytesIO(unicodestring.encode("utf-8"))
+                # upload it
+                ftp.storbinary('STOR '+name,file)
             ftp.quit()
         except Exception as e:
             # if FTP fails log an error not a warning like SFTP
@@ -412,10 +415,16 @@ class Uploader(Thread):
                 link.rename(os.path.basename(f)+".tmp",os.path.basename(f))
 
                 link.chmod(os.path.basename(f), mode=775)
+                self.total_data_uploaded_b += os.path.getsize(f)
                 os.remove(f)
                 self.logger.debug("Successfuly uploaded %s through sftp and removed from local filesystem" % f)
             self.logger.debug("Disconnecting, eh")
             link.close()
+            if self.total_data_uploaded_b > 1000000000000:
+                curr = (((self.total_data_uploaded_b/1024)/1024)/1024)/1024
+                self.total_data_uploaded_b = 0
+                self.total_data_uploaded_tb = curr
+
         except Exception as e:
             # log a warning if fail because SFTP is meant to fail to allow FTP fallback
             self.logger.warning("SFTP:  " + str(e))
@@ -492,25 +501,53 @@ class Uploader(Thread):
                 sys.stderr.flush()
 
             
-    def set_ip_on_server(self):
+    def set_metadata_on_server(self, list_of_uploads):
         """ Html snippet generator, uploads to "ipaddress.html"
         """
+        def sizeof_fmt(num, suffix='B'):
+            for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+                if abs(num) < 1024.0:
+                    return "%3.1f%s%s" % (num, unit, suffix)
+                num /= 1024.0
+            return "%.1f%s%s" % (num, 'Yi', suffix)
         try:
+            data = {}
+            # data entries must be strings so just serialise
             # some more sorcery that i dont fully understand. Connects to googles DNS server
             s = socket(AF_INET, SOCK_DGRAM)
             s.connect(("8.8.8.8",0))
             self.ipaddress = s.getsockname()[0]
             onion_address = ""
-            with open("/home/tor_private/hostname") as f:
-                onion_address=f.read().replace('\n', '')
+            self.logger.info("Sending metadata to server now")
+            try:
+                with open("/home/tor_private/hostname") as f:
+                    onion_address=f.read().replace('\n', '')
+            except Exception as e:
+                self.logger.warning(str(e))
             if self.last_upload_time == None:
                 fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Havent uploaded yet<br> Ip address: "+ self.ipaddress + "<br>onion_address: "+onion_address+"<br><a href='http://" + self.ipaddress + ":5000'>Config</a>" 
             else:
                 fullstr = "<h1>"+str(self.cameraname)+"</h1><br>Last upload at: " + self.last_upload_time.strftime("%y-%m-%d %H:%M:%S") + "<br> Ip address: "+ self.ipaddress + "<br>onion_address: "+onion_address+"<br><a href='http://" + self.ipaddress + ":5000'>Config</a>"
-            self.logger.debug("my IP address:" + str(self.ipaddress))
-            # upload ze ipaddress.html
-            if not self.makeserveripaddressSFTP(fullstr):
-                self.makeserveripaddressFTP(fullstr)
+            a_statvfs = os.statvfs("/")
+            free_space = sizeof_fmt(a_statvfs.f_frsize*a_statvfs.f_bavail)
+            total_space = sizeof_fmt(a_statvfs.f_frsize*a_statvfs.f_blocks)
+            jsondata = {}
+            jsondata["name"]=self.cameraname
+            jsondata["interval"]=self.config.get("timelapse","interval")
+            jsondata["upload_check_interval"] = self.timeinterval
+            jsondata["free_space"]=free_space
+            jsondata["total_space"]=total_space
+            jsondata["onion_address"] = onion_address.split(" ")[0]
+            jsondata["onion_cookie_auth"] = onion_address.split(" ")[1]
+            jsondata["onion_cookie_client"] = onion_address.split(" ")[-1]
+            jsondata["serialnumber"] = self.config_filename[:-4]
+            jsondata["ip_address"] = self.ipaddress
+            jsondata["list_of_uploads"]=list_of_uploads
+            data["metadata.json"] = json.dumps(jsondata, indent=4, sort_keys=True)
+            data["ipaddress.html"] = fullstr
+            
+            if not self.sendMetadataSFTP(data):
+                self.sendMetadataFTP(data)
         except Exception as e:
             self.logger.error(str(e))
             time.sleep(5)
@@ -530,8 +567,8 @@ class Uploader(Thread):
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
                 self.setup()
                
-            self.set_ip_on_server()
             upload_list = glob(os.path.join(self.upload_directory,'*'))
+            self.set_metadata_on_server(upload_list)
             
             if (len(upload_list)==0):
                 self.logger.debug("no files in upload directory")
