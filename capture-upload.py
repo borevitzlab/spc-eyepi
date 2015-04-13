@@ -403,7 +403,8 @@ class Uploader(Thread):
             # dump ze files.
             for f in filenames:
                 # use sftpuloadtracker to handle the progress
-                link.put(f,os.path.basename(f), callback=self.sftpuploadtracker)
+                link.put(f,os.path.basename(f)+".tmp", callback=self.sftpuploadtracker)
+                link.rename(os.path.basename(f)+".tmp",os.path.basename(f))
                 link.chmod(os.path.basename(f), mode=775)
                 os.remove(f)
                 self.logger.debug("Successfuly uploaded %s through sftp and removed from local filesystem" % f)
