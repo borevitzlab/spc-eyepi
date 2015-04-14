@@ -550,6 +550,7 @@ class Uploader(Thread):
                 epoch = datetime.datetime.utcfromtimestamp(0)
                 delta = self.last_upload_time - epoch
                 jsondata["last_upload_time"] = delta.total_seconds()
+                jsondata["version"] = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
             except Exception as e:
                 self.logger.info(str(e))
             data["metadata.json"] = json.dumps(jsondata, indent=4, sort_keys=True)
