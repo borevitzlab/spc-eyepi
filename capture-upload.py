@@ -9,7 +9,8 @@ from glob import glob
 from ConfigParser import SafeConfigParser
 from optparse import OptionParser
 from threading import Thread
-from socket import socket, SOCK_DGRAM, AF_INET 
+from socket import socket, SOCK_DGRAM, AF_INET
+import pyudev
 
 # Global configuration variables
 config_filename = 'eyepi.ini'
@@ -141,6 +142,20 @@ class Camera(Thread):
         """
         return t.hour*60*60+t.minute*60+t.second
 
+    def capture(self, raw_image,try_number):
+        cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
+        try:
+            output = subprocess.check_output(cmd,stderr=subprocess.STDOUT,universal_newlines=True,shell=True)
+            for line in output.splitlines():
+                self.logger.info("GPHOTO2: "+ line)
+            return True
+        except Exception as e:
+            if try_number>2:
+                for line in e.output.splitlines():
+                    if not line.strip() == "" and not "***" in line:
+                        self.logger.error(line.strip())
+            return False
+
     def run(self):
         # set the next capture time to now just because
         self.next_capture = datetime.datetime.now()
@@ -187,24 +202,19 @@ class Camera(Thread):
                     #if bulb.find("bulb") != -1:
                     #    cmd = ["gphoto2 --port "+ self.camera_port+" --set-config capturetarget=sdram --set-config eosremoterelease=5 --wait-event="+str(self.exposure_length)+"ms --set-config eosremoterelease=11 --wait-event-and-download=2s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
                     #else:
-                    cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --wait-event-and-download=36s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
+                    #cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --wait-event-and-download=36s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
                     
-                    #else:
-                    #    #cmd = ["gphoto2 --set-config capturetarget=sdram --capture-image-and-download --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
-                    # subprocess.call. shell=True is hellishly insecure and doesn't throw an error if it fails. Needs to be fixed somehow <shrug>
                     try:
-                        output = subprocess.check_output(cmd,stderr=subprocess.STDOUT,universal_newlines=True,shell=True)
-                        for line in output.splitlines():
-                            self.logger.info("GPHOTO2: "+ line)
+                        try_number = 0
+                        while not self.capture(raw_image,try_number):
+                            try_number+=1
+                            time.sleep(1)
                         self.logger.debug("Capture Complete")
                         self.logger.debug("Moving and renaming image files, buddy")
-                    except subprocess.CalledProcessError as e:
-                        self.logger.error("Something went wrong!")
-                        for line in e.output.splitlines():
-                            if not line.strip() == "" and not "***" in line:
-                                self.logger.error(line.strip())
-                        time.sleep(7)
-                    
+                    except Exception as e:
+                        self.logger.error("Something went really wrong!")
+                        self.logger.error(str(e))
+                        time.sleep(5)
 
                     # glob together all filetypes in filetypes array
                     files = []
@@ -547,6 +557,7 @@ class Uploader(Thread):
                 jsondata["serialnumber"] = self.config_filename[:-4].split("/")[-1]
                 jsondata["ip_address"] = self.ipaddress
                 jsondata["list_of_uploads"] = list_of_uploads
+                jsondata["capture limits"]= self.
                 epoch = datetime.datetime.utcfromtimestamp(0)
                 delta = self.last_upload_time - epoch
                 jsondata["last_upload_time"] = delta.total_seconds()
@@ -670,10 +681,10 @@ class Scheduler(Thread):
             for st,val in self.ordered_sched[self.job_number][1]:
                 config_string+=" --set-config-index "+st+"="+val
             self.logger.info("Current job parameters: %s" % config_string)
-            results = subprocess.check_output("gphoto2 --port "+self.camera_port +" "+config_string, shell=True)
+            output = subprocess.check_output("gphoto2 --port "+self.camera_port +" "+config_string,universal_newlines=True, shell=True)
             return True
         except subprocess.CalledProcessError as error:
-            self.logger.error("Couldnt do job, gonna try again: %s" % str(error))
+            self.logger.error("Couldnt do job, gonna try again: %s" % str(error.output))
             return False
             
 
@@ -711,11 +722,11 @@ class Scheduler(Thread):
                 
                 if tn.time() > next_time_obj:
                     if self.job_number >= 0:
-                        self.logger.info("waiting so that i dont start at the same time as the other")
-                        if self.time2seconds(next_time_obj) % self.interval < 5:
-                            time.sleep(50)
+                        #self.logger.info("waiting so that i dont start at the same time as the other")
+                        #if self.time2seconds(next_time_obj) % self.interval < 5:
+                        #    time.sleep(50)
                         while not self.do_job():
-                            time.sleep(10)
+                            time.sleep(5)
                     self.job_number += 1
                 time.sleep(1)
                     
@@ -724,6 +735,11 @@ class Scheduler(Thread):
 
       
 def detect_cameras(type):
+    """ 
+    detect cameras:
+        args= string
+            - type to search for in the output of gphoto2, enables the searching of serial cameras and maybe webcams.
+    """
     try:
         a = subprocess.check_output("gphoto2 --auto-detect", shell=True)
         cams = {}
@@ -734,6 +750,29 @@ def detect_cameras(type):
     except Exception as e:
         print str(e)
         logger.error("Could not detect camera for some reason: " + str(e))
+
+
+def redetect_cameras(camera_workers):
+    """
+    this isnt used. but might be, if you want to change stuff of the cameras threads.
+
+    """
+    try:
+        a = subprocess.check_output("gphoto2 --auto-detect", shell=True)
+        for port in re.finditer("usb:", a):
+            cmdret = subprocess.check_output('gphoto2 --port "'+a[port.start():port.end()+7]+'" --get-config serialnumber', shell=True)
+            serialnumber = cmdret[cmdret.find("Current: ")+9: len(cmdret)-1]
+            port = a[port.start():port.end()+7]
+            for camera_worker in camera_workers:
+                if camera_worker.__name__ == serialnumber:
+                    camera_worker.camera_port = port
+                    logger.info("redetected camera: "+str(serialnumber)+" : "+str(port))
+        return True
+    except Exception as e:
+        print str(e)
+        logger.error("Could not detect camera for some reason: " + str(e))
+        return False
+
 
 def detect_picam():
     try:
@@ -746,14 +785,14 @@ def detect_picam():
         return False
 
 def create_workers(cameras):
-    camobjects = []
-    uploadobjects = []
-    schedulerobjects = []
+    camthreads = []
+    uploadthreads = []
+    schedulerthreads = []
     for port,serialnumber in cameras.iteritems():
-        camobjects.append(Camera(os.path.join("configs_byserial",serialnumber+".ini"), camera_port=port,serialnumber=serialnumber,name=serialnumber))
-        uploadobjects.append(Uploader(os.path.join("configs_byserial", serialnumber+".ini"), name=serialnumber+"-Uploader"))
-        schedulerobjects.append(Scheduler(os.path.join("configs_byserial", serialnumber+".ini"),port,name=serialnumber+"-Scheduler"))
-    return (camobjects, uploadobjects, schedulerobjects)
+        camthreads.append(Camera(os.path.join("configs_byserial",serialnumber+".ini"), camera_port=port,serialnumber=serialnumber,name=serialnumber))
+        uploadthreads.append(Uploader(os.path.join("configs_byserial", serialnumber+".ini"), name=serialnumber+"-Uploader"))
+        schedulerthreads.append(Scheduler(os.path.join("configs_byserial", serialnumber+".ini"),port,name=serialnumber+"-Scheduler"))
+    return (camthreads, uploadthreads, schedulerthreads)
 
 def start_workers(objects):
     for thread in objects:
@@ -763,6 +802,12 @@ def start_workers(objects):
 def kill_workers(objects):
     for thread in objects:
         thread.join()
+
+def get_usb_dev_list():
+    context = pyudev.Context()
+    ret = ""
+    for device in context.list_devices(subsystem='usb'):
+        ret+=str(device)
 
 if __name__ == "__main__":
     logger = logging.getLogger("Worker_dispatch")
@@ -778,22 +823,40 @@ if __name__ == "__main__":
             cameras= detect_cameras("usb")
             
         if not cameras == None:
-            camsnuploads = create_workers(cameras)
-            start_workers(camsnuploads[0])
-            start_workers(camsnuploads[1])
-            start_workers(camsnuploads[2])
+            workers = create_workers(cameras)
+            start_workers(workers[0])
+            start_workers(workers[1])
+            start_workers(workers[2])
         
         if has_picam:
             raspberry = [PiCamera("picam.ini", name="PiCam"), Uploader("picam.ini", name="PiCam-Uploader")]
             start_workers(raspberry)
-        
-        while True:time.sleep(100)
+        if cant_use_pyudev:
+            while True:time.sleep(1)
+        else:
+            usb_dev_list = get_usb_dev_list()
+            while True:
+                if usb_dev_list != get_usb_dev_list(): 
+                    cameras= detect_cameras("usb")
+                    kill_workers(workers[0])
+                    kill_workers(workers[1])
+                    kill_workers(workers[2])
+                    # start workers again
+                    workers = create_workers(cameras)
+                    start_workers(workers[0])
+                    start_workers(workers[1])
+                    start_workers(workers[2])
+                    usb_dev_list = get_usb_dev_list()
+                time.sleep(1)
+
     except (KeyboardInterrupt, SystemExit):
-        if not cameras == None:
-            kill_workers(camsnuploads[0])
-            kill_workers(camsnuploads[1])
-            kill_workers(camsnuploads[2])
-        if has_picam:
-            kill_workers(raspberry)
+        for c in self.threads:
+            c.join
+        #if not cameras == None:
+        #    kill_workers(workers[0])
+        #    kill_workers(workers[1])
+        #    kill_workers(workers[2])
+        #if has_picam:
+        #    kill_workers(raspberry)
             
         sys.exit()
