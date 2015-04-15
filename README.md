@@ -9,4 +9,4 @@ server of your choice via sftp or ftp.
 
 It automatically detects connected usb DSLRs and the raspberry pi camera (just duplicate "example.ini" to "picam.ini" and "eyepi.ini").
 
-This is also the pulling repo for eyepiOS.
+This is also the pulling repo for the spc-eyepi component of SPC-OS.
