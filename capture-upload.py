@@ -557,7 +557,7 @@ class Uploader(Thread):
                 jsondata["serialnumber"] = self.config_filename[:-4].split("/")[-1]
                 jsondata["ip_address"] = self.ipaddress
                 jsondata["list_of_uploads"] = list_of_uploads
-                jsondata["capture limits"]= self.
+                jsondata["capture_limits"]= self.config.get('timelapse','starttime') +" - "+ self.config.get('timelapse', 'stoptime')
                 epoch = datetime.datetime.utcfromtimestamp(0)
                 delta = self.last_upload_time - epoch
                 jsondata["last_upload_time"] = delta.total_seconds()
