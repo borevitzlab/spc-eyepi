@@ -346,7 +346,7 @@ class Uploader(Thread):
 
     def setup(self):
         # TODO: move the timeinterval to the config file and get it from there, this _should_ avoid too many requests to the sftp server.
-        self.timeinterval = 60
+        self.timeinterval = 5
         self.uploadtimedelay = 1
         self.config = SafeConfigParser()
         self.config.read(self.config_filename)
@@ -365,14 +365,13 @@ class Uploader(Thread):
             *datas is a dictionary of metadata files as datas[fname]=data
         """
         try:
-            self.logger.debug("trying to store new ip on server using SFTP, friend!")
+            #self.logger.debug("trying to store new ip on server using SFTP, friend!")
             # create new link and create directory if it doesnt exist already
             link = pysftp.Connection(host=self.hostname, username=self.user, password=self.passwd)
             link.chdir("/")
             self.mkdir_p_sftp(link, os.path.join(self.target_directory,self.cameraname) )
             # open a file and write the html snippet.
             for name,data in datas.iteritems():
-                self.logger.info("Dumping "+name)
                 f = link.open(os.path.join(self.target_directory,self.cameraname,name), mode='w')
                 f.write(data)
                 f.close()
@@ -387,7 +386,7 @@ class Uploader(Thread):
             *datas is a dictionary of metadata files as datas[fname]=data
         """
         try:
-            self.logger.debug("trying to store metadata on server using FTP, friend!")
+            #self.logger.debug("trying to store metadata on server using FTP, friend!")
             # similar to the SFTP
             ftp = ftplib.FTP(self.hostname)
             ftp.login(self.user,self.passwd)
@@ -578,8 +577,8 @@ class Uploader(Thread):
         """
         while(True):
             # check and see if enabled
-            if self.config.get("ftp","uploaderenabled")=="on":
-                self.logger.debug("Waiting %d secs to check directories again" % self.timeinterval)
+            #if self.config.get("ftp","uploaderenabled")=="on":
+            #    self.logger.debug("Waiting %d secs to check directories again" % self.timeinterval)
             # sleep for a while
             time.sleep(self.timeinterval)
             # check and see if config has changed.
