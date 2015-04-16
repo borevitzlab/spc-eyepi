@@ -2,7 +2,7 @@
 import socket, os, hashlib, subprocess
 import Crypto.Protocol.KDF
 import anydbm
-import datetime, re, fnmatch, shutil
+import datetime, re, fnmatch, shutil,time
 import cPickle
 import copy
 from glob import glob
@@ -174,12 +174,14 @@ def add_user(username, password_to_set, adminpass):
 	# allow global admin password to change everything.
 	if adminpasshash == db["admin"]:
 		db[str(username)] = hash
+		db.close()
 		return True
 
 	# for each username, only allow the correct hash to change the password
 	for username_, hash_ in db.iteritems():
 		if username_ == username and adminpasshash == db[str(username)]:
 			db[str(username)] = hash
+			db.close()
 			return True
 
 	return False
@@ -301,6 +303,47 @@ def get_image(path):
 	if '..' in path or path.startswith('/'):
 		abort(404)
 	return send_file(os.path.join("static","temp",path+".jpg"))
+
+def cap_lock_wait(port,serialnumber):
+	try:
+		a=subprocess.check_output("gphoto2 --port="+str(port)+" --capture-preview --force-overwrite --filename='static/temp/"+str(serialnumber)+".jpg'",shell=True)
+		print a
+		return False
+	except subprocess.CalledProcessError as e:
+		print e.output
+		return True
+
+def capture_preview(serialnumber):
+	try:
+		a = subprocess.check_output("gphoto2 --auto-detect", shell=True)
+		for port in re.finditer("usb:", a):
+			cmdret = subprocess.check_output('gphoto2 --port "'+a[port.start():port.end()+7]+'" --get-config serialnumber', shell=True)
+			_serialnumber = cmdret[cmdret.find("Current: ")+9: len(cmdret)-1]
+			port = a[port.start():port.end()+7]
+			if _serialnumber == serialnumber:
+				tries = 0
+				while tries < 10 and cap_lock_wait(port,serialnumber): 
+					tries+=1
+					time.sleep(1)
+				return True
+
+	except subprocess.CalledProcessError as e:
+		print str(e)
+
+@app.route("/preview_cam", methods=["GET"])
+def preview():
+	if request.method == 'GET':
+		if request.args.get("serialnumber"):
+			serialnumber = request.args.get("serialnumber")
+			preview = capture_preview(serialnumber)
+			return send_file("static/temp/"+str(serialnumber)+".jpg")
+		else:
+			return "fail"
+	else:
+		return "fail"
+
+
+
 
 """
           d8                                                                     88                               ad88  88  88              
