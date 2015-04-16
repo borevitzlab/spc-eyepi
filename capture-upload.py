@@ -346,7 +346,7 @@ class Uploader(Thread):
 
     def setup(self):
         # TODO: move the timeinterval to the config file and get it from there, this _should_ avoid too many requests to the sftp server.
-        self.timeinterval = 5
+        self.timeinterval = 30
         self.uploadtimedelay = 1
         self.config = SafeConfigParser()
         self.config.read(self.config_filename)
