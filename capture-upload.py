@@ -830,32 +830,28 @@ if __name__ == "__main__":
         if has_picam:
             raspberry = [PiCamera("picam.ini", name="PiCam"), Uploader("picam.ini", name="PiCam-Uploader")]
             start_workers(raspberry)
-        if cant_use_pyudev:
-            while True:time.sleep(1)
-        else:
-            usb_dev_list = get_usb_dev_list()
-            while True:
-                if usb_dev_list != get_usb_dev_list(): 
-                    cameras= detect_cameras("usb")
-                    kill_workers(workers[0])
-                    kill_workers(workers[1])
-                    kill_workers(workers[2])
-                    # start workers again
-                    workers = create_workers(cameras)
-                    start_workers(workers[0])
-                    start_workers(workers[1])
-                    start_workers(workers[2])
-                    usb_dev_list = get_usb_dev_list()
-                time.sleep(1)
+
+        usb_dev_list = get_usb_dev_list()
+        while True:
+            if usb_dev_list != get_usb_dev_list(): 
+                cameras= detect_cameras("usb")
+                kill_workers(workers[0])
+                kill_workers(workers[1])
+                kill_workers(workers[2])
+                # start workers again
+                workers = create_workers(cameras)
+                start_workers(workers[0])
+                start_workers(workers[1])
+                start_workers(workers[2])
+                usb_dev_list = get_usb_dev_list()
+            time.sleep(1)
 
     except (KeyboardInterrupt, SystemExit):
-        for c in self.threads:
-            c.join
-        #if not cameras == None:
-        #    kill_workers(workers[0])
-        #    kill_workers(workers[1])
-        #    kill_workers(workers[2])
-        #if has_picam:
-        #    kill_workers(raspberry)
+        if not cameras == None:
+            kill_workers(workers[0])
+            kill_workers(workers[1])
+            kill_workers(workers[2])
+        if has_picam:
+            kill_workers(raspberry)
             
         sys.exit()
