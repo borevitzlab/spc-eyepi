@@ -15,7 +15,7 @@ The goal of this project is to create a robust open source code base for control
  * Cameras settings can be controlled from a web page. 
  * Works over wifi or ethernet. Pi creates an ad-hoc wifi network no know network is found for easier config of new systems and in new wifi environments.
  * Camera uploads it's IP address along with image for easy finding of the camera on your network
- * Camera uploads a JSON xml file with current capture information for easy camera management. See page below for an example of using this to monitor incoming data from 18 cameras in one web page. http://phenocam.anu.edu.au/cloud/a_data/camupload/eyepi-status.min.php
+ * Camera uploads a JSON xml file with current capture information for easy camera management. See page below for an example of using this to monitor incoming data from 18 cameras in one web page. For example: http://phenocam.anu.edu.au/cloud/a_data/camupload/eyepi-status.min.php
  * Camera can auto-upload both timestamped and fixed filenames (for use as a webcam or with auto archiving systems requiring a fixed image name).
  * Extensively tested with Canons (600D, 700D, 70D). Works with Nikon D7100 but not extensively tested/
 
