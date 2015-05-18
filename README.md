@@ -1,10 +1,9 @@
 Welcome to SPC-EyePi
 ====================
 
-This project is open source but please contact us [https://github.com/borevitzlab] before using the code so we can know who is using it and please make sure to link back here in any code you use. This project is in active development but we are happy to work with other groups to develop new features so drop us a line if you are interested.
+This project is open source but please [contact us](https://github.com/borevitzlab) before using the code so we can know who is using it and please make sure to link back here in any code you use. This project is in active development but we are happy to work with other groups to develop new features so drop us a line if you are interested.
 
-This code was developed for the TraitCapture proejct at ANU. Please cite: Brown, Tim B., et al. "TraitCapture: genomic and environment modelling of plant phenomic data." Current opinion in plant biology 18 (2014): 73-79 when using the code.
-
+This code was developed for the TraitCapture proejct at ANU. Please cite: [Brown, Tim B., et al. "TraitCapture: genomic and environment modelling of plant phenomic data." Current opinion in plant biology 18 (2014): 73-79](http://www.ncbi.nlm.nih.gov/pubmed/24646691) when using the code.
 
 The goal of this project is to create a robust open source code base for controlling DSLR and the on-board raspberry pi camera from a Raspberry-PI or similar Linux boards.
 
