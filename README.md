@@ -1,22 +1,22 @@
-Welcome to SPC-EyePi
-====================
-
 This project is open source but please [contact us](https://github.com/borevitzlab) before using the code so we can know who is using it and please make sure to link back here in any code you use. This project is in active development but we are happy to work with other groups to develop new features so drop us a line if you are interested.
 
-This code was developed for the TraitCapture proejct at ANU. Please cite: [Brown, Tim B., et al. "TraitCapture: genomic and environment modelling of plant phenomic data." Current opinion in plant biology 18 (2014): 73-79](http://www.ncbi.nlm.nih.gov/pubmed/24646691) when using the code.
+This code was developed for the TraitCapture proejct at ANU. Please cite: _Brown, Tim B., et al. [TraitCapture](http://www.sciencedirect.com/science/article/pii/S1369526614000181): genomic and environment modelling of plant phenomic data. Current opinion in plant biology 18 (2014): 73-79_. when using the code.
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+**Welcome to SPC-EyePi**
 
 The goal of this project is to create a robust open source code base for controlling DSLR and the on-board raspberry pi camera from a Raspberry-PI or similar Linux boards.
 
-FEATURES
---------
-
+**FEATURES**
  * Control of multiple DSLR cameras (works great for two, not tested for more)
  * Upload of JPG, RAW or JPG+RAW images
  * Captured photos are cached locally and  uploaded to a central server of your choice via sftp or ftp. 
  * Cameras settings can be controlled from a web page. 
+ * Works over wifi or ethernet. Pi creates an ad-hoc wifi network no know network is found for easier config of new systems and in new wifi environments.
  * Camera uploads it's IP address along with image for easy finding of the camera on your network
  * Camera uploads a JSON xml file with current capture information for easy camera management. See page below for an example of using this to monitor incoming data from 18 cameras in one web page. http://phenocam.anu.edu.au/cloud/a_data/camupload/eyepi-status.min.php
- * Camera can auto-upload both timestamped and fixed filenames (for useas a webcam or with auto archiving systems requiring a fixed image name).
+ * Camera can auto-upload both timestamped and fixed filenames (for use as a webcam or with auto archiving systems requiring a fixed image name).
  * Extensively tested with Canons (600D, 700D, 70D). Works with Nikon D7100 but not extensively tested/
 
 Features in active  development: 
