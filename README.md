@@ -1,6 +1,6 @@
 This project is open source but please [contact us](https://github.com/borevitzlab) before using the code so we can know who is using it and please make sure to link back here in any code you use. This project is in active development but we are happy to work with other groups to develop new features so drop us a line if you are interested.
 
-This code was developed for the TraitCapture proejct at ANU. Please cite: _Brown, Tim B., et al. [TraitCapture](http://www.sciencedirect.com/science/article/pii/S1369526614000181): genomic and environment modelling of plant phenomic data. Current opinion in plant biology 18 (2014): 73-79_. when using the code.
+This code was developed for the TraitCapture project at ANU. Please cite: _Brown, Tim B., et al. [TraitCapture](http://www.sciencedirect.com/science/article/pii/S1369526614000181): genomic and environment modelling of plant phenomic data. Current opinion in plant biology 18 (2014): 73-79_. when using the code.
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
