@@ -547,9 +547,11 @@ class Uploader(Thread):
                 jsondata["ip_address"] = self.ipaddress
                 jsondata["list_of_uploads"] = list_of_uploads
                 jsondata["capture_limits"]= self.config.get('timelapse','starttime') +" - "+ self.config.get('timelapse', 'stoptime')
-                epoch = datetime.datetime.utcfromtimestamp(0)
-                delta = self.last_upload_time - epoch
-                jsondata["last_upload_time"] = delta.total_seconds()
+                # need to check against none because otherwise it gets stuck in a broken loop.
+                if self.last_upload_time not None:
+                	epoch = datetime.datetime.utcfromtimestamp(0)
+                	delta = self.last_upload_time - epoch
+                	jsondata["last_upload_time"] = delta.total_seconds()
                 jsondata["version"] = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
             except Exception as e:
                 self.logger.info(str(e))
@@ -566,9 +568,6 @@ class Uploader(Thread):
         """ Main upload loop
         """
         while(True):
-            # check and see if enabled
-            #if self.config.get("ftp","uploaderenabled")=="on":
-            #    self.logger.debug("Waiting %d secs to check directories again" % self.timeinterval)
             # sleep for a while
             time.sleep(self.timeinterval)
             # check and see if config has changed.
@@ -576,7 +575,7 @@ class Uploader(Thread):
                 # reset last change time to last and setup()
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
                 self.setup()
-               
+            
             upload_list = glob(os.path.join(self.upload_directory,'*'))
             self.set_metadata_on_server(upload_list)
             
@@ -586,10 +585,14 @@ class Uploader(Thread):
             if (len(upload_list) > 0) and self.config.get("ftp","uploaderenabled")=="on":
                 self.logger.debug("Pausing %d seconds to wait for files to be closed" % self.uploadtimedelay)
                 time.sleep(self.uploadtimedelay)
-                self.logger.debug("Preparing to upload %d files" % len(upload_list))
-                if not self.sftpUpload(upload_list):
-                    self.ftpUpload(upload_list)
-                self.last_upload_time = datetime.datetime.now()
+                try:
+	                self.logger.debug("Preparing to upload %d files" % len(upload_list))
+	                if not self.sftpUpload(upload_list):
+	                    self.ftpUpload(upload_list)
+	                self.last_upload_time = datetime.datetime.now()
+	            except Exception as e:
+	            	self.logger.error("Couldnt upload for some reason")
+	            	self.logger.error(str(e))
 
 class FtpUploadTracker:
     sizeWritten = 0

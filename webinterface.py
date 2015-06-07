@@ -739,6 +739,50 @@ def writecfg():
 			return "success"
 		except Exception as e:
 			abort(400)
+
+@app.route('/change_hostname', methods=['POST'])
+@requires_auth
+def change_hostname():
+	if request.method == 'POST':
+		if request.form['hostname']:
+			hostname = request.form['hostname']
+
+			config = SafeConfigParser()
+			config_path = "eyepi.ini"
+			config.read(config_path)
+			config.set("camera","name",hostname)
+			pi_config = SafeConfigParser()
+			pi_config_path = "picam.ini"
+			pi_config.read(config_path)
+			pi_config.set("camera","name",hostname+"-Picam")
+			hostsfilestring = """#
+# /etc/hosts: static lookup table for host names
+#
+
+#<ip-address>	<hostname.domain.org>	<hostname>
+127.0.0.1	localhost.localdomain	localhost CHANGE
+::1		localhost.localdomain	localhost CHANGE
+
+# End of file
+"""
+			try:
+				with open("/etc/hosts",'w') as hostsfile:
+					hostsfile.write(hostsfilestring.replace("CHANGE",hostname))
+
+				with open("/etc/hostname",'w') as hostnamefile:
+					hostnamefile.write(hostname+'\n')
+				os.system("hostname "+hostname)
+			except Exception as e:
+				print "Something went horribly wrong"
+				print str(e)
+		else:
+			abort(400)
+		try:
+			sanitizeconfig(config, config_path)
+			sanitizeconfig(pi_config, pi_config_path)
+			return "success"
+		except Exception as e:
+			abort(400)
 """    
           d8  
         ,8P'  
