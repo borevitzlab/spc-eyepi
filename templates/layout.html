@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-{% set navigation_bar = [("/","cameras","Cameras"),("/images","images", "Live Images"), ("/filemanagement","filemgmt","Files"),("/logfile","logfile", "Log"),
+{% set navigation_bar = [("/","cameras","Cameras"),("/images","images", "Images"), ("/filemanagement","filemgmt","Files"),("/logfile","logfile", "Log"),
 ("/net","net","Network"),("/sched","sched","Schedules"),
 ("/admin","admin","Administration")
 ]  -%}
@@ -50,18 +50,19 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">SPC-EyePi</a>
+          <a class="navbar-brand" href="/">SPC-EyePi-{{get_hostname()}}</a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
         {% for href, id, caption in navigation_bar %}
-          <li{% if id == active_page %} class="active"{% endif
+          <li {% if id == active_page %} class="active"{% endif
           %}><a href="{{ href|e }}">{{ caption|e }}</a></li>
         {% endfor %}
 	</ul>
 	<ul class="nav navbar-nav navbar-right">
-	<li class=".navbar-right"><a class=".navbar-right" href="https://github.com/borevitzlab/spc-eyepi">{{ version }}</a></li>
-	<li class=".navbar-right"><a class=".navbar-right" href="/sync_hwclock">{{get_time()}}</a></li>
+	<!--li class=".navbar-right"><a class=".navbar-right" href="#">{{get_hostname()}}</a></li-->
+		<li class=".navbar-right"><a class=".navbar-right" href="/sync_hwclock">{{get_time()}}</a></li>
+		<li class=".navbar-right"><a class=".navbar-right" href="https://github.com/borevitzlab/spc-eyepi">v{{ version }}</a></li>
 	</ul>
          </ul>
 	</div><!--/.nav-collapse -->

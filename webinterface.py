@@ -43,7 +43,9 @@ def get_time():
 	return str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 app.jinja_env.globals.update(get_time=get_time)
 
-
+def get_hostname():
+	return str(socket.gethostname())
+app.jinja_env.globals.update(get_hostname=get_hostname)
 
 
 """                                                                                                                                                                          
@@ -360,6 +362,7 @@ def sync_hwclock():
 	except Exception as e:
 		print "There was a problem Synchronising the hwclock. Debug me please."
 		print "Exception: "+ str(e)
+		return render_template('server_error.html'), 500
 
 	return redirect(url_for('config'))
 
@@ -437,7 +440,10 @@ def savetousb():
 @requires_auth
 def restart():
 	print "shutting down"
-	os.system("reboot")
+	try:
+		os.system("reboot")
+	except Exception as e:
+		return render_template('server_error.html'), 500
 	return redirect(url_for('admin'))
 
 @app.route("/update")

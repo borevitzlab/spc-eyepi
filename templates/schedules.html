@@ -126,9 +126,12 @@ function get_new_event(name, setting, value){
 
 {% block body %}
 <h2>Schedules</h2>
+<hr>
+<h4>This feature is not enabled yet.<br> Check back in the future once it is finished</h4>
 
-
+<!--
 """
+
 ACCESS TO schedules!!
 
 schedule = [
@@ -145,9 +148,8 @@ schedule = [
         ]
 
 """
+-->
 
-
-<hr>
 
 {% for name, schedule in schedules.iteritems() %}
 <div class="btn-group-vertical col-md-4" role="group" aria-label="{{configs[name].get("camera","name")}}">

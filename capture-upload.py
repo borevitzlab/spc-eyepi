@@ -19,8 +19,6 @@ timestopat = datetime.time.max
 default_extension = ".JPG"
 #Acceptable filtypes
 filetypes = ["CR2","RAW","NEF","JPG","JPEG"]
-global birthday
-birthday = datetime.datetime(1990, 07,17,12,12,12,13)
 logging.config.fileConfig(config_filename)
 logging.getLogger("paramiko").setLevel(logging.WARNING)
 
@@ -171,13 +169,9 @@ class Camera(Thread):
             
             # set a timenow, this is used everywhere ahead, do not remove.
             tn = datetime.datetime.now()
-            # This is used to check and see if the date is smething ridiculous.
-            # Log if the time isn't sane yet (needs to get it from ntpdate)
-            if tn<birthday:
-                self.logger.error("My creator hasnt been born yet, sleeping until the time comes...")
-                time.sleep(30)
+
             # checking if enabled and other stuff
-            if (tn>birthday) and (self.time2seconds(tn)%self.interval< self.accuracy) and (tn.time() > self.timestartfrom) and (tn.time() < self.timestopat) and (self.is_enabled):
+            if (self.time2seconds(tn)%self.interval< self.accuracy) and (tn.time() > self.timestartfrom) and (tn.time() < self.timestopat) and (self.is_enabled):
                 try:
                     # set the next capture period to print to the log (not used anymore, really due to time modulo) 
                     self.next_capture = tn + datetime.timedelta(seconds = self.interval)
@@ -271,15 +265,11 @@ class PiCamera(Camera):
                 self.setup()
                 self.logger.info("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
             
-            # set a timenow
+            # set a timenow this is used everywhere
             tn = datetime.datetime.now()
-            # This is used to check and see if the date is something ridiculous.
-            # Log if the time isn't sane yet (needs to get it from ntpdate).
-            if tn<birthday:
-                self.logger.error("My creator hasnt been born yet, sleeping until the time comes...")
-                time.sleep(30)
+
             # checking if enabled and other stuff
-            if (tn>birthday) and (self.time2seconds(tn)%self.interval< self.accuracy) and (tn.time() > self.timestartfrom) and (tn.time() < self.timestopat) and (self.is_enabled):
+            if (self.time2seconds(tn)%self.interval< self.accuracy) and (tn.time() > self.timestartfrom) and (tn.time() < self.timestopat) and (self.is_enabled):
                 try:
                     # change the next_capture for logging. not really used much anymore.
                     self.next_capture = tn + datetime.timedelta(seconds = self.interval)
