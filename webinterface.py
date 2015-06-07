@@ -5,6 +5,7 @@ import anydbm
 import datetime, re, fnmatch, shutil,time
 import cPickle
 import copy
+from datetime import datetime
 from glob import glob
 from functools import wraps
 from flask import Flask, redirect, url_for, request, send_file, abort, Response, render_template, jsonify
@@ -37,6 +38,12 @@ def sanitizeconfig(towriteconfig, filename):
 	print "do checking here"
 	with open(filename, 'wb') as configfile:
 		towriteconfig.write(configfile)
+
+def get_time():
+	return str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+app.jinja_env.globals.update(get_time=get_time)
+
+
 
 
 """                                                                                                                                                                          
@@ -343,6 +350,18 @@ def preview():
 		return "fail"
 
 
+@app.route("/sync_hwclock")
+@requires_auth
+def sync_hwclock():
+	print "Synchronising hwclock"
+	try:
+		cmd = subprocess.check_output("hwclock --systohc",shell=True)
+		print cmd
+	except Exception as e:
+		print "There was a problem Synchronising the hwclock. Debug me please."
+		print "Exception: "+ str(e)
+
+	return redirect(url_for('config'))
 
 
 """
@@ -489,14 +508,10 @@ def admin():
 def network():
 	version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
 	try:
-		if os.path.isfile("interfaces"):
-			netcfg = open("interfaces",'r')
-		else:
-			os.symlink("/etc/network/interfaces")
-			netcfg = open("interfaces",'r')
+		print "a"
 	except:
 		abort(500)
-	return render_template("network.html", version=version, netcfg = netcfg)
+	return render_template("network.html", version=version)
 
 def trunc_at(s, d, n):
 	"Returns s truncated at the n'th occurrence of the delimiter, d."
