@@ -4,24 +4,28 @@
 <h2>Administration</h2>
 <hr>
 <div class="col-md-12">
-<div class="col-md-3">
-<h3>Management:</h3>
-<button class="btn btn-default" ><a href="/update" role="button">Update Spc-Eyepi</a></button>
-<button class="btn btn-danger" ><a href="/restart" role="button">Reboot</a></button>
-<button class="btn btn-primary " data-toggle="modal" data-target="#hostname-confirm-modal" >Change global name</button>
-</div>
-<h3>Users:</h3>
-<div class="panel panel-default col-md-9">
-<table class="table">
-{% for username in usernames %}
-<tr>
-	<td>{{username}}</td>
-	<td><input type="password" id="{{username}}-pass" class="form-control" placeholder="Password"></td>
-	<td><button class="btn btn-warning btn-md" data-toggle="modal" data-target="#{{username}}-confirm-modal">Save</button></td>
-<tr>
-{% endfor %}
-</table>
-</div>
+  <div class="panel panel-default col-md-2">
+    <h3>Management:</h3>
+    <div class="btn-group-vertical" role="group">
+    <button class="btn btn-primary " data-toggle="modal" data-target="#hostname-confirm-modal" >Change global name</button>
+    <button class="btn btn-default" ><a href="/update" role="button">Update Spc-Eyepi</a></button>
+    <button class="btn btn-danger" ><a href="/restart" role="button">Reboot</a></button>
+    </div>
+    <br><br>
+  </div>
+  <div class="panel panel-default col-md-9 pull-right">
+  <h3>Users:</h3>
+    <table class="table">
+      {% for username in usernames %}
+      <tr>
+      	<td>{{username}}</td>
+      	<td><input type="password" id="{{username}}-pass" class="form-control" placeholder="Password"></td>
+      	<td><button class="btn btn-warning btn-md" data-toggle="modal" data-target="#{{username}}-confirm-modal">Save</button></td>
+      <tr>
+      {% endfor %}
+    </table>
+    <br>
+  </div>
 </div>
 <div class="modal fade" id="invalid-modal" tabindex="-1" role="dialog" aria-labelledby="invalid-modal-label" aria-hidden="true">
    <div class="modal-dialog">
