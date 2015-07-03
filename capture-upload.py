@@ -548,7 +548,7 @@ class Uploader(Thread):
                 jsondata["list_of_uploads"] = list_of_uploads
                 jsondata["capture_limits"]= self.config.get('timelapse','starttime') +" - "+ self.config.get('timelapse', 'stoptime')
                 # need to check against none because otherwise it gets stuck in a broken loop.
-                if self.last_upload_time not None:
+                if not self.last_upload_time == None:
                 	epoch = datetime.datetime.utcfromtimestamp(0)
                 	delta = self.last_upload_time - epoch
                 	jsondata["last_upload_time"] = delta.total_seconds()
@@ -586,13 +586,13 @@ class Uploader(Thread):
                 self.logger.debug("Pausing %d seconds to wait for files to be closed" % self.uploadtimedelay)
                 time.sleep(self.uploadtimedelay)
                 try:
-	                self.logger.debug("Preparing to upload %d files" % len(upload_list))
-	                if not self.sftpUpload(upload_list):
-	                    self.ftpUpload(upload_list)
-	                self.last_upload_time = datetime.datetime.now()
-	            except Exception as e:
-	            	self.logger.error("Couldnt upload for some reason")
-	            	self.logger.error(str(e))
+                    self.logger.debug("Preparing to upload %d files" % len(upload_list))
+                    if not self.sftpUpload(upload_list):
+                        self.ftpUpload(upload_list)
+                    self.last_upload_time = datetime.datetime.now()
+                except Exception as e:
+                    self.logger.error("Couldnt upload for some reason")
+                    self.logger.error(str(e))
 
 class FtpUploadTracker:
     sizeWritten = 0

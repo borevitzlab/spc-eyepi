@@ -8,7 +8,7 @@ import copy
 from datetime import datetime
 from glob import glob
 from functools import wraps
-from flask import Flask, redirect, url_for, request, send_file, abort, Response, render_template, jsonify
+from flask import Flask, redirect, url_for, request, send_file, abort, Response, render_template, jsonify, send_from_directory
 from ConfigParser import SafeConfigParser
 
 config_filename = 'eyepi.ini'
@@ -998,6 +998,12 @@ def deletefiles():
 def logfile():
 	version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
 	return render_template("logpage.html", version=version)
+
+@app.route("/<any('css','js'):selector>/<path:path>")
+@requires_auth
+def get_resource(selector, path):
+	return send_from_directory("static",filename=os.path.join(selector,path))
+
 """                                           
                                                             88                                           
                                                             ""                                           
