@@ -2,7 +2,7 @@
 import socket, os, hashlib, subprocess
 import Crypto.Protocol.KDF
 import anydbm
-import datetime, re, fnmatch, shutil,time
+import datetime, re, fnmatch, shutil,time, json
 import cPickle
 import copy
 from datetime import datetime
@@ -15,12 +15,8 @@ config_filename = 'eyepi.ini'
 otherconfig_filename = 'picam.ini'
 example_filename = 'example.ini'
 
-global piname
-piname = "SPC-eyepi"
-
 app = Flask(__name__, static_url_path='/static')
 app.debug = True
-
 
 """             
                                     88           88                                                                  ad88  88               
@@ -522,11 +518,12 @@ def botnetmgmt():
 	with open("/etc/hostname","r") as f:
 		hn = f.read()
 	jsondata["name"]=hns
+	jsondata["version"]=version
 	# jsondata['cameras'] = []
 	# for serial,cam_config in configs.iteritems():
 	# 	d = cam_config.__dict__['_sections'].copy()
 	# 	jsondata['cameras'].append(d)
-	return jsonify(jsondata)
+	return json.dumps(jsondata)
 
 
 """
