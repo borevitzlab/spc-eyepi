@@ -501,6 +501,34 @@ def admin():
 	for key,value in db.iteritems():
 		usernames.append(key)
 	return render_template("admin.html", version=version, usernames=usernames)
+
+
+
+@app.route('/botnetmgmt')
+@requires_auth
+def botnetmgmt():
+	# use post later to send commands
+	# get hostname:
+	
+	version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+	rpiconfig = SafeConfigParser()
+	rpiconfig.read("picam.ini")
+	configs = {}
+	for file in glob(os.path.join("configs_byserial","*.ini")):
+		configs[os.path.basename(file)[:-4]] = SafeConfigParser()
+		configs[os.path.basename(file)[:-4]].read(file)
+	
+	jsondata = {}
+	with open("/etc/hostname","r") as f:
+		hn = f.read()
+	jsondata["name"]=hns
+	jsondata['cameras'] = []
+	for serial,cam_config in configs.iteritems():
+		d = cam_config.__dict__['_sections'].copy()
+		jsondata['cameras'].append(d)
+	return jsonify(jsondata)
+
+
 """
           d8                                    
         ,8P'                             ,d     
