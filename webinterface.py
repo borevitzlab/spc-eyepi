@@ -506,18 +506,18 @@ def botnetmgmt():
 	# use post later to send commands
 	# get hostname:
 	
-	version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
-	rpiconfig = SafeConfigParser()
-	rpiconfig.read("picam.ini")
-	configs = {}
-	for file in glob(os.path.join("configs_byserial","*.ini")):
-		configs[os.path.basename(file)[:-4]] = SafeConfigParser()
-		configs[os.path.basename(file)[:-4]].read(file)
+	# version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+	# rpiconfig = SafeConfigParser()
+	# rpiconfig.read("picam.ini")
+	# configs = {}
+	# for file in glob(os.path.join("configs_byserial","*.ini")):
+	# 	configs[os.path.basename(file)[:-4]] = SafeConfigParser()
+	# 	configs[os.path.basename(file)[:-4]].read(file)
 	
 	jsondata = {}
-	with open("/etc/hostname","r") as f:
-		hn = f.read()
-	jsondata["name"]=hns
+	# with open("/etc/hostname","r") as f:
+	# 	hn = f.read()
+	jsondata["name"]="balh"
 	jsondata["version"]=version
 	# jsondata['cameras'] = []
 	# for serial,cam_config in configs.iteritems():
