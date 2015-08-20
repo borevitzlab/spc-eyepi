@@ -112,6 +112,8 @@ def detect_cameras(type):
 	except Exception as e:
 		print str(e)
 
+
+
 """                                                                                                        
             88                                   88                                                         88           
             88                                   88                                                  ,d     88           
