@@ -515,11 +515,12 @@ def botnetmgmt():
 	# 	configs[os.path.basename(file)[:-4]].read(file)
 	
 	jsondata = {}
-	with open("/etc/hostname","r") as f:
-		hn = f.read()
-	jsondata["name"]="balh"
+	hn = None
+	with open("/etc/hostname","r") as fn:
+		hn = fn.read()
+	jsondata["name"]=hn
 	# jsondata["version"]=version
-	# jsondata['cameras'] = []
+	jsondata['cameras'] = []
 	# for serial,cam_config in configs.iteritems():
 	# 	d = cam_config.__dict__['_sections'].copy()
 	# 	jsondata['cameras'].append(d)
