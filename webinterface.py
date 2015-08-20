@@ -522,7 +522,10 @@ def botnetmgmt():
 		configs[os.path.basename(file)[:-4]].read(file)
 	jsondata['cameras'] = []
 	for serial, cam_config in configs.iteritems():
-		jsondata['cameras'].append(cam_config._sections)
+		conf = {}
+		for section in cam_config.sections():
+			conf[section] = cam_config.items(section)
+		jsondata['cameras'].append(conf)
 	jsondata['cameras'].append(rpiconfig._sections)
 	return str(json.dumps(jsondata))
 
