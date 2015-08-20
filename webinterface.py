@@ -525,7 +525,8 @@ def botnetmgmt():
 		for serial, cam_config in configs.iteritems():
 			conf = {}
 			for section in cam_config.sections():
-				conf[section] = dict(cam_config.items(section))
+				if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter":
+					conf[section] = dict(cam_config.items(section))
 			jsondata['cameras'][serial] = conf
 		jsondata['cameras'].append(rpiconfig._sections)
 		return str(json.dumps(jsondata))
