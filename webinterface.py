@@ -528,7 +528,6 @@ def botnetmgmt():
 				if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter":
 					conf[section] = dict(cam_config.items(section))
 			jsondata['cameras'][serial] = conf
-		jsondata['cameras'].append(rpiconfig._sections)
 		return str(json.dumps(jsondata))
 	except Exception as e:
 		return str(e)
