@@ -507,23 +507,23 @@ def botnetmgmt():
 	# get hostname:
 	
 	# version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
-	# rpiconfig = SafeConfigParser()
-	# rpiconfig.read("picam.ini")
-	# configs = {}
-	# for file in glob(os.path.join("configs_byserial","*.ini")):
-	# 	configs[os.path.basename(file)[:-4]] = SafeConfigParser()
-	# 	configs[os.path.basename(file)[:-4]].read(file)
 	
 	jsondata = {}
+	# jsondata["version"]=version
 	hn = None
 	with open("/etc/hostname","r") as fn:
 		hn = fn.readlines()[0]
 	jsondata["name"]=hn
-	# jsondata["version"]=version
+	rpiconfig = SafeConfigParser()
+	rpiconfig.read("picam.ini")
+	configs = {}
+	for file in glob(os.path.join("configs_byserial","*.ini")):
+		configs[os.path.basename(file)[:-4]] = SafeConfigParser()
+		configs[os.path.basename(file)[:-4]].read(file)
 	jsondata['cameras'] = []
-	for serial,cam_config in configs.iteritems():
-		d = cam_config.__dict__['_sections'].copy()
-		jsondata['cameras'].append(d)
+	for serial, cam_config in configs.iteritems():
+		jsondata['cameras'].append(cam_config._sections)
+	jsondata['cameras'].append(rpiconfig._sections)
 	return str(json.dumps(jsondata))
 
 
