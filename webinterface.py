@@ -522,10 +522,10 @@ def botnetmgmt():
 	with open("/etc/hostname","r") as f:
 		hn = f.read()
 	jsondata["name"]=hns
-	jsondata['cameras'] = []
-	for serial,cam_config in configs.iteritems():
-		d = cam_config.__dict__['_sections'].copy()
-		jsondata['cameras'].append(d)
+	# jsondata['cameras'] = []
+	# for serial,cam_config in configs.iteritems():
+	# 	d = cam_config.__dict__['_sections'].copy()
+	# 	jsondata['cameras'].append(d)
 	return jsonify(jsondata)
 
 
