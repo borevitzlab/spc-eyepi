@@ -511,23 +511,26 @@ def botnetmgmt():
 	jsondata = {}
 	# jsondata["version"]=version
 	hn = None
-	with open("/etc/hostname","r") as fn:
-		hn = fn.readlines()[0]
-	jsondata["name"]=hn
-	rpiconfig = SafeConfigParser()
-	rpiconfig.read("picam.ini")
-	configs = {}
-	for file in glob(os.path.join("configs_byserial","*.ini")):
-		configs[os.path.basename(file)[:-4]] = SafeConfigParser()
-		configs[os.path.basename(file)[:-4]].read(file)
-	jsondata['cameras'] = {}
-	for serial, cam_config in configs.iteritems():
-		conf = {}
-		for section in cam_config.sections():
-			conf[section] = dict(cam_config.items(section))
-		jsondata['cameras'][serial] = conf
-	jsondata['cameras'].append(rpiconfig._sections)
-	return str(json.dumps(jsondata))
+	try:
+		with open("/etc/hostname","r") as fn:
+			hn = fn.readlines()[0]
+		jsondata["name"]=hn
+		rpiconfig = SafeConfigParser()
+		rpiconfig.read("picam.ini")
+		configs = {}
+		for file in glob(os.path.join("configs_byserial","*.ini")):
+			configs[os.path.basename(file)[:-4]] = SafeConfigParser()
+			configs[os.path.basename(file)[:-4]].read(file)
+		jsondata['cameras'] = {}
+		for serial, cam_config in configs.iteritems():
+			conf = {}
+			for section in cam_config.sections():
+				conf[section] = dict(cam_config.items(section))
+			jsondata['cameras'][serial] = conf
+		jsondata['cameras'].append(rpiconfig._sections)
+		return str(json.dumps(jsondata))
+	except Exception as e:
+		return str(e)
 
 
 """
