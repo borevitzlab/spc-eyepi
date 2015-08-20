@@ -515,8 +515,8 @@ def botnetmgmt():
 	# 	configs[os.path.basename(file)[:-4]].read(file)
 	
 	jsondata = {}
-	# with open("/etc/hostname","r") as f:
-	# 	hn = f.read()
+	with open("/etc/hostname","r") as f:
+		hn = f.read()
 	jsondata["name"]="balh"
 	# jsondata["version"]=version
 	# jsondata['cameras'] = []
