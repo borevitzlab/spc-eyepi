@@ -518,7 +518,7 @@ def botnetmgmt():
 	# with open("/etc/hostname","r") as f:
 	# 	hn = f.read()
 	jsondata["name"]="balh"
-	jsondata["version"]=version
+	# jsondata["version"]=version
 	# jsondata['cameras'] = []
 	# for serial,cam_config in configs.iteritems():
 	# 	d = cam_config.__dict__['_sections'].copy()
