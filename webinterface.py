@@ -523,7 +523,7 @@ def botnetmgmt():
 	# for serial,cam_config in configs.iteritems():
 	# 	d = cam_config.__dict__['_sections'].copy()
 	# 	jsondata['cameras'].append(d)
-	return json.dumps(jsondata)
+	return str(json.dumps(jsondata))
 
 
 """
