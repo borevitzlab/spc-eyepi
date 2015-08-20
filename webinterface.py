@@ -520,12 +520,12 @@ def botnetmgmt():
 	for file in glob(os.path.join("configs_byserial","*.ini")):
 		configs[os.path.basename(file)[:-4]] = SafeConfigParser()
 		configs[os.path.basename(file)[:-4]].read(file)
-	jsondata['cameras'] = []
+	jsondata['cameras'] = {}
 	for serial, cam_config in configs.iteritems():
 		conf = {}
 		for section in cam_config.sections():
-			conf[section] = cam_config.items(section)
-		jsondata['cameras'].append(conf)
+			conf[section] = dict(cam_config.items(section))
+		jsondata['cameras'][serial] = conf
 	jsondata['cameras'].append(rpiconfig._sections)
 	return str(json.dumps(jsondata))
 
