@@ -451,6 +451,11 @@ def update():
 	os.system("git reset --hard origin/master")
 	return redirect(url_for('admin'))#'<html><head><script type="text/javascript" //function(){document.location.reload(true);},60000);</script></head><body>UPDATING!! WAIT PLEASE!!</body></html>'
 
+@app.route("/status")
+@requires_auth
+def status():
+	return ''
+
 """                                                                                          
           d8                                                                                               
         ,8P'                                                                                               
