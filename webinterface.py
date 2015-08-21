@@ -520,7 +520,7 @@ def botnetmgmt():
 
 		a_statvfs = os.statvfs("/")
 		free_space = (((a_statvfs.f_frsize*a_statvfs.f_bavail)/1024)/1024)/1024
-		total_space = (((a_statvfs.f_frsize*a_statvfs.f_blocks)/1024)/1024)/1024
+		total_space = (((1a_statvfs.f_frsize*a_statvfs.f_blocks)/1024)/1024)/1024
 		jsondata['free_space'] = free_space
 		jsondata["name"]=hn
 		rpiconfig = SafeConfigParser()
