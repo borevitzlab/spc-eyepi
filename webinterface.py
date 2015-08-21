@@ -517,6 +517,11 @@ def botnetmgmt():
 	try:
 		with open("/etc/hostname","r") as fn:
 			hn = fn.readlines()[0]
+
+		a_statvfs = os.statvfs("/")
+		free_space = (((a_statvfs.f_frsize*a_statvfs.f_bavail)/1024)/1024)/1024
+		total_space = (((a_statvfs.f_frsize*a_statvfs.f_blocks)/1024)/1024)/1024
+		jsondata['free_space'] = free_space
 		jsondata["name"]=hn
 		rpiconfig = SafeConfigParser()
 		rpiconfig.read("picam.ini")
