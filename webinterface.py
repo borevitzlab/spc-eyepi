@@ -506,10 +506,10 @@ def botnetmgmt():
 	# use post later to send commands
 	# get hostname:
 	
-	# version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
 	
 	jsondata = {}
-	# jsondata["version"]=version
+	version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+	jsondata["version"]=version
 	hn = None
 	try:
 		with open("/etc/hostname","r") as fn:
