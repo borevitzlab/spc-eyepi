@@ -505,8 +505,6 @@ def admin():
 def botnetmgmt():
 	# use post later to send commands
 	# get hostname:
-	
-	
 	jsondata = {}
 	version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
 	jsondata["version"]=version
@@ -528,6 +526,11 @@ def botnetmgmt():
 				if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter":
 					conf[section] = dict(cam_config.items(section))
 			jsondata['cameras'][serial] = conf
+		rpc = {}
+		for section in rpiconfig.sections():
+			if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter":
+				rpc[section] = dict(rpiconfig.items(section))
+		jsondata['cameras']["picam"] = rpc
 		return str(json.dumps(jsondata))
 	except Exception as e:
 		return str(e)
