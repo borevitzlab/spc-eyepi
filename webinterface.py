@@ -33,7 +33,7 @@ aa    ]8I  88,    ,88  88       88  88    88,    88  ,d8"       "8b,   ,aa  "8a,
                                                                                                                                  "Y8bbdP"    
 """
 def sanitizeconfig(towriteconfig, filename):
-	print "do checking here"
+	print("do checking here")
 	with open(filename, 'wb') as configfile:
 		towriteconfig.write(configfile)
 
@@ -782,7 +782,7 @@ def writecfg():
 				sect = key.split('.')[0]
 				opt = key.split(".")[1]
 				aconfig.set(sect,opt,value)
-				print "changed: "+sect+':'+opt+':'+value
+				print("changed: "+sect+':'+opt+':'+value)
 		try:
 			sanitizeconfig(aconfig, config_path)
 			return "success"
@@ -822,8 +822,8 @@ def change_hostname():
 					hostnamefile.write(hostname+'\n')
 				os.system("hostname "+hostname)
 			except Exception as e:
-				print "Something went horribly wrong"
-				print str(e)
+				print ("Something went horribly wrong")
+				print (str(e))
 		else:
 			abort(400)
 		try:
