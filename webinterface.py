@@ -246,7 +246,6 @@ def authenticate():
 @app.route('/sched')
 @requires_auth
 def sched():
-
     example = SafeConfigParser()
     version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
     configs = {}
@@ -523,7 +522,7 @@ def botnetmgmt():
 		a_statvfs = os.statvfs("/")
 		free_space = a_statvfs.f_frsize*a_statvfs.f_bavail
 		total_space = a_statvfs.f_frsize*a_statvfs.f_blocks
-		for x in xrange(0,3):
+		for x in xrange(0,2):
 			free_space /= 1024.0
 			total_space /= 1024.0
 		jsondata['free_space_mb'] = free_space
