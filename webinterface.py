@@ -1,4 +1,6 @@
 #!/usr/bin/python2
+from __future__ import print_function
+from __future__ import division
 import socket, os, hashlib, subprocess
 import Crypto.Protocol.KDF
 import anydbm
@@ -258,7 +260,7 @@ def sched():
     cfglists = {}
     for file in glob(os.path.join("schedules","*.cfglist")):
         cfglists[os.path.basename(file)[:-18]] = open(file, 'rb').readlines()
-        print os.path.basename(file)[:-18]
+        print(os.path.basename(file)[:-18])
     finaldict = {}
     for key, cfglist in cfglists.iteritems():
         oos = {}
@@ -280,7 +282,7 @@ def sched():
                     else:
                         oos[setting][keyval[0].strip()] = keyval[1].strip()
                 except Exception as e:
-                    print str(e)
+                    print(str(e))
         otherdict = {}
 
         for innerkey,value in oos.iteritems():
@@ -314,10 +316,10 @@ def get_image(path):
 def cap_lock_wait(port,serialnumber):
 	try:
 		a=subprocess.check_output("gphoto2 --port="+str(port)+" --capture-preview --force-overwrite --filename='static/temp/"+str(serialnumber)+".jpg'",shell=True)
-		print a
+		print(a)
 		return False
 	except subprocess.CalledProcessError as e:
-		print e.output
+		print(e.output)
 		return True
 
 def capture_preview(serialnumber):
@@ -335,7 +337,7 @@ def capture_preview(serialnumber):
 				return True
 
 	except subprocess.CalledProcessError as e:
-		print str(e)
+		print (str(e))
 
 @app.route("/preview_cam", methods=["GET"])
 def preview():
@@ -353,13 +355,13 @@ def preview():
 @app.route("/sync_hwclock")
 @requires_auth
 def sync_hwclock():
-	print "Synchronising hwclock"
+	print ("Synchronising hwclock")
 	try:
 		cmd = subprocess.check_output("hwclock --systohc",shell=True)
 		print cmd
 	except Exception as e:
-		print "There was a problem Synchronising the hwclock. Debug me please."
-		print "Exception: "+ str(e)
+		print ("There was a problem Synchronising the hwclock. Debug me please.")
+		print ("Exception: "+ str(e))
 		return render_template('server_error.html'), 500
 
 	return redirect(url_for('config'))
@@ -419,7 +421,7 @@ def savetousb():
 		shutil.copytree(config.get("localfiles","upload_dir"),os.path.join("/mnt/", config.get("camera","name")))
 	except Exception as e:
 		subprocess.call("umount /mnt", shell=True)
-		print str(e)
+		print (str(e))
 		return "failure"
 	subprocess.call("umount /mnt", shell=True)
 	return "success"
@@ -437,7 +439,7 @@ def savetousb():
 @app.route('/restart')
 @requires_auth
 def restart():
-	print "shutting down"
+	print ("shutting down")
 	try:
 		os.system("reboot")
 	except Exception as e:
@@ -524,7 +526,8 @@ def botnetmgmt():
 		for x in xrange(0,3):
 			free_space /= 1024.0
 			total_space /= 1024.0
-		jsondata['free_space'] = free_space
+		jsondata['free_space_mb'] = free_space
+		jsondata['total_space_mb'] = total_space
 		jsondata["name"]=hn
 		rpiconfig = SafeConfigParser()
 		rpiconfig.read("picam.ini")
@@ -563,10 +566,6 @@ def botnetmgmt():
 @requires_auth
 def network():
 	version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
-	try:
-		print "a"
-	except:
-		abort(500)
 	return render_template("network.html", version=version)
 
 def trunc_at(s, d, n):
