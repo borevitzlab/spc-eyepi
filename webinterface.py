@@ -108,7 +108,7 @@ def detect_cameras(type):
 			cams[a[port.start():port.end()+7]] = cmdret[cmdret.find("Current: ")+9: len(cmdret)-1]
 		return cams
 	except Exception as e:
-		print str(e)
+		print(str(e))
 
 
 
@@ -337,7 +337,7 @@ def capture_preview(serialnumber):
 				return True
 
 	except subprocess.CalledProcessError as e:
-		print (str(e))
+		print(str(e))
 
 @app.route("/preview_cam", methods=["GET"])
 def preview():
@@ -355,13 +355,13 @@ def preview():
 @app.route("/sync_hwclock")
 @requires_auth
 def sync_hwclock():
-	print ("Synchronising hwclock")
+	print("Synchronising hwclock")
 	try:
 		cmd = subprocess.check_output("hwclock --systohc",shell=True)
-		print cmd
+		printcmd
 	except Exception as e:
-		print ("There was a problem Synchronising the hwclock. Debug me please.")
-		print ("Exception: "+ str(e))
+		print("There was a problem Synchronising the hwclock. Debug me please.")
+		print("Exception: "+ str(e))
 		return render_template('server_error.html'), 500
 
 	return redirect(url_for('config'))
@@ -421,7 +421,7 @@ def savetousb():
 		shutil.copytree(config.get("localfiles","upload_dir"),os.path.join("/mnt/", config.get("camera","name")))
 	except Exception as e:
 		subprocess.call("umount /mnt", shell=True)
-		print (str(e))
+		print(str(e))
 		return "failure"
 	subprocess.call("umount /mnt", shell=True)
 	return "success"
@@ -439,7 +439,7 @@ def savetousb():
 @app.route('/restart')
 @requires_auth
 def restart():
-	print ("shutting down")
+	print("shutting down")
 	try:
 		os.system("reboot")
 	except Exception as e:
@@ -777,7 +777,7 @@ def writecfg():
 		aconfig.set("ftp","uploadwebcam","off")
 		aconfig.set("ftp","uploadtimestamped","off")
 		for key, value in request.form.iteritems(multi=True):
-			#print "key:" + key +"  value:"+value
+			#print"key:" + key +"  value:"+value
 			if value != "" and key != "config-name":
 				sect = key.split('.')[0]
 				opt = key.split(".")[1]
@@ -822,8 +822,8 @@ def change_hostname():
 					hostnamefile.write(hostname+'\n')
 				os.system("hostname "+hostname)
 			except Exception as e:
-				print ("Something went horribly wrong")
-				print (str(e))
+				print("Something went horribly wrong")
+				print(str(e))
 		else:
 			abort(400)
 		try:
