@@ -545,14 +545,12 @@ def botnetmgmt():
 		for section in rpiconfig.sections():
 			if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter":
 				rpc[section] = dict(rpiconfig.items(section))
+		
 		try:
 			with open("/proc/machine-id") as f:
-				rpc['serialnumber'] = f.read()
+				jsondata['cameras'][f.read()] = rpc
 		except:
-			rpc['serialnumber'] = "error"
-		
-		jsondata['cameras']["picam"] = rpc
-
+			jsondata['cameras']['picam']['serialnumber'] = f.read()
 		return str(json.dumps(jsondata))
 	except Exception as e:
 		return str(e)
