@@ -548,7 +548,8 @@ def botnetmgmt():
 		
 		try:
 			with open("/etc/machine-id") as f:
-				ser = str(f.read()).replace("\n", "")
+				ser = str(f.read())
+				ser = ser.replace("\n", "")
 				jsondata['cameras'][ser] = rpc
 		except:
 			jsondata['cameras']['picam']= rpc
