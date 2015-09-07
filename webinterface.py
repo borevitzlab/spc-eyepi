@@ -587,7 +587,7 @@ def reset_machine_id():
 		os.remove("/etc/machine-id")
 		system("systemd-machine-id-setup")
 	except Exception as e:
-		resp["ERR"] = str(e)}
+		resp["ERR"] = str(e)
 	return str(json.dumps(resp))
 
 
