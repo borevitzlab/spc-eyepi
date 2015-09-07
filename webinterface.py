@@ -547,10 +547,10 @@ def botnetmgmt():
 				rpc[section] = dict(rpiconfig.items(section))
 		
 		try:
-			with open("/proc/machine-id") as f:
+			with open("/etc/machine-id") as f:
 				jsondata['cameras'][f.read()] = rpc
 		except:
-			jsondata['cameras']['picam']['serialnumber'] = f.read()
+			jsondata['cameras']['picam']['serialnumber'] = rpc
 		return str(json.dumps(jsondata))
 	except Exception as e:
 		return str(e)
