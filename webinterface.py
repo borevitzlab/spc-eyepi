@@ -551,8 +551,9 @@ def botnetmgmt():
 				ser = str(f.read())
 				ser = ser.replace("\n", "")
 				jsondata['cameras'][ser] = rpc
-		except:
+		except Exception as e:
 			jsondata['cameras']['picam']= rpc
+			jsondata['cameras']['picam']['error'] = str(e)
 		return str(json.dumps(jsondata))
 	except Exception as e:
 		return str(e)
