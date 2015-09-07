@@ -570,7 +570,7 @@ def run_command():
 		response = {}
 		for command, argument in request.form.keys():
 			try:
-				system(" ".join([command,argument]))	
+				os.system(" ".join([command,argument]))	
 				response[command] = "OK"
 			except Exception as e:
 				response[command] = str(e)
@@ -588,7 +588,7 @@ def reset_machine_id():
 	resp = {}
 	try:
 		os.remove("/etc/machine-id")
-		system("systemd-machine-id-setup")
+		os.system("systemd-machine-id-setup")
 	except Exception as e:
 		resp["ERR"] = str(e)
 	return str(json.dumps(resp))
