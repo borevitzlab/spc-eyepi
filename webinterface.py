@@ -576,6 +576,21 @@ def run_command():
 		abort(400)
 
 
+@app.route("/reset_machine_id")
+@requires_auth
+def reset_machine_id():
+	"""
+		removes the machine id and calls the command to reset machine-id
+	"""
+	resp = {}
+	try:
+		os.remove("/etc/machine-id")
+		system("systemd-machine-id-setup")
+	except Exception as e:
+		resp["ERR"] = str(e)}
+	return str(json.dumps(resp))
+
+
 """
           d8                                    
         ,8P'                             ,d     
