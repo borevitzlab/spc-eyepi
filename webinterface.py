@@ -513,7 +513,7 @@ def botnetmgmt():
 	# get hostname:
 	jsondata = {}
 	version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
-	jsondata["version"]=version
+	jsondata["version"]=version.strip("\n")
 	hn = None
 	try:
 		with open("/etc/hostname","r") as fn:
