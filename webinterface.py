@@ -505,7 +505,7 @@ def admin():
 	return render_template("admin.html", version=version, usernames=usernames)
 
 
-@app.route('/update_camera/<path:path>')
+@app.route('/update_camera/<path:path>', methods=["GET","POST"])
 @requires_auth
 def update_camera_config(serialnumber):
 	ser = None
@@ -515,6 +515,7 @@ def update_camera_config(serialnumber):
 			ser = ser.strip('\n')
 		if ser == serialnumber:
 			return ""
+
 		files = glob("configs_byserial/*.ini")
 		if serialnumber+".ini" in files:
 			with open(serialnumber+".fm" 'w') as f:
