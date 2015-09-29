@@ -61,8 +61,12 @@ class Camera(Thread):
         
         if serialnumber != None:
             self.serialnumber = serialnumber
+        else: 
+            self.serialnumber = "[no-cam-sn-detected] wtf?"
         if camera_port!=None:
             self.camera_port = camera_port
+        else:
+            self.camera_port = "[no-camera-port-detected] wtf?"
         # variable setting and config file jiggery.
         self.last_config_modify_time = None
         self.config_filename = config_filename
@@ -86,7 +90,7 @@ class Camera(Thread):
         self.spool_directory = self.config.get("localfiles","spooling_dir")
         self.upload_directory = self.config.get("localfiles","upload_dir")
         #self.exposure_length = self.config.getint("camera","exposure")
-
+        self.last_config_modify_time = os.stat(self.config_filename).st_mtime
         # get enabled
         if self.config.get("camera","enabled")=="on":
             self.is_enabled= True
@@ -158,14 +162,14 @@ class Camera(Thread):
         # set the next capture time to now just because
         self.next_capture = datetime.datetime.now()
         # this is to test and see if the config has been modified
-        self.last_config_modify_time = None
+        
         while (True):
             # testing for the config modification
             if os.stat(self.config_filename).st_mtime!=self.last_config_modify_time:
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
                 # Resetup()
                 self.setup()
-                self.logger.info("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
+                self.logger.info("Change in config file at "+ datetime.datetime.now().isoformat() +" reloading")
             
             # set a timenow, this is used everywhere ahead, do not remove.
             tn = datetime.datetime.now()
@@ -176,7 +180,7 @@ class Camera(Thread):
                     # set the next capture period to print to the log (not used anymore, really due to time modulo) 
                     self.next_capture = tn + datetime.timedelta(seconds = self.interval)
                     # The time now is within the operating times
-                    self.logger.info("Capturing Image now")
+                    self.logger.info("Capturing Image now for %s" % self.serialnumber)
                     
                     # setting variables for saving files
                     # TODO:
@@ -241,12 +245,11 @@ class Camera(Thread):
                         self.logger.info("Next capture at %s" % self.next_capture.isoformat())
                     else:
                         self.logger.info("Capture will stop at %s" % self.timestopat.isoformat())
-
                 except Exception, e:
                     self.next_capture = datetime.datetime.now()
                     # TODO: This needs to catch errors from subprocess.call because it doesn't
                     self.logger.error("Image Capture error - " + str(e))
-            time.sleep(0.01)
+            time.sleep(0.1)
 
 class PiCamera(Camera):
     """ PiCamera extension to the Camera Class
@@ -256,8 +259,10 @@ class PiCamera(Camera):
         # set next_capture, this isnt really used much anymore except for logging.
         self.next_capture = datetime.datetime.now()
         # this is to test and see if the config has been modified
-        self.last_config_modify_time = None
         while (True):
+            # set a timenow this is used locally down here
+            tn = datetime.datetime.now()
+
             # testing for the config modification
             if os.stat(self.config_filename).st_mtime!=self.last_config_modify_time:
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
@@ -265,18 +270,27 @@ class PiCamera(Camera):
                 self.setup()
                 self.logger.info("change in config at "+ datetime.datetime.now().isoformat() +" reloading")
             
-            # set a timenow this is used everywhere
-            tn = datetime.datetime.now()
-
-            # checking if enabled and other stuff
+            if (self.time2seconds(tn)%(86400/24) < self.accuracy):
+                files = []
+                # once per hour
+                # remove weird images that appear in the working dir. 
+                # TODO: fix this so its not so hacky, need to find out why the 
+                # picam is leaving jpegs in the working directoy.
+                for filetype in filetypes:
+                    files.extend(glob("/home/spc-eyepi/*."+filetype.upper()+"\~"))
+                    files.extend(glob("/home/spc-eyepi/*."+filetype.lower()+"\~"))
+                    files.extend(glob("/home/spc-eyepi/*."+filetype.upper()))
+                    files.extend(glob("/home/spc-eyepi/*."+filetype.lower()))
+                for fn in files:
+                    os.remove(fn)
+            
             if (self.time2seconds(tn)%self.interval< self.accuracy) and (tn.time() > self.timestartfrom) and (tn.time() < self.timestopat) and (self.is_enabled):
                 try:
                     # change the next_capture for logging. not really used much anymore.
                     self.next_capture = tn + datetime.timedelta(seconds = self.interval)
                         
                     # The time now is within the operating times
-                    self.logger.info("Capturing Image now")
-
+                    self.logger.info("Capturing Image now for picam")
                     # TODO: once timestamped imagename is more agnostic this will require a jpeg append.
                     image_file = self.timestamped_imagename(tn)
 
@@ -311,7 +325,7 @@ class PiCamera(Camera):
                     self.next_capture = datetime.datetime.now()
                     self.logger.error("Image Capture error - " + str(e))
 
-            time.sleep(0.01)
+            time.sleep(0.1)
         
 
 class Uploader(Thread):
@@ -337,7 +351,6 @@ class Uploader(Thread):
     def setup(self):
         # TODO: move the timeinterval to the config file and get it from there, this _should_ avoid too many requests to the sftp server.
         self.timeinterval = 30
-        self.uploadtimedelay = 1
         self.config = SafeConfigParser()
         self.config.read(self.config_filename)
         self.hostname = self.config.get("ftp","server")
@@ -554,7 +567,7 @@ class Uploader(Thread):
                 	jsondata["last_upload_time"] = delta.total_seconds()
                 jsondata["version"] = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
             except Exception as e:
-                self.logger.info(str(e))
+                self.logger.error("Couldnt upload metadata: %s" % str(e))
             data["metadata.json"] = json.dumps(jsondata, indent=4, sort_keys=True)
             data["ipaddress.html"] = fullstr
             self.logger.debug("Sending metadata to server now")
@@ -575,24 +588,20 @@ class Uploader(Thread):
                 # reset last change time to last and setup()
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
                 self.setup()
-            
-            upload_list = glob(os.path.join(self.upload_directory,'*'))
-            self.set_metadata_on_server(upload_list)
-            
-            if (len(upload_list)==0):
-                self.logger.debug("no files in upload directory")
+            try:
+                upload_list = glob(os.path.join(self.upload_directory,'*'))
+                self.set_metadata_on_server(upload_list)
                 
-            if (len(upload_list) > 0) and self.config.get("ftp","uploaderenabled")=="on":
-                self.logger.debug("Pausing %d seconds to wait for files to be closed" % self.uploadtimedelay)
-                time.sleep(self.uploadtimedelay)
-                try:
+                if (len(upload_list)==0):
+                    self.logger.debug("No files in upload directory")
+                    
+                if (len(upload_list) > 0) and self.config.get("ftp","uploaderenabled")=="on":
                     self.logger.debug("Preparing to upload %d files" % len(upload_list))
                     if not self.sftpUpload(upload_list):
                         self.ftpUpload(upload_list)
                     self.last_upload_time = datetime.datetime.now()
-                except Exception as e:
-                    self.logger.error("Couldnt upload for some reason")
-                    self.logger.error(str(e))
+            except Exception as e:
+                self.logger.error("ERROR: UPLOAD %s" % str(e))
 
 class FtpUploadTracker:
     sizeWritten = 0
@@ -658,7 +667,6 @@ class Scheduler(Thread):
                 tries += 1
             self.job_number +=1
 
-
         with open(os.path.join("schedules",self.name + ".cfglist"),'wb') as file:
             try:
                 cfg_list = subprocess.check_output("gphoto2 --port "+self.camera_port+" --list-all-config",shell=True)
@@ -699,7 +707,7 @@ class Scheduler(Thread):
                 
                 if os.stat(self.schedule_file_name).st_mtime!=self.last_schedule_mod_time:
                         # reset last change time to last and setup()
-                        self.logger.info("change in schedule, setting up again, last" + str(os.stat(self.schedule_file_name).st_mtime) + str(self.last_schedule_mod_time))
+                        self.logger.info("Change in schedule, setting up again")
                         self.last_schedule_mod_time = os.stat(self.schedule_file_name).st_mtime
                         self.setup()
                 
@@ -740,8 +748,7 @@ def detect_cameras(type):
             cams[a[port.start():port.end()+7]] = cmdret[cmdret.find("Current: ")+9: len(cmdret)-1]
         return cams
     except Exception as e:
-        print str(e)
-        logger.error("Could not detect camera for some reason: " + str(e))
+        logger.error("Could not detect camera for some reason: %s" % str(e))
 
 
 def redetect_cameras(camera_workers):
@@ -812,7 +819,8 @@ if __name__ == "__main__":
         has_picam = detect_picam()
         while cameras == None and tries < 10:
             logger.debug("detecting Cameras")
-            cameras= detect_cameras("usb")
+            cameras = detect_cameras("usb")
+            tries+=1
             
         if not cameras == None:
             workers = create_workers(cameras)
@@ -832,6 +840,7 @@ if __name__ == "__main__":
                 kill_workers(workers[1])
                 kill_workers(workers[2])
                 # start workers again
+                time.sleep(60)
                 workers = create_workers(cameras)
                 start_workers(workers[0])
                 start_workers(workers[1])
