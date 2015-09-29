@@ -229,7 +229,7 @@ class Camera(Thread):
                         if ext == ".jpeg" or ".jpg":
                             # best to create a symlink to /dev/shm/ from static/temp
                             # TODO: multicamera support will need changes here!!
-                            shutil.copy(file,os.path.join("static","temp", self.serialnumber+".jpg"))
+                            shutil.copy(file,os.path.join("/dev/shm", self.serialnumber+".jpg"))
                             if self.config.get("ftp","uploadwebcam") == "on":
                                 shutil.copy(file,os.path.join(self.upload_directory, "dslr_last_image.jpg"))
                         # move timestamped image te be uploaded
