@@ -58,7 +58,7 @@
             <form id="{{name}}-form">
             <input type="text" style="display:none;" name="config-name" value="{{name}}"></input>
             {% for section in config.sections() %}
-                {% if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter" and not section == "eosserialnumber" %}
+                {% if not section == "eosserialnumber" %}
                     {% if section not in ["camera","timelapse","ftp"] %}
                     <div class="panel panel-default hidden {{name}}-advanced">
                     {% else %}
@@ -70,7 +70,6 @@
                       <div class="panel-body">
                           {% for option in config.options(section) %}
                           {{option}} 
-                          
                            {% if option == "enabled" or option == "uploadwebcam" or option == "uploadtimestamped" or option == "uploaderenabled" %}
                                   
                                   <input class="col-md-4 pull-right" type='checkbox' name="{{section}}.{{option}}" placeholder="{{config.get(section, option)}}" {% if config.get(section,option)=="on"%}checked{% endif %}> 
@@ -178,7 +177,6 @@ $("#{{name}}-advanced-button").click(function(e){
             <form id="picam-form">
             <input type="text" style="display:none;" name="config-name" value="picam"></input>
             {% for section in rpiconfig.sections() %}
-                {% if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter" %}
                     {% if section not in ["camera","timelapse","ftp"] %}
                     <div class="panel panel-default hidden picam-advanced">
                     {% else %}
@@ -200,7 +198,6 @@ $("#{{name}}-advanced-button").click(function(e){
                          {% endfor %}
                     </div>
                     </div>
-                {% endif %}
             {% endfor %}
         </div>
         <div class="modal-footer">

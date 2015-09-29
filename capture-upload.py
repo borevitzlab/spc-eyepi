@@ -13,13 +13,12 @@ from socket import socket, SOCK_DGRAM, AF_INET
 import pyudev
 
 # Global configuration variables
-config_filename = 'eyepi.ini'
 timestartfrom = datetime.time.min
 timestopat = datetime.time.max
 default_extension = ".JPG"
 #Acceptable filtypes
 filetypes = ["CR2","RAW","NEF","JPG","JPEG"]
-logging.config.fileConfig(config_filename)
+logging.config.fileConfig("logging.ini")
 logging.getLogger("paramiko").setLevel(logging.WARNING)
 
 def timestamp(tn):
