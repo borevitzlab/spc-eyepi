@@ -505,6 +505,27 @@ def admin():
 	return render_template("admin.html", version=version, usernames=usernames)
 
 
+@app.route('/update_camera/<path:path>')
+@requires_auth
+def update_camera_config(serialnumber):
+	ser = None
+	if request.method == "POST":
+		with open("/etc/machine-id") as f:
+			ser = str(f.read())
+			ser = ser.strip('\n')
+		if ser == serialnumber:
+			return ""
+		files = glob("configs_byserial/*.ini")
+		if serialnumber+".ini" in files:
+			with open(serialnumber+".fm" 'w') as f:
+				for key,value in request.form.iteritems():
+					f.write("%s:%s" % (key,value))
+		else:
+			return "FAILURE"
+	return None
+
+
+
 
 @app.route('/botnetmgmt')
 @requires_auth
