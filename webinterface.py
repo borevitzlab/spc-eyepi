@@ -512,20 +512,49 @@ def admin():
 @requires_auth
 def update_camera_config(serialnumber):
 	ser = None
+
+	config_map = {
+		'name': ('camera','name'),
+		'camera_enabled': ('camera','enabled'),
+		  'upload_enabled': ('ftp','uploaderenabled'),
+		  'upload_username': ('ftp','user'),
+		  'upload_pass': ('ftp','pass'),
+		  'upload_server': ('ftp','server'),
+		  'upload_timestamped': ('ftp','uploadtimestamped'),
+		  'upload_webcam': ('ftp','uploadwebcam'),
+		  'interval_in_seconds': ('timelapse','interval'),
+		  'starttime': ('timelapse','starttime'),
+		  'stoptime': ('timelapse','stoptime')
+	}
 	if request.method == "POST":
+		config = SafeConfigParser()
 		with open("/etc/machine-id") as f:
-			ser = str(f.read())
-			ser = ser.strip('\n')
-		if ser == serialnumber:
-			for key,value in request.form.iteritems():
-				print("%s:%s"%(key,value))
+			m_id = str(f.read())
+			m_id = m_id.strip('\n')
+		if m_id == serialnumber:
+			# modify picam file if machine id is the sn
+			config_path="picam.ini"
+			config.read(config_path)
+			for key,value in request.form.iteritems(multi=True):
+				config.set(config_map[key][0],config_map[key][1],value)
+			print(config)
 			return "",200
 
 		files = glob("configs_byserial/*.ini")
 		if serialnumber+".ini" in files:
-			for key,value in request.form.iteritems():
-				print("%s:%s"%(key,value))
+			# modify camera by serial if available, otherwise 404.
+			config_path = os.path.join("configs_byserial",serialnumber+".ini") 
+			config.read(config_path)
+			for key,value in request.form.iteritems(multi=True):
+				config.set(config_map[key][0],config_map[key][1],value)
+			print(config)
 			return "",200
+			
+			# try:
+			# 	sanitizeconfig(config, config_path)
+			# 	return "",200
+			# except Exception as e:
+			# 	"",500
 		else:
 			return "",404
 	return "",405
