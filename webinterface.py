@@ -536,7 +536,7 @@ def update_camera_config(serialnumber):
 			config_path="picam.ini"
 			config.read(config_path)
 			for key,value in request.form.iteritems(multi=True):
-				print("%s:%s"%(key,value))
+				print("%s:%s:%s"%(config_map[key][0],config_map[key][0],value))
 				config.set(config_map[key][0],config_map[key][1],value)
 			# for section in config.sections():
 			# 	for key,value in config.items(section):
@@ -550,7 +550,7 @@ def update_camera_config(serialnumber):
 			config.read(config_path)
 			for key,value in request.form.iteritems(multi=True):
 				config.set(config_map[key][0],config_map[key][1],value)
-				print("%s:%s"%(key,value))
+				print("%s:%s:%s"%(config_map[key][0],config_map[key][0],value))
 			# for section in config.sections():
 			# 	for key,value in config.items(section):
 			# 		print("%s:%s"%(key,value))
