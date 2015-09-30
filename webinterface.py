@@ -526,6 +526,7 @@ def update_camera_config(serialnumber):
 		  'starttime': ('timelapse','starttime'),
 		  'stoptime': ('timelapse','stoptime')
 	}
+	tf = {"True":"on", "False":"off"}
 	if request.method == "POST":
 		config = SafeConfigParser()
 		with open("/etc/machine-id") as f:
@@ -536,7 +537,8 @@ def update_camera_config(serialnumber):
 			config_path="picam.ini"
 			config.read(config_path)
 			for key,value in request.form.iteritems(multi=True):
-				print("%s:%s:%s"%(config_map[key][0],config_map[key][1],value))
+				if value in tf.keys():
+					value = tf[value]
 				config.set(config_map[key][0],config_map[key][1],value)
 			# for section in config.sections():
 			# 	for key,value in config.items(section):
@@ -551,7 +553,8 @@ def update_camera_config(serialnumber):
 				for key,value in config.items(section):
 					print("%s:%s"%(key,value))
 			for key,value in request.form.iteritems(multi=True):
-				print("%s:%s:%s"%(config_map[key][0],config_map[key][1],value))
+				if value in tf.keys():
+					value = tf[value]
 				config.set(config_map[key][0],config_map[key][1],value)
 			for section in config.sections():
 				for key,value in config.items(section):
