@@ -517,16 +517,17 @@ def update_camera_config(serialnumber):
 			ser = str(f.read())
 			ser = ser.strip('\n')
 		if ser == serialnumber:
+			for key,value in request.form.iteritems():
+				print("%s:%s"%(key,value))
 			return ""
 
 		files = glob("configs_byserial/*.ini")
 		if serialnumber+".ini" in files:
-			with open(serialnumber+".fm" 'w') as f:
-				for key,value in request.form.iteritems():
-					f.write("%s:%s" % (key,value))
+			for key,value in request.form.iteritems():
+				print("%s:%s"%(key,value))
 		else:
-			return "FAILURE"
-	return None
+			return 404
+	return 405
 
 
 
