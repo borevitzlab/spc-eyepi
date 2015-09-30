@@ -20,7 +20,7 @@ example_filename = 'example.ini'
 
 app = Flask(__name__, static_url_path='/static')
 app.debug = True
-kmsghandler = loggin.FileHandler("/dev/kmsg",'w')
+kmsghandler = logging.FileHandler("/dev/kmsg",'w')
 app.logger.addHandler(kmsghandler)
 
 """             
