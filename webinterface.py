@@ -537,8 +537,9 @@ def update_camera_config(serialnumber):
 			config.read(config_path)
 			for key,value in request.form.iteritems(multi=True):
 				config.set(config_map[key][0],config_map[key][1],value)
-			for key,value in config.items():
-				print("%s:%s"%(key,value))
+			for section in config.sections():
+				for key,value in config.items(section):
+					print("%s:%s"%(key,value))
 			return "",200
 
 		files = glob("configs_byserial/*.ini")
@@ -548,8 +549,9 @@ def update_camera_config(serialnumber):
 			config.read(config_path)
 			for key,value in request.form.iteritems(multi=True):
 				config.set(config_map[key][0],config_map[key][1],value)
-			for key,value in config.items():
-				print("%s:%s"%(key,value))
+			for section in config.sections():
+				for key,value in config.items(section):
+					print("%s:%s"%(key,value))
 			return "",200
 			
 			# try:
