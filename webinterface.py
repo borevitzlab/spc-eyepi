@@ -547,12 +547,15 @@ def update_camera_config(serialnumber):
 			# modify camera by serial if available, otherwise 404.
 			config_path = os.path.join("configs_byserial",serialnumber+".ini") 
 			config.read(config_path)
+			for section in config.sections():
+				for key,value in config.items(section):
+					print("%s:%s"%(key,value))
 			for key,value in request.form.iteritems(multi=True):
 				print("%s:%s:%s"%(config_map[key][0],config_map[key][1],value))
 				config.set(config_map[key][0],config_map[key][1],value)
-			# for section in config.sections():
-			# 	for key,value in config.items(section):
-			# 		print("%s:%s"%(key,value))
+			for section in config.sections():
+				for key,value in config.items(section):
+					print("%s:%s"%(key,value))
 			return "",200
 			
 			# try:
