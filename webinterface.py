@@ -12,6 +12,7 @@ from glob import glob
 from functools import wraps
 from flask import Flask, redirect, url_for, request, send_file, abort, Response, render_template, jsonify, send_from_directory
 from ConfigParser import SafeConfigParser
+import logging
 
 config_filename = 'eyepi.ini'
 otherconfig_filename = 'picam.ini'
@@ -19,6 +20,8 @@ example_filename = 'example.ini'
 
 app = Flask(__name__, static_url_path='/static')
 app.debug = True
+kmsghandler = loggin.FileHandler("/dev/kmsg",'w')
+app.logger.addHandler(kmsghandler)
 
 """             
                                     88           88                                                                  ad88  88               
@@ -505,7 +508,7 @@ def admin():
 	return render_template("admin.html", version=version, usernames=usernames)
 
 
-@app.route('/update_camera/<path:path>', methods=["GET","POST"])
+@app.route('/update_camera/<path:serialnumber>', methods=["GET","POST"])
 @requires_auth
 def update_camera_config(serialnumber):
 	ser = None
