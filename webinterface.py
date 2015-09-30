@@ -554,9 +554,6 @@ def update_camera_config(serialnumber):
 				if value in tf.keys():
 					value = tf[value]
 				config.set(config_map[key][0],config_map[key][1],value)
-			for section in config.sections():
-				for key,value in config.items(section):
-					print("%s:%s"%(key,value))
 			try:
 				sanitizeconfig(config, config_path)
 				return "",200
