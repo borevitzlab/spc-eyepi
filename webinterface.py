@@ -538,6 +538,10 @@ def update_camera_config(serialnumber):
 			config.read(config_path)
 			for key,value in request.form.iteritems(multi=True):
 				if value in tf.keys():
+					# parse datetimes correctly, because they are gonna be messy.
+					if value in ["starttime","stoptime"]:
+						dt = datetime.strptime(value,"%Y-%m-%dT%H:%M:%S.Z")
+						value = dt.strftime('%H:%M')
 					value = tf[value]
 				config.set(config_map[key][0],config_map[key][1],value)
 			try:
@@ -562,6 +566,27 @@ def update_camera_config(serialnumber):
 		else:
 			return "",404
 	return "",405
+
+
+@app.route("/fix_configs")
+@requires_auth
+def fix_confs():
+	configs = {}
+	default = SafeConfigParser()
+	default.read("example.ini")
+	defaultsections = set(default.sections())
+	confs = glob("configs_byserial/*.ini")
+	returnvalues = []
+	for conff in confs:
+		configs[conff] = SafeConfigParser()
+		configs[conff].read(conff)
+		for section in set(configs[conff].sections())-defaultsections:
+			a = configs[conff].remove_section(section)
+			returnvalues.append(section+"?"+str(a))
+		configs[conff].write(conff)
+	return a.join("--") 
+
+
 
 
 
@@ -739,7 +764,6 @@ def set_ip(ipaddress=None,subnet=None,gateway=None,dev="eth0"):
 		os.system("ip route add default via "+gateway)
 	else:
 		make_dynamic(dev)
-
 
 
 @app.route('/set-ip', methods=['POST'])
