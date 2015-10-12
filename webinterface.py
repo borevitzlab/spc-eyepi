@@ -577,9 +577,12 @@ def fix_confs():
 	defaultsections = set(default.sections())
 	confs = glob("configs_byserial/*.ini")
 	returnvalues = []
+
 	for conff in confs:
 		configs[conff] = SafeConfigParser()
 		configs[conff].read(conff)
+	
+	for path, config in configs.iteritems():
 		for section in set(configs[conff].sections())-defaultsections:
 			a = configs[conff].remove_section(section)
 			returnvalues.append(section+"?"+str(a))

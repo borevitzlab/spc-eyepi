@@ -102,6 +102,7 @@ class Camera(Thread):
                     self.timestartfrom = datetime.time(int(tval[:2]),int(tval[3:]))
                     self.logger.info("Starting at %s" % self.timestartfrom.isoformat())
         except Exception, e:
+            self.timestartfrom = datetime.time(0,0)
             self.logger.error("Time conversion error startime - %s" % str(e))
         try:
             tval = self.config.get('timelapse','stoptime')
@@ -110,6 +111,7 @@ class Camera(Thread):
                     self.timestopat = datetime.time(int(tval[:2]),int(tval[3:]))
                     self.logger.info("Stopping at %s" % self.timestopat.isoformat())
         except Exception, e:
+            self.timestopat = datetime.time(23,59)
             self.logger.error("Time conversion error stoptime - %s" % str(e))
 
         # create spooling and upload directories if they dont exist, and delete files in the spooling dir
@@ -149,6 +151,7 @@ class Camera(Thread):
             output = subprocess.check_output(cmd,stderr=subprocess.STDOUT,universal_newlines=True,shell=True)
             for line in output.splitlines():
                 self.logger.info("GPHOTO2: "+ line)
+            time.sleep(1+(self.accuracy*2))
             return True
         except Exception as e:
             if try_number>2:
@@ -220,30 +223,38 @@ class Camera(Thread):
                         files.extend(glob(os.path.join(self.spool_directory,"*."+filetype.lower())))
                         
                     # copying/renaming for files
-                    for file in files:
+                    for fn in files:
                         # get the extension and basename
-                        ext = os.path.splitext(file)[-1].lower()
+                        ext = os.path.splitext(fn)[-1].lower()
                         name = os.path.splitext(raw_image)[0]
                         # copy jpegs to the static web dir, and to the upload dir (if upload webcam flag is set)
-                        if ext == ".jpeg" or ".jpg":
+
+                        try:
+                            if ext == ".jpeg" or ".jpg":
                             # best to create a symlink to /dev/shm/ from static/temp
-                            # TODO: multicamera support will need changes here!!
-                            shutil.copy(file,os.path.join("/dev/shm", self.serialnumber+".jpg"))
-                            if self.config.get("ftp","uploadwebcam") == "on":
-                                shutil.copy(file,os.path.join(self.upload_directory, "dslr_last_image.jpg"))
-                        # move timestamped image te be uploaded
-                        if self.config.get("ftp","uploadtimestamped")=="on":
-                            self.logger.debug("saving timestamped image for you, buddy")
-                            os.rename(file, os.path.join(self.upload_directory, os.path.basename(name+ext)))
-                        else:
-                            self.logger.debug("deleting file, eh")
-                            os.remove(file)
+                                shutil.copy(os.path.join("/dev/shm", self.serialnumber+".jpg"))
+                                if self.config.get("ftp","uploadwebcam") == "on":
+                                    shutil.copy(fn,os.path.join(self.upload_directory, "dslr_last_image.jpg"))
+                        except Exception as e:
+                            self.logger.error("Couldnt copy timestamp upload: %s"%str(e))
+                        
+                        try:
+                            if self.config.get("ftp","uploadtimestamped")=="on":
+                                self.logger.debug("saving timestamped image for you, buddy")
+                                shutil.copy(fn,os.path.join(self.upload_directory, os.path.basename(name+ext)))
+                        except Exception as e:
+                            self.logger.error("Couldnt copy timestamp upload: %s"%str(e))
+                        try:
+                            if os.path.isfile(fn):
+                                os.remove(fn)
+                        except Exception as e:
+                            self.logger.error("Couldnt delete spool file: %s"%str(e))
                         self.logger.info("Captured and stored - %s" % os.path.basename(name+ext))
                     # Log Delay/next shots
                     if self.next_capture.time() < self.timestopat:
-                        self.logger.info("Next capture at %s" % self.next_capture.isoformat())
+                        self.logger.info("Next capture at - %s" % self.next_capture.isoformat())
                     else:
-                        self.logger.info("Capture will stop at %s" % self.timestopat.isoformat())
+                        self.logger.info("Capture will stop at - %s" % self.timestopat.isoformat())
                 except Exception, e:
                     self.next_capture = datetime.datetime.now()
                     # TODO: This needs to catch errors from subprocess.call because it doesn't
@@ -293,27 +304,36 @@ class PiCamera(Camera):
                     # TODO: once timestamped imagename is more agnostic this will require a jpeg append.
                     image_file = self.timestamped_imagename(tn)
 
-                    image_file_path = os.path.join(self.spool_directory, image_file)
+                    image_file = os.path.join(self.spool_directory, image_file)
                     # take the image using os.system(), pretty hacky but it cant exactly be run on windows.
                     if self.config.has_section("picam_size"):
                         os.system("/opt/vc/bin/raspistill -w "+self.config.get("picam_size","width")+" -h "+self.config.get("picam_size","height")+" --nopreview -o " + image_file)    
                     else:
                         os.system("/opt/vc/bin/raspistill --nopreview -o " + image_file)
                     os.chmod(image_file,0755)
+
                     self.logger.debug("Capture Complete")
                     self.logger.debug("Copying the image to the web service, buddy")
                     # Copy the image file to the static webdir 
-                    shutil.copy(image_file,os.path.join("static","temp","pi_last_image.jpg"))
-                    # webcam copying
-                    if self.config.get("ftp","uploadwebcam") == "on":
-                        shutil.copy(image_file,os.path.join(self.upload_directory, "pi_last_image.jpg"))
+                    try:
+                        shutil.copy(image_file,os.path.join("static","temp","pi_last_image.jpg"))
+                        # webcam copying
+                        if self.config.get("ftp","uploadwebcam") == "on":
+                            shutil.copy(image_file,os.path.join(self.upload_directory, "pi_last_image.jpg"))
+                    except Exception as e:
+                        self.logger.error("Error moving for webinterface or webcam: %s"%str(e))
                     # rename for timestamped upload
-                    if self.config.get("ftp","uploadtimestamped")=="on":
-                        self.logger.debug("saving timestamped image for you, buddy")
-                        os.rename(image_file ,os.path.join(self.upload_directory,os.path.basename(image_file))) 
-                    else:
+                    try:
+                        if self.config.get("ftp","uploadtimestamped")=="on":
+                            self.logger.debug("saving timestamped image for you, buddy")
+                            shutil.copy(image_file ,os.path.join(self.upload_directory,os.path.basename(image_file))) 
+                    except Exception as e:
+                        self.logger.error("Couldnt copy image for timestamped: %s"%str(e))
+                    try:
                         self.logger.debug("deleting file buddy")
                         os.remove(image_file)
+                    except Exception as e:
+                        self.logger.error("Couldnt remove file from filesystem: %s"%str(e))
                     # Do some logging.
                     if self.next_capture.time() < self.timestopat:
                         self.logger.info("Next capture at %s" % self.next_capture.isoformat())
@@ -421,15 +441,17 @@ class Uploader(Thread):
             # dump ze files.
             for f in filenames:
                 # use sftpuloadtracker to handle the progress
-                link.put(f,os.path.basename(f)+".tmp", callback=self.sftpuploadtracker)
-                if link.exists(os.path.basename(f)):
-                    link.remove(os.path.basename(f))
-                link.rename(os.path.basename(f)+".tmp",os.path.basename(f))
-
-                link.chmod(os.path.basename(f), mode=775)
-                self.total_data_uploaded_b += os.path.getsize(f)
-                os.remove(f)
-                self.logger.debug("Successfuly uploaded %s through sftp and removed from local filesystem" % f)
+                try:
+                    link.put(f,os.path.basename(f)+".tmp", callback=self.sftpuploadtracker)
+                    if link.exists(os.path.basename(f)):
+                        link.remove(os.path.basename(f))
+                    link.rename(os.path.basename(f)+".tmp",os.path.basename(f))
+                    link.chmod(os.path.basename(f), mode=775)
+                    self.total_data_uploaded_b += os.path.getsize(f)
+                    os.remove(f)
+                    self.logger.debug("Successfuly uploaded %s through sftp and removed from local filesystem" % f)
+                except Exception as e:
+                    self.logger.warning("sftp:%s"%str(e))
             self.logger.debug("Disconnecting, eh")
             link.close()
             if self.total_data_uploaded_b > 1000000000000:
