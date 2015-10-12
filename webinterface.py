@@ -577,17 +577,18 @@ def fix_confs():
 	defaultsections = set(default.sections())
 	confs = glob("configs_byserial/*.ini")
 	returnvalues = []
-
+	confs.append("picam.ini")
+	confs.append("eyepi.ini")
 	for conff in confs:
 		configs[conff] = SafeConfigParser()
 		configs[conff].read(conff)
-	
+
 	for path, config in configs.iteritems():
 		for section in set(configs[conff].sections())-defaultsections:
-			a = configs[conff].remove_section(section)
+			a = config.remove_section(section)
 			returnvalues.append(section+"?"+str(a))
 		with open(conff, 'wb') as configfile:
-			configs[conff].write(configfile)
+			config.write(configfile)
 	return a.join("--") 
 
 
