@@ -583,7 +583,8 @@ def fix_confs():
 		for section in set(configs[conff].sections())-defaultsections:
 			a = configs[conff].remove_section(section)
 			returnvalues.append(section+"?"+str(a))
-		configs[conff].write(conff)
+		with open(conff, 'wb') as configfile:
+			configs[conff].write(configfile)
 	return a.join("--") 
 
 
