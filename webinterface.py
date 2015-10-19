@@ -15,7 +15,6 @@ from functools import wraps
 import logging
 
 import Crypto.Protocol.KDF
-
 from flask import Flask, redirect, url_for, request, send_file, abort, Response, render_template, jsonify, \
     send_from_directory
 
@@ -48,7 +47,9 @@ app.jinja_env.globals.update(get_time=get_time)
 def get_hostname():
     return str(socket.gethostname())
 
+
 app.jinja_env.globals.update(get_hostname=get_hostname)
+
 
 def geteosserialnumber(port):
     """
@@ -62,6 +63,7 @@ def geteosserialnumber(port):
         return cmdret[cmdret.find("Current: ") + 9: len(cmdret) - 1]
     except:
         return 0
+
 
 def create_config(serialnumber, eosserial=0):
     """
@@ -118,6 +120,7 @@ def check_auth(username, password):
             return False
     db.close()
 
+
 def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -138,14 +141,15 @@ def authenticate():
     return Response('Access DENIED!', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
 
-
 @app.errorhandler(404)
 def not_found(error):
     return render_template('page_not_found.html'), 404
 
+
 @app.errorhandler(500)
 def server_error(error):
     return render_template('server_error.html'), 500
+
 
 @app.errorhandler(401)
 def bad_auth(error):
@@ -180,6 +184,7 @@ def add_user(username, password_to_set, adminpass):
             return True
 
     return False
+
 
 @app.route("/imgs/<path:path>")
 def get_image(path):
@@ -343,10 +348,12 @@ def update():
     os.system("git reset --hard origin/master")
     return "SUCCESS"
 
+
 @app.route("/status")
 @requires_auth
 def status():
     return ''
+
 
 @app.route("/newuser", methods=['POST'])
 @requires_auth
@@ -364,6 +371,7 @@ def newuser():
             return "invalid"
     else:
         return abort(400)
+
 
 @app.route('/admin')
 @requires_auth
@@ -641,6 +649,7 @@ def commit_ip(ipaddress=None, subnet=None, gateway=None, dev="eth0"):
 def make_dynamic(dev):
     os.system("systemctl disable network@" + dev)
 
+
 def set_ip(ipaddress=None, subnet=None, gateway=None, dev="eth0"):
     if ipaddress is not None and subnet is not None and gateway is not None:
         os.system("ip addr add " + ipaddress + "/" + get_net_size(subnet) + " broadcast " + trunc_at(ipaddress,
@@ -681,7 +690,6 @@ def set_ips():
 @app.route('/commit-ip', methods=['POST'])
 @requires_auth
 def commit_ip_():
-
     if request.method == 'POST':
         try:
             if "ip-form-dynamic" in request.form.keys():
@@ -712,6 +720,7 @@ def commit_ip_():
 def break_the_interface():
     return render_template("bljdg.html")
 
+
 @app.route('/delcfg', methods=['POST'])
 @requires_auth
 def delcfg():
@@ -737,7 +746,7 @@ def detectcams():
                     eos_serial = geteosserialnumber(port)
                     create_config(serial_number, eos_serial)
                     post_return_string += "Added new config for S#" + (
-                    serial_number if eos_serial == 0 else eos_serial) + "<br>"
+                        serial_number if eos_serial == 0 else eos_serial) + "<br>"
             return post_return_string
         except Exception as e:
             return "Something went horribly wrong! :" + str(e)
@@ -816,6 +825,7 @@ def change_hostname():
         except Exception as e:
             abort(400)
 
+
 @app.route('/')
 @requires_auth
 def config():
@@ -858,6 +868,7 @@ def filemanagement():
     return render_template("filemgmt.html", version=version, fsinfo=fsinfo, configs=configs, rpiconfig=rpiconfig,
                            filelists=filelists)
 
+
 @app.route('/filelist', methods=['POST'])
 @requires_auth
 def filelist():
@@ -878,6 +889,7 @@ def filelist():
     else:
         abort(400)
 
+
 @app.route("/images")
 def images():
     version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
@@ -896,6 +908,7 @@ def images():
         urls.append(os.path.basename(file)[:-4])
     return render_template("images.html", version=version, configs=configs, rpiconfig=rpiconfig, image_urls=urls,
                            example=example)
+
 
 @app.route("/getfilteredlog", methods=["POST"])
 @requires_auth
@@ -923,6 +936,7 @@ def getfilteredlog():
 def log():
     return send_file("spc-eyepi.log")
 
+
 @app.route("/deletefiles", methods=['POST'])
 @requires_auth
 def deletefiles():
@@ -939,11 +953,13 @@ def deletefiles():
     else:
         abort(400)
 
+
 @app.route("/logfile")
 @requires_auth
 def logfile():
     version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
     return render_template("logpage.html", version=version)
+
 
 @app.route("/<any('css','js'):selector>/<path:path>")
 @requires_auth
