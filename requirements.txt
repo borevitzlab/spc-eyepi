@@ -1,0 +1,6 @@
+Crypto
+pyudev
+pysftp
+six
+flask
+pycrypto
