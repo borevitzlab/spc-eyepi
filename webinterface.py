@@ -45,6 +45,10 @@ app.jinja_env.globals.update(get_time=get_time)
 
 
 def get_hostname():
+    """
+    returns the hostname of the system as a string.
+    :return:
+    """
     return str(socket.gethostname())
 
 
