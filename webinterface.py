@@ -18,6 +18,7 @@ config_filename = 'eyepi.ini'
 otherconfig_filename = 'picam.ini'
 example_filename = 'example.ini'
 
+
 app = Flask(__name__, static_url_path='/static')
 app.debug = True
 kmsghandler = logging.FileHandler("/dev/kmsg",'w')
@@ -592,10 +593,6 @@ def fix_confs():
 	return a.join("--") 
 
 
-
-
-
-
 @app.route('/botnetmgmt')
 @requires_auth
 def botnetmgmt():
@@ -608,6 +605,11 @@ def botnetmgmt():
 	try:
 		with open("/etc/hostname","r") as fn:
 			hn = fn.readlines()[0]
+		metadatas = {}
+		metadatas_from_cameras_fn = glob("*.json")
+		for fn in metadatas_from_cameras_fn:
+			with open(fn,'r') as f:
+				metadatas[os.path.splitext(fn)[0]] = json.loads(f.read())
 
 		a_statvfs = os.statvfs("/")
 		free_space = a_statvfs.f_frsize*a_statvfs.f_bavail
@@ -618,6 +620,7 @@ def botnetmgmt():
 		jsondata['free_space_mb'] = free_space
 		jsondata['total_space_mb'] = total_space
 		jsondata["name"]=hn
+
 		rpiconfig = SafeConfigParser()
 		rpiconfig.read("picam.ini")
 		configs = {}
@@ -625,6 +628,7 @@ def botnetmgmt():
 			configs[os.path.basename(file)[:-4]] = SafeConfigParser()
 			configs[os.path.basename(file)[:-4]].read(file)
 		jsondata['cameras'] = {}
+		jsondata['metadata'] = metadatas
 		for serial, cam_config in configs.iteritems():
 			conf = {}
 			for section in cam_config.sections():

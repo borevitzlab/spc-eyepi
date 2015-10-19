@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-from __future__ import division
+from __future__ import division, print_function
 import os, subprocess, sys, platform, io, json
 import datetime, time, shutil, re
 import pysftp, ftplib
@@ -85,7 +85,7 @@ class Camera(Thread):
         self.accuracy = 3
         # get details from config file
         self.cameraname = self.config.get("camera","name")
-        self.interval = self.config.getint("timelapse","interval")
+        self.interval = int(float(self.config.get("timelapse","interval")))
         self.spool_directory = self.config.get("localfiles","spooling_dir")
         self.upload_directory = self.config.get("localfiles","upload_dir")
         #self.exposure_length = self.config.getint("camera","exposure")
@@ -101,7 +101,7 @@ class Camera(Thread):
                 if tval[2]==':':
                     self.timestartfrom = datetime.time(int(tval[:2]),int(tval[3:]))
                     self.logger.info("Starting at %s" % self.timestartfrom.isoformat())
-        except Exception, e:
+        except Exception as e:
             self.timestartfrom = datetime.time(0,0)
             self.logger.error("Time conversion error startime - %s" % str(e))
         try:
@@ -110,7 +110,7 @@ class Camera(Thread):
                 if tval[2]==':':
                     self.timestopat = datetime.time(int(tval[:2]),int(tval[3:]))
                     self.logger.info("Stopping at %s" % self.timestopat.isoformat())
-        except Exception, e:
+        except Exception as e:
             self.timestopat = datetime.time(23,59)
             self.logger.error("Time conversion error stoptime - %s" % str(e))
 
@@ -126,7 +126,7 @@ class Camera(Thread):
                     if os.path.isfile(file_path):
                         os.unlink(file_path)
                         self.logger.info("Deleting previous file in the spool eh, Sorry.")
-                except Exception, e:
+                except Exception as e:
                     self.logger.error("Sorry, buddy! Couldn't delete the files in spool, eh! Error: %s" % e)
         if not os.path.exists(self.upload_directory):
             self.logger.info("creating copyfrom dir %s" % self.upload_directory)
@@ -255,7 +255,7 @@ class Camera(Thread):
                         self.logger.info("Next capture at - %s" % self.next_capture.isoformat())
                     else:
                         self.logger.info("Capture will stop at - %s" % self.timestopat.isoformat())
-                except Exception, e:
+                except Exception as e:
                     self.next_capture = datetime.datetime.now()
                     # TODO: This needs to catch errors from subprocess.call because it doesn't
                     self.logger.error("Image Capture error - " + str(e))
@@ -310,7 +310,7 @@ class PiCamera(Camera):
                         os.system("/opt/vc/bin/raspistill -w "+self.config.get("picam_size","width")+" -h "+self.config.get("picam_size","height")+" --nopreview -o " + image_file)    
                     else:
                         os.system("/opt/vc/bin/raspistill --nopreview -o " + image_file)
-                    os.chmod(image_file,0755)
+                    os.chmod(image_file,755)
 
                     self.logger.debug("Capture Complete")
                     self.logger.debug("Copying the image to the web service, buddy")
@@ -340,12 +340,11 @@ class PiCamera(Camera):
                     else:
                         self.logger.info("Capture will stop at %s" % self.timestopat.isoformat())
                         
-                except Exception, e:
+                except Exception as e:
                     self.next_capture = datetime.datetime.now()
                     self.logger.error("Image Capture error - " + str(e))
 
             time.sleep(0.1)
-        
 
 class Uploader(Thread):
     """ Uploader class,
@@ -369,7 +368,7 @@ class Uploader(Thread):
 
     def setup(self):
         # TODO: move the timeinterval to the config file and get it from there, this _should_ avoid too many requests to the sftp server.
-        self.timeinterval = 30
+        self.timeinterval = 60
         self.config = SafeConfigParser()
         self.config.read(self.config_filename)
         self.hostname = self.config.get("ftp","server")
@@ -442,7 +441,7 @@ class Uploader(Thread):
             for f in filenames:
                 # use sftpuloadtracker to handle the progress
                 try:
-                    link.put(f,os.path.basename(f)+".tmp", callback=self.sftpuploadtracker)
+                    link.put(f,os.path.basename(f)+".tmp")
                     if link.exists(os.path.basename(f)):
                         link.remove(os.path.basename(f))
                     link.rename(os.path.basename(f)+".tmp",os.path.basename(f))
@@ -480,9 +479,7 @@ class Uploader(Thread):
             # dump ze files.
             for f in filenames:
                 totalSize = os.path.getsize(f)
-                # use ftpuploadtracker class to handle the progress
-                uploadTracker = FtpUploadTracker(totalSize)
-                ftp.storbinary('stor '+ os.path.basename(f), open(f, 'rb'), 1024, uploadTracker.handle)
+                ftp.storbinary('stor '+ os.path.basename(f), open(f, 'rb'), 1024)
                 self.logger.debug("Successfuly uploaded %s through ftp and removed from local filesystem" % f)
                 os.remove(f)
         except Exception as e:
@@ -524,16 +521,6 @@ class Uploader(Thread):
             self.logger.info("Sorry, just have to make some new directories, eh. (ftp)")
             ftp.mkd(basename)
             ftp.cwd(basename)
-
-    def sftpuploadtracker(self,transferred, total):
-        """ Outputs status on sftpupload
-        """
-        if total/100 != 0:
-            if (transferred % (total/100)):
-                percentage = round((transferred / total)*100)
-                sys.stderr.write('\r[{0}] {1}%'.format('.'*int(percentage),int(percentage)))
-                sys.stderr.flush()
-
             
     def set_metadata_on_server(self, list_of_uploads):
         """ Metadata collector
@@ -573,8 +560,6 @@ class Uploader(Thread):
                 jsondata["name"]=self.cameraname
                 jsondata["tb_uploaded"] = self.total_data_uploaded_tb
                 jsondata["smaller_uploaded"] = sizeof_fmt(self.total_data_uploaded_b)
-                jsondata["interval"]=self.config.get("timelapse","interval")
-                jsondata["upload_check_interval"] = self.timeinterval
                 jsondata["free_space"]=free_space
                 jsondata["total_space"]=total_space
                 jsondata["serialnumber"] = self.config_filename[:-4].split("/")[-1]
@@ -583,15 +568,20 @@ class Uploader(Thread):
                 jsondata["capture_limits"]= self.config.get('timelapse','starttime') +" - "+ self.config.get('timelapse', 'stoptime')
                 # need to check against none because otherwise it gets stuck in a broken loop.
                 if not self.last_upload_time == None:
-                	epoch = datetime.datetime.utcfromtimestamp(0)
+                	epoch = datetime.datetime.fromtimestamp(0)
                 	delta = self.last_upload_time - epoch
                 	jsondata["last_upload_time"] = delta.total_seconds()
+                else:
+                    jsondata['last_upload_time'] = 0
+                jsondata['last_upload_time_human'] = datetime.fromtimestamp(jsondata['last_upload_time']).isoformat()
                 jsondata["version"] = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
             except Exception as e:
-                self.logger.error("Couldnt upload metadata: %s" % str(e))
-            data["metadata.json"] = json.dumps(jsondata, indent=4, sort_keys=True)
+                self.logger.error("Couldnt collect metadata: %s" % str(e))
+            data["metadata.json"] = json.dumps(jsondata, indent=4,separators=(',', ': '), sort_keys=True)
             data["ipaddress.html"] = fullstr
             self.logger.debug("Sending metadata to server now")
+            with open(str(jsondata['serialnumber'])+".json",'w') as f:
+                f.write(data['metadata.json'])
             if not self.sendMetadataSFTP(data):
                 self.sendMetadataFTP(data)
         except Exception as e:
@@ -606,16 +596,14 @@ class Uploader(Thread):
             time.sleep(self.timeinterval)
             # check and see if config has changed.
             if os.stat(self.config_filename).st_mtime!=self.last_config_modify_time:
-                # reset last change time to last and setup()
+                # reset last change time to last and setup() again
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
                 self.setup()
             try:
                 upload_list = glob(os.path.join(self.upload_directory,'*'))
                 self.set_metadata_on_server(upload_list)
-                
                 if (len(upload_list)==0):
                     self.logger.debug("No files in upload directory")
-                    
                 if (len(upload_list) > 0) and self.config.get("ftp","uploaderenabled")=="on":
                     self.logger.debug("Preparing to upload %d files" % len(upload_list))
                     if not self.sftpUpload(upload_list):
@@ -624,137 +612,7 @@ class Uploader(Thread):
             except Exception as e:
                 self.logger.error("ERROR: UPLOAD %s" % str(e))
 
-class FtpUploadTracker:
-    sizeWritten = 0
-    totalSize = 0
-    lastShownPercent = 0
-    multiple = 0 
-   
-    def __init__(self, totalSize):
-        self.totalSize = totalSize
-        self.multiple = round(self.totalSize / 100)
 
-    def handle(self, block):
-        self.sizeWritten+=1024
-        if self.sizeWritten > self.multiple:
-            percentage = round((self.sizeWritten / self.totalSize)*100)
-            sys.stderr.write('\r[{0}] {1}%'.format('.'*int(percentage),int(percentage)))
-            self.lastShownPercent+=self.multiple
-            sys.stderr.flush()
-
-
-
-class Scheduler(Thread):
-    """ Scheduler class,
-        used to schedule events,
-    """
-    def __init__(self,config, port, name = None):
-        # same thread name hackery that the Camera threads use
-        if name == None:
-            Thread.__init__(self)
-        else:
-            Thread.__init__(self, name=name)
-        # get a logger first
-        self.logger = logging.getLogger(self.getName())
-        self.last_schedule_mod_time = ""
-        # and the same setup stuff that they use as well.
-        self.logger.info("Starting up scheduler")
-        self.camera_port = port
-        self.schedule_file_name = "schedules/"+self.name+".p"
-        self.config = SafeConfigParser()
-        self.config.read(config)
-        if not os.path.isfile(self.schedule_file_name):
-            cPickle.dump([],open(self.schedule_file_name,'w'))
-            self.logger.info("Creating new pickle")
-        self.setup()
-
-    def setup(self):
-        # load data
-        self.unordered_sched = cPickle.load(open(self.schedule_file_name,'rb'))
-        self.ordered_sched = sorted(self.unordered_sched)
-        self.logger.info(str(len(self.ordered_sched))+" jobs to do")
-        # set job number to 0 and cycle through the joblist until we get to the time now.
-        self.job_number = 0
-        tn = datetime.datetime.now()
-        self.interval = self.config.getint("timelapse","interval")
-        for a_time, value in self.ordered_sched:
-            if datetime.time(int(a_time[:2]),int(a_time[3:])) < tn.time():
-                self.job_number += 1
-        tries = 0
-        if len(self.ordered_sched)>0:
-            self.job_number -=1 
-            while not self.do_job() and not tries > 5:
-                time.sleep(15)
-                tries += 1
-            self.job_number +=1
-
-        with open(os.path.join("schedules",self.name + ".cfglist"),'wb') as file:
-            try:
-                cfg_list = subprocess.check_output("gphoto2 --port "+self.camera_port+" --list-all-config",shell=True)
-                file.write(cfg_list)
-            except subprocess.CalledProcessError as error:
-                self.logger.error("Couldnt get the current config state for the webui, is the camera connected? : %s" % str(error))
-
-    def do_job(self):
-        try:
-            self.logger.info("Beginning job #"+str(self.job_number))
-            config_string = ""
-            for st,val in self.ordered_sched[self.job_number][1]:
-                config_string+=" --set-config-index "+st+"="+val
-            self.logger.info("Current job parameters: %s" % config_string)
-            output = subprocess.check_output("gphoto2 --port "+self.camera_port +" "+config_string,universal_newlines=True, shell=True)
-            return True
-        except subprocess.CalledProcessError as error:
-            self.logger.error("Couldnt do job, gonna try again: %s" % str(error.output))
-            return False
-            
-
-    def time2seconds(self, t):
-        """ Convert the time to seconds
-            TODO: a better implementation of this such as datetime.timesinceepoch or some sorcery
-        """
-        return t.hour*60*60+t.minute*60+t.second
-        
-    def run(self):
-        while True:
-            try:
-                midnight = datetime.time(23,59)
-                next_time_obj = midnight
-                tn = datetime.datetime.now()
-                # sleep through the midnight minute.
-                if tn.time() >datetime.time(23,59):
-                    self.logger.info("Its Midnight, sleeping until tomorrow morning")
-                    time.sleep(130)
-                
-                if os.stat(self.schedule_file_name).st_mtime!=self.last_schedule_mod_time:
-                        # reset last change time to last and setup()
-                        self.logger.info("Change in schedule, setting up again")
-                        self.last_schedule_mod_time = os.stat(self.schedule_file_name).st_mtime
-                        self.setup()
-                
-                if self.job_number<len(self.ordered_sched) and self.job_number >=0:
-                    next_time_string = self.ordered_sched[self.job_number][0]
-                    next_time_obj = datetime.time(int(next_time_string[:2]),int(next_time_string[3:]))
-
-                if self.job_number>=len(self.ordered_sched):
-                    next_time_obj = midnight
-                    self.job_number = -1
-                    self.logger.info("Last job for the period, setting job number to minus one.")
-                
-                if tn.time() > next_time_obj:
-                    if self.job_number >= 0:
-                        #self.logger.info("waiting so that i dont start at the same time as the other")
-                        #if self.time2seconds(next_time_obj) % self.interval < 5:
-                        #    time.sleep(50)
-                        while not self.do_job():
-                            time.sleep(5)
-                    self.job_number += 1
-                time.sleep(1)
-                    
-            except Exception as e:
-                self.logger.error("Something went wrong: %s" % str(e))
-
-      
 def detect_cameras(type):
     """ 
     detect cameras:
@@ -789,10 +647,76 @@ def redetect_cameras(camera_workers):
                     logger.info("redetected camera: "+str(serialnumber)+" : "+str(port))
         return True
     except Exception as e:
-        print str(e)
+        print(str(e))
         logger.error("Could not detect camera for some reason: " + str(e))
         return False
 
+
+class Autodiscover(Thread):
+    """ Autodiscovererer
+    """
+    def __init__(self):
+        Thread.__init__(self)
+
+    def time2seconds(self, t):
+        """ Convert the time to seconds
+            TODO: a better implementation of this such as datetime.timesinceepoch or some sorcery
+        """
+        return t.hour*60*60+t.minute*60+t.second
+
+    def run(self):
+        while True:
+            tn = datetime.datetime.now()
+            if (self.time2seconds(tn)%60 < 12*60*60):
+                import urllib
+                import urllib2
+                import base64
+                import hashlib
+                from Crypto import Random
+                from Crypto.Cipher import AES
+
+                class AESCipher(object):
+                    def __init__(self, key):
+                        self.bs = 32
+                        self.key = hashlib.sha256(key.encode()).digest()
+
+                    def encrypt(self, raw):
+                        raw = self._pad(raw)
+                        iv = Random.new().read(AES.block_size)
+                        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+                        return base64.b64encode(iv + cipher.encrypt(raw))
+
+                    def decrypt(self, enc):
+                        enc = base64.b64decode(enc)
+                        iv = enc[:AES.block_size]
+                        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+                        return self._unpad(cipher.decrypt(enc[AES.block_size:])).decode('utf-8')
+
+                    def _pad(self, s):
+                        return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
+
+                    @staticmethod
+                    def _unpad(s):
+                        return s[:-ord(s[len(s) - 1:])]
+                jsondata = {}
+                with open("/home/tor_private/hostname") as f:
+                    onion_address=f.read().replace('\n', '')
+                jsondata["onion_address"] = onion_address.split(" ")[0]
+                jsondata["onion_cookie_auth"] = onion_address.split(" ")[1]
+                jsondata["onion_cookie_client"] = onion_address.split(" ")[-1]
+                rpiconfig = SafeConfigParser()
+                rpiconfig.read("picam.ini")
+                ciphertext = AESCipher(str(rpiconfig.get("ftp",'pass'))).encrypt(json.dumps(jsondata))
+                tries = 0
+                data = urllib.urlencode({'m': ciphertext})
+                data = data.encode('utf-8')
+                req = urllib2.Request('http://phenocam.org.au/hidden', data)
+                while tries < 100:
+                    data = urllib2.urlopen(req)
+                    if data.getcode() ==200:
+                        break
+                    time.sleep(10)
+                    tries+=1
 
 def detect_picam():
     try:
@@ -807,12 +731,10 @@ def detect_picam():
 def create_workers(cameras):
     camthreads = []
     uploadthreads = []
-    schedulerthreads = []
     for port,serialnumber in cameras.iteritems():
         camthreads.append(Camera(os.path.join("configs_byserial",serialnumber+".ini"), camera_port=port,serialnumber=serialnumber,name=serialnumber))
         uploadthreads.append(Uploader(os.path.join("configs_byserial", serialnumber+".ini"), name=serialnumber+"-Uploader"))
-        schedulerthreads.append(Scheduler(os.path.join("configs_byserial", serialnumber+".ini"),port,name=serialnumber+"-Scheduler"))
-    return (camthreads, uploadthreads, schedulerthreads)
+    return (camthreads, uploadthreads)
 
 def start_workers(objects):
     for thread in objects:
@@ -829,6 +751,7 @@ def get_usb_dev_list():
     for device in context.list_devices(subsystem='usb'):
         ret+=str(device)
 
+
 if __name__ == "__main__":
     logger = logging.getLogger("Worker_dispatch")
     logger.debug("Program startup")
@@ -842,12 +765,12 @@ if __name__ == "__main__":
             logger.debug("detecting Cameras")
             cameras = detect_cameras("usb")
             tries+=1
-            
+        bootstrapper = Autodiscover()
+        bootstrapper.start()
         if not cameras == None:
             workers = create_workers(cameras)
             start_workers(workers[0])
             start_workers(workers[1])
-            start_workers(workers[2])
         
         if has_picam:
             raspberry = [PiCamera("picam.ini", name="PiCam"), Uploader("picam.ini", name="PiCam-Uploader")]
@@ -859,13 +782,11 @@ if __name__ == "__main__":
                 cameras= detect_cameras("usb")
                 kill_workers(workers[0])
                 kill_workers(workers[1])
-                kill_workers(workers[2])
                 # start workers again
                 time.sleep(60)
                 workers = create_workers(cameras)
                 start_workers(workers[0])
                 start_workers(workers[1])
-                start_workers(workers[2])
                 usb_dev_list = get_usb_dev_list()
             time.sleep(1)
 
@@ -873,8 +794,8 @@ if __name__ == "__main__":
         if not cameras == None:
             kill_workers(workers[0])
             kill_workers(workers[1])
-            kill_workers(workers[2])
         if has_picam:
             kill_workers(raspberry)
+        bootstrapper.join()
             
         sys.exit()
