@@ -14,12 +14,15 @@ from glob import glob
 from functools import wraps
 import logging
 
-import Crypto.Protocol.KDF
-from flask import Flask, redirect, url_for, request, send_file, abort, Response, render_template, jsonify, \
-    send_from_directory
+from flask.ext.bcrypt import Bcrypt
+from flask import Flask, redirect, url_for, send_file, abort, Response, render_template, jsonify, \
+    send_from_directory, request
 
-from six.moves import dbm
 from six.moves.configparser import ConfigParser
+
+
+# TODO: compatibility anydbm
+import dbm
 
 config_filename = 'eyepi.ini'
 otherconfig_filename = 'picam.ini'
@@ -27,21 +30,83 @@ example_filename = 'example.ini'
 
 app = Flask(__name__, static_url_path='/static')
 app.debug = True
-kmsghandler = logging.FileHandler("/dev/kmsg", 'w')
-app.logger.addHandler(kmsghandler)
+bcrypt = Bcrypt(app)
+
+from Crypto import Random
+from Crypto.Cipher import AES
+import base64
+import hashlib
+
+class AESCipher(object):
+    """
+    AES cipher
+    for encrypting data between the server and the
+    pi when we cant be sure to leave passwords in plaintext on a git repo.
+    """
+    def __init__(self, key):
+        self.bs = 32
+        self.key = hashlib.sha256(key.encode()).digest()
+
+    def encrypt(self, raw):
+        raw = self._pad(raw)
+        iv = Random.new().read(AES.block_size)
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        return base64.b64encode(iv + cipher.encrypt(raw))
+
+    def decrypt(self, enc):
+        enc = base64.b64decode(enc)
+        iv = enc[:AES.block_size]
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        return self._unpad(cipher.decrypt(enc[AES.block_size:])).decode('utf-8')
+
+    def _pad(self, s):
+        return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
+
+    @staticmethod
+    def _unpad(s):
+        return s[:-ord(s[len(s) - 1:])]
+
+
+# TODO: deprecate this almost as soon as the python3 migrate is finished.
+import urllib
+if os.path.exists('db'):
+    os.remove('db')
+cfg = ConfigParser()
+cfg.read("picam.ini")
+try:
+    dbf = urllib.request.urlopen("http://data.phenocam.org.au/p.ejson")
+    a = AESCipher(cfg['ftp']['pass'])
+    f = json.loads(a.decrypt(dbf.read()))
+    db = dbm.open('db', 'c')
+    db[bytes('admin','utf-8')] = bcrypt.generate_password_hash(f['admin'])
+    db.close()
+except Exception as e:
+    print("asdfasdfasdf%s"%str(e))
+
+
+if socket.gethostname() != "VorvadossTwo":
+    kmsghandler = logging.FileHandler("/dev/kmsg", 'w')
+    app.logger.addHandler(kmsghandler)
 
 
 def sanitizeconfig(towriteconfig, filename):
-    print("do checking here")
+    """
+    This will eventually do checking of the config file.
+    it currently just writes a config file to a filename.
+    :param towriteconfig:
+    :param filename:
+    :return:
+    """
     with open(filename, 'wb') as configfile:
         towriteconfig.write(configfile)
 
 
 def get_time():
+    """
+    gets a time string from the current time.
+    :return:
+    """
     return str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-
-
-app.jinja_env.globals.update(get_time=get_time)
 
 
 def get_hostname():
@@ -52,6 +117,7 @@ def get_hostname():
     return str(socket.gethostname())
 
 
+app.jinja_env.globals.update(get_time=get_time)
 app.jinja_env.globals.update(get_hostname=get_hostname)
 
 
@@ -114,15 +180,15 @@ def check_auth(username, password):
     :param password:
     :return:
     """
+    ubytes = bytes(username, 'utf-8')
     db = dbm.open('db', 'r')
-    if str(username) in db:
-        m = Crypto.Protocol.KDF.PBKDF2(password=str(password), salt=str(username), count=100)
-        if m == db[str(username)]:
+    if ubytes in db.keys():
+        if bcrypt.check_password_hash(db[ubytes].decode('utf-8'), password):
             db.close()
             return True
         else:
+            db.close()
             return False
-    db.close()
 
 
 def requires_auth(f):
@@ -170,23 +236,22 @@ def add_user(username, password_to_set, adminpass):
     :param adminpass:
     :return:
     """
-    hash = Crypto.Protocol.KDF.PBKDF2(password=str(password_to_set), salt=str(username), count=100)
-    adminpasshash = Crypto.Protocol.KDF.PBKDF2(password=str(adminpass), salt="admin", count=100)
+    hash = bcrypt.generate_password_hash('hunter2')
     db = dbm.open('db', 'c')
     # later only allow users control over their own password and admin to add later.
     # allow global admin password to change everything.
-    if adminpasshash == db["admin"]:
-        db[str(username)] = hash
+    if b'admin' in db.keys() and bcrypt.check_password_hash(db[b'admin'], adminpass):
+        db[username] = hash
         db.close()
         return True
 
     # for each username, only allow the correct hash to change the password
     for username_, hash_ in db.items():
-        if username_ == username and adminpasshash == db[str(username)]:
-            db[str(username)] = hash
+        if username_ in db.keys() and bcrypt.check_password_hash(hash_, adminpass):
+            db[username] = hash
             db.close()
             return True
-
+    db.close()
     return False
 
 
@@ -255,54 +320,6 @@ def sync_hwclock():
     return redirect(url_for('config'))
 
 
-"""
-          d8                                                                     88                               ad88  88  88              
-        ,8P'                             ,d                   ,d                 88                              d8"    ""  88              
-       d8"                               88                   88                 88                              88         88              
-     ,8P'     8b,dPPYba,   ,adPPYba,   MM88MMM  ,adPPYYba,  MM88MMM   ,adPPYba,  88   ,adPPYba,    ,adPPYb,d8  MM88MMM  88  88   ,adPPYba,  
-    d8"       88P'   "Y8  a8"     "8a    88     ""     `Y8    88     a8P_____88  88  a8"     "8a  a8"    `Y88    88     88  88  a8P_____88  
-  ,8P'        88          8b       d8    88     ,adPPPPP88    88     8PP"""""""  88  8b       d8  8b       88    88     88  88  8PP"""""""  
- d8"          88          "8a,   ,a8"    88,    88,    ,88    88,    "8b,   ,aa  88  "8a,   ,a8"  "8a,   ,d88    88     88  88  "8b,   ,aa  
-8P'           88           `"YbbdP"'     "Y888  `"8bbdP"Y8    "Y888   `"Ybbd8"'  88   `"YbbdP"'    `"YbbdP"Y8    88     88  88   `"Ybbd8"'  
-                                                                                                   aa,    ,88                               
-                                                                                                    "Y8bbdP"
-"""
-
-
-@app.route('/rotatelogfile')
-@requires_auth
-def rotatelogfile():
-    config = ConfigParser()
-    config.read(config_filename)
-    config2 = ConfigParser()
-    config2.read(otherconfig_filename)
-    if config["ftp"]["uploaderenabled"] == "on":
-        with open("static/logfile.txt", 'r') as log:
-            with open(os.path.join(config["localfiles"]["upload_dir"],
-                                   datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S') + ".log"), 'w') as writeout:
-                writeout.write(log.read())
-    elif config2["ftp"]["uploaderenabled"] == "on":
-        with open("static/logfile.txt", 'r') as log:
-            with open(os.path.join(config2["localfiles"]["upload_dir"],
-                                   datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S') + ".log"), 'w') as writeout:
-                writeout.write(log.read())
-
-    open("static/logfile.txt", "w").close()
-    return redirect(url_for('logfile'))
-
-
-"""
-          d8                                                                                                88           
-        ,8P'                                                    ,d                                          88           
-       d8"                                                      88                                          88           
-     ,8P'     ,adPPYba,  ,adPPYYba,  8b       d8   ,adPPYba,  MM88MMM   ,adPPYba,   88       88  ,adPPYba,  88,dPPYba,   
-    d8"       I8[    ""  ""     `Y8  `8b     d8'  a8P_____88    88     a8"     "8a  88       88  I8[    ""  88P'    "8a  
-  ,8P'         `"Y8ba,   ,adPPPPP88   `8b   d8'   8PP"""""""    88     8b       d8  88       88   `"Y8ba,   88       d8  
- d8"          aa    ]8I  88,    ,88    `8b,d8'    "8b,   ,aa    88,    "8a,   ,a8"  "8a,   ,a88  aa    ]8I  88b,   ,a8"  
-8P'           `"YbbdP"'  `"8bbdP"Y8      "8"       `"Ybbd8"'    "Y888   `"YbbdP"'    `"YbbdP'Y8  `"YbbdP"'  8Y"Ybbd8"'                                                                                                                       
-"""
-
-
 @app.route('/savetousb', methods=["POST"])
 @requires_auth
 def savetousb():
@@ -322,24 +339,33 @@ def savetousb():
     return "success"
 
 
-"""
-          d8                                                                               
-        ,8P'                                       ,d                               ,d     
-       d8"                                         88                               88     
-     ,8P'     8b,dPPYba,   ,adPPYba,  ,adPPYba,  MM88MMM  ,adPPYYba,  8b,dPPYba,  MM88MMM  
-    d8"       88P'   "Y8  a8P_____88  I8[    ""    88     ""     `Y8  88P'   "Y8    88     
-  ,8P'        88          8PP"""""""   `"Y8ba,     88     ,adPPPPP88  88            88     
- d8"          88          "8b,   ,aa  aa    ]8I    88,    88,    ,88  88            88,    
-8P'           88           `"Ybbd8"'  `"YbbdP"'    "Y888  `"8bbdP"Y8  88            "Y888                                                                                         
-"""
+from flask import g
+
+
+def after_this_request(func):
+    if not hasattr(g, 'call_after_request'):
+        g.call_after_request = []
+    g.call_after_request.append(func)
+    return func
+
+
+@app.after_request
+def per_request_callbacks(response):
+    for func in getattr(g, 'call_after_request', ()):
+        response = func(response)
+    return response
 
 
 @app.route('/restart')
 @requires_auth
 def restart():
-    print("shutting down")
-    try:
+    @after_this_request
+    def shutdown(response):
         os.system("reboot")
+        return response
+
+    try:
+        return "OK! shutting down"
     except Exception as e:
         return render_template('server_error.html'), 500
     return redirect(url_for('admin'))
@@ -920,7 +946,7 @@ def getfilteredlog():
     if request.method == 'POST':
         query = request.form["query"].lower()
         returnstring = ''
-        with open("spc-eyepi.log", 'rb') as f:
+        with open("spc-eyepi.log", 'r') as f:
             f.seek(0, 2)
             fsize = f.tell()
             f.seek(max(fsize - 10.24 ** 6, 0), 0)

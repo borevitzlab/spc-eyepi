@@ -3,4 +3,5 @@ pyudev
 pysftp
 six
 flask
+flask-bcrypt
 pycrypto

@@ -1,280 +1,308 @@
 {% extends "layout.html" -%}
 {% set active_page="cameras" -%}
 {% block body %}
+    <h2>Cameras</h2>
+    <hr>
+    <!-- detect cameras button -->
+    <div class="btn-group col-md-4" role="group" aria-label="detect-camera-button-group">
+        <button class="btn btn-info btn-md" data-toggle="modal" data-target="#detect-camera-modal"
+                id="detect-camera-button">Detect Cameras
+        </button>
+    </div>
+    <!-- buttons for modals -->
+    <div class="btn-group-vertical col-md-4" role="group" aria-label="picam-modal-button-group-label">
+        <button class="btn btn-primary btn-md" data-toggle="modal" data-target="#picam-modal">RPI Camera</button>
+    </div>
+    <br>
+    <hr>
+    {% for name, config in configs.items() %}
+        <div class="btn-group-vertical col-md-4 panel panel-default" role="group"
+             aria-label="{{ config.get("camera","name") }}">
+            <br>
+            <button class="btn btn-primary btn-md" data-toggle="modal"
+                    data-target="#{{ name }}-modal">{{ config["camera"]["name"] }}</button>
+            <button class="btn btn-danger btn-md" data-toggle="modal" data-target="#{{ name }}-delete-modal">Remove
+                Config
+            </button>
+            <br>
 
+            <p>
+            <h4>
+                {% if config.get("camera","enabled")=="on" %}
 
-<h2>Cameras</h2>
-<hr>
-<!-- detect cameras button -->
-<div class="btn-group col-md-4" role="group" aria-label="detect-camera-button-group">
-	<button class="btn btn-info btn-md" data-toggle="modal" data-target="#detect-camera-modal" id="detect-camera-button">Detect Cameras</button>
-</div>
-<!-- buttons for modals -->
-<div class="btn-group-vertical col-md-4" role="group" aria-label="picam-modal-button-group-label">
-	<button class="btn btn-primary btn-md" data-toggle="modal" data-target="#picam-modal">RPI Camera</button>
-</div>
-<br>
-<hr>
-{% for name, config in configs.iteritems() %}
-<div class="btn-group-vertical col-md-4 panel panel-default" role="group" aria-label="{{config.get("camera","name")}}">
-  <br>
-	<button class="btn btn-primary btn-md" data-toggle="modal" data-target="#{{name}}-modal">{{config.get("camera","name")}}</button>
-        <button class="btn btn-danger btn-md" data-toggle="modal" data-target="#{{name}}-delete-modal">Remove Config</button>
-  <br>
-  <p>
-    <h4>
-    {% if config.get("camera","enabled")=="on"%}
-
-    Camera Enabled <br><br>
-    {% else %}
-    Camera Disabled <br><br>
-    {% endif %}
-
-    {% if config.get("ftp","uploaderenabled")=="on"%}
-
-    Uploader Enabled <br><br>
-    {% else %}
-    Uploader Disabled <br><br>
-    {% endif %}
-
-    </h4>
-  </p>
-</div>
-<!-- Modal -->
-<div class="modal fade" id="{{name}}-modal" tabindex="-1" role="dialog" aria-labelledby="{{name}}-modal-label" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h3 class="modal-title" id="{{name}}-modal-label">{{config.get("camera","name")}}</h3>
-		<h6 class="modal-title pull-right">{% if not config.get("eosserialnumber","value") == "0" %}
-			{{config.get("eosserialnumber","value")}}
-				{% else %}
-			{{name}}
-				{% endif %}
-			</h6>
-        </div>
-        <div class="modal-body col-md-12">
-            <form id="{{name}}-form">
-            <input type="text" style="display:none;" name="config-name" value="{{name}}"></input>
-            {% for section in config.sections() %}
-                {% if not section == "eosserialnumber" %}
-                    {% if section not in ["camera","timelapse","ftp"] %}
-                    <div class="panel panel-default hidden {{name}}-advanced">
-                    {% else %}
-                    <div class="panel panel-default">
-                    {% endif %}
-                      <div class="panel-heading">
-                          <h4 class="panel-title">{{section}}</h4>
-                      </div>
-                      <div class="panel-body">
-                          {% for option in config.options(section) %}
-                          {{option}} 
-                           {% if option == "enabled" or option == "uploadwebcam" or option == "uploadtimestamped" or option == "uploaderenabled" %}
-                                  
-                                  <input class="col-md-4 pull-right" type='checkbox' name="{{section}}.{{option}}" placeholder="{{config.get(section, option)}}" {% if config.get(section,option)=="on"%}checked{% endif %}> 
-                           {% else %}
-                                  <input class="col-md-4 pull-right" type='text' title=example:"{{example.get(section,option)}}" name="{{section}}.{{option}}" value="{{config.get(section, option)}}">
-                           {% endif %}
-                           <div class="col-md-4 pull-right" style="text-align:right">{{example.get(section,option)}}</div>
-                         <br><br>
-                           {% endfor %}
-                      </div>
-                    </div>
+                    Camera Enabled <br><br>
+                {% else %}
+                    Camera Disabled <br><br>
                 {% endif %}
-            {% endfor %} 
+
+                {% if config.get("ftp","uploaderenabled")=="on" %}
+
+                    Uploader Enabled <br><br>
+                {% else %}
+                    Uploader Disabled <br><br>
+                {% endif %}
+
+            </h4>
+            </p>
         </div>
-        <div class="modal-footer">
-           <button type="button" id="{{name}}-advanced-button" class="btn btn-warning">Advanced</button>
-           <br><br>
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close/Discard</button>
-            <button type="button" id="{{name}}-save-button" class="btn btn-primary">Save changes</button>
-
-        </div>
-        </form>
-      </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->	
-
-<!-- deletion modals -->
-
-<div class="modal fade" id="{{name}}-delete-modal" tabindex="-1" role="dialog" aria-labelledby="{{name}}-delete-modal-label" aria-hidden="true">
-   <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="{{name}}-delete-modal-label">Are You SURE?</h4>
-        </div>
-        <div class="modal-body">
-        <p>This cannot be undone. <br> You will lose this config.</p>
-        </div>
-        <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">I'm not sure...</button>
-        <button id="{{name}}-delete-button" type="button" class="btn btn-danger">Delete it</button>
-        </div>    
-      </div>
-   </div>
-</div>
-
-<script type="text/javascript">
-$("#{{name}}-save-button").click(function(e){
-      e.preventDefault();
-      $.post('/writecfg', 
-         $("#{{name}}-form").serialize(), 
-         function(data, status, xhr){
-           console.log(data);
-           if(data =="success"){
-		console.log("changing button");
-		$("#{{name}}-save-button").toggleClass("btn-success")
-  
-		setTimeout(function(){
-			$("#{{name}}-save-button").toggleClass("btn-success")	
-		},2000)
-	   }
-         });
-});
-</script>
-
-<script type="text/javascript">
-$("#{{name}}-delete-button").click(function(e){
-      e.preventDefault();
-      $.post('/delcfg', 
-         {name: "{{name}}"},
-         function(data, status, xhr){
-           if(data =="success"){
-                console.log("changing button");
-                $("#{{name}}-delete-button").toggleClass("btn-success")
-  
-                setTimeout(function(){
-                        $("#{{name}}-delete-modal").modal("hide")
-                },2000)
-           }
-         });
-});
-</script>
-<script type="text/javascript">
-$("#{{name}}-advanced-button").click(function(e){
-      e.preventDefault();
-      $(".{{name}}-advanced").toggleClass("hidden");
-});
-</script>
-
-{% endfor %}
-
-<!-- modals -->	
-
-<!-- picam modal -->
-
-<!-- Modal -->
-<div class="modal fade" id="picam-modal" tabindex="-1" role="dialog" aria-labelledby="picam-modal-label" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h3 class="modal-title" id="picam-modal-label">Raspberry Pi Camera</h3>
-        </div>
-        <div class="modal-body col-md-12">
-            <form id="picam-form">
-            <input type="text" style="display:none;" name="config-name" value="picam"></input>
-            {% for section in rpiconfig.sections() %}
-                    {% if section not in ["camera","timelapse","ftp"] %}
-                    <div class="panel panel-default hidden picam-advanced">
+        <!-- Modal -->
+        <div class="modal fade" id="{{ name }}-modal" tabindex="-1" role="dialog"
+             aria-labelledby="{{ name }}-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3 class="modal-title" id="{{ name }}-modal-label">{{ config["camera"]["name"] }}</h3>
+                    <h6 class="modal-title pull-right">{% if not config["eosserialnumber"]["value"] == "0" %}
+                        {{ config["eosserialnumber"]["value"] }}
                     {% else %}
-                    <div class="panel panel-default">
+                        {{ name }}
                     {% endif %}
+                    </h6>
+                </div>
+                <div class="modal-body col-md-12">
+                    <form id="{{ name }}-form">
+                        <input type="text" style="display:none;" name="config-name" value="{{ name }}"></input>
+                        {% for section,option in config.items() %}
+                            {% if not section == "eosserialnumber" %}
+                                {% if section not in ["camera","timelapse","ftp"] %}
+                                    <div class="panel panel-default hidden {{ name }}-advanced">
+                                {% else %}
+                                    <div class="panel panel-default">
+                                {% endif %}
+                            <div class="panel-heading">
+                                <h4 class="panel-title">{{ section }}</h4>
+                            </div>
+                            <div class="panel-body">
+                                {% for option in config.options(section) %}
+                                    {{ option }}
+                                    {% if option == "enabled" or option == "uploadwebcam" or option == "uploadtimestamped" or option == "uploaderenabled" %}
+
+                                        <input class="col-md-4 pull-right" type='checkbox'
+                                               name="{{ section }}.{{ option }}"
+                                               placeholder="{{ config[section][option] }}"
+                                               {% if config.get(section,option)=="on" %}checked{% endif %}>
+                                    {% else %}
+                                        <input class="col-md-4 pull-right" type='text'
+                                               title=example:"{{ example[section][option] }}"
+                                               name="{{ section }}.{{ option }}"
+                                               value="{{ config[section][option] }}">
+                                    {% endif %}
+                                    <div class="col-md-4 pull-right"
+                                         style="text-align:right">{{ example[section][option] }}</div>
+                                    <br><br>
+                                {% endfor %}
+                            </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" id="{{ name }}-advanced-button" class="btn btn-warning">Advanced
+                            </button>
+                            <br><br>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close/Discard</button>
+                            <button type="button" id="{{ name }}-save-button" class="btn btn-primary">Save changes
+                            </button>
+
+                        </div>
+                    </form>
+                </div>
+                <!-- /.modal-content -->
+            </div>
+            <!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+
+        <!-- deletion modals -->
+
+        <div class="modal fade" id="{{ name }}-delete-modal" tabindex="-1" role="dialog"
+             aria-labelledby="{{ name }}-delete-modal-label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="{{ name }}-delete-modal-label">Are You SURE?</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>This cannot be undone. <br> You will lose this config.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">I'm not sure...</button>
+                        <button id="{{ name }}-delete-button" type="button" class="btn btn-danger">Delete it</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            $("#{{name}}-save-button").click(function (e) {
+                e.preventDefault();
+                $.post('/writecfg',
+                        $("#{{name}}-form").serialize(),
+                        function (data, status, xhr) {
+                            console.log(data);
+                            if (data == "success") {
+                                console.log("changing button");
+                                $("#{{name}}-save-button").toggleClass("btn-success")
+
+                                setTimeout(function () {
+                                    $("#{{name}}-save-button").toggleClass("btn-success")
+                                }, 2000)
+                            }
+                        });
+            });
+        </script>
+
+        <script type="text/javascript">
+            $("#{{name}}-delete-button").click(function (e) {
+                e.preventDefault();
+                $.post('/delcfg',
+                        {name: "{{name}}"},
+                        function (data, status, xhr) {
+                            if (data == "success") {
+                                console.log("changing button");
+                                $("#{{name}}-delete-button").toggleClass("btn-success")
+
+                                setTimeout(function () {
+                                    $("#{{name}}-delete-modal").modal("hide")
+                                }, 2000)
+                            }
+                        });
+            });
+        </script>
+        <script type="text/javascript">
+            $("#{{name}}-advanced-button").click(function (e) {
+                e.preventDefault();
+                $(".{{name}}-advanced").toggleClass("hidden");
+            });
+        </script>
+
+    {% endfor %}
+
+    <!-- modals -->
+
+    <!-- picam modal -->
+
+    <!-- Modal -->
+    <div class="modal fade" id="picam-modal" tabindex="-1" role="dialog" aria-labelledby="picam-modal-label"
+         aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 class="modal-title" id="picam-modal-label">Raspberry Pi Camera</h3>
+            </div>
+            <div class="modal-body col-md-12">
+                <form id="picam-form">
+                    <input type="text" style="display:none;" name="config-name" value="picam"></input>
+                    {% for section in rpiconfig.sections() %}
+                        {% if section not in ["camera","timelapse","ftp"] %}
+                            <div class="panel panel-default hidden picam-advanced">
+                        {% else %}
+                            <div class="panel panel-default">
+                        {% endif %}
                     <div class="panel-heading">
-                        <h4 class="panel-title">{{section}}</h4>
+                        <h4 class="panel-title">{{ section }}</h4>
                     </div>
                     <div class="panel-body">
                         {% for option in rpiconfig.options(section) %}
-                        {{option}}
-                         {% if option == "enabled" or option == "uploadwebcam" or option == "uploadtimestamped" or option == "uploaderenabled" %}
-                                <input class="col-md-3 pull-right" type='checkbox' name="{{section}}.{{option}}" placeholder="{{rpiconfig.get(section, option)}}" {% if rpiconfig.get(section,option)=="on"%}checked{% endif %}>
-                         {% else %}
-                                <input class="col-md-4 pull-right" type='text' title=example:"{{rpiconfig.get(section,option)}}" name="{{section}}.{{option}}" placeholder="{{rpiconfig.get(section, option)}}">
-                         {% endif %}
-                         <div class="col-md-4 pull-right" style="text-align:right">{{example.get(section,option)}}</div>
-                       <br><br>
-                         {% endfor %}
+                            {{ option }}
+                            {% if option == "enabled" or option == "uploadwebcam" or option == "uploadtimestamped" or option == "uploaderenabled" %}
+                                <input class="col-md-3 pull-right" type='checkbox' name="{{ section }}.{{ option }}"
+                                       placeholder="{{ rpiconfig.get(section, option) }}"
+                                       {% if rpiconfig.get(section,option)=="on" %}checked{% endif %}>
+                            {% else %}
+                                <input class="col-md-4 pull-right" type='text'
+                                       title=example:"{{ rpiconfig.get(section,option) }}"
+                                       name="{{ section }}.{{ option }}"
+                                       placeholder="{{ rpiconfig.get(section, option) }}">
+                            {% endif %}
+                            <div class="col-md-4 pull-right"
+                                 style="text-align:right">{{ example.get(section,option) }}</div>
+                            <br><br>
+                        {% endfor %}
                     </div>
                     </div>
-            {% endfor %}
+                    {% endfor %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="picam-advanced-button" class="btn btn-warning">Advanced</button>
+                        <br><br>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close/Discard</button>
+                        <button type="button" id="picam-save-button" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.modal-content -->
         </div>
-        <div class="modal-footer">
-          <button type="button" id="picam-advanced-button" class="btn btn-warning">Advanced</button>
-           <br><br>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close/Discard</button>
-        	<button type="button" id="picam-save-button" class="btn btn-primary">Save changes</button>
+        <!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+
+    <div class="modal fade" id="detect-camera-modal" tabindex="-1" role="dialog"
+         aria-labelledby="detect-camera-modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="detect-camera-modal-label">Camera Detection</h4>
+                </div>
+                <div class="modal-body">
+                    <p id="detect-return-area"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Go away!</button>
+                    <button id="detect-camera-modal-button" type="button" class="btn btn-info">Detect</button>
+                </div>
+            </div>
         </div>
-        </form>
-      </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
+    </div>
 
 
-<div class="modal fade" id="detect-camera-modal" tabindex="-1" role="dialog" aria-labelledby="detect-camera-modal-label" aria-hidden="true">
-   <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="detect-camera-modal-label">Camera Detection</h4>
-        </div>
-        <div class="modal-body">
-        <p id="detect-return-area"></p>
-        </div>
-        <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Go away!</button>
-        <button id="detect-camera-modal-button" type="button" class="btn btn-info">Detect</button>
-        </div>
-      </div>
-   </div>
-</div>
+    <script type="text/javascript">
+        $("#detect-camera-modal-button").click(function (e) {
+            e.preventDefault();
+            $.post('/detectcams',
+                    {nothing: "nothing"},
+                    function (data, status, xhr) {
+                        if (data != "No cameras detected, are they turned on?") {
+                            console.log("changing button");
+                            $("#detect-camera-modal-button").toggleClass("btn-success")
+                            $("#detect-return-area").html(data)
+                            setTimeout(function () {
+                                $("#detect-camera-modal").modal("hide")
+                            }, 5000)
+                        } else {
+                            $("#detect-return-area").html(data)
+                        }
+                    });
+        });
+    </script>
+    <script type="text/javascript">
 
+        $("#picam-save-button").click(function (e) {
+            e.preventDefault();
+            $.post('/writecfg',
+                    $("#picam-form").serialize(),
+                    function (data, status, xhr) {
+                        console.log(data);
+                        if (data == "success") {
+                            console.log("changing button");
+                            $("#picam-save-button").toggleClass("btn-success")
 
-<script type="text/javascript">
-$("#detect-camera-modal-button").click(function(e){
-      e.preventDefault();
-      $.post('/detectcams',
-         {nothing:"nothing"},
-         function(data, status, xhr){
-           if(data !="No cameras detected, are they turned on?"){
-                console.log("changing button");
-                $("#detect-camera-modal-button").toggleClass("btn-success")
-		$("#detect-return-area").html(data)
-                setTimeout(function(){
-                        $("#detect-camera-modal").modal("hide")
-                },5000)
-           }else{
-		$("#detect-return-area").html(data)
-		}	
-         });
-});
-</script>
-<script type="text/javascript">
-
-$("#picam-save-button").click(function(e){
-      e.preventDefault();
-      $.post('/writecfg',
-         $("#picam-form").serialize(),
-         function(data, status, xhr){
-           console.log(data);
-           if(data =="success"){
-                console.log("changing button");
-                $("#picam-save-button").toggleClass("btn-success")
-
-                setTimeout(function(){
-                        $("#picam-save-button").toggleClass("btn-success")
-                },2000)
-           }
-         });
-});
-</script>
-<script type="text/javascript">
-$("#picam-advanced-button").click(function(e){
-      e.preventDefault();
-      $(".picam-advanced").toggleClass("hidden");
-});
-</script>
+                            setTimeout(function () {
+                                $("#picam-save-button").toggleClass("btn-success")
+                            }, 2000)
+                        }
+                    });
+        });
+    </script>
+    <script type="text/javascript">
+        $("#picam-advanced-button").click(function (e) {
+            e.preventDefault();
+            $(".picam-advanced").toggleClass("hidden");
+        });
+    </script>
 
 {% endblock %}
 

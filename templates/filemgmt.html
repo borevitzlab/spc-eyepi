@@ -17,7 +17,7 @@
 </table>
 </div>
 
-{% for name, config in configs.iteritems() %}
+{% for name, config in configs.items() %}
 <div class="btn-group-vertical col-md-4" role="group" aria-label="files-modal-button-group-label">
         <button class="btn btn-primary btn-md" data-toggle="modal" data-target="#{{name}}-files-modal">{{ config.get("camera","name") }}Files</button>
 </div>
@@ -44,7 +44,7 @@
 			 </div>
                     	 <div class="panel-body">
 				<ul class="list-group">
-				{% for basename,path in filelists[name].iteritems() %}
+				{% for basename,path in filelists[name].items() %}
 				<li class="list-group-item col-md-11">{{basename}}
 					<div class="btn-group col-md-1 pull-right" data-toggle="buttons">
         					<label class="btn btn-sm btn-default">

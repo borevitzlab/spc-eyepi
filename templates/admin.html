@@ -1,145 +1,166 @@
 {% extends "layout.html" -%}
 {% set active_page="admin" -%}
 {% block body %}
-<h2>Administration</h2>
-<hr>
-<div class="col-md-12">
-  <div class="panel panel-default col-md-2">
-    <h3>Management:</h3>
-    <div class="btn-group-vertical" role="group">
-    <button class="btn btn-primary " data-toggle="modal" data-target="#hostname-confirm-modal" >Change global name</button>
-    <button class="btn btn-default" ><a href="/update" role="button">Update Spc-Eyepi</a></button>
-    <button class="btn btn-danger" ><a href="/restart" role="button">Reboot</a></button>
+    <h2>Administration</h2>
+    <hr>
+    <div class="col-md-12">
+        <div class="panel panel-default col-md-2">
+            <h3>Management:</h3>
+
+            <div class="btn-group-vertical" role="group">
+                <button class="btn btn-primary " data-toggle="modal" data-target="#hostname-confirm-modal">Change global
+                    name
+                </button>
+                <button class="btn btn-default"><a href="/update" role="button">Update Spc-Eyepi</a></button>
+                <button class="btn btn-danger"><a href="/restart" role="button">Reboot</a></button>
+            </div>
+            <br><br>
+        </div>
+        <div class="panel panel-default col-md-9 pull-right">
+            <h3>Users:</h3>
+            <table class="table">
+                {% for username in usernames %}
+                    <tr>
+                        <td>{{ username }}</td>
+                        <td><input type="password" id="{{ username }}-pass" class="form-control" placeholder="Password">
+                        </td>
+                        <td>
+                            <button class="btn btn-warning btn-md" data-toggle="modal"
+                                    data-target="#{{ username }}-confirm-modal">Save
+                            </button>
+                        </td>
+                    <tr>
+                {% endfor %}
+            </table>
+            <br>
+        </div>
     </div>
-    <br><br>
-  </div>
-  <div class="panel panel-default col-md-9 pull-right">
-  <h3>Users:</h3>
-    <table class="table">
-      {% for username in usernames %}
-      <tr>
-      	<td>{{username}}</td>
-      	<td><input type="password" id="{{username}}-pass" class="form-control" placeholder="Password"></td>
-      	<td><button class="btn btn-warning btn-md" data-toggle="modal" data-target="#{{username}}-confirm-modal">Save</button></td>
-      <tr>
-      {% endfor %}
-    </table>
-    <br>
-  </div>
-</div>
-<div class="modal fade" id="invalid-modal" tabindex="-1" role="dialog" aria-labelledby="invalid-modal-label" aria-hidden="true">
-   <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="invalid-modal-modal-label">Bad Authentication</h4>
+    <div class="modal fade" id="invalid-modal" tabindex="-1" role="dialog" aria-labelledby="invalid-modal-label"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="invalid-modal-modal-label">Bad Authentication</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Not enough characters</p>
+                </div>
+            </div>
         </div>
-        <div class="modal-body">
-        <p>Not enough characters</p>
+    </div>
+    <div class="modal fade" id="bad-auth-modal" tabindex="-1" role="dialog" aria-labelledby="bad-auth-modal-label"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="bad-auth-modal-label">Bad Authentication</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Wrong password.<br> You may enter either the admin password or the users password.</p>
+                </div>
+            </div>
         </div>
-      </div>
-   </div>
-</div>
-<div class="modal fade" id="bad-auth-modal" tabindex="-1" role="dialog" aria-labelledby="bad-auth-modal-label" aria-hidden="true">
-   <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="bad-auth-modal-label">Bad Authentication</h4>
-        </div>
-        <div class="modal-body">
-        <p>Wrong password.<br> You may enter either the admin password or the users password.</p>
-        </div>
-      </div>
-   </div>
-</div>
+    </div>
 
-{% for username in usernames %}
-<div class="modal fade" id="{{username}}-confirm-modal" tabindex="-1" role="dialog" aria-labelledby="{{username}}-confirm-modal-label" aria-hidden="true">
-   <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="{{username}}-confirm-modal-label">Are You SURE?</h4>
+    {% for username in usernames %}
+        <div class="modal fade" id="{{ username }}-confirm-modal" tabindex="-1" role="dialog"
+             aria-labelledby="{{ username }}-confirm-modal-label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="{{ username }}-confirm-modal-label">Are You SURE?</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Please type either that users password or the admin password</p><br><input type="password"
+                                                                                                      id="{{ username }}-pass-confirm"
+                                                                                                      class="form-control"
+                                                                                                      placeholder="Password">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">I'm not sure...</button>
+                        <button id="{{ username }}-save-button" type="button" class="btn btn-danger">Do it!</button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="modal-body">
-        <p>Please type either that users password or the admin password</p><br><input type="password" id="{{username}}-pass-confirm" class="form-control" placeholder="Password">
-        </div>
-         <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">I'm not sure...</button>
-        <button id="{{username}}-save-button" type="button" class="btn btn-danger">Do it!</button>
-        </div>
-      </div>
-   </div>
-</div>
 
-<script type="text/javascript">
-$("#{{username}}-save-button").click(function(e){
-      e.preventDefault();
-      $.post('/newuser',
-         {username:"{{username}}",pass:$("#{{username}}-pass").val(),adminpass:$("#{{username}}-pass-confirm").val()},
-         function(data, status, xhr){
-           console.log(data);
-           if(data =="success"){
-                $("#{{username}}-save-button").toggleClass("btn-success")
-                setTimeout(function(){
-                        $("#{{username}}-confirm-modal").modal("hide")
-                },3000)
+        <script type="text/javascript">
+            $("#{{username}}-save-button").click(function (e) {
+                e.preventDefault();
+                $.post('/newuser',
+                        {
+                            username: "{{username}}",
+                            pass: $("#{{username}}-pass").val(),
+                            adminpass: $("#{{username}}-pass-confirm").val()
+                        },
+                        function (data, status, xhr) {
+                            console.log(data);
+                            if (data == "success") {
+                                $("#{{username}}-save-button").toggleClass("btn-success")
+                                setTimeout(function () {
+                                    $("#{{username}}-confirm-modal").modal("hide")
+                                }, 3000)
 
-           }else if(data=="invalid"){
-            $("#{{username}}-confirm-modal").modal("hide")
-              $("#invalid-modal").modal("show")
-              setTimeout(function(){
-                $("#invalid-modal").modal("hide")
-              }, 4000)
+                            } else if (data == "invalid") {
+                                $("#{{username}}-confirm-modal").modal("hide")
+                                $("#invalid-modal").modal("show")
+                                setTimeout(function () {
+                                    $("#invalid-modal").modal("hide")
+                                }, 4000)
 
-          }else if(data=="bad_auth"){
-            $("#{{username}}-confirm-modal").modal("hide")
-            $("#bad-auth-modal").modal("show")
-            setTimeout(function(){
-              $("#bad-auth-modal").modal("hide")
-            }, 4000)
-          }
-  });
-});
-</script>
-{% endfor %}
-<div class="modal fade" id="hostname-confirm-modal" tabindex="-1" role="dialog" aria-labelledby="hostname-confirm-modal-label" aria-hidden="true">
-   <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="hostname-confirm-modal-label">Are You SURE?</h4>
-        </div>
-        <div class="modal-body">
-        <p>This sets the global name. It wont change the name of the cameras currently connected, but it will change the prefix of any new cameras connected, and the name of the RPI camera module.</p>
+                            } else if (data == "bad_auth") {
+                                $("#{{username}}-confirm-modal").modal("hide")
+                                $("#bad-auth-modal").modal("show")
+                                setTimeout(function () {
+                                    $("#bad-auth-modal").modal("hide")
+                                }, 4000)
+                            }
+                        });
+            });
+        </script>
+    {% endfor %}
+    <div class="modal fade" id="hostname-confirm-modal" tabindex="-1" role="dialog"
+         aria-labelledby="hostname-confirm-modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="hostname-confirm-modal-label">Are You SURE?</h4>
+                </div>
+                <div class="modal-body">
+                    <p>This sets the global name. It wont change the name of the cameras currently connected, but it
+                        will change the prefix of any new cameras connected, and the name of the RPI camera module.</p>
 
-        <p>New global name: </p><input type="text" id="hostname-text-box" class="form-control" placeholder="{{get_hostname()}}">
+                    <p>New global name: </p><input type="text" id="hostname-text-box" class="form-control"
+                                                   placeholder="{{ get_hostname() }}">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">I'm not sure...</button>
+                    <button id="hostname-save-button" type="button" class="btn btn-danger">Do it!</button>
+                </div>
+            </div>
         </div>
-         <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">I'm not sure...</button>
-        <button id="hostname-save-button" type="button" class="btn btn-danger">Do it!</button>
-        </div>
-      </div>
-   </div>
-</div>
+    </div>
 
 
-<script type="text/javascript">
-$("#hostname-save-button").click(function(e){
-      e.preventDefault();
+    <script type="text/javascript">
+        $("#hostname-save-button").click(function (e) {
+            e.preventDefault();
 
-      $.post('/change_hostname',
-         {hostname:$("#hostname-text-box").val()},
-         function(data, status, xhr){
-           console.log(data);
-           if(data =="success"){
-                $("#hostname-save-button").toggleClass("btn-success")
-                setTimeout(function(){
-                        $("#hostname-confirm-modal").modal("hide")
-                },3000)
-              }
-	});
-});
-</script>
+            $.post('/change_hostname',
+                    {hostname: $("#hostname-text-box").val()},
+                    function (data, status, xhr) {
+                        console.log(data);
+                        if (data == "success") {
+                            $("#hostname-save-button").toggleClass("btn-success")
+                            setTimeout(function () {
+                                $("#hostname-confirm-modal").modal("hide")
+                            }, 3000)
+                        }
+                    });
+        });
+    </script>
 {% endblock %}
