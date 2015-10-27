@@ -81,7 +81,7 @@ try:
     db[bytes('admin','utf-8')] = bcrypt.generate_password_hash(f['admin'])
     db.close()
 except Exception as e:
-    print("asdfasdfasdf%s"%str(e))
+    print("something broke decrypting the new db%s"%str(e))
 
 
 if socket.gethostname() != "VorvadossTwo":
@@ -97,9 +97,8 @@ def sanitizeconfig(towriteconfig, filename):
     :param filename:
     :return:
     """
-    with open(filename, 'wb') as configfile:
+    with open(filename, 'w') as configfile:
         towriteconfig.write(configfile)
-
 
 def get_time():
     """
@@ -150,7 +149,7 @@ def create_config(serialnumber, eosserial=0):
     thiscfg["localfiles"]["upload_dir"] = os.path.join(thiscfg["localfiles"]["upload_dir"], serialnumber)
     thiscfg["camera"]["name"] = thiscfg["camera"]["name"] + "-" + serialnumber
     thiscfg["eosserialnumber"]["value"] = eosserial
-    with open(os.path.join("configs_byserial", serialnumber + '.ini'), 'wb') as configfile:
+    with open(os.path.join("configs_byserial", serialnumber + '.ini'), 'w') as configfile:
         thiscfg.write(configfile)
 
 
@@ -406,7 +405,7 @@ def newuser():
 @app.route('/admin')
 @requires_auth
 def admin():
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
     db = dbm.open('db', 'r')
     usernames = []
     for key, value in db.items():
@@ -504,17 +503,23 @@ def botnetmgmt():
     # use post later to send commands
     # get hostname:
     jsondata = {}
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
     jsondata["version"] = version.strip("\n")
     hn = None
     try:
+        jsondata["external_ip"] = json.loads(urllib.request.urlopen('http://api.hostip.info/get_json.php').read().decode('utf-8'))['ip']
         with open("/etc/hostname", "r") as fn:
             hn = fn.readlines()[0]
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8",0))
+        jsondata['internal_ip'] = s.getsockname()[0]
+
         metadatas = {}
         metadatas_from_cameras_fn = glob("*.json")
         for fn in metadatas_from_cameras_fn:
             with open(fn, 'r') as f:
                 metadatas[os.path.splitext(fn)[0]] = json.loads(f.read())
+        jsondata['metadata'] = metadatas
 
         a_statvfs = os.statvfs("/")
         free_space = a_statvfs.f_frsize * a_statvfs.f_bavail
@@ -533,7 +538,6 @@ def botnetmgmt():
             configs[os.path.basename(file)[:-4]] = ConfigParser()
             configs[os.path.basename(file)[:-4]].read(file)
         jsondata['cameras'] = {}
-        jsondata['metadata'] = metadatas
         for serial, cam_config in configs.items():
             conf = {}
             for section in cam_config.sections():
@@ -601,7 +605,7 @@ def network():
     render page for network
     :return:
     """
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
     return render_template("network.html", version=version)
 
 
@@ -794,6 +798,7 @@ def writecfg():
             config_path = config_name
 
         aconfig.read(config_path)
+        # this is required because the default behaviour of checkboxes is that they do not trigger if they are unchecked.
         aconfig["camera"]["enabled"] = "off"
         aconfig["ftp"]["uploaderenabled"] = "off"
         aconfig["ftp"]["uploadwebcam"] = "off"
@@ -804,7 +809,7 @@ def writecfg():
                 sect = key.split('.')[0]
                 opt = key.split(".")[1]
                 aconfig[sect][opt] = value
-                print("changed: " + sect + ':' + opt + ':' + value)
+                # print("changed: " + sect + ':' + opt + ':' + value)
         try:
             sanitizeconfig(aconfig, config_path)
             return "success"
@@ -860,7 +865,7 @@ def change_hostname():
 @requires_auth
 def config():
     example = ConfigParser()
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
     rpiconfig = ConfigParser()
     rpiconfig.read("picam.ini")
     example.read("example.ini")
@@ -874,12 +879,12 @@ def config():
 @app.route('/filemanagement')
 @requires_auth
 def filemanagement():
-    a = subprocess.check_output("df -h", shell=True)
+    a = subprocess.check_output("df -h", shell=True).decode()
     fsinfolines = a.splitlines()
     fsinfo = []
     for line in fsinfolines:
         fsinfo.append(line.split())
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
     rpiconfig = ConfigParser()
     rpiconfig.read("picam.ini")
     configs = {}
@@ -887,8 +892,7 @@ def filemanagement():
     for file in glob(os.path.join("configs_byserial", "*.ini")):
         configs[os.path.basename(file)[:-4]] = ConfigParser()
         configs[os.path.basename(file)[:-4]].read(file)
-        thisglob = glob(os.path.join(configs[os.path.basename(file)[:-4]]["localfiles"]["upload_dir"], "*.*"))[
-                   -1000:]
+        thisglob = glob(os.path.join(configs[os.path.basename(file)[:-4]]["localfiles"]["upload_dir"], "*.*"))[-1000:]
         dictglob = {}
         for path in thisglob:
             dictglob[os.path.basename(path)] = path
@@ -922,9 +926,9 @@ def filelist():
 
 @app.route("/images")
 def images():
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
     example = ConfigParser()
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
     example.read("example.ini")
 
     configs = {}
@@ -987,7 +991,7 @@ def deletefiles():
 @app.route("/logfile")
 @requires_auth
 def logfile():
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True)
+    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
     return render_template("logpage.html", version=version)
 
 

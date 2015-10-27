@@ -63,7 +63,7 @@
                 <div class="modal-body col-md-12">
                     <form id="{{ name }}-form">
                         <input type="text" style="display:none;" name="config-name" value="{{ name }}"></input>
-                        {% for section,option in config.items() %}
+                        {% for section in config.sections() %}
                             {% if not section == "eosserialnumber" %}
                                 {% if section not in ["camera","timelapse","ftp"] %}
                                     <div class="panel panel-default hidden {{ name }}-advanced">
@@ -74,19 +74,18 @@
                                 <h4 class="panel-title">{{ section }}</h4>
                             </div>
                             <div class="panel-body">
-                                {% for option in config.options(section) %}
+                                {% for option,value in config[section].items() %}
                                     {{ option }}
                                     {% if option == "enabled" or option == "uploadwebcam" or option == "uploadtimestamped" or option == "uploaderenabled" %}
-
                                         <input class="col-md-4 pull-right" type='checkbox'
                                                name="{{ section }}.{{ option }}"
-                                               placeholder="{{ config[section][option] }}"
-                                               {% if config.get(section,option)=="on" %}checked{% endif %}>
+                                               placeholder="{{ value }}"
+                                               {% if value=="on" %}checked{% endif %}>
                                     {% else %}
                                         <input class="col-md-4 pull-right" type='text'
                                                title=example:"{{ example[section][option] }}"
                                                name="{{ section }}.{{ option }}"
-                                               value="{{ config[section][option] }}">
+                                               value="{{ value }}">
                                     {% endif %}
                                     <div class="col-md-4 pull-right"
                                          style="text-align:right">{{ example[section][option] }}</div>
@@ -202,23 +201,23 @@
                             <div class="panel panel-default">
                         {% endif %}
                     <div class="panel-heading">
-                        <h4 class="panel-title">{{ section }}</h4>
+                        <h4 class="panel-title">{{ key }}</h4>
                     </div>
                     <div class="panel-body">
-                        {% for option in rpiconfig.options(section) %}
+                        {% for option,value in rpiconfig[section].items() %}
                             {{ option }}
                             {% if option == "enabled" or option == "uploadwebcam" or option == "uploadtimestamped" or option == "uploaderenabled" %}
                                 <input class="col-md-3 pull-right" type='checkbox' name="{{ section }}.{{ option }}"
-                                       placeholder="{{ rpiconfig.get(section, option) }}"
-                                       {% if rpiconfig.get(section,option)=="on" %}checked{% endif %}>
+                                       placeholder="{{ value }}"
+                                       {% if value=="on" %}checked{% endif %}>
                             {% else %}
                                 <input class="col-md-4 pull-right" type='text'
-                                       title=example:"{{ rpiconfig.get(section,option) }}"
+                                       title=example:"{{ value }}"
                                        name="{{ section }}.{{ option }}"
-                                       placeholder="{{ rpiconfig.get(section, option) }}">
+                                       placeholder="{{ value }}">
                             {% endif %}
                             <div class="col-md-4 pull-right"
-                                 style="text-align:right">{{ example.get(section,option) }}</div>
+                                 style="text-align:right">{{ example[section][option] }}</div>
                             <br><br>
                         {% endfor %}
                     </div>
