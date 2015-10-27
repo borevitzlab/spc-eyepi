@@ -48,6 +48,7 @@ class GphotoCamera(Thread):
             self.create_config(name, eosserial=eosserial)
             self.config_filename = os.path.join("configs_byserial", serialnumber + ".ini")
         self.logger = logging.getLogger(self.getName())
+
         # run setup(), there is a separate setup() function so that it can be called again in the event of settings changing
         self.setup()
 
@@ -58,19 +59,19 @@ class GphotoCamera(Thread):
         # accuracy is really the timeout before it gives up and waits for the next time period
         self.accuracy = 3
         # get details from config file
-        self.cameraname = self.config.get("camera", "name")
-        self.interval = int(float(self.config.get("timelapse", "interval")))
-        self.spool_directory = self.config.get("localfiles", "spooling_dir")
-        self.upload_directory = self.config.get("localfiles", "upload_dir")
+        self.cameraname = self.config["camera"]["name"]
+        self.interval = int(float(self.config["timelapse"]["interval"]))
+        self.spool_directory = self.config["localfiles"]["spooling_dir"]
+        self.upload_directory = self.config["localfiles"]["upload_dir"]
         # self.exposure_length = self.config.getint("camera","exposure")
         self.last_config_modify_time = os.stat(self.config_filename).st_mtime
         # get enabled
-        if self.config.get("camera", "enabled") == "on":
+        if self.config["camera"]["enabled"] == "on":
             self.is_enabled = True
         else:
             self.is_enabled = False
         try:
-            tval = self.config.get('timelapse', 'starttime')
+            tval = self.config['timelapse']['starttime']
             if len(tval) == 5:
                 if tval[2] == ':':
                     self.timestartfrom = datetime.time(int(tval[:2]), int(tval[3:]))
@@ -79,7 +80,7 @@ class GphotoCamera(Thread):
             self.timestartfrom = datetime.time(0, 0)
             self.logger.error("Time conversion error startime - %s" % str(e))
         try:
-            tval = self.config.get('timelapse', 'stoptime')
+            tval = self.config['timelapse']['stoptime']
             if len(tval) == 5:
                 if tval[2] == ':':
                     self.timestopat = datetime.time(int(tval[:2]), int(tval[3:]))
@@ -152,7 +153,7 @@ class GphotoCamera(Thread):
         thiscfg["camera"]["name"] = thiscfg["camera"]["name"] + "-" + serialnumber
         if eosserial:
             thiscfg["eosserialnumber"]["value"] = str(eosserial)
-        with open(os.path.join("configs_byserial", serialnumber + '.ini'), 'wb') as configfile:
+        with open(os.path.join("configs_byserial", serialnumber + '.ini'), 'w') as configfile:
             thiscfg.write(configfile)
 
     def get_eos_serial(self, port):
@@ -240,11 +241,11 @@ class GphotoCamera(Thread):
                         try:
                             if ext == ".jpeg" or ".jpg":
                                 # best to create a symlink to /dev/shm/ from static/temp
-                                shutil.copy(os.path.join("/dev/shm", self.serialnumber + ".jpg"))
+                                shutil.copy(fn,os.path.join("/dev/shm", self.serialnumber + ".jpg"))
                                 if self.config["ftp"]["uploadwebcam"] == "on":
                                     shutil.copy(fn, os.path.join(self.upload_directory, "dslr_last_image.jpg"))
                         except Exception as e:
-                            self.logger.error("Couldnt copy timestamp upload: %s" % str(e))
+                            self.logger.error("Couldnt copy webcam upload: %s" % str(e))
 
                         try:
                             if self.config["ftp"]["uploadtimestamped"] == "on":

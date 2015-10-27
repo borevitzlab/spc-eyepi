@@ -17,7 +17,6 @@ from libs.Uploader import Uploader
 logging.config.fileConfig("logging.ini")
 logging.getLogger("paramiko").setLevel(logging.WARNING)
 
-
 def detect_cameras(type):
     """ 
     detect cameras:
@@ -25,13 +24,16 @@ def detect_cameras(type):
             - type to search for in the output of gphoto2, enables the searching of serial cameras and maybe webcams.
     """
     try:
-        a = subprocess.check_output("gphoto2 --auto-detect", shell=True)
+        a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
+        a = a.replace(" ","").replace("\n","").replace("-","")
         cams = {}
-        for port in re.finditer("usb:", a):
+        for pstring in re.finditer("usb:", a):
+            port = a[pstring.start():pstring.end() + 7]
             cmdret = subprocess.check_output(
-                'gphoto2 --port "' + a[port.start():port.end() + 7] + '" --get-config serialnumber',
+                'gphoto2 --port "' + port + '" --get-config serialnumber',
                 shell=True).decode()
-            cams[a[port.start():port.end() + 7]] = cmdret[cmdret.find("Current: ") + 9: len(cmdret) - 1]
+            cur = cmdret.split("\n")[-2]
+            cams[port] = cur.split(" ")[-1]
         return cams
     except Exception as e:
         logger.error("Could not detect camera for some reason: %s" % str(e))
@@ -63,7 +65,7 @@ def redetect_cameras(camera_workers):
 
 def detect_picam():
     try:
-        cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True)
+        cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
         if cmdret[cmdret.find("detected=") + 9: len(cmdret) - 1] == "1":
             return True
         else:
