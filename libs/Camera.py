@@ -64,12 +64,15 @@ class GphotoCamera(Thread):
         self.spool_directory = self.config["localfiles"]["spooling_dir"]
         self.upload_directory = self.config["localfiles"]["upload_dir"]
         self.type = "other"
+        # DISABLED: apparently we dont need this right now.
+        # we kinda do....
         cmd = ["".join(["gphoto2 --port ", self.camera_port, " --get-config manufacturer"])]
         output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
         if "Canon" in output:
             self.type = "Canon"
         if "Nikon" in output:
             self.type = "Nikon"
+
         # self.exposure_length = self.config.getint("camera","exposure")
         self.last_config_modify_time = os.stat(self.config_filename).st_mtime
         # get enabled
@@ -138,6 +141,8 @@ class GphotoCamera(Thread):
                 # Choice: 0 One Shot -- no capture in dark -- autofocus nonmoving
                 # Choice: 1 AI Focus -- no capture in dark -- autofocus for movement.
                 # Choice: 2 AI Servo -- capture in dark -- apparently this does actually do autofocus...
+
+                # was going to disable autofocus but not now.
                 self.logger.info("Captureing with a Canon")
                 cmd = ["".join(
                     ["gphoto2 --port ", self.camera_port,
@@ -147,6 +152,7 @@ class GphotoCamera(Thread):
                      " --filename='", fn])]
 
             elif self.type == "Nikon":
+                # DISABLED, focusmode set t
                 # focusmode2
                 # Choice: 0 AF-S -- no capture in dark -- autofocus nonmoving -- use first.
                 # Choice: 1 AF-C -- no capture in dark -- autofocus moving

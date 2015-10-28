@@ -277,11 +277,10 @@ def capture_preview(serialnumber):
     try:
         a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
         for port in re.finditer("usb:", a):
-            cmdret = subprocess.check_output(
-                'gphoto2 --port "' + a[port.start():port.end() + 7] + '" --get-config serialnumber',
+            port = a[port.start():port.end() + 7]
+            cmdret = subprocess.check_output('gphoto2 --port "' + port + '" --get-config serialnumber',
                 shell=True).decode()
             _serialnumber = cmdret[cmdret.find("Current: ") + 9: len(cmdret) - 1]
-            port = a[port.start():port.end() + 7]
             if _serialnumber == serialnumber:
                 tries = 0
                 while tries < 10 and cap_lock_wait(port, serialnumber):
@@ -304,6 +303,16 @@ def preview():
             return "fail"
     else:
         return "fail"
+
+@app.route("/focus_cams")
+def preview():
+    a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
+    for port in re.finditer("usb:", a):
+
+        port = a[port.start():port.end() + 7]
+        cmdret = subprocess.check_output('gphoto2 --port "' + port + '" --get-config serialnumber',
+                shell=True).decode()
+
 
 
 @app.route("/sync_hwclock")
