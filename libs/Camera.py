@@ -36,10 +36,9 @@ class GphotoCamera(Thread):
             self.serialnumber = serialnumber
         else:
             self.serialnumber = "[no-cam-sn-detected] wtf?"
-        if camera_port != None:
-            self.camera_port = camera_port
-        else:
-            self.camera_port = "[no-camera-port-detected] wtf?"
+
+        self.camera_port = camera_port
+
         # variable setting and config file jiggery.
         self.last_config_modify_time = None
         self.config_filename = config_filename
@@ -66,12 +65,13 @@ class GphotoCamera(Thread):
         self.type = "other"
         # DISABLED: apparently we dont need this right now.
         # we kinda do....
-        cmd = ["".join(["gphoto2 --port ", self.camera_port, " --get-config manufacturer"])]
-        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
-        if "Canon" in output:
-            self.type = "Canon"
-        if "Nikon" in output:
-            self.type = "Nikon"
+        if self.camera_port:
+            cmd = ["".join(["gphoto2 --port ", self.camera_port, " --get-config manufacturer"])]
+            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
+            if "Canon" in output:
+                self.type = "Canon"
+            if "Nikon" in output:
+                self.type = "Nikon"
 
         # self.exposure_length = self.config.getint("camera","exposure")
         self.last_config_modify_time = os.stat(self.config_filename).st_mtime
