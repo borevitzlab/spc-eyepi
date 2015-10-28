@@ -2,3 +2,4 @@ eyepi.ini
 picam.ini
 db
 .idea/
+configs_byserial/*
