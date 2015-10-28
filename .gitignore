@@ -3,4 +3,4 @@ picam.ini
 db
 .idea/
 configs_byserial/*
-spc-eyepi.log
+spc-eyepi.log*
