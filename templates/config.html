@@ -17,7 +17,7 @@
     <hr>
     {% for name, config in configs.items() %}
         <div class="btn-group-vertical col-md-4 panel panel-default" role="group"
-             aria-label="{{ config.get("camera","name") }}">
+             aria-label="{{ config["camera"]["name"] }}">
             <br>
             <button class="btn btn-primary btn-md" data-toggle="modal"
                     data-target="#{{ name }}-modal">{{ config["camera"]["name"] }}</button>
@@ -28,14 +28,14 @@
 
             <p>
             <h4>
-                {% if config.get("camera","enabled")=="on" %}
+                {% if config["camera"]["enabled"]=="on" %}
 
                     Camera Enabled <br><br>
                 {% else %}
                     Camera Disabled <br><br>
                 {% endif %}
 
-                {% if config.get("ftp","uploaderenabled")=="on" %}
+                {% if config["ftp"]["uploaderenabled"]=="on" %}
 
                     Uploader Enabled <br><br>
                 {% else %}

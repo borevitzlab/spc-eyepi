@@ -121,17 +121,22 @@ class GphotoCamera(Thread):
         return t.hour * 60 * 60 + t.minute * 60 + t.second
 
     def capture(self, raw_image, try_number):
+        focusmode = try_number % 3
+        # just keep trying until something without error is raised
         cmd = ["".join(
-            ["gphoto2 --port ", self.camera_port, " --set-config capturetarget=sdram", " --capture-image-and-download",
+            ["gphoto2 --port ", self.camera_port, " --set-config capturetarget=sdram --set-config focusmode=",str(focusmode), " --capture-image-and-download",
              " --filename='", os.path.join(self.spool_directory, os.path.splitext(raw_image)[0]) + ".%C'"])]
         try:
-            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
+            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True).decode()
+            time.sleep(1 + (self.accuracy * 2))
+            if "error" in output.lower():
+                raise subprocess.CalledProcessError("non-zero exit status",cmd=cmd)
+
             for line in output.splitlines():
                 self.logger.info("GPHOTO2: " + line)
-            time.sleep(1 + (self.accuracy * 2))
             return True
         except Exception as e:
-            if try_number > 2:
+            if try_number > 3:
                 for line in e.output.splitlines():
                     if not line.strip() == "" and not "***" in line:
                         self.logger.error(line.strip())
@@ -215,7 +220,8 @@ class GphotoCamera(Thread):
 
                     try:
                         try_number = 0
-                        while not self.capture(raw_image, try_number):
+                        # do it 12 times 3 times at each focus setting.
+                        while try_number < 12 and not self.capture(raw_image, try_number):
                             try_number += 1
                             time.sleep(1)
                         self.logger.debug("Capture Complete")

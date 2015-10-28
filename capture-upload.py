@@ -45,7 +45,7 @@ def redetect_cameras(camera_workers):
     this isnt used. but might be, if you want to change stuff of the cameras threads.
     """
     try:
-        a = subprocess.check_output("gphoto2 --auto-detect", shell=True)
+        a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
         for port in re.finditer("usb:", a):
             cmdret = subprocess.check_output(
                 'gphoto2 --port "' + a[port.start():port.end() + 7] + '" --get-config serialnumber',
@@ -61,6 +61,7 @@ def redetect_cameras(camera_workers):
         print((str(e)))
         logger.error("Could not detect camera for some reason: " + str(e))
         return False
+
 
 
 def detect_picam():

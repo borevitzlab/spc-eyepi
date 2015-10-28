@@ -19,7 +19,7 @@
 
 {% for name, config in configs.items() %}
 <div class="btn-group-vertical col-md-4" role="group" aria-label="files-modal-button-group-label">
-        <button class="btn btn-primary btn-md" data-toggle="modal" data-target="#{{name}}-files-modal">{{ config.get("camera","name") }}Files</button>
+        <button class="btn btn-primary btn-md" data-toggle="modal" data-target="#{{name}}-files-modal">{{ config["camera"]["name"] }}Files</button>
 </div>
 <br>
 <hr>
@@ -29,13 +29,13 @@
       <div class="modal-content">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h3 class="modal-title" id="files-modal-label"> {{ config.get("camera","name") }} Files</h3>
+            <h3 class="modal-title" id="files-modal-label"> {{ config["camera"]["name"] }} Files</h3>
         </div>
         <div class="modal-body col-md-12">
               <form method="POST" id="{{name}}-filelist-form">
                     <div class="panel panel-default">
         	         <div class="panel-heading">
-	                     <h4 class="panel-title">{{ config.get("camera","name") }} Files</h4>
+	                     <h4 class="panel-title">{{ config["camera"]["name"] }} Files</h4>
                 		 <div class="btn-group col-md-6 pull-right">
 					<button class="btn btn-warning" data-loading-text="Copying..."  id="{{name}}-files-modal-savetousb-button">Copy to usb</button> 
 					<button class="btn btn-danger" data-loading-text="Deleting..." id="{{name}}-files-modal-delete-button">Delete Selected</button>

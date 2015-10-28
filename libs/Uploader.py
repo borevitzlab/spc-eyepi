@@ -19,7 +19,6 @@ class Uploader(Thread):
     """ Uploader class,
         used to upload,
     """
-
     def __init__(self, config_filename, name=None):
         # same thread name hackery that the Camera threads use
         if name == None:
@@ -38,7 +37,7 @@ class Uploader(Thread):
 
     def setup(self):
         # TODO: move the timeinterval to the config file and get it from there, this _should_ avoid too many requests to the sftp server.
-        self.timeinterval = 60
+        self.timeinterval = 10
         self.config = ConfigParser()
         self.config.read(self.config_filename)
         self.hostname = self.config["ftp"]["server"]
@@ -220,7 +219,7 @@ class Uploader(Thread):
                 jsondata["onion_cookie_client"] = onion_address.split(" ")[-1]
             except Exception as e:
                 self.logger.warning(str(e))
-            if self.last_upload_time == None:
+            if self.last_upload_time is None:
                 fullstr = "<h1>" + str(
                     self.cameraname) + "</h1><br>Havent uploaded yet<br> Ip address: " + self.ipaddress + "<br>onion_address: " + onion_address + "<br><a href='http://" + self.ipaddress + ":5000'>Config</a>"
             else:
@@ -247,7 +246,7 @@ class Uploader(Thread):
                     jsondata["last_upload_time"] = delta.total_seconds()
                 else:
                     jsondata['last_upload_time'] = 0
-                jsondata['last_upload_time_human'] = datetime.fromtimestamp(jsondata['last_upload_time']).isoformat()
+                jsondata['last_upload_time_human'] = datetime.datetime.fromtimestamp(jsondata['last_upload_time']).isoformat()
                 jsondata["version"] = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
             except Exception as e:
                 self.logger.error("Couldnt collect metadata: %s" % str(e))
@@ -275,7 +274,6 @@ class Uploader(Thread):
                 self.setup()
             try:
                 upload_list = glob(os.path.join(self.upload_directory, '*'))
-                self.set_metadata_on_server(upload_list)
                 if (len(upload_list) == 0):
                     self.logger.debug("No files in upload directory")
                 if (len(upload_list) > 0) and self.config["ftp"]["uploaderenabled"] == "on":
@@ -285,6 +283,10 @@ class Uploader(Thread):
                     self.last_upload_time = datetime.datetime.now()
             except Exception as e:
                 self.logger.error("ERROR: UPLOAD %s" % str(e))
+            try:
+                self.set_metadata_on_server(upload_list)
+            except Exception as e:
+                self.logger.error(str(e))
 
     def stop(self):
         self.stopper.set()

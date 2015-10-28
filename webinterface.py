@@ -265,7 +265,7 @@ def cap_lock_wait(port, serialnumber):
     try:
         a = subprocess.check_output(
             "gphoto2 --port=" + str(port) + " --capture-preview --force-overwrite --filename='static/temp/" + str(
-                serialnumber) + ".jpg'", shell=True)
+                serialnumber) + ".jpg'", shell=True).decode()
         print(a)
         return False
     except subprocess.CalledProcessError as e:
@@ -275,10 +275,11 @@ def cap_lock_wait(port, serialnumber):
 
 def capture_preview(serialnumber):
     try:
-        a = subprocess.check_output("gphoto2 --auto-detect", shell=True)
+        a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
         for port in re.finditer("usb:", a):
             cmdret = subprocess.check_output(
-                'gphoto2 --port "' + a[port.start():port.end() + 7] + '" --get-config serialnumber', shell=True)
+                'gphoto2 --port "' + a[port.start():port.end() + 7] + '" --get-config serialnumber',
+                shell=True).decode()
             _serialnumber = cmdret[cmdret.find("Current: ") + 9: len(cmdret) - 1]
             port = a[port.start():port.end() + 7]
             if _serialnumber == serialnumber:
