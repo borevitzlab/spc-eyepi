@@ -305,13 +305,14 @@ def preview():
         return "fail"
 
 @app.route("/focus_cams")
-def preview():
+def focus():
     a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
     for port in re.finditer("usb:", a):
 
         port = a[port.start():port.end() + 7]
         cmdret = subprocess.check_output('gphoto2 --port "' + port + '" --get-config serialnumber',
                 shell=True).decode()
+    return "success"
 
 
 
