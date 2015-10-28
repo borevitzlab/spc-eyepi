@@ -120,27 +120,43 @@ class GphotoCamera(Thread):
         """
         return t.hour * 60 * 60 + t.minute * 60 + t.second
 
-    def capture(self, raw_image, try_number):
-        focusmode = try_number % 3
-        # just keep trying until something without error is raised
-        cmd = ["".join(
-            ["gphoto2 --port ", self.camera_port, " --set-config capturetarget=sdram --set-config focusmode=",str(focusmode), " --capture-image-and-download",
-             " --filename='", os.path.join(self.spool_directory, os.path.splitext(raw_image)[0]) + ".%C'"])]
+    def capture(self, raw_image):
         try:
-            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True).decode()
-            time.sleep(1 + (self.accuracy * 2))
-            if "error" in output.lower():
-                raise subprocess.CalledProcessError("non-zero exit status",cmd=cmd)
-
-            for line in output.splitlines():
-                self.logger.info("GPHOTO2: " + line)
-            return True
+            try_number = 0
+            # do it 12 times 3 times at each focus setting.
+            while try_number < 12 and not self.capture(raw_image, try_number):
+                try_number += 1
+                time.sleep(1)
+            self.logger.debug("Capture Complete")
+            self.logger.debug("Moving and renaming image files, buddy")
         except Exception as e:
-            if try_number > 3:
-                for line in e.output.splitlines():
-                    if not line.strip() == "" and not "***" in line:
-                        self.logger.error(line.strip())
-            return False
+            self.logger.error("Something went really wrong!")
+            self.logger.error(str(e))
+            time.sleep(5)
+        # try 3 times
+        for tries in range(6):
+            focusmode = (tries % 2) * 2
+            # Choice: 0 One Shot -- no capture in dark -- no autofocus
+            # Choice: 1 AI Focus -- no capture in dark
+            # Choice: 2 AI Servo -- capture in dark
+            cmd = ["".join(
+                ["gphoto2 --port ", self.camera_port, " --set-config capturetarget=sdram --set-config focusmode=",str(focusmode), " --capture-image-and-download",
+                 " --filename='", os.path.join(self.spool_directory, os.path.splitext(raw_image)[0]) + ".%C'"])]
+            try:
+                output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True).decode()
+                time.sleep(1 + (self.accuracy * 2))
+                if "error" in output.lower():
+                    raise subprocess.CalledProcessError("non-zero exit status",cmd=cmd, output=output)
+
+                for line in output.splitlines():
+                    self.logger.info("GPHOTO2: " + line)
+                break
+            except subprocess.CalledProcessError as e:
+                if try_number > 3:
+                    for line in e.output.splitlines():
+                        if not line.strip() == "" and not "***" in line:
+                            self.logger.error(line.strip())
+
 
     def timestamp(self, tn):
         """ Build a timestamp in the required format
@@ -199,14 +215,12 @@ class GphotoCamera(Thread):
                     self.logger.info("Capturing Image now for %s" % self.serialnumber)
 
                     # setting variables for saving files
-                    # TODO:
-                    # 1. Here is where the raw_image should be just timestamped imagename minus extension so that things are more extension agnostic
+                    # TODO: Here is where the raw_image should be just timestamped imagename minus extension so that things are more extension agnostic
                     raw_image = self.timestamped_imagename(tn)
                     jpeg_image = self.timestamped_imagename(tn)[:-4] + ".jpg"
 
 
-                    # TODO:
-                    # 3. put other camera settings in another call to setup camera (iso, aperture etc) using gphoto2 --set-config (nearly done)
+                    # TODO: put other camera settings in another call to setup camera (iso, aperture etc) using gphoto2 --set-config (nearly done)
 
                     # No conversion needed, just take 2 files, 1 jpeg and 1 raw
                     # if self.camera_port:
@@ -218,18 +232,7 @@ class GphotoCamera(Thread):
                     # else:
                     # cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --wait-event-and-download=36s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
 
-                    try:
-                        try_number = 0
-                        # do it 12 times 3 times at each focus setting.
-                        while try_number < 12 and not self.capture(raw_image, try_number):
-                            try_number += 1
-                            time.sleep(1)
-                        self.logger.debug("Capture Complete")
-                        self.logger.debug("Moving and renaming image files, buddy")
-                    except Exception as e:
-                        self.logger.error("Something went really wrong!")
-                        self.logger.error(str(e))
-                        time.sleep(5)
+                    self.capture(raw_image)
 
                     # glob together all filetypes in filetypes array
                     files = []
