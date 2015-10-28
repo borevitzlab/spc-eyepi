@@ -63,6 +63,13 @@ class GphotoCamera(Thread):
         self.interval = int(float(self.config["timelapse"]["interval"]))
         self.spool_directory = self.config["localfiles"]["spooling_dir"]
         self.upload_directory = self.config["localfiles"]["upload_dir"]
+        self.type = "other"
+        cmd = ["".join(["gphoto2 --port ", self.camera_port, " --get-config manufacturer"])]
+        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
+        if "Canon" in output:
+            self.type = "Canon"
+        if "Nikon" in output:
+            self.type = "Nikon"
         # self.exposure_length = self.config.getint("camera","exposure")
         self.last_config_modify_time = os.stat(self.config_filename).st_mtime
         # get enabled
@@ -121,29 +128,50 @@ class GphotoCamera(Thread):
         return t.hour * 60 * 60 + t.minute * 60 + t.second
 
     def capture(self, raw_image):
-        try:
-            try_number = 0
-            # do it 12 times 3 times at each focus setting.
-            while try_number < 12 and not self.capture(raw_image, try_number):
-                try_number += 1
-                time.sleep(1)
-            self.logger.debug("Capture Complete")
-            self.logger.debug("Moving and renaming image files, buddy")
-        except Exception as e:
-            self.logger.error("Something went really wrong!")
-            self.logger.error(str(e))
-            time.sleep(5)
         # try 3 times
+        fn = os.path.join(self.spool_directory, os.path.splitext(raw_image)[0]) + ".%C'"
         for tries in range(6):
-            focusmode = (tries % 2) * 2
-            # Choice: 0 One Shot -- no capture in dark -- no autofocus
-            # Choice: 1 AI Focus -- no capture in dark
-            # Choice: 2 AI Servo -- capture in dark
-            cmd = ["".join(
-                ["gphoto2 --port ", self.camera_port, " --set-config capturetarget=sdram --set-config focusmode=",str(focusmode), " --capture-image-and-download",
-                 " --filename='", os.path.join(self.spool_directory, os.path.splitext(raw_image)[0]) + ".%C'"])]
+            if self.type == "Canon":
+                # focusmode = (tries % 2) + 1
+                # not moving through the focusmode because of choice 2.
+                # focusmode
+                # Choice: 0 One Shot -- no capture in dark -- autofocus nonmoving
+                # Choice: 1 AI Focus -- no capture in dark -- autofocus for movement.
+                # Choice: 2 AI Servo -- capture in dark -- apparently this does actually do autofocus...
+                self.logger.info("Captureing with a Canon")
+                cmd = ["".join(
+                    ["gphoto2 --port ", self.camera_port,
+                     " --set-config capturetarget=sdram",
+                     " --set-config focusmode=2",
+                     " --capture-image-and-download",
+                     " --filename='", fn])]
+
+            elif self.type == "Nikon":
+                # focusmode2
+                # Choice: 0 AF-S -- no capture in dark -- autofocus nonmoving -- use first.
+                # Choice: 1 AF-C -- no capture in dark -- autofocus moving
+                # Choice: 2 AF-A -- no capture in dark -- autofocus auto
+                # Choice: 3 MF (fixed) -- cannot select, this is the switch
+                # Choice: 4 MF (selection) -- totally manual -- set to this last.
+                self.logger.info("Capturing with a Nikon")
+                focusmode = (tries % 2) * 4
+                cmd = ["".join(
+                    ["gphoto2 --port ", self.camera_port,
+                     " --set-config capturetarget=sdram",
+                     " --set-config focusmode2="+str(focusmode),
+                     " --capture-image-and-download",
+                     " --filename='", fn])]
+
+            else:
+                self.logger.info("Capturing with a some other camera")
+                cmd = ["".join(
+                    ["gphoto2 --port ", self.camera_port,
+                     " --set-config capturetarget=sdram",
+                     " --capture-image-and-download",
+                     " --filename='", fn])]
+
             try:
-                output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True).decode()
+                output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
                 time.sleep(1 + (self.accuracy * 2))
                 if "error" in output.lower():
                     raise subprocess.CalledProcessError("non-zero exit status",cmd=cmd, output=output)
@@ -152,10 +180,13 @@ class GphotoCamera(Thread):
                     self.logger.info("GPHOTO2: " + line)
                 break
             except subprocess.CalledProcessError as e:
-                if try_number > 3:
-                    for line in e.output.splitlines():
-                        if not line.strip() == "" and not "***" in line:
-                            self.logger.error(line.strip())
+                if tries >= 5:
+                    self.logger.critical("Really bad stuff happened. too many tries capturing.")
+                    break
+                for line in e.output.splitlines():
+                    if not line.strip() == "" and not "***" in line:
+                        self.logger.error(line.strip())
+
 
 
     def timestamp(self, tn):

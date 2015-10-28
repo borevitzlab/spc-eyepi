@@ -277,16 +277,18 @@ class Uploader(Thread):
                 if (len(upload_list) == 0):
                     self.logger.debug("No files in upload directory")
                 if (len(upload_list) > 0) and self.config["ftp"]["uploaderenabled"] == "on":
-                    self.logger.debug("Preparing to upload %d files" % len(upload_list))
+                    self.logger.info("Preparing to upload %d files" % len(upload_list))
                     if not self.sftpUpload(upload_list):
                         self.ftpUpload(upload_list)
                     self.last_upload_time = datetime.datetime.now()
+
+                try:
+                    self.set_metadata_on_server(upload_list)
+                except Exception as e:
+                    self.logger.error(str(e))
             except Exception as e:
                 self.logger.error("ERROR: UPLOAD %s" % str(e))
-            try:
-                self.set_metadata_on_server(upload_list)
-            except Exception as e:
-                self.logger.error(str(e))
+
 
     def stop(self):
         self.stopper.set()
