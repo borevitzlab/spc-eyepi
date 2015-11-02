@@ -516,7 +516,11 @@ def botnetmgmt():
     jsondata["version"] = version.strip("\n")
     hn = None
     try:
-        jsondata["external_ip"] = json.loads(urllib.request.urlopen('http://api.hostip.info/get_json.php').read().decode('utf-8'))['ip']
+        try:
+            jsondata["external_ip"] = json.loads(urllib.request.urlopen('https://api.ipify.org/?format=json', timeout=10).read().decode('utf-8'))['ip']
+        except Exception as e:
+            print(str(e))
+
         with open("/etc/hostname", "r") as fn:
             hn = fn.readlines()[0]
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -580,10 +584,10 @@ def run_command():
     """
     if request.method == 'POST':
         response = {}
-        for command, argument in request.form.keys():
+        for command, argument in request.form.items():
             try:
-                os.system(" ".join([command, argument]))
-                response[command] = "OK"
+                a = subprocess.check_output([" ".join([command, argument])], shell=True).decode()
+                response[command] = str(a)
             except Exception as e:
                 response[command] = str(e)
         return str(json.dumps(response))
