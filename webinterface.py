@@ -592,7 +592,7 @@ def run_command():
                 response[command] = {}
                 response[command]['exc'] = str(e)
                 if hasattr(e,"output"):
-                    response[command]['out'] = e.output
+                    response[command]['out'] = str(e.output.decode())
         return str(json.dumps(response))
     else:
         abort(400)
