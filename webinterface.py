@@ -23,7 +23,7 @@ try:
     if not os.path.exists("/etc/machine-id"):
         os.system("systemd-machine-id-setup")
 
-    os.system("chown tor:tor /home/tor_private ")
+    os.system("chown -R tor:tor /home/tor_private ")
     os.system("chown -R tor:tor /var/lib/tor ")
 except:
     print("something went wrong, oh well...")
