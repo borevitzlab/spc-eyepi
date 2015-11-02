@@ -589,7 +589,10 @@ def run_command():
                 a = subprocess.check_output([" ".join([command, argument])],stderr=subprocess.STDOUT, shell=True).decode()
                 response[command] = str(a)
             except Exception as e:
-                response[command] = str(e)
+                response[command] = {}
+                response[command]['exc'] = str(e)
+                if hasattr(a,"output"):
+                    response[command]['out'] = a.output
         return str(json.dumps(response))
     else:
         abort(400)
