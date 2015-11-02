@@ -16,8 +16,7 @@ from flask.ext.bcrypt import Bcrypt
 from flask import Flask, redirect, url_for, send_file, abort, Response, render_template, jsonify, \
     send_from_directory, request
 
-from six.moves.configparser import ConfigParser
-
+from configparser import ConfigParser
 
 if not os.path.exists("/etc/machine-id"):
     os.system("systemd-machine-id-setup")
