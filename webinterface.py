@@ -19,6 +19,9 @@ from flask import Flask, redirect, url_for, send_file, abort, Response, render_t
 from six.moves.configparser import ConfigParser
 
 
+if not os.path.exists("/etc/machine-id"):
+    os.system("systemd-machine-id-setup")
+
 # TODO: compatibility anydbm
 import dbm
 
