@@ -18,9 +18,15 @@ from flask import Flask, redirect, url_for, send_file, abort, Response, render_t
 
 from configparser import ConfigParser
 
-# generate a new machine id if one does not already exist
-if not os.path.exists("/etc/machine-id"):
-    os.system("systemd-machine-id-setup")
+try:
+    # generate a new machine id if one does not already exist
+    if not os.path.exists("/etc/machine-id"):
+        os.system("systemd-machine-id-setup")
+
+    os.system("chown tor:tor /home/tor_private ")
+    os.system("chown -R tor:tor /var/lib/tor ")
+except:
+    print("something went wrong, oh well...")
 
 # TODO: compatibility anydbm
 import dbm
@@ -34,7 +40,7 @@ app.debug = True
 bcrypt = Bcrypt(app)
 
 from Crypto import Random
-from Crypto.Cipher import AES
+from Crypto.Cipher import AES++
 import base64
 import hashlib
 
