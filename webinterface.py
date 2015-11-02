@@ -591,8 +591,8 @@ def run_command():
             except Exception as e:
                 response[command] = {}
                 response[command]['exc'] = str(e)
-                if hasattr(a,"output"):
-                    response[command]['out'] = a.output
+                if hasattr(e,"output"):
+                    response[command]['out'] = e.output
         return str(json.dumps(response))
     else:
         abort(400)
