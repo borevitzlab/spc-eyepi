@@ -18,6 +18,7 @@ from flask import Flask, redirect, url_for, send_file, abort, Response, render_t
 
 from configparser import ConfigParser
 
+# generate a new machine id if one does not already exist
 if not os.path.exists("/etc/machine-id"):
     os.system("systemd-machine-id-setup")
 
