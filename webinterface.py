@@ -586,7 +586,7 @@ def run_command():
         response = {}
         for command, argument in request.form.items():
             try:
-                a = subprocess.check_output([" ".join([command, argument])], shell=True).decode()
+                a = subprocess.check_output([" ".join([command, argument])],stderr=subprocess.STDOUT, shell=True).decode()
                 response[command] = str(a)
             except Exception as e:
                 response[command] = str(e)
