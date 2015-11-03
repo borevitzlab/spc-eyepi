@@ -65,13 +65,13 @@ class GphotoCamera(Thread):
         self.type = "other"
         # DISABLED: apparently we dont need this right now.
         # we kinda do....
-        if self.camera_port:
-            cmd = ["".join(["gphoto2 --port ", self.camera_port, " --get-config manufacturer"])]
-            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
-            if "Canon" in output:
-                self.type = "Canon"
-            if "Nikon" in output:
-                self.type = "Nikon"
+        # if self.camera_port:
+        #     cmd = ["".join(["gphoto2 --port ", self.camera_port, " --get-config manufacturer"])]
+        #     output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
+        #     if "Canon" in output:
+        #         self.type = "Canon"
+        #     if "Nikon" in output:
+        #         self.type = "Nikon"
 
         # self.exposure_length = self.config.getint("camera","exposure")
         self.last_config_modify_time = os.stat(self.config_filename).st_mtime
