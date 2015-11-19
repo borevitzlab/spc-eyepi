@@ -143,7 +143,7 @@ class GphotoCamera(Thread):
                 # Choice: 2 AI Servo -- capture in dark -- apparently this does actually do autofocus...
 
                 # was going to disable autofocus but not now.
-                self.logger.info("Captureing with a Canon")
+                self.logger.info("Capturing with a Canon")
                 cmd = ["".join(
                     ["gphoto2 --port ", self.camera_port,
                      " --set-config capturetarget=sdram",

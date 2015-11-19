@@ -116,21 +116,22 @@ if __name__ == "__main__":
     has_picam = None
     # TODO: Fix storage for multiple cameras
     try:
-        tries = 0
+
         has_picam = detect_picam()
 
         if has_picam:
             raspberry = [PiCamera("picam.ini", name="PiCam"), Uploader("picam.ini", name="PiCam-Uploader")]
             start_workers(raspberry)
-
+        bootstrapper = None
         if os.path.isfile("picam.ini"):
             bootstrapper = Bootstrapper()
             bootstrapper.start()
 
+        tries = 0
         while not cameras and tries < 10:
             logger.debug("detecting Cameras")
             cameras = detect_cameras("usb")
-            time.sleep(5)
+            time.sleep(2)
             tries += 1
 
         if not cameras is None:
@@ -168,7 +169,7 @@ if __name__ == "__main__":
             kill_workers(workers[1])
         if has_picam:
             kill_workers(raspberry)
-        if os.path.isfile("picam.ini"):
+        if bootstrapper:
             kill_workers([bootstrapper])
 
         sys.exit()

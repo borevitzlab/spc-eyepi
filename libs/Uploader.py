@@ -19,6 +19,7 @@ class Uploader(Thread):
     """ Uploader class,
         used to upload,
     """
+
     def __init__(self, config_filename, name=None):
         # same thread name hackery that the Camera threads use
         if name == None:
@@ -46,6 +47,8 @@ class Uploader(Thread):
         self.target_directory = self.config["ftp"]["directory"]
         self.cameraname = self.config["camera"]["name"]
         self.upload_directory = self.config["localfiles"]["upload_dir"]
+        self.last_upload_list = []
+        self.last_capture_time = datetime.datetime.fromtimestamp(0)
         # these things are to none now so we can check for None later.
         self.last_upload_time = None
         self.ipaddress = None
@@ -218,7 +221,7 @@ class Uploader(Thread):
                 jsondata["onion_cookie_auth"] = onion_address.split(" ")[1]
                 jsondata["onion_cookie_client"] = onion_address.split(" ")[-1]
             except Exception as e:
-                self.logger.warning(str(e))
+                self.logger.warning("couldnt do onion {}".format(str(e)))
             if self.last_upload_time is None:
                 fullstr = "<h1>" + str(
                     self.cameraname) + "</h1><br>Havent uploaded yet<br> Ip address: " + self.ipaddress + "<br>onion_address: " + onion_address + "<br><a href='http://" + self.ipaddress + ":5000'>Config</a>"
@@ -239,14 +242,32 @@ class Uploader(Thread):
                 jsondata["list_of_uploads"] = list_of_uploads
                 jsondata["capture_limits"] = self.config['timelapse']['starttime'] + " - " + self.config['timelapse'][
                     'stoptime']
-                # need to check against none because otherwise it gets stuck in a broken loop.
-                if not self.last_upload_time == None:
+                jsondata["last_capture_time"] = jsondata['last_upload_time'] = 0
+
+                def fn_to_dt(fn):
+                    return datetime.datetime.strptime(os.path.splitext(fn)[0][-19:], '%Y_%m_%d_%H_%M_%S')
+
+                def posix_stamp(dt):
                     epoch = datetime.datetime.fromtimestamp(0)
-                    delta = self.last_upload_time - epoch
-                    jsondata["last_upload_time"] = delta.total_seconds()
-                else:
-                    jsondata['last_upload_time'] = 0
-                jsondata['last_upload_time_human'] = datetime.datetime.fromtimestamp(jsondata['last_upload_time']).isoformat()
+                    delta = dt - epoch
+                    return delta.total_seconds()
+
+                try:
+                    jsondata["last_capture_time"] = posix_stamp(sorted([fn_to_dt(x) for x in list_of_uploads if not "last_image" in x]).pop())
+                except:
+                    pass
+
+                # need to check against none because otherwise it gets stuck in a broken loop.
+                if self.last_upload_time is not None:
+                    try:
+                        jsondata["last_upload_time"] = posix_stamp(self.last_upload_time)
+                    except:
+                        pass
+
+                jsondata['last_upload_time_human'] = datetime.datetime.fromtimestamp(
+                    jsondata['last_upload_time']).isoformat()
+                jsondata['last_capture_time_human'] = datetime.datetime.fromtimestamp(
+                    jsondata['last_capture_time']).isoformat()
                 jsondata["version"] = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
             except Exception as e:
                 self.logger.error("Couldnt collect metadata: %s" % str(e))
@@ -281,14 +302,14 @@ class Uploader(Thread):
                     if not self.sftpUpload(upload_list):
                         self.ftpUpload(upload_list)
                     self.last_upload_time = datetime.datetime.now()
-
                 try:
-                    self.set_metadata_on_server(upload_list)
+                    if not upload_list == []:
+                        self.last_upload_list = upload_list
+                    self.set_metadata_on_server(self.last_upload_list)
                 except Exception as e:
                     self.logger.error(str(e))
             except Exception as e:
                 self.logger.error("ERROR: UPLOAD %s" % str(e))
-
 
     def stop(self):
         self.stopper.set()
