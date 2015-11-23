@@ -256,7 +256,7 @@ class Uploader(Thread):
                 # need to check against none because otherwise it gets stuck in a broken loop.
                 if self.last_upload_time is not None:
                     try:
-                        jsondata["last_upload_time"] = posix_stamp(self.last_upload_time)
+                        jsondata["last_upload_time"] = time.time()
                     except:
                         pass
                 jsondata['last_upload_time_human'] = datetime.datetime.fromtimestamp(
