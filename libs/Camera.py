@@ -1,14 +1,14 @@
 __author__ = 'Gareth Dunstone'
-import logging
-from threading import Thread, Event
-import subprocess
-import os
 import datetime
-import time
 import json
-from glob import glob
+import logging
+import os
 import shutil
+import subprocess
+import time
 from configparser import ConfigParser
+from glob import glob
+from threading import Thread, Event
 
 # default config variables
 # TODO: move this to a defaultdict within the camera class
@@ -165,7 +165,7 @@ class GphotoCamera(Thread):
                 cmd = ["".join(
                     ["gphoto2 --port ", self.camera_port,
                      " --set-config capturetarget=sdram",
-                     " --set-config focusmode2="+str(focusmode),
+                     " --set-config focusmode2=" + str(focusmode),
                      " --capture-image-and-download",
                      " --filename='", fn])]
 
@@ -181,7 +181,7 @@ class GphotoCamera(Thread):
                 output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
                 time.sleep(1 + (self.accuracy * 2))
                 if "error" in output.lower():
-                    raise subprocess.CalledProcessError("non-zero exit status",cmd=cmd, output=output)
+                    raise subprocess.CalledProcessError("non-zero exit status", cmd=cmd, output=output)
 
                 for line in output.splitlines():
                     self.logger.info("GPHOTO2: " + line)
@@ -193,8 +193,6 @@ class GphotoCamera(Thread):
                 for line in e.output.splitlines():
                     if not line.strip() == "" and not "***" in line:
                         self.logger.error(line.strip())
-
-
 
     def timestamp(self, tn):
         """ Build a timestamp in the required format
@@ -257,7 +255,6 @@ class GphotoCamera(Thread):
                     raw_image = self.timestamped_imagename(tn)
                     jpeg_image = self.timestamped_imagename(tn)[:-4] + ".jpg"
 
-
                     # TODO: put other camera settings in another call to setup camera (iso, aperture etc) using gphoto2 --set-config (nearly done)
 
                     # No conversion needed, just take 2 files, 1 jpeg and 1 raw
@@ -288,7 +285,7 @@ class GphotoCamera(Thread):
                         try:
                             if ext == ".jpeg" or ".jpg":
                                 # best to create a symlink to /dev/shm/ from static/temp
-                                shutil.copy(fn,os.path.join("/dev/shm", self.serialnumber + ".jpg"))
+                                shutil.copy(fn, os.path.join("/dev/shm", self.serialnumber + ".jpg"))
                                 if self.config["ftp"]["uploadwebcam"] == "on":
                                     shutil.copy(fn, os.path.join(self.upload_directory, "dslr_last_image.jpg"))
                         except Exception as e:
@@ -317,10 +314,11 @@ class GphotoCamera(Thread):
                     self.logger.error("Image Capture error - " + str(e))
                 try:
                     if len(files):
-                        with open(self.serialnumber+".json",'r+') as f:
+                        with open(self.serialnumber + ".json", 'r+') as f:
                             js = json.loads(f.read())
                             js['last_capture_time'] = tsn
-                            js['last_capture_time_human'] = datetime.datetime.fromtimestamp(js['last_capture_time']).isoformat()
+                            js['last_capture_time_human'] = datetime.datetime.fromtimestamp(
+                                js['last_capture_time']).isoformat()
                             f.seek(0)
                             f.write(json.dumps(js))
                 except:
@@ -415,10 +413,11 @@ class PiCamera(GphotoCamera):
 
                     try:
                         if len(files):
-                            with open("picam.json",'r+') as f:
+                            with open("picam.json", 'r+') as f:
                                 js = json.loads(f.read())
                                 js['last_capture_time'] = tsn
-                                js['last_capture_time_human'] = datetime.datetime.fromtimestamp(js['last_capture_time']).isoformat()
+                                js['last_capture_time_human'] = datetime.datetime.fromtimestamp(
+                                    js['last_capture_time']).isoformat()
                                 f.seek(0)
                                 f.write(json.dumps(js))
                     except:
@@ -427,7 +426,5 @@ class PiCamera(GphotoCamera):
                 except Exception as e:
                     self.next_capture = datetime.datetime.now()
                     self.logger.error("Image Capture error - " + str(e))
-
-
 
             time.sleep(0.1)

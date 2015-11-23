@@ -1,16 +1,16 @@
 __author__ = 'Gareth Dunstone'
-from threading import Thread, Event
-import logging
-import time
 import datetime
-import os
-import subprocess
-import json
 import ftplib
 import io
+import json
+import logging
+import os
+import subprocess
+import time
+from configparser import ConfigParser
 from glob import glob
 from socket import socket, SOCK_DGRAM, AF_INET
-from configparser import ConfigParser
+from threading import Thread, Event
 
 import pysftp
 

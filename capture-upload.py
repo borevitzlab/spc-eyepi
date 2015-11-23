@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 
+import logging
+import logging.config
 import os
+import re
 import subprocess
 import sys
 import time
-import re
-import logging
-import logging.config
+
 import pyudev
 
 from libs.Camera import GphotoCamera, PiCamera
@@ -15,6 +16,7 @@ from libs.Uploader import Uploader
 
 logging.config.fileConfig("logging.ini")
 logging.getLogger("paramiko").setLevel(logging.WARNING)
+
 
 def detect_cameras(type):
     """
@@ -27,7 +29,7 @@ def detect_cameras(type):
     """
     try:
         a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
-        a = a.replace(" ","").replace("\n","").replace("-","")
+        a = a.replace(" ", "").replace("\n", "").replace("-", "")
         cams = {}
         for pstring in re.finditer("usb:", a):
             port = a[pstring.start():pstring.end() + 7]
@@ -65,7 +67,6 @@ def redetect_cameras(camera_workers):
         print((str(e)))
         logger.error("Could not detect camera for some reason: " + str(e))
         return False
-
 
 
 def detect_picam():
