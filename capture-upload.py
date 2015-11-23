@@ -7,21 +7,23 @@ import time
 import re
 import logging
 import logging.config
-
 import pyudev
 
 from libs.Camera import GphotoCamera, PiCamera
-from libs.Bootstrapper import Bootstrapper
+from libs.Updater import Updater
 from libs.Uploader import Uploader
 
 logging.config.fileConfig("logging.ini")
 logging.getLogger("paramiko").setLevel(logging.WARNING)
 
 def detect_cameras(type):
-    """ 
-    detect cameras:
-        args= string
-            - type to search for in the output of gphoto2, enables the searching of serial cameras and maybe webcams.
+    """
+    detects cameras connected via usb/gphoto2.
+    locks gphoto2, so this will cause errors if a camera is attempting to capture for the split second that it tries
+    to detect
+
+    :param type:
+    :return: a dict of port:serialnumber values corresponding to the currently connected gphoto2 cameras.
     """
     try:
         a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
@@ -42,7 +44,9 @@ def detect_cameras(type):
 
 def redetect_cameras(camera_workers):
     """
-    this isnt used. but might be, if you want to change stuff of the cameras threads.
+    this isnt used yet, but it may be in the future to reassign port numbers to cameras when they are unplugged.
+    :param camera_workers:
+    :return:
     """
     try:
         a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
@@ -65,6 +69,13 @@ def redetect_cameras(camera_workers):
 
 
 def detect_picam():
+    """
+    detects whether the pi has a picam installed and enabled.
+    on all SPC-OS devices this will return true if the picam is installed
+    on other rpis it may return false if the raspberrypi-firmware-tools is not installed or the boot.cfg flag
+    for the camera is not set.
+    :return:
+    """
     try:
         cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
         if cmdret[cmdret.find("detected=") + 9: len(cmdret) - 1] == "1":
@@ -77,6 +88,13 @@ def detect_picam():
 
 
 def create_workers(cameras):
+    """
+    Creates thread workers from a dict of port:serialnumber strings.
+    creates workers for uploaders as well as captures.
+    :param cameras:
+    :return:
+    """
+
     camthreads = []
     uploadthreads = []
     for port, serialnumber in list(cameras.items()):
@@ -122,10 +140,10 @@ if __name__ == "__main__":
         if has_picam:
             raspberry = [PiCamera("picam.ini", name="PiCam"), Uploader("picam.ini", name="PiCam-Uploader")]
             start_workers(raspberry)
-        bootstrapper = None
+        updater = None
         if os.path.isfile("picam.ini"):
-            bootstrapper = Bootstrapper()
-            bootstrapper.start()
+            updater = Updater()
+            updater.start()
 
         tries = 0
         while not cameras and tries < 10:
@@ -159,7 +177,7 @@ if __name__ == "__main__":
                     kill_workers(workers[1])
                 if has_picam:
                     kill_workers(raspberry)
-                bootstrapper.join()
+                updater.join()
                 sys.exit()
 
     except (KeyboardInterrupt, SystemExit):
@@ -169,7 +187,7 @@ if __name__ == "__main__":
             kill_workers(workers[1])
         if has_picam:
             kill_workers(raspberry)
-        if bootstrapper:
-            kill_workers([bootstrapper])
+        if updater:
+            kill_workers([updater])
 
         sys.exit()
