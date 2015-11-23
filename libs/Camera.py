@@ -5,6 +5,7 @@ import subprocess
 import os
 import datetime
 import time
+import json
 from glob import glob
 import shutil
 from configparser import ConfigParser
@@ -241,7 +242,7 @@ class GphotoCamera(Thread):
 
             # set a timenow, this is used everywhere ahead, do not remove.
             tn = datetime.datetime.now()
-
+            tsn = time.time()
             # checking if enabled and other stuff
             if (self.time2seconds(tn) % self.interval < self.accuracy) and (tn.time() > self.timestartfrom) and (
                         tn.time() < self.timestopat) and (self.is_enabled):
@@ -314,6 +315,13 @@ class GphotoCamera(Thread):
                     self.next_capture = datetime.datetime.now()
                     # TODO: This needs to catch errors from subprocess.call because it doesn't
                     self.logger.error("Image Capture error - " + str(e))
+                try:
+                    with open(self.serialnumber+".json",'r+') as f:
+                        js = json.loads(f.read())
+                        js['last_capture_time'] = tsn
+                        js['last_capture_time_human'] = datetime.datetime.fromtimestamp(js['last_capture_time']).isoformat()
+                except:
+                    pass
             time.sleep(0.1)
 
     def stop(self):

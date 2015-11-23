@@ -266,8 +266,6 @@ class Uploader(Thread):
 
                 jsondata['last_upload_time_human'] = datetime.datetime.fromtimestamp(
                     jsondata['last_upload_time']).isoformat()
-                jsondata['last_capture_time_human'] = datetime.datetime.fromtimestamp(
-                    jsondata['last_capture_time']).isoformat()
                 jsondata["version"] = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
             except Exception as e:
                 self.logger.error("Couldnt collect metadata: %s" % str(e))
