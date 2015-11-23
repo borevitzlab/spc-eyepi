@@ -242,7 +242,8 @@ class Uploader(Thread):
                 jsondata["list_of_uploads"] = list_of_uploads
                 jsondata["capture_limits"] = self.config['timelapse']['starttime'] + " - " + self.config['timelapse'][
                     'stoptime']
-                jsondata["last_capture_time"] = jsondata['last_upload_time'] = 0
+
+                jsondata['last_upload_time'] = 0
 
                 def fn_to_dt(fn):
                     return datetime.datetime.strptime(os.path.splitext(fn)[0][-19:], '%Y_%m_%d_%H_%M_%S')
@@ -252,18 +253,12 @@ class Uploader(Thread):
                     delta = dt - epoch
                     return delta.total_seconds()
 
-                try:
-                    jsondata["last_capture_time"] = posix_stamp(sorted([fn_to_dt(x) for x in list_of_uploads if not "last_image" in x]).pop())
-                except:
-                    pass
-
                 # need to check against none because otherwise it gets stuck in a broken loop.
                 if self.last_upload_time is not None:
                     try:
                         jsondata["last_upload_time"] = posix_stamp(self.last_upload_time)
                     except:
                         pass
-
                 jsondata['last_upload_time_human'] = datetime.datetime.fromtimestamp(
                     jsondata['last_upload_time']).isoformat()
                 jsondata["version"] = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()

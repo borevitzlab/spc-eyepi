@@ -316,10 +316,13 @@ class GphotoCamera(Thread):
                     # TODO: This needs to catch errors from subprocess.call because it doesn't
                     self.logger.error("Image Capture error - " + str(e))
                 try:
-                    with open(self.serialnumber+".json",'r+') as f:
-                        js = json.loads(f.read())
-                        js['last_capture_time'] = tsn
-                        js['last_capture_time_human'] = datetime.datetime.fromtimestamp(js['last_capture_time']).isoformat()
+                    if len(files):
+                        with open(self.serialnumber+".json",'r+') as f:
+                            js = json.loads(f.read())
+                            js['last_capture_time'] = tsn
+                            js['last_capture_time_human'] = datetime.datetime.fromtimestamp(js['last_capture_time']).isoformat()
+                            f.seek(0)
+                            f.write(json.dumps(js))
                 except:
                     pass
             time.sleep(0.1)
@@ -340,7 +343,7 @@ class PiCamera(GphotoCamera):
         while True and not self.stopper.is_set():
             # set a timenow this is used locally down here
             tn = datetime.datetime.now()
-
+            tsn = time.time()
             # testing for the config modification
             if os.stat(self.config_filename).st_mtime != self.last_config_modify_time:
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
@@ -410,8 +413,21 @@ class PiCamera(GphotoCamera):
                     else:
                         self.logger.info("Capture will stop at %s" % self.timestopat.isoformat())
 
+                    try:
+                        if len(files):
+                            with open("picam.json",'r+') as f:
+                                js = json.loads(f.read())
+                                js['last_capture_time'] = tsn
+                                js['last_capture_time_human'] = datetime.datetime.fromtimestamp(js['last_capture_time']).isoformat()
+                                f.seek(0)
+                                f.write(json.dumps(js))
+                    except:
+                        pass
+
                 except Exception as e:
                     self.next_capture = datetime.datetime.now()
                     self.logger.error("Image Capture error - " + str(e))
+
+
 
             time.sleep(0.1)
