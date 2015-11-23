@@ -249,7 +249,7 @@ class Uploader(Thread):
                 # need to check against none because otherwise it gets stuck in a broken loop.
                 if self.last_upload_time is not None:
                     try:
-                        jsondata["last_upload_time"] = time.time() - 3600
+                        jsondata["last_upload_time"] = (datetime.datetime.now()-datetime.datetime.fromtimestamp(0)).total_seconds()
                     except:
                         pass
 

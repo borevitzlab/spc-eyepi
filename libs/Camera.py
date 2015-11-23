@@ -240,7 +240,6 @@ class GphotoCamera(Thread):
 
             # set a timenow, this is used everywhere ahead, do not remove.
             tn = datetime.datetime.now()
-            tsn = time.time()
             # checking if enabled and other stuff
             if (self.time2seconds(tn) % self.interval < self.accuracy) and (tn.time() > self.timestartfrom) and (
                         tn.time() < self.timestopat) and (self.is_enabled):
@@ -308,8 +307,8 @@ class GphotoCamera(Thread):
                             js = json.loads(f.read())
 
                         with open(self.serialnumber+".json", 'w') as f:
-                            js['last_capture_time'] = tsn-3600
-                            js['last_capture_time_human'] = datetime.datetime.fromtimestamp(tsn).isoformat()
+                            js['last_capture_time'] = tn
+                            js['last_capture_time_human'] = datetime.datetime.fromtimestamp(tn).isoformat()
                             f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
                     except Exception as e:
                         self.logger.error("Couldnt log camera capture json why? {}".format(str(e)))
@@ -343,7 +342,6 @@ class PiCamera(GphotoCamera):
         while True and not self.stopper.is_set():
             # set a timenow this is used locally down here
             tn = datetime.datetime.now()
-            tsn = time.time()
             # testing for the config modification
             if os.stat(self.config_filename).st_mtime != self.last_config_modify_time:
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
@@ -418,8 +416,8 @@ class PiCamera(GphotoCamera):
                             js = json.loads(f.read())
 
                         with open("picam.json", 'w') as f:
-                            js['last_capture_time'] = tsn
-                            js['last_capture_time_human'] = datetime.datetime.fromtimestamp(tsn).isoformat()
+                            js['last_capture_time'] = tn
+                            js['last_capture_time_human'] = datetime.datetime.fromtimestamp(tn).isoformat()
                             f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
                     except Exception as e:
                         self.logger.error("Couldnt log picam capture json why? {}".format(str(e)))
