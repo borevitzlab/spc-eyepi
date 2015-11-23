@@ -316,7 +316,7 @@ class GphotoCamera(Thread):
                                 js['last_capture_time_human'] = datetime.datetime.fromtimestamp(
                                     js['last_capture_time']).isoformat()
                                 f.seek(0)
-                                f.write(json.dumps(js))
+                                f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
                     except Exception as e:
                         self.logger.error("Couldnt log camera capture json why? {}".format(str(e)))
 
@@ -428,7 +428,7 @@ class PiCamera(GphotoCamera):
                                 js['last_capture_time_human'] = datetime.datetime.fromtimestamp(
                                     js['last_capture_time']).isoformat()
                                 f.seek(0)
-                                f.write(json.dumps(js))
+                                f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
                     except Exception as e:
                         self.logger.error("Couldnt log picam capture json why? {}".format(str(e)))
 
