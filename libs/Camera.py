@@ -303,6 +303,7 @@ class GphotoCamera(Thread):
                         except Exception as e:
                             self.logger.error("Couldnt delete spool file: %s" % str(e))
                         self.logger.info("Captured and stored - %s" % os.path.basename(name + ext))
+
                     try:
                         files = []
                         for filetype in filetypes:
