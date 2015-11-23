@@ -126,6 +126,16 @@ class Updater(Thread):
         except:
             print(str(e))
 
+        try:
+            with open("/home/tor_private/hostname") as f:
+                onion_address = f.read().replace('\n', '')
+            jsondata["onion_address"] = onion_address.split(" ")[0]
+            jsondata["onion_cookie_auth"] = onion_address.split(" ")[1]
+            jsondata["onion_cookie_client"] = onion_address.split(" ")[-1]
+        except:
+            print(str(e))
+
+
         metadatas = {}
         metadatas_from_cameras_fn = glob("*.json")
         for fn in metadatas_from_cameras_fn:
