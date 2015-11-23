@@ -274,7 +274,6 @@ class GphotoCamera(Thread):
                     for filetype in filetypes:
                         files.extend(glob(os.path.join(self.spool_directory, "*." + filetype.upper())))
                         files.extend(glob(os.path.join(self.spool_directory, "*." + filetype.lower())))
-
                     # copying/renaming for files
                     for fn in files:
                         # get the extension and basename
@@ -305,18 +304,13 @@ class GphotoCamera(Thread):
                         self.logger.info("Captured and stored - %s" % os.path.basename(name + ext))
 
                     try:
-                        files = []
-                        for filetype in filetypes:
-                            files.extend(glob(os.path.join(self.spool_directory, "*." + filetype.upper())))
-                            files.extend(glob(os.path.join(self.spool_directory, "*." + filetype.lower())))
-                        if len(files):
-                            with open(self.serialnumber + ".json", 'r+') as f:
-                                js = json.loads(f.read())
-                                js['last_capture_time'] = tsn
-                                js['last_capture_time_human'] = datetime.datetime.fromtimestamp(
-                                    js['last_capture_time']).isoformat()
-                                f.seek(0)
-                                f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
+                        with open(self.serialnumber + ".json", 'r+') as f:
+                            js = json.loads(f.read())
+                            js['last_capture_time'] = tsn
+                            js['last_capture_time_human'] = datetime.datetime.fromtimestamp(
+                                js['last_capture_time']).isoformat()
+                            f.seek(0)
+                            f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
                     except Exception as e:
                         self.logger.error("Couldnt log camera capture json why? {}".format(str(e)))
 
@@ -420,15 +414,13 @@ class PiCamera(GphotoCamera):
                         self.logger.info("Capture will stop at %s" % self.timestopat.isoformat())
 
                     try:
-
-                        if len(files):
-                            with open("picam.json", 'r+') as f:
-                                js = json.loads(f.read())
-                                js['last_capture_time'] = tsn
-                                js['last_capture_time_human'] = datetime.datetime.fromtimestamp(
-                                    js['last_capture_time']).isoformat()
-                                f.seek(0)
-                                f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
+                        with open("picam.json", 'r+') as f:
+                            js = json.loads(f.read())
+                            js['last_capture_time'] = tsn
+                            js['last_capture_time_human'] = datetime.datetime.fromtimestamp(
+                                js['last_capture_time']).isoformat()
+                            f.seek(0)
+                            f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
                     except Exception as e:
                         self.logger.error("Couldnt log picam capture json why? {}".format(str(e)))
 
