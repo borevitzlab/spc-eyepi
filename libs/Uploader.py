@@ -245,22 +245,14 @@ class Uploader(Thread):
 
                 jsondata['last_upload_time'] = 0
 
-                def fn_to_dt(fn):
-                    return datetime.datetime.strptime(os.path.splitext(fn)[0][-19:], '%Y_%m_%d_%H_%M_%S')
-
-                def posix_stamp(dt):
-                    epoch = datetime.datetime.fromtimestamp(0)
-                    delta = dt - epoch
-                    return delta.total_seconds()
-
                 # need to check against none because otherwise it gets stuck in a broken loop.
                 if self.last_upload_time is not None:
                     try:
-                        jsondata["last_upload_time"] = time.time()
+                        jsondata["last_upload_time"] = time.time() - 3600
                     except:
                         pass
-                jsondata['last_upload_time_human'] = datetime.datetime.fromtimestamp(
-                    jsondata['last_upload_time']).isoformat()
+
+                jsondata['last_upload_time_human'] = datetime.datetime.fromtimestamp(jsondata['last_upload_time']).isoformat()
                 jsondata["version"] = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
             except Exception as e:
                 self.logger.error("Couldnt collect metadata: %s" % str(e))
