@@ -303,6 +303,22 @@ class GphotoCamera(Thread):
                         except Exception as e:
                             self.logger.error("Couldnt delete spool file: %s" % str(e))
                         self.logger.info("Captured and stored - %s" % os.path.basename(name + ext))
+                    try:
+                        files = []
+                        for filetype in filetypes:
+                            files.extend(glob(os.path.join(self.spool_directory, "*." + filetype.upper())))
+                            files.extend(glob(os.path.join(self.spool_directory, "*." + filetype.lower())))
+                        if len(files):
+                            with open(self.serialnumber + ".json", 'r+') as f:
+                                js = json.loads(f.read())
+                                js['last_capture_time'] = tsn
+                                js['last_capture_time_human'] = datetime.datetime.fromtimestamp(
+                                    js['last_capture_time']).isoformat()
+                                f.seek(0)
+                                f.write(json.dumps(js))
+                    except Exception as e:
+                        self.logger.error("Couldnt log camera capture json why? {}".format(str(e)))
+
                     # Log Delay/next shots
                     if self.next_capture.time() < self.timestopat:
                         self.logger.info("Next capture at - %s" % self.next_capture.isoformat())
@@ -312,17 +328,7 @@ class GphotoCamera(Thread):
                     self.next_capture = datetime.datetime.now()
                     # TODO: This needs to catch errors from subprocess.call because it doesn't
                     self.logger.error("Image Capture error - " + str(e))
-                try:
-                    if len(files):
-                        with open(self.serialnumber + ".json", 'r+') as f:
-                            js = json.loads(f.read())
-                            js['last_capture_time'] = tsn
-                            js['last_capture_time_human'] = datetime.datetime.fromtimestamp(
-                                js['last_capture_time']).isoformat()
-                            f.seek(0)
-                            f.write(json.dumps(js))
-                except Exception as e:
-                    self.logger.error("Couldnt log camera capture json why? {}".format(str(e)))
+
 
             time.sleep(0.1)
 
@@ -413,6 +419,7 @@ class PiCamera(GphotoCamera):
                         self.logger.info("Capture will stop at %s" % self.timestopat.isoformat())
 
                     try:
+
                         if len(files):
                             with open("picam.json", 'r+') as f:
                                 js = json.loads(f.read())
