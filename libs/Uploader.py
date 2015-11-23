@@ -214,7 +214,7 @@ class Uploader(Thread):
             onion_address = ""
             self.logger.debug("Collecting metadata")
             with open(self.config_filename[:-4].split("/")[-1]+".json", 'r') as f:
-                jsondata = json.load(f.read())
+                jsondata = json.load(f)
             try:
                 with open("/home/tor_private/hostname") as f:
                     onion_address = f.read().replace('\n', '')
