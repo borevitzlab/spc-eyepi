@@ -307,7 +307,7 @@ class GphotoCamera(Thread):
                             js = json.loads(f.read())
 
                         with open(self.serialnumber+".json", 'w') as f:
-                            js['last_capture_time'] = (tn -datetime.datetime.fromtimestamp(0)).total_seconds()
+                            js['last_capture_time'] = (tn -datetime.datetime.fromtimestamp(0)).total_seconds()+time.daylight*3600
                             js['last_capture_time_human'] = tn.isoformat()
                             f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
                     except Exception as e:
@@ -416,7 +416,7 @@ class PiCamera(GphotoCamera):
                             js = json.loads(f.read())
 
                         with open("picam.json", 'w') as f:
-                            js['last_capture_time'] = (tn - datetime.datetime.fromtimestamp(0)).total_seconds()
+                            js['last_capture_time'] = (tn - datetime.datetime.fromtimestamp(0)).total_seconds()+time.daylight*3600
                             js['last_capture_time_human'] = tn.isoformat()
                             f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
                     except Exception as e:
