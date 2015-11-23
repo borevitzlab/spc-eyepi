@@ -303,6 +303,9 @@ class GphotoCamera(Thread):
                         self.logger.info("Captured and stored - %s" % os.path.basename(name + ext))
 
                     try:
+                        if not os.path.isfile(self.serialnumber+".json"):
+                            with open(self.serialnumber+".json",'w') as f:
+                                f.write("{}")
                         with open(self.serialnumber+".json", 'r') as f:
                             js = json.loads(f.read())
 
@@ -412,6 +415,9 @@ class PiCamera(GphotoCamera):
                         self.logger.info("Capture will stop at %s" % self.timestopat.isoformat())
 
                     try:
+                        if not os.path.isfile("picam.json"):
+                            with open("picam.json",'w') as f:
+                                f.write("{}")
                         with open("picam.json", 'r') as f:
                             js = json.loads(f.read())
 
