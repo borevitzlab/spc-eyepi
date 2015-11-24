@@ -85,19 +85,19 @@ class GphotoCamera(Thread):
             tval = self.config['timelapse']['starttime']
             if len(tval) == 5:
                 if tval[2] == ':':
-                    self.timestartfrom = datetime.time(int(tval[:2]), int(tval[3:]))
-                    self.logger.info("Starting at %s" % self.timestartfrom.isoformat())
+                    self.begincapture = datetime.time(int(tval[:2]), int(tval[3:]))
+                    self.logger.info("Starting at %s" % self.begincapture.isoformat())
         except Exception as e:
-            self.timestartfrom = datetime.time(0, 0)
+            self.begincapture = datetime.time(0, 0)
             self.logger.error("Time conversion error startime - %s" % str(e))
         try:
             tval = self.config['timelapse']['stoptime']
             if len(tval) == 5:
                 if tval[2] == ':':
-                    self.timestopat = datetime.time(int(tval[:2]), int(tval[3:]))
-                    self.logger.info("Stopping at %s" % self.timestopat.isoformat())
+                    self.endcapture = datetime.time(int(tval[:2]), int(tval[3:]))
+                    self.logger.info("Stopping at %s" % self.endcapture.isoformat())
         except Exception as e:
-            self.timestopat = datetime.time(23, 59)
+            self.endcapture = datetime.time(23, 59)
             self.logger.error("Time conversion error stoptime - %s" % str(e))
 
         # create spooling and upload directories if they dont exist, and delete files in the spooling dir
@@ -241,8 +241,8 @@ class GphotoCamera(Thread):
             # set a timenow, this is used everywhere ahead, do not remove.
             tn = datetime.datetime.now()
             # checking if enabled and other stuff
-            if (self.time2seconds(tn) % self.interval < self.accuracy) and (tn.time() > self.timestartfrom) and (
-                        tn.time() < self.timestopat) and (self.is_enabled):
+            if (self.time2seconds(tn) % self.interval < self.accuracy) and (tn.time() > self.begincapture) and (
+                        tn.time() < self.endcapture) and (self.is_enabled):
                 try:
                     # set the next capture period to print to the log (not used anymore, really due to time modulo)
                     self.next_capture = tn + datetime.timedelta(seconds=self.interval)
@@ -317,10 +317,10 @@ class GphotoCamera(Thread):
                         self.logger.error("Couldnt log camera capture json why? {}".format(str(e)))
 
                     # Log Delay/next shots
-                    if self.next_capture.time() < self.timestopat:
+                    if self.next_capture.time() < self.endcapture:
                         self.logger.info("Next capture at - %s" % self.next_capture.isoformat())
                     else:
-                        self.logger.info("Capture will stop at - %s" % self.timestopat.isoformat())
+                        self.logger.info("Capture will stop at - %s" % self.endcapture.isoformat())
                 except Exception as e:
                     self.next_capture = datetime.datetime.now()
                     # TODO: This needs to catch errors from subprocess.call because it doesn't
@@ -366,8 +366,16 @@ class PiCamera(GphotoCamera):
                 for fn in files:
                     os.remove(fn)
 
-            if (self.time2seconds(tn) % self.interval < self.accuracy) and (tn.time() > self.timestartfrom) and (
-                        tn.time() < self.timestopat) and (self.is_enabled):
+            capture = False
+
+            if tn.time() > self.begincapture and tn.time() < self.endcapture and self.is_enabled:
+                capture = True
+            if self.begincapture > self.endcapture:
+                if tn.time() > self.begincapture or tn.time() < self.endcapture:
+                    capture = True
+
+
+            if capture and self.is_enabled and (self.time2seconds(tn) % self.interval < self.accuracy):
                 try:
                     # change the next_capture for logging. not really used much anymore.
                     self.next_capture = tn + datetime.timedelta(seconds=self.interval)
@@ -409,10 +417,10 @@ class PiCamera(GphotoCamera):
                     except Exception as e:
                         self.logger.error("Couldnt remove file from filesystem: %s" % str(e))
                     # Do some logging.
-                    if self.next_capture.time() < self.timestopat:
+                    if self.next_capture.time() < self.endcapture:
                         self.logger.info("Next capture at %s" % self.next_capture.isoformat())
                     else:
-                        self.logger.info("Capture will stop at %s" % self.timestopat.isoformat())
+                        self.logger.info("Capture will stop at %s" % self.endcapture.isoformat())
 
                     try:
                         if not os.path.isfile("picam.json"):
