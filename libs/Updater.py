@@ -1,5 +1,6 @@
 __author__ = 'Gareth Dunstone'
 import datetime
+import http.client
 import json
 import os
 import socket
@@ -14,25 +15,100 @@ from schedule import Scheduler
 
 from .AESCipher import AESCipher
 
+hostname = "localhost:5000"
 
 class Updater(Thread):
     def __init__(self):
         Thread.__init__(self)
         self.scheduler = Scheduler()
         self.scheduler.every(10).seconds.do(self.go)
+        self.scheduler.every(30).minutes.do(self.upload_log)
         self.stopper = Event()
+
+    def post_multipart(self, host, selector, fields, files):
+        """
+        httplib form encoding. more black magic.
+        only does http, no https.
+        :param selector:
+        :param fields:
+        :param files:
+        :return:
+        """
+        content_type, body = self.encode_multipart_formdata(fields, files)
+        # Choose between http and https connections
+        h = http.client.HTTPConnection(host)
+        h.putrequest('POST', selector)
+        h.putheader('content-type', content_type)
+        h.putheader('content-length', str(len(body)))
+        h.endheaders()
+        h.send(body)
+        response = h.getresponse()
+        return response.read()
+
+    def encode_multipart_formdata(self, fields, files):
+        """
+        Black magic that does multipart form encoding.
+        :param fields:
+        :param files:
+        :return:
+        """
+        BOUNDARY_STR = '----------ThIs_Is_tHe_bouNdaRY_$'
+        CRLF = bytes("\r\n", "ASCII")
+        L = []
+        for (key, value) in fields:
+            L.append(bytes("--" + BOUNDARY_STR, "ASCII"))
+            L.append(bytes('Content-Disposition: form-data; name="{}"'.format(key), "ASCII"))
+            L.append(b'')
+            L.append(bytes(value, "ASCII"))
+        for (key, filename, value) in files:
+            L.append(bytes('--' + BOUNDARY_STR, "ASCII"))
+            L.append(bytes('Content-Disposition: form-data; name="{}"; filename="{}"'.format(key, filename), "ASCII"))
+            L.append(bytes('Content-Type: application/octet-stream', "ASCII"))
+            L.append(b'')
+            L.append(value)
+        L.append(bytes('--' + BOUNDARY_STR + '--', "ASCII"))
+        L.append(b'')
+        body = CRLF.join(L)
+        content_type = 'multipart/form-data; boundary=' + BOUNDARY_STR
+        return content_type, body
+
+    @staticmethod
+    def get_cipher():
+        rpiconfig = ConfigParser()
+        rpiconfig.read("picam.ini")
+        return AESCipher(rpiconfig["ftp"]['pass'])
+
+    def upload_log(self):
+        logfile = "spc-eyepi.log"
+        fl = glob('configs_byserial/*.ini')
+        names = {}
+        for fn in fl:
+            c = ConfigParser()
+            c.read(fn)
+            try:
+                names[os.path.split(os.path.splitext(fn)[0])[-1]] = c['camera']['name']
+            except:
+                pass
+
+        aes_crypt = self.get_cipher()
+        n = aes_crypt.encrypt(json.dumps(names)).decode('utf-8')
+        with open(logfile, 'r') as f:
+            encrypted_data = aes_crypt.encrypt(f.read())
+            self.post_multipart("{}".format(hostname), "http://{}/post_log".format(hostname), [("names", n)],
+                                [("file", "log", encrypted_data)])
 
     def go(self):
         try:
             rpiconfig = ConfigParser()
             rpiconfig.read("picam.ini")
             jsondata = self.gather_data(rpiconfig)
-            aes_crypt = AESCipher(rpiconfig["ftp"]['pass'])
+
+            aes_crypt = self.get_cipher()
             ciphertext = aes_crypt.encrypt(json.dumps(jsondata))
 
             data = parse.urlencode({'data': ciphertext})
             data = data.encode('utf-8')
-            req = request.Request('http://phenocam.org.au/checkin', data)
+            req = request.Request('http://{}/checkin'.format(hostname), data)
 
             # do backwards change if response is valid later.
             tries = 0
@@ -41,7 +117,7 @@ class Updater(Thread):
                 if data.getcode() == 200:
                     # do config modify/parse of command here.
                     data = json.loads(aes_crypt.decrypt(data.read().decode("utf-8")))
-                    for key,value in data.copy().items():
+                    for key, value in data.copy().items():
                         if value == {}:
                             del data[key]
                     if len(data) > 0:
@@ -49,6 +125,7 @@ class Updater(Thread):
                     break
                 time.sleep(5)
                 tries += 1
+
         except Exception as e:
             print(str(e))
 
@@ -105,7 +182,6 @@ class Updater(Thread):
                     config[config_map[key][0]][config_map[key][1]] = value
                 self.writecfg(config, config_path)
 
-
     def gather_data(self, piconf):
         jsondata = {}
         version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
@@ -113,7 +189,8 @@ class Updater(Thread):
         hn = None
         try:
             jsondata["external_ip"] = \
-            json.loads(request.urlopen('https://api.ipify.org/?format=json', timeout=10).read().decode('utf-8'))['ip']
+                json.loads(request.urlopen('https://api.ipify.org/?format=json', timeout=10).read().decode('utf-8'))[
+                    'ip']
         except Exception as e:
             print(str(e))
 
@@ -123,7 +200,7 @@ class Updater(Thread):
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect(("8.8.8.8", 0))
             jsondata['internal_ip'] = s.getsockname()[0]
-        except:
+        except Exception as e:
             print(str(e))
 
         try:
@@ -132,9 +209,8 @@ class Updater(Thread):
             jsondata["onion_address"] = onion_address.split(" ")[0]
             jsondata["onion_cookie_auth"] = onion_address.split(" ")[1]
             jsondata["onion_cookie_client"] = onion_address.split(" ")[-1]
-        except:
+        except Exception as e:
             print(str(e))
-
 
         metadatas = {}
         metadatas_from_cameras_fn = glob("*.json")
