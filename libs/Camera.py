@@ -303,17 +303,21 @@ class GphotoCamera(Thread):
                         self.logger.info("Captured and stored - %s" % os.path.basename(name + ext))
 
                     try:
-                        if not os.path.isfile(self.serialnumber+".json"):
-                            with open(self.serialnumber+".json",'w') as f:
+                        if not os.path.isfile(self.serialnumber + ".json"):
+                            with open(self.serialnumber + ".json", 'w+') as f:
                                 f.write("{}")
-                        with open(self.serialnumber+".json", 'r') as f:
+                        with open(self.serialnumber + ".json", 'r') as f:
                             js = json.loads(f.read())
 
-                        with open(self.serialnumber+".json", 'w') as f:
-                            js['last_capture_time'] = (tn -datetime.datetime.fromtimestamp(0)).total_seconds()-time.daylight*3600
+                        with open(self.serialnumber + ".json", 'w') as f:
+                            js['last_capture_time'] = (tn - datetime.datetime.fromtimestamp(
+                                0)).total_seconds() - time.daylight * 3600
                             js['last_capture_time_human'] = tn.isoformat()
                             f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
                     except Exception as e:
+                        # clear the files if it cant be opened.
+                        with open(self.serialnumber + ".json", 'w+') as f:
+                            f.write("{}")
                         self.logger.error("Couldnt log camera capture json why? {}".format(str(e)))
 
                     # Log Delay/next shots
@@ -325,7 +329,6 @@ class GphotoCamera(Thread):
                     self.next_capture = datetime.datetime.now()
                     # TODO: This needs to catch errors from subprocess.call because it doesn't
                     self.logger.error("Image Capture error - " + str(e))
-
 
             time.sleep(0.1)
 
@@ -373,7 +376,6 @@ class PiCamera(GphotoCamera):
             if self.begincapture > self.endcapture:
                 if tn.time() > self.begincapture or tn.time() < self.endcapture:
                     capture = True
-
 
             if capture and self.is_enabled and (self.time2seconds(tn) % self.interval < self.accuracy):
                 try:
@@ -424,16 +426,19 @@ class PiCamera(GphotoCamera):
 
                     try:
                         if not os.path.isfile("picam.json"):
-                            with open("picam.json",'w') as f:
+                            with open("picam.json", 'w+') as f:
                                 f.write("{}")
                         with open("picam.json", 'r') as f:
                             js = json.loads(f.read())
 
                         with open("picam.json", 'w') as f:
-                            js['last_capture_time'] = (tn - datetime.datetime.fromtimestamp(0)).total_seconds()-time.daylight*3600
+                            js['last_capture_time'] = (tn - datetime.datetime.fromtimestamp(
+                                0)).total_seconds() - time.daylight * 3600
                             js['last_capture_time_human'] = tn.isoformat()
                             f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
                     except Exception as e:
+                        with open("picam.json", 'w+') as f:
+                            f.write("{}")
                         self.logger.error("Couldnt log picam capture json why? {}".format(str(e)))
 
                 except Exception as e:
