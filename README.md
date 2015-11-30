@@ -29,7 +29,7 @@ Features in active  development:
 
 **REQUIREMENTS**
 
- *base:*
+*base:*
  * python3
  * pysftp<sup>[pip](https://pypi.python.org/pypi/pysftp)</sup>
  * flask
@@ -38,8 +38,8 @@ Features in active  development:
  * gphoto2
  * pyudev<sup>[pip](https://pypi.python.org/pypi/pyudev)</sup>
  
- 
- *os extras:*
+
+*os extras:*
  * create_ap<sup>[aur](https://aur.archlinux.org/packages/create_ap)</sup>
 
 
