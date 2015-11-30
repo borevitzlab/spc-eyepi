@@ -28,6 +28,7 @@ Features in active  development:
  * Weatherproof and solar powered camera housing  for full remote timelapse solution 
 
 **REQUIREMENTS**
+
  *base:*
  * python3
  * pysftp<sup>[pip](https://pypi.python.org/pypi/pysftp)</sup>
