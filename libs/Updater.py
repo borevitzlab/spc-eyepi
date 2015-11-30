@@ -15,7 +15,7 @@ from schedule import Scheduler
 
 from .AESCipher import AESCipher
 
-hostname = "localhost:5000"
+hostname = "phenocam.org.au"
 
 class Updater(Thread):
     def __init__(self):
