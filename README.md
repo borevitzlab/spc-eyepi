@@ -27,6 +27,18 @@ Features in active  development:
  * DB-based camera management system.
  * Weatherproof and solar powered camera housing  for full remote timelapse solution 
 
+**REQUIREMENTS**
+ base:
+ * python3
+ * flask
+ * flask-bcrypt<sup>[pip](https://pypi.python.org/pypi/Flask-Bcrypt)</sup>
+ * pycrypto<sup>[pip](https://pypi.python.org/pypi/pycrypto)</sup>
+ * gphoto2
+ * pyudev
+ 
+ os extras
+ * create_ap<sup>[aur](https://aur.archlinux.org/packages/create_ap/)</sup>
+
 
 Code automatically detects connected usb DSLRs and the raspberry pi camera (just duplicate "example.ini" to "picam.ini" and "eyepi.ini"). DSLR's are given a unique ID based on hardware serial. Camera name can be easily changed to a user friendly value.
 
