@@ -30,6 +30,7 @@ Features in active  development:
 **REQUIREMENTS**
  base:
  * python3
+ * pysftp<sup>[pip](https://pypi.python.org/pypi/pysftp)</sup>
  * flask
  * flask-bcrypt<sup>[pip](https://pypi.python.org/pypi/Flask-Bcrypt)</sup>
  * pycrypto<sup>[pip](https://pypi.python.org/pypi/pycrypto)</sup>
