@@ -27,6 +27,8 @@ Features in active  development:
  * DB-based camera management system.
  * Weatherproof and solar powered camera housing  for full remote timelapse solution 
 
+
+
 **REQUIREMENTS**
 ---
 
