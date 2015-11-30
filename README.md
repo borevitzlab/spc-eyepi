@@ -28,7 +28,7 @@ Features in active  development:
  * Weatherproof and solar powered camera housing  for full remote timelapse solution 
 
 **REQUIREMENTS**
- base:
+ *base:*
  * python3
  * pysftp<sup>[pip](https://pypi.python.org/pypi/pysftp)</sup>
  * flask
@@ -37,8 +37,9 @@ Features in active  development:
  * gphoto2
  * pyudev<sup>[pip](https://pypi.python.org/pypi/pyudev)</sup>
  
- os extras
- * create_ap<sup>[aur](https://aur.archlinux.org/packages/create_ap/)</sup>
+ 
+ *os extras:*
+ * create_ap<sup>[aur](https://aur.archlinux.org/packages/create_ap)</sup>
 
 
 Code automatically detects connected usb DSLRs and the raspberry pi camera (just duplicate "example.ini" to "picam.ini" and "eyepi.ini"). DSLR's are given a unique ID based on hardware serial. Camera name can be easily changed to a user friendly value.
