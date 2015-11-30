@@ -35,7 +35,7 @@ Features in active  development:
  * flask-bcrypt<sup>[pip](https://pypi.python.org/pypi/Flask-Bcrypt)</sup>
  * pycrypto<sup>[pip](https://pypi.python.org/pypi/pycrypto)</sup>
  * gphoto2
- * pyudev
+ * pyudev<sup>[pip](https://pypi.python.org/pypi/pyudev)</sup>
  
  os extras
  * create_ap<sup>[aur](https://aur.archlinux.org/packages/create_ap/)</sup>
