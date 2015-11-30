@@ -47,6 +47,7 @@ Features in active  development:
 
 *os extras:*
  * create_ap<sup>[aur](https://aur.archlinux.org/packages/create_ap)</sup>
+ * tor
 
 
 Code automatically detects connected usb DSLRs and the raspberry pi camera (just duplicate "example.ini" to "picam.ini" and "eyepi.ini"). DSLR's are given a unique ID based on hardware serial. Camera name can be easily changed to a user friendly value.
