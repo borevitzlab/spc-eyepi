@@ -11,11 +11,13 @@ from glob import glob
 from threading import Thread, Event
 from urllib import request, parse
 
+
 from schedule import Scheduler
 
 from .AESCipher import AESCipher
 
-hostname = "phenocam.org.au"
+# hostname = "phenocam.org.au"
+hostname = "localhost:5000"
 
 class Updater(Thread):
     def __init__(self):
@@ -105,7 +107,7 @@ class Updater(Thread):
             rpiconfig = ConfigParser()
             rpiconfig.read("picam.ini")
             jsondata = self.gather_data(rpiconfig)
-
+            print(jsondata)
             aes_crypt = self.get_cipher()
             ciphertext = aes_crypt.encrypt(json.dumps(jsondata))
 
@@ -116,16 +118,21 @@ class Updater(Thread):
             # do backwards change if response is valid later.
             tries = 0
             while tries < 120:
-                data = request.urlopen(req)
-                if data.getcode() == 200:
-                    # do config modify/parse of command here.
-                    data = json.loads(aes_crypt.decrypt(data.read().decode("utf-8")))
-                    for key, value in data.copy().items():
-                        if value == {}:
-                            del data[key]
-                    if len(data) > 0:
-                        self.set_configdata(data)
-                    break
+                try:
+
+                    data = request.urlopen(req)
+                    if data.getcode() == 200:
+                        # do config modify/parse of command here.
+                        data = json.loads(aes_crypt.decrypt(data.read().decode("utf-8")))
+                        for key, value in data.copy().items():
+                            if value == {}:
+                                del data[key]
+                        print(data)
+                        if len(data) > 0:
+                            self.set_configdata(data)
+                        break
+                except Exception as e:
+                    print(str(e))
                 time.sleep(5)
                 tries += 1
 
@@ -151,6 +158,7 @@ class Updater(Thread):
             'stoptime': ('timelapse', 'stoptime')
         }
         tf = {"True": "on", "False": "off"}
+        tfr = {True: "on", False: "off"}
 
         for serialnumber, setdata in data.items():
             config = ConfigParser()
@@ -178,6 +186,10 @@ class Updater(Thread):
                 for key, value in setdata.items():
                     if value in tf.keys():
                         value = tf[value]
+                    if type(value) is int or type(value) is float:
+                        value = str(value)
+                    if type(value) is bool:
+                        value = tfr[value]
                     if value in ["starttime", "stoptime"]:
                         # parse datetimes correctly, because they are gonna be messy.
                         dt = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.Z")
