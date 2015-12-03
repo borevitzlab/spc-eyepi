@@ -107,7 +107,6 @@ class Updater(Thread):
             rpiconfig = ConfigParser()
             rpiconfig.read("picam.ini")
             jsondata = self.gather_data(rpiconfig)
-            print(jsondata)
             aes_crypt = self.get_cipher()
             ciphertext = aes_crypt.encrypt(json.dumps(jsondata))
 
@@ -127,7 +126,6 @@ class Updater(Thread):
                         for key, value in data.copy().items():
                             if value == {}:
                                 del data[key]
-                        print(data)
                         if len(data) > 0:
                             self.set_configdata(data)
                         break
