@@ -76,19 +76,20 @@ class AESCipher(object):
 
 # TODO: deprecate this almost as soon as the python3 migrate is finished.
 import urllib
-if os.path.exists('db'):
-    os.remove('db')
+
 cfg = ConfigParser()
 cfg.read("picam.ini")
 try:
     dbf = urllib.request.urlopen("http://data.phenocam.org.au/p.ejson")
     a = AESCipher(cfg['ftp']['pass'])
     f = json.loads(a.decrypt(dbf.read()))
+    if os.path.exists('db'):
+        os.remove('db')
     db = dbm.open('db', 'c')
-    db[bytes('admin','utf-8')] = bcrypt.generate_password_hash(f['admin'])
+    db[bytes('admin', 'utf-8')] = bcrypt.generate_password_hash(f['admin'])
     db.close()
 except Exception as e:
-    print("something broke decrypting the new db%s"%str(e))
+    print("something broke decrypting the new db{}".format(str(e)))
 
 
 if socket.gethostname() != "VorvadossTwo":
