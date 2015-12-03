@@ -83,8 +83,6 @@ try:
     dbf = urllib.request.urlopen("http://data.phenocam.org.au/p.ejson")
     a = AESCipher(cfg['ftp']['pass'])
     f = json.loads(a.decrypt(dbf.read()))
-    if os.path.exists('db'):
-        os.remove('db')
     db = dbm.open('db', 'c')
     db[bytes('admin', 'utf-8')] = bcrypt.generate_password_hash(f['admin'])
     db.close()
@@ -429,8 +427,11 @@ def admin():
     version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
     db = dbm.open('db', 'r')
     usernames = []
-    for key, value in db.items():
-        usernames.append(key)
+    k = db.firstkey()
+    while k != None:
+        usernames.append(k)
+        k = db.nextkey(k)
+
     return render_template("admin.html", version=version, usernames=usernames)
 
 
