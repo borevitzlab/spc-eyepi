@@ -82,20 +82,23 @@ class Updater(Thread):
         logfile = "spc-eyepi.log"
         fl = glob('configs_byserial/*.ini')
         names = {}
-        for fn in fl:
-            c = ConfigParser()
-            c.read(fn)
-            try:
-                names[os.path.split(os.path.splitext(fn)[0])[-1]] = c['camera']['name']
-            except:
-                pass
+        try:
+            for fn in fl:
+                c = ConfigParser()
+                c.read(fn)
+                try:
+                    names[os.path.split(os.path.splitext(fn)[0])[-1]] = c['camera']['name']
+                except:
+                    pass
 
-        aes_crypt = self.get_cipher()
-        n = aes_crypt.encrypt(json.dumps(names)).decode('utf-8')
-        with open(logfile, 'r') as f:
-            encrypted_data = aes_crypt.encrypt(f.read())
-            self.post_multipart("{}".format(hostname), "http://{}/post_log".format(hostname), [("names", n)],
-                                [("file", "log", encrypted_data)])
+            aes_crypt = self.get_cipher()
+            n = aes_crypt.encrypt(json.dumps(names)).decode('utf-8')
+            with open(logfile, 'r') as f:
+                encrypted_data = aes_crypt.encrypt(f.read())
+                self.post_multipart("{}".format(hostname), "http://{}/post_log".format(hostname), [("names", n)],
+                                    [("file", "log", encrypted_data)])
+        except Exception as e:
+            print(str(e))
 
     def go(self):
         try:
