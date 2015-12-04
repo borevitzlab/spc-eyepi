@@ -213,6 +213,9 @@ class Uploader(Thread):
             self.ipaddress = s.getsockname()[0]
             onion_address = ""
             self.logger.debug("Collecting metadata")
+            if not os.path.isfile(self.config_filename[:-4].split("/")[-1]+".json"):
+                with open(self.config_filename[:-4].split("/")[-1]+".json",'w') as f:
+                    f.write("{}")
             with open(self.config_filename[:-4].split("/")[-1]+".json", 'r') as f:
                 jsondata = json.load(f)
             try:
