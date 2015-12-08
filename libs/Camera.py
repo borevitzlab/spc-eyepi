@@ -140,16 +140,19 @@ class GphotoCamera(Thread):
         """
 
         if not self.is_enabled:
+            self.logger.debug("camera disabled")
             return False
 
         if self.begincapture < self.endcapture:
             # where the start capture time is less than the end capture time
             if not self.begincapture <= time_now <= self.endcapture:
+                self.logger.error("no capture, in begin<end ")
                 return False
         else:
             # where the start capture time is greater than the end capture time
             # i.e. capturing across midnight.
             if self.endcapture <= time_now <= self.begincapture:
+                self.logger.error("no capture, in end<begin ")
                 return False
 
         # capture interval
