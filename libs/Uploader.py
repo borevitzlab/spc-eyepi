@@ -216,8 +216,13 @@ class Uploader(Thread):
             if not os.path.isfile(self.config_filename[:-4].split("/")[-1]+".json"):
                 with open(self.config_filename[:-4].split("/")[-1]+".json",'w') as f:
                     f.write("{}")
-            with open(self.config_filename[:-4].split("/")[-1]+".json", 'r') as f:
-                jsondata = json.load(f)
+            try:
+                with open(self.config_filename[:-4].split("/")[-1]+".json", 'r') as f:
+                    jsondata = json.load(f)
+            except Exception as e:
+                self.logger.debug("Couldn't load json rewriting... EXC: {}".format(str(e)))
+                with open(self.config_filename[:-4].split("/")[-1]+".json",'w') as f:
+                    f.write("{}")
             try:
                 with open("/home/tor_private/hostname") as f:
                     onion_address = f.read().replace('\n', '')

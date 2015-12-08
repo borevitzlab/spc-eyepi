@@ -126,10 +126,36 @@ class GphotoCamera(Thread):
         return os.path.join(self.cameraname + '_' + self.timestamp(timen) + default_extension)
 
     def time2seconds(self, t):
-        """ Convert the time to seconds
-            TODO: a better implementation of this such as datetime.timesinceepoch or some sorcery
+        """ Converts a time to seconds
         """
+        # TODO: a better implementation of this such as datetime.timesinceepoch or some sorcery
         return t.hour * 60 * 60 + t.minute * 60 + t.second
+
+    def get_is_capture(self, time_now):
+        """
+        filters out times for capture, returns True by default
+        returns False if the conditions where the camera should NOT capture are met.
+        :param time_now:
+        :return:
+        """
+
+        if not self.is_enabled:
+            return False
+
+        if self.begincapture < self.endcapture:
+            # where the start capture time is less than the end capture time
+            if not self.begincapture <= time_now <= self.endcapture:
+                return False
+        else:
+            # where the start capture time is greater than the end capture time
+            # i.e. capturing across midnight.
+            if self.endcapture <= time_now <= self.begincapture:
+                return False
+
+        # capture interval
+        if not (self.time2seconds(time_now) % self.interval < self.accuracy):
+            return False
+        return True
 
     def capture(self, raw_image):
         # try 3 times
@@ -241,8 +267,7 @@ class GphotoCamera(Thread):
             # set a timenow, this is used everywhere ahead, do not remove.
             tn = datetime.datetime.now()
             # checking if enabled and other stuff
-            if (self.time2seconds(tn) % self.interval < self.accuracy) and (tn.time() > self.begincapture) and (
-                        tn.time() < self.endcapture) and (self.is_enabled):
+            if self.get_is_capture(tn):
                 try:
                     # set the next capture period to print to the log (not used anymore, really due to time modulo)
                     self.next_capture = tn + datetime.timedelta(seconds=self.interval)
@@ -369,15 +394,7 @@ class PiCamera(GphotoCamera):
                 for fn in files:
                     os.remove(fn)
 
-            capture = False
-
-            if tn.time() > self.begincapture and tn.time() < self.endcapture and self.is_enabled:
-                capture = True
-            if self.begincapture > self.endcapture:
-                if tn.time() > self.begincapture or tn.time() < self.endcapture:
-                    capture = True
-
-            if capture and self.is_enabled and (self.time2seconds(tn) % self.interval < self.accuracy):
+            if self.get_is_capture(tn):
                 try:
                     # change the next_capture for logging. not really used much anymore.
                     self.next_capture = tn + datetime.timedelta(seconds=self.interval)
@@ -437,7 +454,7 @@ class PiCamera(GphotoCamera):
                             js['last_capture_time_human'] = tn.isoformat()
                             f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
                     except Exception as e:
-                        with open("picam.json", 'w+') as f:
+                        with open("picam.json", 'w') as f:
                             f.write("{}")
                         self.logger.error("Couldnt log picam capture json why? {}".format(str(e)))
 
