@@ -268,7 +268,7 @@ class GphotoCamera(Thread):
             # set a timenow, this is used everywhere ahead, do not remove.
             tn = datetime.datetime.now()
             # checking if enabled and other stuff
-            if self.get_is_capture(tn):
+            if self.get_is_capture(tn.time()):
                 try:
                     # set the next capture period to print to the log (not used anymore, really due to time modulo)
                     self.next_capture = tn + datetime.timedelta(seconds=self.interval)
@@ -395,7 +395,7 @@ class PiCamera(GphotoCamera):
                 for fn in files:
                     os.remove(fn)
 
-            if self.get_is_capture(tn):
+            if self.get_is_capture(tn.time()):
                 try:
                     # change the next_capture for logging. not really used much anymore.
                     self.next_capture = tn + datetime.timedelta(seconds=self.interval)
