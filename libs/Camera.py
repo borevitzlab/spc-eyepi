@@ -138,9 +138,7 @@ class GphotoCamera(Thread):
         :param time_now:
         :return:
         """
-
         if not self.is_enabled:
-            self.logger.debug("camera disabled")
             return False
 
         if self.begincapture < self.endcapture:
