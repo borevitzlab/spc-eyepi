@@ -162,19 +162,22 @@ class Uploader(Thread):
     def mkdir_p_sftp(self, sftp, remote_directory):
         """ Recursive directory sorcery for SecureFTP
         """
-        if remote_directory == '/':
-            sftp.chdir('/')
-            return
-        if remote_directory == '':
-            return
-        remote_dirname, basename = os.path.split(remote_directory)
-        self.mkdir_p_sftp(sftp, os.path.dirname(remote_directory))
         try:
-            sftp.chdir(basename)
-        except IOError:
-            self.logger.info("Sorry, just have to make some new directories, eh. (sftp)")
-            sftp.mkdir(basename)
-            sftp.chdir(basename)
+            if remote_directory == '/':
+                sftp.chdir('/')
+                return
+            if remote_directory == '':
+                return
+            remote_dirname, basename = os.path.split(remote_directory)
+            self.mkdir_p_sftp(sftp, os.path.dirname(remote_directory))
+            try:
+                sftp.chdir(basename)
+            except IOError:
+                self.logger.info("Sorry, just have to make some new directories, eh. (sftp)")
+                sftp.mkdir(basename)
+                sftp.chdir(basename)
+        except Exception as e:
+            self.logger.error("something went wrong making directories... {}".format(str(e)))
 
     def mkdir_p_ftp(self, ftp, remote_directory):
         """ Recursive directory sorcery for FTP
