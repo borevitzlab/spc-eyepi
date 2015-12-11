@@ -54,6 +54,7 @@ class GphotoCamera(Thread):
 
     def setup(self):
         # setup new config parser and parse config
+        self.logger.info("Setting up.")
         self.config = ConfigParser()
         self.config.read(self.config_filename)
         # accuracy is really the timeout before it gives up and waits for the next time period
@@ -200,7 +201,7 @@ class GphotoCamera(Thread):
                     ["gphoto2 --port ", self.camera_port,
                      " --set-config capturetarget=sdram",
                      " --capture-image-and-download",
-                     " --filename='", fn])]
+                     " --filename='", fn,";sleep 15"])]
 
             try:
                 output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
