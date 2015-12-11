@@ -205,6 +205,7 @@ class GphotoCamera(Thread):
             try:
                 output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
                 time.sleep(1 + (self.accuracy * 2))
+
                 if "error" in output.lower():
                     raise subprocess.CalledProcessError("non-zero exit status", cmd=cmd, output=output)
 
@@ -260,8 +261,8 @@ class GphotoCamera(Thread):
             if os.stat(self.config_filename).st_mtime != self.last_config_modify_time:
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
                 # Resetup()
-                self.setup()
                 self.logger.info("Change in config file at " + datetime.datetime.now().isoformat() + " reloading")
+                self.setup()
 
             # set a timenow, this is used everywhere ahead, do not remove.
             tn = datetime.datetime.now()
@@ -306,10 +307,11 @@ class GphotoCamera(Thread):
 
                         try:
                             if ext == ".jpeg" or ".jpg":
-                                # best to create a symlink to /dev/shm/ from static/temp
-                                shutil.copy(fn, os.path.join("/dev/shm", self.serialnumber + ".jpg"))
                                 if self.config["ftp"]["uploadwebcam"] == "on":
                                     shutil.copy(fn, os.path.join(self.upload_directory, "dslr_last_image.jpg"))
+                                # best to create a symlink to /dev/shm/ from static/temp
+                                shutil.copy(fn, os.path.join("/dev/shm", self.serialnumber + ".jpg"))
+
                         except Exception as e:
                             self.logger.error("Couldnt copy webcam upload: %s" % str(e))
 
