@@ -317,19 +317,17 @@ class GphotoCamera(Thread):
                         # get the extension and basename
                         ext = os.path.splitext(fn)[-1].lower()
                         name = os.path.splitext(raw_image)[0]
-                        # copy jpegs to the static web dir, and to the upload dir (if upload webcam flag is set)
 
                         try:
-                            if ext == ".jpeg" or ".jpg":
-
-                                if self.config["ftp"]["uploadwebcam"] == "on":
-                                    try:
-                                        im = Image.open(fn)
-                                        im.thumbnail((200,200), Image.NEAREST)
-                                        im.save(os.path.join(self.upload_directory, "dslr_last_image.jpg"))
-                                        # shutil.copy(fn, os.path.join(self.upload_directory, "dslr_last_image.jpg"))
-                                    except Exception as e:
-                                        self.logger.error("couldnt resize :( {}".format(str(e)))
+                            # copy jpegs to the static web dir, and to the upload dir (if upload webcam flag is set)
+                            if ext in [".jpeg" or ".jpg"] and self.config["ftp"]["uploadwebcam"] == "on":
+                                try:
+                                    im = Image.open(fn)
+                                    im.thumbnail((320,240), Image.NEAREST)
+                                    im.save(os.path.join(self.upload_directory, "dslr_last_image.jpg"))
+                                    # shutil.copy(fn, os.path.join(self.upload_directory, "dslr_last_image.jpg"))
+                                except Exception as e:
+                                    self.logger.error("couldnt resize :( {}".format(str(e)))
 
                                 # best to create a symlink to /dev/shm/ from static/temp
                                 shutil.copy(fn, os.path.join("/dev/shm", self.serialnumber + ".jpg"))
