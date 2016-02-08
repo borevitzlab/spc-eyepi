@@ -10,7 +10,7 @@ import time
 
 import pyudev
 
-from libs.Camera import GphotoCamera, PiCamera
+from libs.Camera import *
 from libs.Updater import Updater
 from libs.Uploader import Uploader
 
@@ -135,9 +135,7 @@ if __name__ == "__main__":
     has_picam = None
     # TODO: Fix storage for multiple cameras
     try:
-
         has_picam = detect_picam()
-
         if has_picam:
             raspberry = [PiCamera("picam.ini", name="PiCam"), Uploader("picam.ini", name="PiCam-Uploader")]
             start_workers(raspberry)
@@ -153,40 +151,62 @@ if __name__ == "__main__":
             time.sleep(2)
             tries += 1
 
-        if not cameras is None:
+        if cameras is not None:
             workers = create_workers(cameras)
-            start_workers(workers[0])
-            start_workers(workers[1])
+            for worker in workers:
+                start_workers(worker)
+
+        # TODO: detect and classify with serialnumber /dev/videoX devices.
+        # webcam = (WebCamera("webcam.ini", name="WebCam", serialnumber="webcam"),
+        #           Uploader("webcam.ini", name="Webcam-Uploader"))
+        # start_workers(webcam)
+
+        # ivportcam = (IVPortCamera("ivport.ini", name="IVPort", serialnumber="ivport"),
+        #           Uploader("ivport.ini", name="IVport-Uploader"))
+        # start_workers(ivportcam)
 
         usb_dev_list = get_usb_dev_list()
+
         while True:
             try:
+                pass
                 if usb_dev_list != get_usb_dev_list():
+                    if cameras is not None:
+                        for worker in workers:
+                            kill_workers(worker)
                     cameras = detect_cameras("usb")
-                    kill_workers(workers[0])
-                    kill_workers(workers[1])
                     # start workers again
                     time.sleep(60)
                     workers = create_workers(cameras)
-                    start_workers(workers[0])
-                    start_workers(workers[1])
+                    for worker in workers:
+                        start_workers(worker)
                     usb_dev_list = get_usb_dev_list()
                 time.sleep(1)
             except (KeyboardInterrupt, SystemExit):
-                if cameras:
-                    kill_workers(workers[0])
-                    kill_workers(workers[1])
-                if has_picam:
+                if cameras is not None:
+                    for worker in workers:
+                        kill_workers(worker)
+                # if webcam:
+                #     kill_workers(webcam)
+
+                # if ivportcam:
+                #     kill_workers(ivportcam)
+                if raspberry:
                     kill_workers(raspberry)
                 updater.join()
                 sys.exit()
 
     except (KeyboardInterrupt, SystemExit):
         print("exiting...")
-        if not cameras == None:
-            kill_workers(workers[0])
-            kill_workers(workers[1])
-        if has_picam:
+        if cameras is not None:
+            for worker in workers:
+                kill_workers(worker)
+
+        # if webcam:
+        #     kill_workers(webcam)
+        # if ivportcam:
+        #     kill_workers(ivportcam)
+        if raspberry:
             kill_workers(raspberry)
         if updater:
             kill_workers([updater])
