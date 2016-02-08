@@ -324,13 +324,11 @@ class GphotoCamera(Thread):
                                 try:
                                     im = Image.open(fn)
                                     im.thumbnail((320,240), Image.NEAREST)
-                                    im.save(os.path.join(self.upload_directory, "dslr_last_image.jpg"))
-                                    # shutil.copy(fn, os.path.join(self.upload_directory, "dslr_last_image.jpg"))
+                                    im.save(os.path.join("/dev/shm", self.serialnumber + ".jpg"))
+
+                                    shutil.copy(os.path.join("/dev/shm", self.serialnumber + ".jpg") , os.path.join(self.upload_directory, "dslr_last_image.jpg"))
                                 except Exception as e:
                                     self.logger.error("couldnt resize :( {}".format(str(e)))
-
-                                # best to create a symlink to /dev/shm/ from static/temp
-                                shutil.copy(fn, os.path.join("/dev/shm", self.serialnumber + ".jpg"))
 
                         except Exception as e:
                             self.logger.error("Couldnt copy webcam upload: %s" % str(e))
