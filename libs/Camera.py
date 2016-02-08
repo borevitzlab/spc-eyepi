@@ -320,11 +320,12 @@ class GphotoCamera(Thread):
 
                         try:
                             # copy jpegs to the static web dir, and to the upload dir (if upload webcam flag is set)
-                            if ext in [".jpeg" or ".jpg"] and self.config["ftp"]["uploadwebcam"] == "on":
+                            if ext == ".jpeg" or ext == ".jpg":
+                                # if self.config["ftp"]["uploadwebcam"] == "on":
                                 try:
                                     im = Image.open(fn)
+                                    self.logger.error("resizing image {}".format(fn) )
                                     im.thumbnail((320, 240), Image.NEAREST)
-
                                     im.save(os.path.join(self.upload_directory, "dslr_last_image.jpg"))
                                     shutil.copy(os.path.join(self.upload_directory, "dslr_last_image.jpg"),os.path.join("/dev/shm", self.serialnumber + ".jpg"))
                                 except Exception as e:
