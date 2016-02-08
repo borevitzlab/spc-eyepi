@@ -328,7 +328,7 @@ class GphotoCamera(Thread):
                                         im.thumbnail((200,200), Image.NEAREST)
                                         im.save(os.path.join(self.upload_directory, "dslr_last_image.jpg"))
                                         # shutil.copy(fn, os.path.join(self.upload_directory, "dslr_last_image.jpg"))
-                                    except:
+                                    except Exception as e:
                                         self.logger.error("couldnt resize :( {}".format(str(e)))
 
                                 # best to create a symlink to /dev/shm/ from static/temp
