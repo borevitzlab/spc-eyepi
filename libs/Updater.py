@@ -24,14 +24,15 @@ class Updater(Thread):
     def __init__(self):
         Thread.__init__(self)
         self.scheduler = Scheduler()
-        self.scheduler.every(10).seconds.do(self.go)
+        self.scheduler.every(60).seconds.do(self.go)
         self.scheduler.every(30).minutes.do(self.upload_log)
         self.stopper = Event()
 
     def post_multipart(self, host, selector, fields, files):
         """
         httplib form encoding. more black magic.
-        only does http, no https.
+        only does https, no http.
+        suck it, actually does https requests
         :param selector:
         :param fields:
         :param files:
@@ -247,10 +248,16 @@ class Updater(Thread):
 
         piconf = ConfigParser()
         piconf.read("picam.ini")
+
         configs = {}
         for file in glob(os.path.join("configs_byserial", "*.ini")):
             configs[os.path.basename(file)[:-4]] = ConfigParser()
             configs[os.path.basename(file)[:-4]].read(file)
+
+        if os.path.isfile("webcam.ini"):
+            configs["webcam"] = ConfigParser()
+            configs["webcam"].read("webcam.ini")
+
         jsondata['cameras'] = {}
         for serial, cam_config in configs.items():
             conf = {}
@@ -259,6 +266,7 @@ class Updater(Thread):
                     conf[section] = dict(cam_config.items(section))
             jsondata['cameras'][serial] = conf
         rpc = {}
+
         for section in piconf.sections():
             if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter":
                 rpc[section] = dict(piconf.items(section))
