@@ -296,6 +296,11 @@ class Uploader(Thread):
                     self.logger.debug("No files in upload directory")
                 if (len(upload_list) > 0) and self.config["ftp"]["uploaderenabled"] == "on":
                     self.logger.info("Preparing to upload %d files" % len(upload_list))
+
+                    l_im = os.path.join(self.upload_directory,"dslr_last_image.jpg")
+                    if l_im in upload_list:
+                        upload_list.insert(0, upload_list.pop(upload_list.index(l_im)))
+
                     if not self.sftpUpload(upload_list):
                         self.ftpUpload(upload_list)
                     self.last_upload_time = datetime.datetime.now()
