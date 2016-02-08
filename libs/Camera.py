@@ -323,10 +323,10 @@ class GphotoCamera(Thread):
                             if ext in [".jpeg" or ".jpg"] and self.config["ftp"]["uploadwebcam"] == "on":
                                 try:
                                     im = Image.open(fn)
-                                    im.thumbnail((320,240), Image.NEAREST)
-                                    im.save(os.path.join("/dev/shm", self.serialnumber + ".jpg"))
+                                    im.thumbnail((320, 240), Image.NEAREST)
 
-                                    shutil.copy(os.path.join("/dev/shm", self.serialnumber + ".jpg") , os.path.join(self.upload_directory, "dslr_last_image.jpg"))
+                                    im.save(os.path.join(self.upload_directory, "dslr_last_image.jpg"))
+                                    shutil.copy(os.path.join(self.upload_directory, "dslr_last_image.jpg"),os.path.join("/dev/shm", self.serialnumber + ".jpg"))
                                 except Exception as e:
                                     self.logger.error("couldnt resize :( {}".format(str(e)))
 
