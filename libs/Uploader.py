@@ -249,7 +249,15 @@ class Uploader(Thread):
                 jsondata["smaller_uploaded"] = sizeof_fmt(self.total_data_uploaded_b)
                 jsondata["free_space"] = free_space
                 jsondata["total_space"] = total_space
-                jsondata["serialnumber"] = self.config_filename[:-4].split("/")[-1]
+                jsondata["serialnumber"] = os.path.splitext(os.path.basename(self.config_filename))[0]
+                if jsondata['serialnumber'] == "picam":
+                    try:
+                        with open("/etc/machine-id") as f:
+                            m_id = str(f.read())
+                            m_id = m_id.strip('\n')
+                        jsondata['serialnumber'] = m_id
+                    except Exception as e:
+                        self.logger.error("Couldnt save serialnumber boo hoo...")
                 jsondata["ip_address"] = self.ipaddress
                 jsondata["list_of_uploads"] = list_of_uploads
                 jsondata["capture_limits"] = self.config['timelapse']['starttime'] + " - " + self.config['timelapse'][
@@ -271,7 +279,7 @@ class Uploader(Thread):
             data["metadata.json"] = json.dumps(jsondata, indent=4, separators=(',', ': '), sort_keys=True)
             data["ipaddress.html"] = fullstr
             self.logger.debug("Sending metadata to server now")
-            with open(str(jsondata['serialnumber']) + ".json", 'w') as f:
+            with open(str(os.path.splitext(os.path.basename(self.config_filename))[0]) + ".json", 'w') as f:
                 f.write(data['metadata.json'])
             if not self.sendMetadataSFTP(data):
                 self.sendMetadataFTP(data)
