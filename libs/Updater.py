@@ -22,7 +22,8 @@ hostname = "phenocam.org.au"
 
 class Updater(Thread):
     def __init__(self):
-        Thread.__init__(self)
+        Thread.__init__(self, name="Updater")
+
         self.scheduler = Scheduler()
         self.scheduler.every(60).seconds.do(self.go)
         self.scheduler.every(30).minutes.do(self.upload_log)
