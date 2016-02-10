@@ -129,6 +129,7 @@ class Updater(Thread):
                         self.logger.error("getting here?")
                         data = json.loads(aes_crypt.decrypt(data.read().decode("utf-8")))
                         for key, value in data.copy().items():
+                            self.logger.error(key)
                             if value == {}:
                                 del data[str(key)]
                         if len(data) > 0:
