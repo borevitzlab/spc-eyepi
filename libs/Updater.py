@@ -160,8 +160,7 @@ class Updater(Thread):
             'starttime': ('timelapse', 'starttime'),
             'stoptime': ('timelapse', 'stoptime')
         }
-        tf = {"True": "on", "False": "off"}
-        tfr = {True: "on", False: "off"}
+        tf = {"True": "on", "False": "off", "true": "on", "false": "off", True: "on", False: "off"}
         self.logger.error("getting here")
 
         for serialnumber, setdata in data.items():
@@ -193,12 +192,10 @@ class Updater(Thread):
                 config_path = os.path.join("configs_byserial", serialnumber + ".ini")
                 config.read(config_path)
                 for key, value in setdata.items():
-                    if value in tf.keys():
+                    if key in tf.keys():
                         value = tf[value]
                     if type(value) is int or type(value) is float:
                         value = str(value)
-                    if type(value) is bool:
-                        value = tfr[value]
                     if value in ["starttime", "stoptime"]:
                         # parse datetimes correctly, because they are gonna be messy.
                         dt = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.Z")
