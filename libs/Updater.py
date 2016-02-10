@@ -180,7 +180,7 @@ class Updater(Thread):
                         dt = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.Z")
                         value = dt.strftime('%H:%M')
                     try:
-                        config[config_map[key][0]][config_map[key][1]] = value
+                        config[config_map[key][0]][config_map[key][1]] = str(value)
                     except Exception as e:
                         self.logger.error("Couldnt set item {}:{}, {}".format(key,value, str(e)))
                 self.logger.info("Saving Pi config: ")
@@ -194,13 +194,11 @@ class Updater(Thread):
                 for key, value in setdata.items():
                     if value in tf.keys():
                         value = tf[value]
-                    if type(value) is int or type(value) is float:
-                        value = str(value)
                     if value in ["starttime", "stoptime"]:
                         # parse datetimes correctly, because they are gonna be messy.
                         dt = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.Z")
                         value = dt.strftime('%H:%M')
-                    config[config_map[key][0]][config_map[key][1]] = value
+                    config[config_map[key][0]][config_map[key][1]] = str(value)
                 self.writecfg(config, config_path)
 
     def gather_data(self, piconf):
