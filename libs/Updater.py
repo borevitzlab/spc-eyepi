@@ -192,7 +192,7 @@ class Updater(Thread):
                 config_path = os.path.join("configs_byserial", serialnumber + ".ini")
                 config.read(config_path)
                 for key, value in setdata.items():
-                    if key in tf.keys():
+                    if value in tf.keys():
                         value = tf[value]
                     if type(value) is int or type(value) is float:
                         value = str(value)
