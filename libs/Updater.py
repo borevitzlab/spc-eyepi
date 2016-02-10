@@ -126,10 +126,11 @@ class Updater(Thread):
                     data = opener.open(req)
                     if data.getcode() == 200:
                         # do config modify/parse of command here.
+                        self.logger.error("getting here?")
                         data = json.loads(aes_crypt.decrypt(data.read().decode("utf-8")))
                         for key, value in data.copy().items():
                             if value == {}:
-                                del data[key]
+                                del data[str(key)]
                         if len(data) > 0:
                             self.set_configdata(data)
                         break
