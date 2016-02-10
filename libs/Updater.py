@@ -25,7 +25,7 @@ class Updater(Thread):
         Thread.__init__(self, name="Updater")
 
         self.scheduler = Scheduler()
-        self.scheduler.every(60).seconds.do(self.go)
+        self.scheduler.every(10).seconds.do(self.go)
         self.scheduler.every(30).minutes.do(self.upload_log)
         self.logger = logging.getLogger(self.getName())
         self.stopper = Event()
