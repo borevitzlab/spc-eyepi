@@ -410,6 +410,14 @@ def update():
     os.system("systemctl restart spc-eyepi_capture.service")
     return "SUCCESS"
 
+@app.route("/pip_install")
+@requires_auth
+def pip_install():
+    import pip
+    _,package = dict(request.args).popitem()
+    pip.main(["install",package])
+    return "SUCCESS"
+
 
 @app.route("/status")
 @requires_auth

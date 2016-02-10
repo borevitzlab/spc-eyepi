@@ -11,7 +11,7 @@ from configparser import ConfigParser
 from glob import glob
 from threading import Thread, Event
 from urllib import request, parse
-
+import logging
 
 from schedule import Scheduler
 
@@ -26,6 +26,7 @@ class Updater(Thread):
         self.scheduler = Scheduler()
         self.scheduler.every(60).seconds.do(self.go)
         self.scheduler.every(30).minutes.do(self.upload_log)
+        self.logger = logging.getLogger(self.getName())
         self.stopper = Event()
 
     def post_multipart(self, host, selector, fields, files):
@@ -133,7 +134,7 @@ class Updater(Thread):
                             self.set_configdata(data)
                         break
                 except Exception as e:
-                    print(str(e))
+                    self.logger.error("Error getting the data {}".format(str(e)))
                 time.sleep(5)
                 tries += 1
 
@@ -178,6 +179,8 @@ class Updater(Thread):
                         dt = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.Z")
                         value = dt.strftime('%H:%M')
                     config[config_map[key][0]][config_map[key][1]] = value
+                self.logger.info("Saving Pi config: ")
+                self.logger.info(dict(config))
                 self.writecfg(config, config_path)
 
             if os.path.isfile(os.path.join("configs_byserial", serialnumber + ".ini")):
@@ -208,7 +211,7 @@ class Updater(Thread):
                 json.loads(request.urlopen('https://api.ipify.org/?format=json', timeout=10).read().decode('utf-8'))[
                     'ip']
         except Exception as e:
-            print(str(e))
+            self.logger.error(str(e))
 
         with open("/etc/hostname", "r") as fn:
             hn = fn.readlines()[0]
@@ -217,7 +220,7 @@ class Updater(Thread):
             s.connect(("8.8.8.8", 0))
             jsondata['internal_ip'] = s.getsockname()[0]
         except Exception as e:
-            print(str(e))
+            self.logger.error(str(e))
 
         try:
             with open("/home/tor_private/hostname") as f:
@@ -226,7 +229,7 @@ class Updater(Thread):
             jsondata["onion_cookie_auth"] = onion_address.split(" ")[1]
             jsondata["onion_cookie_client"] = onion_address.split(" ")[-1]
         except Exception as e:
-            print(str(e))
+            self.logger.error(str(e))
 
         metadatas = {}
         metadatas_from_cameras_fn = glob("*.json")
@@ -280,6 +283,7 @@ class Updater(Thread):
         except Exception as e:
             jsondata['cameras']['picam'] = rpc
             jsondata['cameras']['picam']['error'] = str(e)
+            self.logger.warning("Using picam as key in json metadata {}".format(str(e)))
 
         return jsondata
 

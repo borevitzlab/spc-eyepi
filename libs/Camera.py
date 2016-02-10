@@ -306,7 +306,6 @@ class GphotoCamera(Thread):
                     # cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --wait-event-and-download=36s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
 
                     self.capture(raw_image)
-
                     # glob together all filetypes in filetypes array
                     files = []
                     for filetype in filetypes:
