@@ -126,10 +126,8 @@ class Updater(Thread):
                     data = opener.open(req)
                     if data.getcode() == 200:
                         # do config modify/parse of command here.
-                        self.logger.error("getting here?")
                         data = json.loads(aes_crypt.decrypt(data.read().decode("utf-8")))
                         for key, value in data.copy().items():
-                            self.logger.error(key)
                             if value == {}:
                                 del data[str(key)]
                         if len(data) > 0:
@@ -163,6 +161,7 @@ class Updater(Thread):
         }
         tf = {"True": "on", "False": "off"}
         tfr = {True: "on", False: "off"}
+        self.logger.error("getting here")
 
         for serialnumber, setdata in data.items():
             config = ConfigParser()
@@ -180,7 +179,10 @@ class Updater(Thread):
                         # parse datetimes correctly, because they are gonna be messy.
                         dt = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.Z")
                         value = dt.strftime('%H:%M')
-                    config[config_map[key][0]][config_map[key][1]] = value
+                    try:
+                        config[config_map[key][0]][config_map[key][1]] = value
+                    except Exception as e:
+                        self.logger.error("Couldnt set item {}:{}, {}".format(key,value, str(e)))
                 self.logger.info("Saving Pi config: ")
                 self.logger.info(dict(config))
                 self.writecfg(config, config_path)
