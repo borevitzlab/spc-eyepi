@@ -418,9 +418,9 @@ class PiCamera(GphotoCamera):
         # take the image using os.system(), pretty hacky but it cant exactly be run on windows.
         if self.config.has_section("picam_size"):
             os.system("/opt/vc/bin/raspistill -w " + self.config["picam_size"]["width"] + " -h " +
-                      self.config["picam_size"]["height"] + " --nopreview -o " + raw_image)
+                      self.config["picam_size"]["height"] + " --nopreview -o \"" + raw_image+"\"")
         else:
-            os.system("/opt/vc/bin/raspistill --nopreview -o " + raw_image)
+            os.system("/opt/vc/bin/raspistill --nopreview -o \"" + raw_image+"\"")
         os.chmod(raw_image, 755)
 
     def run(self):
