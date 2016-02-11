@@ -25,7 +25,7 @@ class Updater(Thread):
         Thread.__init__(self, name="Updater")
 
         self.scheduler = Scheduler()
-        self.scheduler.every(10).seconds.do(self.go)
+        self.scheduler.every(60).seconds.do(self.go)
         self.scheduler.every(30).minutes.do(self.upload_log)
         self.logger = logging.getLogger(self.getName())
         self.stopper = Event()
@@ -182,9 +182,8 @@ class Updater(Thread):
                     try:
                         config[config_map[key][0]][config_map[key][1]] = str(value)
                     except Exception as e:
-                        self.logger.error("Couldnt set item {}:{}, {}".format(key,value, str(e)))
-                self.logger.info("Saving Pi config: ")
-                self.logger.info(dict(config))
+                        self.logger.error("Couldnt set item {}:{}, {}".format(key, value, str(e)))
+                self.logger.info("Saving Pi config")
                 self.writecfg(config, config_path)
 
             if os.path.isfile(os.path.join("configs_byserial", serialnumber + ".ini")):
