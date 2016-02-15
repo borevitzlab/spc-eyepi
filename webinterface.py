@@ -416,8 +416,9 @@ def update():
         # os.system("systemctl restart spc-eyepi_capture.service")
         print(response)
         return response
-    print("returning to default")
     app.debug = True
+    print("returning to default")
+    print(app.debug)
     return "SUCCESS"
 
 @app.route("/pip_install")
