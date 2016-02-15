@@ -214,7 +214,7 @@ class GphotoCamera(Thread):
                     ["gphoto2 --port ", self.camera_port,
                      " --set-config capturetarget=sdram",
                      " --capture-image-and-download",
-                     " --filename='", fn,";sleep 15"])]
+                     " --filename='", fn, ";sleep 15"])]
 
             try:
                 output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
@@ -229,10 +229,13 @@ class GphotoCamera(Thread):
             except subprocess.CalledProcessError as e:
                 if tries >= 5:
                     self.logger.critical("Really bad stuff happened. too many tries capturing.")
-                    break
+                    return False
+
+                self.logger.error("failed {} times".format(tries))
                 for line in e.output.splitlines():
                     if not line.strip() == "" and not "***" in line:
                         self.logger.error(line.strip())
+            return True
 
     def timestamp(self, tn):
         """ Build a timestamp in the required format
@@ -283,6 +286,8 @@ class GphotoCamera(Thread):
             # checking if enabled and other stuff
             if self.get_is_capture(tn.time()):
                 try:
+
+                    did_capture = False
                     # set the next capture period to print to the log (not used anymore, really due to time modulo)
                     self.next_capture = tn + datetime.timedelta(seconds=self.interval)
                     # The time now is within the operating times
@@ -305,7 +310,7 @@ class GphotoCamera(Thread):
                     # else:
                     # cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --wait-event-and-download=36s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
 
-                    self.capture(raw_image)
+                    did_capture = self.capture(raw_image)
                     # glob together all filetypes in filetypes array
                     files = []
                     for filetype in filetypes:
@@ -354,9 +359,10 @@ class GphotoCamera(Thread):
                             js = json.loads(f.read())
 
                         with open(self.serialnumber + ".json", 'w') as f:
-                            js['last_capture_time'] = (tn - datetime.datetime.fromtimestamp(
-                                0)).total_seconds() - time.daylight * 3600
-                            js['last_capture_time_human'] = tn.isoformat()
+                            if did_capture:
+                                js['last_capture_time'] = (tn - datetime.datetime.fromtimestamp(
+                                    0)).total_seconds() - time.daylight * 3600
+                                js['last_capture_time_human'] = tn.isoformat()
                             f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
                     except Exception as e:
                         # clear the files if it cant be opened.
@@ -404,10 +410,12 @@ class WebCamera(GphotoCamera):
             except subprocess.CalledProcessError as e:
                 if tries >= 5:
                     self.logger.critical("Really bad stuff happened. too many tries capturing.")
-                    break
+                    return False
+                self.logger.error("failed {} times".format(tries))
                 for line in e.output.splitlines():
                     if not line.strip() == "" and not "***" in line:
                         self.logger.error(line.strip())
+        return True
 
 class PiCamera(GphotoCamera):
     """ PiCamera extension to the Camera Class
@@ -415,13 +423,17 @@ class PiCamera(GphotoCamera):
     """
 
     def capture(self, raw_image):
+        retcode = 1
         # take the image using os.system(), pretty hacky but it cant exactly be run on windows.
         if self.config.has_section("picam_size"):
-            os.system("/opt/vc/bin/raspistill -w " + self.config["picam_size"]["width"] + " -h " +
-                      self.config["picam_size"]["height"] + " --nopreview -o " + raw_image)
+            retcode = os.system("/opt/vc/bin/raspistill -w " + self.config["picam_size"]["width"] + " -h " +
+                  self.config["picam_size"]["height"] + " --nopreview -o " + raw_image)
         else:
-            os.system("/opt/vc/bin/raspistill --nopreview -o " + raw_image)
+            retcode = os.system("/opt/vc/bin/raspistill --nopreview -o " + raw_image)
         os.chmod(raw_image, 755)
+        if retcode == 0:
+            return True
+        return False
 
     def run(self):
         # set next_capture, this isnt really used much anymore except for logging.
@@ -452,6 +464,7 @@ class PiCamera(GphotoCamera):
                     os.remove(fn)
 
             if self.get_is_capture(tn.time()):
+                did_capture = False
                 try:
                     # change the next_capture for logging. not really used much anymore.
                     self.next_capture = tn + datetime.timedelta(seconds=self.interval)
@@ -462,7 +475,7 @@ class PiCamera(GphotoCamera):
                     image_file = self.timestamped_imagename(tn)
 
                     image_file = os.path.join(self.spool_directory, image_file)
-                    self.capture(image_file)
+                    did_capture = self.capture(image_file)
 
                     self.logger.debug("Capture Complete")
                     self.logger.debug("Copying the image to the web service, buddy")
@@ -500,9 +513,10 @@ class PiCamera(GphotoCamera):
                             js = json.loads(f.read())
 
                         with open("picam.json", 'w') as f:
-                            js['last_capture_time'] = (tn - datetime.datetime.fromtimestamp(
-                                0)).total_seconds() - time.daylight * 3600
-                            js['last_capture_time_human'] = tn.isoformat()
+                            if did_capture:
+                                js['last_capture_time'] = (tn - datetime.datetime.fromtimestamp(
+                                    0)).total_seconds() - time.daylight * 3600
+                                js['last_capture_time_human'] = tn.isoformat()
                             f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
                     except Exception as e:
                         with open("picam.json", 'w') as f:
@@ -535,6 +549,8 @@ class IVPortCamera(PiCamera):
             [True, True, False]
         ]
         filenames = []
+
+        retcode = 0
         for c in range(0, 4):
             GPIO.setmode(GPIO.BOARD)
             for idx,pin in enumerate([7, 11, 12]):
@@ -545,10 +561,10 @@ class IVPortCamera(PiCamera):
             try:
                 if self.config.has_section("picam_size"):
 
-                    os.system("/opt/vc/bin/raspistill -w " + self.config["picam_size"]["width"] + " -h " +
+                    retcode = retcode or os.system("/opt/vc/bin/raspistill -w " + self.config["picam_size"]["width"] + " -h " +
                               self.config["picam_size"]["height"] + " --nopreview -o " + image_numbered)
                 else:
-                    os.system("/opt/vc/bin/raspistill --nopreview -o " + image_numbered)
+                    retcode = retcode or os.system("/opt/vc/bin/raspistill --nopreview -o " + image_numbered)
                 os.chmod(image_numbered, 755)
             except Exception as e:
                 self.logger.critical("Couldnt capture (IVPORT) with camera {} {}".format(c, str(e)))
@@ -586,6 +602,7 @@ class IVPortCamera(PiCamera):
 
             if self.get_is_capture(tn.time()):
                 try:
+                    filenames = []
                     # change the next_capture for logging. not really used much anymore.
                     self.next_capture = tn + datetime.timedelta(seconds=self.interval)
 
@@ -622,9 +639,10 @@ class IVPortCamera(PiCamera):
                             js = json.loads(f.read())
 
                         with open("ivport.json", 'w') as f:
-                            js['last_capture_time'] = (tn - datetime.datetime.fromtimestamp(
-                                0)).total_seconds() - time.daylight * 3600
-                            js['last_capture_time_human'] = tn.isoformat()
+                            if len(filenames):
+                                js['last_capture_time'] = (tn - datetime.datetime.fromtimestamp(
+                                    0)).total_seconds() - time.daylight * 3600
+                                js['last_capture_time_human'] = tn.isoformat()
                             f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
                     except Exception as e:
                         with open("ivport.json", 'w') as f:
