@@ -408,10 +408,13 @@ def restart():
 @app.route("/update")
 @requires_auth
 def update():
-    os.system("git fetch --all")
-    os.system("git reset --hard origin/python3")
-    time.sleep(3)
-    os.system("systemctl restart spc-eyepi_capture.service")
+    @after_this_request
+    def update(response):
+        os.system("git fetch --all")
+        os.system("git reset --hard origin/python3")
+        time.sleep(3)
+        os.system("systemctl restart spc-eyepi_capture.service")
+        return response
     return "SUCCESS"
 
 @app.route("/pip_install")
