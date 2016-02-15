@@ -411,10 +411,12 @@ def update():
     @after_this_request
     def update(response):
         app.debug = False
+        print(app.debug)
         os.system("git fetch --all;git reset --hard origin/python3")
         # os.system("systemctl restart spc-eyepi_capture.service")
         print(response)
         return response
+    print("returning to default")
     app.debug = True
     return "SUCCESS"
 
