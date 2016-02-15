@@ -410,9 +410,10 @@ def restart():
 def update():
     @after_this_request
     def update(response):
-        os.system("git fetch --all;git reset --hard origin/python3;sleep 4")
+        os.system("git fetch --all;git reset --hard origin/python3;sleep 10")
         # time.sleep(3)
         # os.system("systemctl restart spc-eyepi_capture.service")
+        return response
 
     return "SUCCESS"
 
