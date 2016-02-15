@@ -379,6 +379,12 @@ def after_this_request(func):
     return func
 
 
+def shutdown_server():
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        raise RuntimeError('Not running with the Werkzeug Server')
+    func()
+
 @app.after_request
 def per_request_callbacks(response):
     for func in getattr(g, 'call_after_request', ()):
@@ -393,7 +399,8 @@ def restart():
     @after_this_request
     def shutdown(response):
         time.sleep(1)
-        os.system("reboot")
+        # shutdown_server()
+        os.system("shutdown -r +1 'This computer will restart in 1 minute'")
         return response
     return "Rebooting... ", 200
 
