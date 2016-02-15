@@ -411,7 +411,7 @@ def update():
     @after_this_request
     def update(response):
         app.debug = False
-        subprocess.call(["git fetch --all;git reset --hard origin/python3"],shell=True)
+        os.system("git fetch --all;git reset --hard origin/python3")
         # os.system("systemctl restart spc-eyepi_capture.service")
         print(response)
         return response
