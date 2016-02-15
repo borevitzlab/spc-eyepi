@@ -330,8 +330,8 @@ class GphotoCamera(Thread):
                                     im = Image.open(fn)
                                     self.logger.error("resizing image {}".format(fn))
                                     im.thumbnail((640, 480), Image.NEAREST)
-                                    im.save(os.path.join(self.upload_directory, "dslr_last_image.jpg"))
-                                    shutil.copy(os.path.join(self.upload_directory, "dslr_last_image.jpg"), os.path.join("/dev/shm", self.serialnumber + ".jpg"))
+                                    im.save(os.path.join(self.upload_directory, "last_image.jpg"))
+                                    shutil.copy(os.path.join(self.upload_directory, "last_image.jpg"), os.path.join("/dev/shm", self.serialnumber + ".jpg"))
                                 except Exception as e:
                                     self.logger.error("couldnt resize :( {}".format(str(e)))
 
@@ -479,12 +479,11 @@ class PiCamera(GphotoCamera):
 
                     self.logger.debug("Capture Complete")
                     self.logger.debug("Copying the image to the web service, buddy")
-                    # Copy the image file to the static webdir
                     try:
-                        shutil.copy(image_file, os.path.join("static", "temp", "pi_last_image.jpg"))
+                        shutil.copy(image_file, os.path.join("/dev/shm", "picam.jpg"))
                         # webcam copying
-                        if self.config["ftp"]["uploadwebcam"] == "on":
-                            shutil.copy(image_file, os.path.join(self.upload_directory, "pi_last_image.jpg"))
+                        if self.config.getboolean("ftp","uploadwebcam"):
+                            shutil.copy(image_file, os.path.join(self.upload_directory, "last_image.jpg"))
                     except Exception as e:
                         self.logger.error("Error moving for webinterface or webcam: %s" % str(e))
                     # rename for timestamped upload

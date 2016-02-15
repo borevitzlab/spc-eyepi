@@ -991,10 +991,11 @@ def images():
     for file in glob(os.path.join("configs_byserial", "*.ini")):
         configs[os.path.basename(file)[:-4]] = ConfigParser()
         configs[os.path.basename(file)[:-4]].read(file)
+    configs['picam'] = rpiconfig
     urls = []
     for file in glob(os.path.join("static", "temp", "*.jpg")):
         urls.append(os.path.basename(file)[:-4])
-    return render_template("images.html", version=version, configs=configs, rpiconfig=rpiconfig, image_urls=urls,
+    return render_template("images.html", version=version, configs=configs, image_urls=urls,
                            example=example)
 
 
