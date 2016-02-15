@@ -387,18 +387,15 @@ def per_request_callbacks(response):
 
 
 @app.route('/restart')
+@app.route('/reboot')
 @requires_auth
 def restart():
     @after_this_request
     def shutdown(response):
+        time.sleep(1)
         os.system("reboot")
         return response
-
-    try:
-        return "OK! shutting down"
-    except Exception as e:
-        return render_template('server_error.html'), 500
-    return redirect(url_for('admin'))
+    return "Rebooting... ", 200
 
 
 @app.route("/update")
