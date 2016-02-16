@@ -40,7 +40,7 @@ def detect_cameras(type):
             cams[port] = cur.split(" ")[-1]
         return cams
     except Exception as e:
-        logger.error("Could not detect camera for some reason: %s" % str(e))
+        logger.error("Could not detect camera for some reason: {}".format(str(e)))
     return None
 
 
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     try:
         has_picam = detect_picam()
         if has_picam:
-            raspberry = [PiCamera("picam.ini", name="PiCam"), Uploader("picam.ini", name="PiCam-Uploader")]
+            raspberry = [PiCamera("picam.ini", name="PiCam",serialnumber="picam"), Uploader("picam.ini", name="PiCam-Uploader")]
             start_workers(raspberry)
         updater = None
         if os.path.isfile("picam.ini"):
