@@ -327,24 +327,20 @@ class GphotoCamera(Thread):
                         ext = os.path.splitext(fn)[-1].lower()
                         name = os.path.splitext(raw_image)[0]
 
-                        try:
-                            # copy jpegs to the static web dir, and to the upload dir (if upload webcam flag is set)
-                            if ext == ".jpeg" or ext == ".jpg":
-                                try:
-                                    if self.config.getboolean("ftp","uploadwebcam"):
-                                        im = Image.open(fn)
-                                        self.logger.error("resizing image {}".format(fn))
-                                        im.thumbnail((640, 480), Image.NEAREST)
-                                        im.save(os.path.join(self.upload_directory, "last_image.jpg"))
-                                        shutil.copy(os.path.join(self.upload_directory, "last_image.jpg"), os.path.join("/dev/shm", self.serialnumber + ".jpg"))
-                                except Exception as e:
-                                    self.logger.error("couldnt resize :( {}".format(str(e)))
-
-                        except Exception as e:
-                            self.logger.error("Couldnt copy webcam upload: %s" % str(e))
+                        # copy jpegs to the static web dir, and to the upload dir (if upload webcam flag is set)
+                        if ext == ".jpeg" or ext == ".jpg":
+                            try:
+                                if self.config.getboolean("ftp","uploadwebcam"):
+                                    self.logger.info("resizing image {}".format(fn))
+                                    im = Image.open(fn)
+                                    im.thumbnail((640, 480), Image.NEAREST)
+                                    im.save(os.path.join(self.upload_directory, "last_image.jpg"))
+                                    shutil.copy(os.path.join(self.upload_directory, "last_image.jpg"), os.path.join("/dev/shm", self.serialnumber + ".jpg"))
+                            except Exception as e:
+                                self.logger.error("couldnt resize :( {}".format(str(e)))
 
                         try:
-                            if self.config.getboolean("ftp","uploadtimestamped"):
+                            if self.config.getboolean("ftp", "uploadtimestamped"):
                                 self.logger.debug("saving timestamped image for you, buddy")
                                 shutil.copy(fn, os.path.join(self.upload_directory, os.path.basename(name + ext)))
                         except Exception as e:
