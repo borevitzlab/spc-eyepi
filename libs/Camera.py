@@ -239,11 +239,12 @@ class GphotoCamera(Thread):
             # this is the new method of this stuff
             cmd = ["gphoto2",
                    "--port={}".format(self.camera_port),
-                   "--set-config=capturetarget=0",
+                   # "--set-config=capturetarget=0",
                    "--force-overwrite"
                    "--capture-image-and-download",
                    '--filename={}'.format(fn)
                    ]
+
             try:
                 output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True)
 
