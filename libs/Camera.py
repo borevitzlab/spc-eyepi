@@ -472,7 +472,7 @@ class PiCamera(GphotoCamera):
         extends some functionality and members, modified image capture call and placements.
     """
 
-    def capture(self, raw_image):
+    def capture(self, image_file_basename):
         retcode = 1
         # take the image using os.system(), pretty hacky but its never exactly be run on windows.
         if self.config.has_section("picam_size"):
@@ -480,9 +480,9 @@ class PiCamera(GphotoCamera):
             retcode = os.system(
                 "/opt/vc/bin/raspistill -w {width} -h {height} --nopreview -o \"{filename}.jpg\"".format(width=w,
                                                                                                          height=h,
-                                                                                                         filename=raw_image))
+                                                                                                         filename=image_file_basename))
         else:
-            retcode = os.system("/opt/vc/bin/raspistill --nopreview -o \"{filename}.jpg\"".format(filename=raw_image))
+            retcode = os.system("/opt/vc/bin/raspistill --nopreview -o \"{filename}.jpg\"".format(filename=image_file_basename))
         os.chmod(raw_image, 755)
         if retcode != 0:
             return False
