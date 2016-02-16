@@ -15,13 +15,12 @@ try:
 except ImportError:
     print("Couldnt import gpio")
 
-
 try:
     from PIL import Image
 except ImportError:
     import pip
-    pip.main(["install","Pillow"])
 
+    pip.main(["install", "Pillow"])
 
 # default config variables
 # TODO: move this to a defaultdict within the camera class
@@ -175,7 +174,7 @@ class GphotoCamera(Thread):
 
     def capture(self, raw_image):
         # try 3 times
-        fn = os.path.join(self.spool_directory, os.path.splitext(raw_image)[0]) + ".%C'"
+        fn = os.path.join(self.spool_directory, os.path.splitext(raw_image)[0]) + ".%C"
         for tries in range(6):
             # if self.type == "Canon":
             #     # focusmode = (tries % 2) + 1
@@ -213,21 +212,25 @@ class GphotoCamera(Thread):
             #
             # else:
             self.logger.info("Capturing...")
-            cmd = ["".join(
-                        ["gphoto2 --port ", self.camera_port,
-                         " --set-config capturetarget=sdram",
-                         " --capture-image-and-download",
-                         " --filename='", fn, ";sleep 15"])
-                  ]
+
+            # this is the new method of this stuff
+            cmd = ["gphoto2",
+                   "--port {}".format(self.camera_port),
+                   "--set-config=capturetarget=0",
+                   "--force-overwrite"
+                   "--capture-image-and-download",
+                   '--filename={}'.format(fn)
+                   ]
+
             try:
-                output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
+                output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True)
 
                 if "error" in output.lower():
                     raise subprocess.CalledProcessError("non-zero exit status", cmd=cmd, output=output)
                 else:
                     # success
                     for line in output.splitlines():
-                        self.logger.info("GPHOTO2: " + line)
+                        self.logger.info("GPHOTO2: {}".format(line))
 
                     time.sleep(1 + (self.accuracy * 2))
                     return True
@@ -239,7 +242,7 @@ class GphotoCamera(Thread):
 
                 self.logger.error("failed {} times".format(tries))
                 for line in e.output.splitlines():
-                    if not line.strip() == "" and not "***" in line:
+                    if not line.strip() == "" and "***" not in line:
                         self.logger.error(line.strip())
         return True
 
@@ -330,12 +333,13 @@ class GphotoCamera(Thread):
                         # copy jpegs to the static web dir, and to the upload dir (if upload webcam flag is set)
                         if ext == ".jpeg" or ext == ".jpg":
                             try:
-                                if self.config.getboolean("ftp","uploadwebcam"):
+                                if self.config.getboolean("ftp", "uploadwebcam"):
                                     self.logger.info("resizing image {}".format(fn))
                                     im = Image.open(fn)
                                     im.thumbnail((640, 480), Image.NEAREST)
                                     im.save(os.path.join(self.upload_directory, "last_image.jpg"))
-                                    shutil.copy(os.path.join(self.upload_directory, "last_image.jpg"), os.path.join("/dev/shm", self.serialnumber + ".jpg"))
+                                    shutil.copy(os.path.join(self.upload_directory, "last_image.jpg"),
+                                                os.path.join("/dev/shm", self.serialnumber + ".jpg"))
                             except Exception as e:
                                 self.logger.error("couldnt resize :( {}".format(str(e)))
 
@@ -393,11 +397,11 @@ class WebCamera(GphotoCamera):
         for tries in range(6):
             self.logger.info("Capturing with a USB webcam")
             cmd = ["".join(
-                    ["streamer",
-                     " -b 8",
-                     " -j 100",
-                     " -s 4224x3156",
-                     " -o '"+fn+"'"])]
+                ["streamer",
+                 " -b 8",
+                 " -j 100",
+                 " -s 4224x3156",
+                 " -o '" + fn + "'"])]
             try:
                 output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
                 time.sleep(1 + (self.accuracy * 2))
@@ -418,18 +422,22 @@ class WebCamera(GphotoCamera):
                         self.logger.error(line.strip())
         return True
 
+
 class PiCamera(GphotoCamera):
     """ PiCamera extension to the Camera Class
         extends some functionality and members, modified image capture call and placements.
     """
+
     def capture(self, raw_image):
         retcode = 1
         # take the image using os.system(), pretty hacky but it cant exactly be run on windows.
         if self.config.has_section("picam_size"):
-            retcode = os.system("/opt/vc/bin/raspistill -w " + self.config["picam_size"]["width"] + " -h " +
-                  self.config["picam_size"]["height"] + " --nopreview -o " + raw_image)
+            w, h = self.config["picam_size"]["width"], self.config["picam_size"]["height"]
+            retcode = os.system(
+                "/opt/vc/bin/raspistill -w {width} -h {height} --nopreview -o \"{filename}\"".format(width=w, height=h,
+                                                                                                     filename=raw_image))
         else:
-            retcode = os.system("/opt/vc/bin/raspistill --nopreview -o " + raw_image)
+            retcode = os.system("/opt/vc/bin/raspistill --nopreview -o \"{filename}\"".format(filename=raw_image))
         os.chmod(raw_image, 755)
         if retcode != 0:
             return False
@@ -482,13 +490,13 @@ class PiCamera(GphotoCamera):
                     try:
                         shutil.copy(image_file, os.path.join("/dev/shm", "picam.jpg"))
                         # webcam copying
-                        if self.config.getboolean("ftp","uploadwebcam"):
+                        if self.config.getboolean("ftp", "uploadwebcam"):
                             shutil.copy(image_file, os.path.join(self.upload_directory, "last_image.jpg"))
                     except Exception as e:
                         self.logger.error("Error moving for webinterface or webcam: %s" % str(e))
                     # rename for timestamped upload
                     try:
-                        if self.config.getboolean("ftp","uploadtimestamped"):
+                        if self.config.getboolean("ftp", "uploadtimestamped"):
                             self.logger.debug("saving timestamped image for you, buddy")
                             shutil.copy(image_file, os.path.join(self.upload_directory, os.path.basename(image_file)))
                     except Exception as e:
@@ -528,6 +536,7 @@ class PiCamera(GphotoCamera):
 
             time.sleep(0.1)
 
+
 class IVPortCamera(PiCamera):
     def setup(self):
         super(IVPortCamera, self).setup()
@@ -543,27 +552,29 @@ class IVPortCamera(PiCamera):
 
     def capture(self, raw_image):
         map = [[False, False, True],
-            [True, False, True],
-            [False, True, False],
-            [True, True, False]
-        ]
+               [True, False, True],
+               [False, True, False],
+               [True, True, False]
+               ]
         filenames = []
 
         retcode = 0
         for c in range(0, 4):
             GPIO.setmode(GPIO.BOARD)
-            for idx,pin in enumerate([7, 11, 12]):
+            for idx, pin in enumerate([7, 11, 12]):
                 GPIO.output(pin, map[c][idx])
 
             # take the image using os.system(), pretty hacky but it cant exactly be run on windows.
             image_numbered = "{}-{}{}".format(os.path.splitext(raw_image)[0], str(c), os.path.splitext(raw_image)[-1])
             try:
                 if self.config.has_section("picam_size"):
-
-                    retcode = retcode or os.system("/opt/vc/bin/raspistill -w " + self.config["picam_size"]["width"] + " -h " +
-                              self.config["picam_size"]["height"] + " --nopreview -o " + image_numbered)
+                    w, h = self.config["picam_size"]["width"], self.config["picam_size"]["height"]
+                    retcode = retcode or os.system(
+                        "/opt/vc/bin/raspistill -w {width} -h {height} --nopreview -o \"{filename}\"".format(
+                            filename=image_numbered))
                 else:
-                    retcode = retcode or os.system("/opt/vc/bin/raspistill --nopreview -o " + image_numbered)
+                    retcode = retcode or os.system(
+                        "/opt/vc/bin/raspistill --nopreview -o \"{filename}\"".format(filename=image_numbered))
                 os.chmod(image_numbered, 755)
             except Exception as e:
                 self.logger.critical("Couldnt capture (IVPORT) with camera {} {}".format(c, str(e)))
@@ -618,7 +629,7 @@ class IVPortCamera(PiCamera):
                     # Copy the image file to the static webdir
                     for filename in filenames:
                         try:
-                            if self.config.getboolean("ftp","uploadtimestamped"):
+                            if self.config.getboolean("ftp", "uploadtimestamped"):
                                 self.logger.debug("saving timestamped image for you, buddy")
                                 shutil.copy(filename, os.path.join(self.upload_directory, os.path.basename(filename)))
                         except Exception as e:
@@ -628,7 +639,7 @@ class IVPortCamera(PiCamera):
                             os.remove(filename)
                         except Exception as e:
                             self.logger.error("Couldnt remove file from filesystem: %s" % str(e))
-                        # Do some logging.
+                            # Do some logging.
 
                     try:
                         if not os.path.isfile("ivport.json"):
