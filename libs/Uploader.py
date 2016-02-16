@@ -300,12 +300,12 @@ class Uploader(Thread):
                 self.setup()
             try:
                 upload_list = glob(os.path.join(self.upload_directory, '*'))
-                if (len(upload_list) == 0):
+                if len(upload_list) == 0:
                     self.logger.debug("No files in upload directory")
-                if (len(upload_list) > 0) and self.config["ftp"]["uploaderenabled"] == "on":
+                if (len(upload_list) > 0) and self.config.getboolean("ftp", "uploaderenabled"):
                     self.logger.info("Preparing to upload %d files" % len(upload_list))
 
-                    l_im = os.path.join(self.upload_directory,"dslr_last_image.jpg")
+                    l_im = os.path.join(self.upload_directory,"last_image.jpg")
                     if l_im in upload_list:
                         upload_list.insert(0, upload_list.pop(upload_list.index(l_im)))
 
