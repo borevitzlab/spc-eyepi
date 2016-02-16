@@ -239,8 +239,8 @@ class GphotoCamera(Thread):
             # this is the new method of this stuff
             cmd = ["gphoto2",
                    "--port={}".format(self.camera_port),
-                   # "--set-config=capturetarget=0",
-                   "--force-overwrite"
+                   "--set-config=capturetarget=0",
+                   "--force-overwrite",
                    "--capture-image-and-download",
                    '--filename={}'.format(fn)
                    ]
