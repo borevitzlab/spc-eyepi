@@ -41,6 +41,7 @@ Features in active  development:
  * pycrypto<sup>[pip](https://pypi.python.org/pypi/pycrypto)</sup>
  * gphoto2
  * pyudev<sup>[pip](https://pypi.python.org/pypi/pyudev)</sup>
+ * pillow<sup>[pip](https://pypi.python.org/pypi/Pillow/3.1.1)</sup>
 
 ---
 
