@@ -234,7 +234,7 @@ class GphotoCamera(Thread):
             #          " --filename='", fn])]
             #
             # else:
-            self.logger.info("Capturing...")
+            self.logger.info("Capturing... ")
 
             # this is the new method of this stuff
             cmd = ["gphoto2",
