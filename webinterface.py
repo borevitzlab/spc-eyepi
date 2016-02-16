@@ -422,7 +422,7 @@ def update():
 
 @app.route("/update_to_tag/<tag>")
 @requires_auth
-def update(tag):
+def update_tag(tag):
     @after_this_request
     def update(response):
         app.debug = False
