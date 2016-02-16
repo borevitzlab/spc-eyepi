@@ -352,7 +352,6 @@ def sync_hwclock():
 
     return redirect(url_for('config'))
 
-
 @app.route('/savetousb', methods=["POST"])
 @requires_auth
 def savetousb():
@@ -414,7 +413,7 @@ def update():
     @after_this_request
     def update(response):
         app.debug = False
-        os.system("git fetch --all;git reset --hard origin/master")
+        os.system("git fetch --tags --all;git reset --hard origin/master")
         os.system("systemctl restart spc-eyepi_capture.service")
         return response
     app.debug = True
