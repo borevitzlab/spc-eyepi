@@ -419,6 +419,19 @@ def update():
     app.debug = True
     return "SUCCESS"
 
+
+@app.route("/update_to_tag/<tag>")
+@requires_auth
+def update(tag):
+    @after_this_request
+    def update(response):
+        app.debug = False
+        os.system("git fetch --tags --all;git reset --hard {}".format(tag))
+        os.system("systemctl restart spc-eyepi_capture.service")
+        return response
+    app.debug = True
+    return "SUCCESS"
+
 @app.route("/pip_install")
 @requires_auth
 def pip_install():
