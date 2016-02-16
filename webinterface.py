@@ -402,7 +402,7 @@ def restart():
     def shutdown(response):
         time.sleep(1)
         # shutdown_server()
-        os.system("shutdown -r +1 'This computer will restart in 1 minute'")
+        os.system("reboot")
         return response
     return "Rebooting... ", 200
 
