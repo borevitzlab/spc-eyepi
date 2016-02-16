@@ -30,7 +30,6 @@ __maintainer__ = "Gareth Dunstone"
 __email__ = "gareth.dunstone@anu.edu.au"
 __status__ = "Testing"
 
-
 # default config variables
 # TODO: move this to a defaultdict within the camera class
 timestartfrom = datetime.time.min
@@ -471,14 +470,16 @@ class PiCamera(GphotoCamera):
     """ PiCamera extension to the Camera Class
         extends some functionality and members, modified image capture call and placements.
     """
+
     def capture(self, raw_image):
         retcode = 1
-        # take the image using os.system(), pretty hacky but it cant exactly be run on windows.
+        # take the image using os.system(), pretty hacky but its never exactly be run on windows.
         if self.config.has_section("picam_size"):
             w, h = self.config["picam_size"]["width"], self.config["picam_size"]["height"]
             retcode = os.system(
-                "/opt/vc/bin/raspistill -w {width} -h {height} --nopreview -o \"{filename}.jpg\"".format(width=w, height=h,
-                                                                                                     filename=raw_image))
+                "/opt/vc/bin/raspistill -w {width} -h {height} --nopreview -o \"{filename}.jpg\"".format(width=w,
+                                                                                                         height=h,
+                                                                                                         filename=raw_image))
         else:
             retcode = os.system("/opt/vc/bin/raspistill --nopreview -o \"{filename}.jpg\"".format(filename=raw_image))
         os.chmod(raw_image, 755)
