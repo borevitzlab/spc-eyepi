@@ -74,7 +74,7 @@ class GphotoCamera(Thread):
         self.accuracy = 3
         # get details from config file
         self.cameraname = self.config["camera"]["name"]
-        self.interval = int(float(self.config["timelapse"]["interval"]))
+        self.interval = self.config.getint("timelapse", "interval")
         self.spool_directory = self.config["localfiles"]["spooling_dir"]
         self.upload_directory = self.config["localfiles"]["upload_dir"]
         self.type = "other"
@@ -91,7 +91,7 @@ class GphotoCamera(Thread):
         # self.exposure_length = self.config.getint("camera","exposure")
         self.last_config_modify_time = os.stat(self.config_filename).st_mtime
         # get enabled
-        if self.config["camera"]["enabled"] == "on":
+        if self.config.getboolean("camera", "enabled"):
             self.is_enabled = True
         else:
             self.is_enabled = False
@@ -152,7 +152,9 @@ class GphotoCamera(Thread):
         :param time_now:
         :return:
         """
-        if not self.is_enabled:
+
+        if not self.config.getboolean("camera", "enabled"):
+            # if the camera is disabled, never take photos
             return False
 
         if self.begincapture < self.endcapture:
@@ -168,6 +170,7 @@ class GphotoCamera(Thread):
         # capture interval
         if not (self.time2seconds(time_now) % self.interval < self.accuracy):
             return False
+
         return True
 
     def capture(self, raw_image):
@@ -218,13 +221,15 @@ class GphotoCamera(Thread):
                   ]
             try:
                 output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
-                time.sleep(1 + (self.accuracy * 2))
 
                 if "error" in output.lower():
                     raise subprocess.CalledProcessError("non-zero exit status", cmd=cmd, output=output)
                 else:
+                    # success
                     for line in output.splitlines():
                         self.logger.info("GPHOTO2: " + line)
+
+                    time.sleep(1 + (self.accuracy * 2))
                     return True
 
             except subprocess.CalledProcessError as e:
@@ -325,13 +330,13 @@ class GphotoCamera(Thread):
                         try:
                             # copy jpegs to the static web dir, and to the upload dir (if upload webcam flag is set)
                             if ext == ".jpeg" or ext == ".jpg":
-                                # if self.config["ftp"]["uploadwebcam"] == "on":
                                 try:
-                                    im = Image.open(fn)
-                                    self.logger.error("resizing image {}".format(fn))
-                                    im.thumbnail((640, 480), Image.NEAREST)
-                                    im.save(os.path.join(self.upload_directory, "last_image.jpg"))
-                                    shutil.copy(os.path.join(self.upload_directory, "last_image.jpg"), os.path.join("/dev/shm", self.serialnumber + ".jpg"))
+                                    if self.config.getboolean("ftp","uploadwebcam"):
+                                        im = Image.open(fn)
+                                        self.logger.error("resizing image {}".format(fn))
+                                        im.thumbnail((640, 480), Image.NEAREST)
+                                        im.save(os.path.join(self.upload_directory, "last_image.jpg"))
+                                        shutil.copy(os.path.join(self.upload_directory, "last_image.jpg"), os.path.join("/dev/shm", self.serialnumber + ".jpg"))
                                 except Exception as e:
                                     self.logger.error("couldnt resize :( {}".format(str(e)))
 
@@ -339,7 +344,7 @@ class GphotoCamera(Thread):
                             self.logger.error("Couldnt copy webcam upload: %s" % str(e))
 
                         try:
-                            if self.config["ftp"]["uploadtimestamped"] == "on":
+                            if self.config.getboolean("ftp","uploadtimestamped"):
                                 self.logger.debug("saving timestamped image for you, buddy")
                                 shutil.copy(fn, os.path.join(self.upload_directory, os.path.basename(name + ext)))
                         except Exception as e:
@@ -487,7 +492,7 @@ class PiCamera(GphotoCamera):
                         self.logger.error("Error moving for webinterface or webcam: %s" % str(e))
                     # rename for timestamped upload
                     try:
-                        if self.config["ftp"]["uploadtimestamped"] == "on":
+                        if self.config.getboolean("ftp","uploadtimestamped"):
                             self.logger.debug("saving timestamped image for you, buddy")
                             shutil.copy(image_file, os.path.join(self.upload_directory, os.path.basename(image_file)))
                     except Exception as e:
@@ -617,7 +622,7 @@ class IVPortCamera(PiCamera):
                     # Copy the image file to the static webdir
                     for filename in filenames:
                         try:
-                            if self.config["ftp"]["uploadtimestamped"] == "on":
+                            if self.config.getboolean("ftp","uploadtimestamped"):
                                 self.logger.debug("saving timestamped image for you, buddy")
                                 shutil.copy(filename, os.path.join(self.upload_directory, os.path.basename(filename)))
                         except Exception as e:
