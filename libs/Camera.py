@@ -483,7 +483,7 @@ class PiCamera(GphotoCamera):
                                                                                                          filename=image_file_basename))
         else:
             retcode = os.system("/opt/vc/bin/raspistill --nopreview -o \"{filename}.jpg\"".format(filename=image_file_basename))
-        os.chmod(raw_image, 755)
+        os.chmod(image_file_basename, 755)
         if retcode != 0:
             return False
         return True
