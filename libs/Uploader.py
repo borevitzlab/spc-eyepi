@@ -37,6 +37,10 @@ class Uploader(Thread):
         self.setup()
 
     def setup(self):
+        """
+        setup to be run each time the config is reloaded
+        :return:
+        """
         # TODO: move the timeinterval to the config file and get it from there, this _should_ avoid too many requests to the sftp server.
         self.timeinterval = 10
         self.config = ConfigParser()
@@ -54,8 +58,10 @@ class Uploader(Thread):
         self.ipaddress = None
 
     def sendMetadataSFTP(self, datas):
-        """ Stores IP address on server using SecureFTP
-            *datas is a dictionary of metadata files as datas[fname]=data
+        """
+        sets the metadata on the server.
+        :param datas:
+        :return:
         """
         try:
             # self.logger.debug("trying to store new ip on server using SFTP, friend!")
@@ -100,7 +106,10 @@ class Uploader(Thread):
         return True
 
     def sftpUpload(self, filenames):
-        """ Secure upload the image file to the Server
+        """
+        uploads files via sftp. deletes the files as they are uploaded.
+        :param filenames: filenames to upload
+        :return:
         """
         try:
             self.logger.debug("Connecting sftp and uploading buddy")
@@ -121,8 +130,9 @@ class Uploader(Thread):
                     self.total_data_uploaded_b += os.path.getsize(f)
                     os.remove(f)
                     self.logger.debug("Successfuly uploaded %s through sftp and removed from local filesystem" % f)
+                    self.last_upload_time = datetime.datetime.now()
                 except Exception as e:
-                    self.logger.warning("sftp:%s" % str(e))
+                    self.logger.error("sftp:{}".format(str(e)))
             self.logger.debug("Disconnecting, eh")
             link.close()
             if self.total_data_uploaded_b > 1000000000000:
@@ -132,12 +142,15 @@ class Uploader(Thread):
 
         except Exception as e:
             # log a warning if fail because SFTP is meant to fail to allow FTP fallback
-            self.logger.warning("SFTP:  " + str(e))
+            self.logger.error("SFTP: {}".format(str(e)))
             return False
         return True
 
     def ftpUpload(self, filenames):
-        """ insecure upload for backwards compatibility
+        """
+        uploads via ftp
+        :param filenames:
+        :return:
         """
         self.logger.info("Looks like I can't make a connection using sftp, eh. Falling back to ftp.")
         try:
@@ -160,7 +173,11 @@ class Uploader(Thread):
         return True
 
     def mkdir_p_sftp(self, sftp, remote_directory):
-        """ Recursive directory sorcery for SecureFTP
+        """
+        creates directories recursively on the remote server
+        :param sftp: sftp handler
+        :param remote_directory:
+        :return:
         """
         try:
             if remote_directory == '/':
@@ -180,7 +197,12 @@ class Uploader(Thread):
             self.logger.error("something went wrong making directories... {}".format(str(e)))
 
     def mkdir_p_ftp(self, ftp, remote_directory):
-        """ Recursive directory sorcery for FTP
+        """
+        creates directories recursively on the remote server
+        warning: black magic ahead
+        :param ftp: ftp handler
+        :param remote_directory:
+        :return:
         """
         if remote_directory == '/':
             ftp.cwd('/')
@@ -197,7 +219,10 @@ class Uploader(Thread):
             ftp.cwd(basename)
 
     def set_metadata_on_server(self, list_of_uploads):
-        """ Metadata collector
+        """
+        collects metadata from various parts of the pi and sets the data on the server.
+        :param list_of_uploads:
+        :return:
         """
 
         def sizeof_fmt(num, suffix='B'):
@@ -209,8 +234,8 @@ class Uploader(Thread):
 
         try:
             data = {}
-            # data entries must be strings so just serialise
-            # some more sorcery that i dont fully understand. Connects to googles DNS server
+            # data entries must be strings so just serialise a dict
+
             s = socket(AF_INET, SOCK_DGRAM)
             s.connect(("8.8.8.8", 0))
             self.ipaddress = s.getsockname()[0]
@@ -264,7 +289,6 @@ class Uploader(Thread):
                     'stoptime']
 
                 jsondata['last_upload_time'] = 0
-
                 # need to check against none because otherwise it gets stuck in a broken loop.
                 if self.last_upload_time is not None:
                     try:
@@ -285,7 +309,6 @@ class Uploader(Thread):
                 self.sendMetadataFTP(data)
         except Exception as e:
             self.logger.error(str(e))
-            time.sleep(5)
 
     def run(self):
         """ Main upload loop
