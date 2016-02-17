@@ -117,14 +117,15 @@ def start_workers(objects):
 def kill_workers(objects):
     for thread in objects:
         thread.stop()
-        thread.join()
+        # thread.join()
 
 
-def get_usb_dev_list():
-    context = pyudev.Context()
-    ret = ""
-    for device in context.list_devices(subsystem='usb'):
-        ret += str(device)
+def enumerate_usb_devices():
+    """
+    usb dev list is very important
+    :return:
+    """
+    return "\n".join([str(x) for x in pyudev.Context().list_devices(subsystem="usb")])
 
 
 if __name__ == "__main__":
@@ -166,23 +167,23 @@ if __name__ == "__main__":
         #           Uploader("ivport.ini", name="IVport-Uploader"))
         # start_workers(ivportcam)
 
-        usb_dev_list = get_usb_dev_list()
+        usb_devices = enumerate_usb_devices()
 
         while True:
             try:
-                if usb_dev_list != get_usb_dev_list():
-                    logger.warning("change in usb dev list")
+                if usb_devices != enumerate_usb_devices():
+                    logger.error("change in usb dev list")
                     if cameras is not None:
                         for worker in workers:
                             kill_workers(worker)
                     cameras = detect_cameras("usb")
-                    usb_dev_list = get_usb_dev_list()
+                    usb_devices = enumerate_usb_devices()
 
                     workers = create_workers(cameras)
                     for worker in workers:
                         start_workers(worker)
                 time.sleep(1)
-            except (KeyboardInterrupt, SystemExit):
+            except (KeyboardInterrupt, SystemExit) as e:
                 if cameras is not None:
                     for worker in workers:
                         kill_workers(worker)
@@ -190,7 +191,7 @@ if __name__ == "__main__":
                     kill_workers(raspberry)
                 if updater:
                     kill_workers([updater])
-                sys.exit()
+                raise e
             except Exception as e:
                 logger.fatal("EMERGENCY! Other exception encountered. {}".format(str(e)))
 
