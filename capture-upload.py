@@ -206,3 +206,5 @@ if __name__ == "__main__":
             kill_workers([updater])
 
         sys.exit()
+    except Exception as e:
+        logger.fatal("EMERGENCY! An exception occurred during worker dispatch: {}".format(str(e)))
