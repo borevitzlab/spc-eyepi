@@ -1,0 +1,11 @@
+[Unit]
+Description=SPC-Eyepi api systemd service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/spc-eyepi/
+ExecStart=/usr/bin/python3 /home/spc-eyepi/api.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

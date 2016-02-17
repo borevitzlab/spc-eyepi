@@ -427,7 +427,7 @@ def update_tag(tag):
     def update(response):
         app.debug = False
         os.system("git fetch --tags --all;git reset --hard {}".format(tag))
-        os.system("systemctl restart spc-eyepi_capture.service")
+        os.system("systemctl restart eyepi-capture.service")
         return response
     app.debug = True
     return "SUCCESS"
@@ -439,6 +439,7 @@ def pip_install():
     _,package = dict(request.args).popitem()
     pip.main(["install",package])
     return "SUCCESS"
+
 
 
 @app.route("/status")
