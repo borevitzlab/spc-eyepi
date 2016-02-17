@@ -474,16 +474,17 @@ class PiCamera(GphotoCamera):
 
     def capture(self, image_file_basename):
         retcode = 1
+        image_file_spoolpath = os.path.join(self.spool_directory,image_file_basename)
         # take the image using os.system(), pretty hacky but its never exactly be run on windows.
         if self.config.has_section("picam_size"):
             w, h = self.config["picam_size"]["width"], self.config["picam_size"]["height"]
             retcode = os.system(
                 "/opt/vc/bin/raspistill -w {width} -h {height} --nopreview -o \"{filename}.jpg\"".format(width=w,
                                                                                                          height=h,
-                                                                                                         filename=image_file_basename))
+                                                                                                         filename=image_file_spoolpath))
         else:
-            retcode = os.system("/opt/vc/bin/raspistill --nopreview -o \"{filename}.jpg\"".format(filename=image_file_basename))
-        os.chmod(image_file_basename+".jpg", 755)
+            retcode = os.system("/opt/vc/bin/raspistill --nopreview -o \"{filename}.jpg\"".format(filename=image_file_spoolpath))
+        os.chmod(image_file_spoolpath+".jpg", 755)
         if retcode != 0:
             return False
         return True
