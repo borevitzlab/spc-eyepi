@@ -80,9 +80,9 @@ def detect_picam():
     try:
         cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
         if cmdret[cmdret.find("detected=") + 9: len(cmdret) - 1] == "1":
-            return True
+            return [PiCamera("picam.ini", name="PiCam",serialnumber="picam"), Uploader("picam.ini", name="PiCam-Uploader")]
         else:
-            return False
+            return None
     except subprocess.CalledProcessError:
         pass
     return None
@@ -109,6 +109,9 @@ def create_workers(cameras):
 
 
 def start_workers(objects):
+    if not objects:
+        logger.warning("Tried to start workers that didnt exist")
+        return
     for thread in objects:
         thread.daemon = True
         thread.start()
@@ -129,21 +132,21 @@ def get_usb_dev_list():
 
 if __name__ == "__main__":
     logger = logging.getLogger("Worker_dispatch")
-    logger.debug("Program startup")
+    logger.info("Program startup")
     # The main loop for capture
     cameras = None
-    has_picam = None
+    raspberry = None
     # TODO: Fix storage for multiple cameras
     try:
-        has_picam = detect_picam()
-        if has_picam:
-            raspberry = [PiCamera("picam.ini", name="PiCam",serialnumber="picam"), Uploader("picam.ini", name="PiCam-Uploader")]
-            start_workers(raspberry)
+        raspberry = detect_picam()
+        start_workers(raspberry)
+
         updater = None
         if os.path.isfile("picam.ini"):
             updater = Updater()
             updater.start()
 
+        cameras = detect_cameras("usb")
         tries = 0
         while not cameras and tries < 10:
             logger.debug("detecting Cameras")
@@ -169,7 +172,6 @@ if __name__ == "__main__":
 
         while True:
             try:
-                pass
                 if usb_dev_list != get_usb_dev_list():
                     if cameras is not None:
                         for worker in workers:
