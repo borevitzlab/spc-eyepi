@@ -109,9 +109,6 @@ def create_workers(cameras):
 
 
 def start_workers(objects):
-    if not objects:
-        logger.warning("Tried to start workers that didnt exist")
-        return
     for thread in objects:
         thread.daemon = True
         thread.start()
@@ -177,37 +174,29 @@ if __name__ == "__main__":
                         for worker in workers:
                             kill_workers(worker)
                     cameras = detect_cameras("usb")
-                    # start workers again
-                    time.sleep(60)
+                    usb_dev_list = get_usb_dev_list()
+
                     workers = create_workers(cameras)
                     for worker in workers:
                         start_workers(worker)
-                    usb_dev_list = get_usb_dev_list()
                 time.sleep(1)
             except (KeyboardInterrupt, SystemExit):
                 if cameras is not None:
                     for worker in workers:
                         kill_workers(worker)
-                # if webcam:
-                #     kill_workers(webcam)
-
-                # if ivportcam:
-                #     kill_workers(ivportcam)
                 if raspberry:
                     kill_workers(raspberry)
-                updater.join()
+                if updater:
+                    kill_workers([updater])
                 sys.exit()
+            except Exception as e:
+                logger.fatal("EMERGENCY! Other exception encountered. {}".format(str(e)))
 
     except (KeyboardInterrupt, SystemExit):
         print("exiting...")
         if cameras is not None:
             for worker in workers:
                 kill_workers(worker)
-
-        # if webcam:
-        #     kill_workers(webcam)
-        # if ivportcam:
-        #     kill_workers(ivportcam)
         if raspberry:
             kill_workers(raspberry)
         if updater:

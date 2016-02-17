@@ -314,19 +314,19 @@ class GphotoCamera(Thread):
             # set a timenow, this is used everywhere ahead, DO NOT REMOVE.
             tn = datetime.datetime.now()
 
-            if self.time2seconds(tn) % (86400 / 24) < self.accuracy:
-                files = []
-                # once per hour
-                # remove weird images that appear in the working dir.
-                # TODO: fix this so its not so hacky, need to find out why the
-                # picam is leaving jpegs in the working directoy.
-                for filetype in filetypes:
-                    files.extend(glob("/home/spc-eyepi/*." + filetype.upper() + "\~"))
-                    files.extend(glob("/home/spc-eyepi/*." + filetype.lower() + "\~"))
-                    files.extend(glob("/home/spc-eyepi/*." + filetype.upper()))
-                    files.extend(glob("/home/spc-eyepi/*." + filetype.lower()))
-                for fn in files:
-                    os.remove(fn)
+            # if self.time2seconds(tn) % (86400 / 24) < self.accuracy:
+            #     files = []
+            #     # once per hour
+            #     # remove weird images that appear in the working dir.
+            #     # TODO: fix this so its not so hacky, need to find out why the
+            #     # picam is leaving jpegs in the working directoy.
+            #     for filetype in filetypes:
+            #         files.extend(glob("/home/spc-eyepi/*." + filetype.upper() + "\~"))
+            #         files.extend(glob("/home/spc-eyepi/*." + filetype.lower() + "\~"))
+            #         files.extend(glob("/home/spc-eyepi/*." + filetype.upper()))
+            #         files.extend(glob("/home/spc-eyepi/*." + filetype.lower()))
+            #     for fn in files:
+            #         os.remove(fn)
 
             # checking if enabled and other stuff
             if self.get_is_capture(tn.time()):
@@ -548,19 +548,19 @@ class IVPortCamera(PiCamera):
                 self.setup()
                 self.logger.info("change in config at " + datetime.datetime.now().isoformat() + " reloading")
 
-            if (self.time2seconds(tn) % (86400 / 24) < self.accuracy):
-                files = []
-                # once per hour
-                # remove weird images that appear in the working dir.
-                # TODO: fix this so its not so hacky, need to find out why the
-                # picam is leaving jpegs in the working directoy.
-                for filetype in filetypes:
-                    files.extend(glob("/home/spc-eyepi/*." + filetype.upper() + "\~"))
-                    files.extend(glob("/home/spc-eyepi/*." + filetype.lower() + "\~"))
-                    files.extend(glob("/home/spc-eyepi/*." + filetype.upper()))
-                    files.extend(glob("/home/spc-eyepi/*." + filetype.lower()))
-                for fn in files:
-                    os.remove(fn)
+            # if self.time2seconds(tn) % (86400 / 24) < self.accuracy:
+            #     files = []
+            #     # once per hour
+            #     # remove weird images that appear in the working dir.
+            #     # TODO: fix this so its not so hacky, need to find out why the
+            #     # picam is leaving jpegs in the working directoy.
+            #     for filetype in filetypes:
+            #         files.extend(glob("/home/spc-eyepi/*." + filetype.upper() + "\~"))
+            #         files.extend(glob("/home/spc-eyepi/*." + filetype.lower() + "\~"))
+            #         files.extend(glob("/home/spc-eyepi/*." + filetype.upper()))
+            #         files.extend(glob("/home/spc-eyepi/*." + filetype.lower()))
+            #     for fn in files:
+            #         os.remove(fn)
 
             if self.get_is_capture(tn.time()):
                 try:
