@@ -34,6 +34,9 @@ class Uploader(Thread):
         self.startup_time = datetime.datetime.now()
         self.total_data_uploaded_tb = 0
         self.total_data_uploaded_b = 0
+        # these things are to none now so we can check for None later.
+        self.last_upload_time = None
+        self.ipaddress = None
         self.setup()
 
     def setup(self):
@@ -42,7 +45,7 @@ class Uploader(Thread):
         :return:
         """
         # TODO: move the timeinterval to the config file and get it from there, this _should_ avoid too many requests to the sftp server.
-        self.timeinterval = 10
+        self.timeinterval = 60
         self.config = ConfigParser()
         self.config.read(self.config_filename)
         self.hostname = self.config["ftp"]["server"]
@@ -53,9 +56,6 @@ class Uploader(Thread):
         self.upload_directory = self.config["localfiles"]["upload_dir"]
         self.last_upload_list = []
         self.last_capture_time = datetime.datetime.fromtimestamp(0)
-        # these things are to none now so we can check for None later.
-        self.last_upload_time = None
-        self.ipaddress = None
 
     def sendMetadataSFTP(self, datas):
         """
@@ -324,7 +324,7 @@ class Uploader(Thread):
             try:
                 upload_list = glob(os.path.join(self.upload_directory, '*'))
                 if len(upload_list) == 0:
-                    self.logger.debug("No files in upload directory")
+                    self.logger.info("No files in upload directory")
                 if (len(upload_list) > 0) and self.config.getboolean("ftp", "uploaderenabled"):
                     self.logger.info("Preparing to upload %d files" % len(upload_list))
                     try:

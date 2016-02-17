@@ -1,0 +1,11 @@
+[Unit]
+Description=SPC-Eyepi capture systemd service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/spc-eyepi/
+ExecStart=/usr/bin/python3 /home/spc-eyepi/capture-upload.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

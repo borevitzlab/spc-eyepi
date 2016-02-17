@@ -1,0 +1,11 @@
+[Unit]
+Description=SPC-Eyepi webinterface systemd service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/spc-eyepi/
+ExecStart=/usr/bin/python3 /home/spc-eyepi/webinterface.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
