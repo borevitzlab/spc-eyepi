@@ -136,7 +136,8 @@ if __name__ == "__main__":
     # TODO: Fix storage for multiple cameras
     try:
         raspberry = detect_picam()
-        start_workers(raspberry)
+        if raspberry:
+            start_workers(raspberry)
 
         updater = None
         if os.path.isfile("picam.ini"):
@@ -170,6 +171,7 @@ if __name__ == "__main__":
         while True:
             try:
                 if usb_dev_list != get_usb_dev_list():
+                    logger.warning("change in usb dev list")
                     if cameras is not None:
                         for worker in workers:
                             kill_workers(worker)
