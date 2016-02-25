@@ -17,7 +17,7 @@ from schedule import Scheduler
 
 from .AESCipher import AESCipher
 
-hostname = "traitcapture.org"
+hostname = "api.traitcapture.org"
 # hostname = "localhost:5000"
 
 class Updater(Thread):
