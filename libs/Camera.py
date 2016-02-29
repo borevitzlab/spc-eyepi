@@ -385,20 +385,23 @@ class GphotoCamera(Thread):
                                         shutil.copy(fn, os.path.join("/dev/shm", self.serialnumber + ".jpg"))
                                         shutil.copy(fn, os.path.join(self.upload_directory, "last_image.jpg"))
                             except Exception as e:
-                                self.logger.error("couldnt resize :( {}".format(str(e)))
+                                self.logger.error("Couldnt resize for webcam upload :( {}".format(str(e)))
 
                         try:
                             if self.config.getboolean("ftp", "uploadtimestamped"):
                                 self.logger.debug("saving timestamped image for you, buddy")
                                 # shutil move is preferable over copy
                                 shutil.copy(fn, self.upload_directory)
-                            if os.path.isfile(fn):
-                                os.remove(fn)
 
                         except Exception as e:
-                            self.logger.error("Couldnt copy/remove: {}".format(str(e)))
-
+                            self.logger.error("Couldnt copy for timestamped: {}".format(str(e)))
                         self.logger.info("Captured and stored - {}".format(os.path.basename(basename)))
+
+                        try:
+                            if os.path.isfile(fn):
+                                os.remove(fn)
+                        except Exception as e:
+                            self.logger.error("Couldnt remove spooled: {}".format(str(e)))
 
                     try:
                         if not os.path.isfile(self.serialnumber + ".json"):
