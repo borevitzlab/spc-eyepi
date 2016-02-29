@@ -391,7 +391,7 @@ class GphotoCamera(Thread):
                             if self.config.getboolean("ftp", "uploadtimestamped"):
                                 self.logger.debug("saving timestamped image for you, buddy")
                                 # shutil move is preferable over copy
-                                shutil.move(fn, self.upload_directory)
+                                shutil.copy(fn, self.upload_directory)
                             if os.path.isfile(fn):
                                 os.remove(fn)
 
