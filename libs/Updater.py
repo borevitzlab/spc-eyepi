@@ -17,7 +17,7 @@ from schedule import Scheduler
 
 from .AESCipher import AESCipher
 
-hostname = "api.traitcapture.org"
+hostname = "traitcapture.org"
 # hostname = "localhost:5000"
 
 class Updater(Thread):
@@ -101,7 +101,7 @@ class Updater(Thread):
             n = aes_crypt.encrypt(json.dumps(names)).decode('utf-8')
             with open(logfile, 'r') as f:
                 encrypted_data = aes_crypt.encrypt(f.read())
-                self.post_multipart("{}".format(hostname), "https://{}/post_log".format(hostname), [("names", n)],
+                self.post_multipart("{}".format(hostname), "https://{}/api/camera/post-log".format(hostname), [("names", n)],
                                     [("file", "log", encrypted_data)])
         except Exception as e:
             print(str(e))
@@ -116,7 +116,7 @@ class Updater(Thread):
 
             data = parse.urlencode({'data': ciphertext})
             data = data.encode('utf-8')
-            req = request.Request('https://{}/checkin'.format(hostname), data)
+            req = request.Request('https://{}/api/camera/check-in'.format(hostname), data)
 
             # do backwards change if response is valid later.
             tries = 0
