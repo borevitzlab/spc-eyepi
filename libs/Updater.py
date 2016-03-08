@@ -161,7 +161,6 @@ class Updater(Thread):
             'stoptime': ('timelapse', 'stoptime')
         }
         tf = {"True": "on", "False": "off", "true": "on", "false": "off", True: "on", False: "off"}
-        self.logger.error("getting here")
 
         for serialnumber, setdata in data.items():
             config = ConfigParser()
