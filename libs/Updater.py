@@ -122,7 +122,7 @@ class Updater(Thread):
             tries = 0
             while tries < 120:
                 try:
-                    handler = request.HTTPSHandler(context=ssl.SSLContext(ssl.PROTOCOL_SSLv3))
+                    handler = request.HTTPSHandler(context=ssl.SSLContext(ssl.PROTOCOL_TLSv1_2))
                     opener = request.build_opener(handler)
                     data = opener.open(req)
                     if data.getcode() == 200:
@@ -161,7 +161,6 @@ class Updater(Thread):
             'stoptime': ('timelapse', 'stoptime')
         }
         tf = {"True": "on", "False": "off", "true": "on", "false": "off", True: "on", False: "off"}
-        self.logger.error("getting here")
 
         for serialnumber, setdata in data.items():
             config = ConfigParser()
