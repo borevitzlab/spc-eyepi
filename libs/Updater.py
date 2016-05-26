@@ -29,6 +29,7 @@ class Updater(Thread):
         self.scheduler.every(30).minutes.do(self.upload_log)
         self.logger = logging.getLogger(self.getName())
         self.stopper = Event()
+        self.go()
 
     def post_multipart(self, host, selector, fields, files):
         """
