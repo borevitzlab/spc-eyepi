@@ -11,6 +11,7 @@
                 <button class="btn btn-primary " data-toggle="modal" data-target="#hostname-confirm-modal">Change global
                     name
                 </button>
+                <button class="btn btn-default"><a id="reset-machine-id" role="button">Reset Machine ID</a></button>
                 <button class="btn btn-default"><a href="/update" role="button">Update Spc-Eyepi</a></button>
                 <button class="btn btn-danger"><a href="/restart" role="button">Reboot</a></button>
             </div>
@@ -88,6 +89,11 @@
         </div>
 
         <script type="text/javascript">
+            $("#reset-machine-id").click(function(){
+                $.getJSON("/reset_machine_id", function(data){
+                    console.log(data);
+                })
+            });
             $("#{{username}}-save-button").click(function (e) {
                 e.preventDefault();
                 $.post('/newuser',

@@ -308,6 +308,16 @@ def capture_preview(serialnumber):
 
     except subprocess.CalledProcessError as e:
         print(str(e))
+
+@app.route("/available_networks", methods=["GET"])
+def available_networks():
+    def generate_networks():
+        networks = str.splitlines(os.popen('sudo iw dev wlp6s0 scan | grep "SSID: " | cut -c 8- | sort |uniq').read())
+        networks = [x for x in networks if "x00" not in x]
+        for net in networks:
+            yield net + '\n'
+    return app.response_class(generate_networks(), mimetype='text/plain')
+
 @app.route("/wifi", methods=["GET"])
 def wifi():
     return render_template("wifi.html")
@@ -412,9 +422,9 @@ def per_request_callbacks(response):
 def restart():
     @after_this_request
     def shutdown(response):
+        print("SHUTTING DOWN!")
         time.sleep(1)
-        # shutdown_server()
-        os.system("reboot")
+        os.system("reboot now")
         return response
     return "Rebooting... ", 200
 
@@ -466,11 +476,10 @@ def wificonfig():
     if request.method == 'POST':
         interface = os.popen("ip link | cut -c4- | grep ^w | sed 's/:.*//'").read().rstrip()
         print("Interface: " + interface)
-        security = request.form["security"]
         ssid = request.form["ssid"]
         key = request.form["key"]
         netprofile = open('/etc/netctl/netprofile', 'w')
-        netprofile.write(render_template("netprofile", interface=interface,security=security, ssid=ssid, key=key))
+        netprofile.write(render_template("netprofile", interface=interface, ssid=ssid, key=key))
         netprofile.close();
         print("Stopping AP")
         os.system("systemctl stop create_ap.service")
@@ -633,8 +642,9 @@ def reset_machine_id():
         removes the machine id and calls the command to reset machine-id
     """
     resp = {}
+    print("Resetting machine ID")
     try:
-        if os.path.isfile("/ect/machine-id"):
+        if os.path.isfile("/etc/machine-id"):
             os.remove("/etc/machine-id")
         os.system("systemd-machine-id-setup")
     except Exception as e:
@@ -1010,6 +1020,23 @@ def getfilteredlog():
         abort(400)
 
 
+@app.route('/log/<lt>/<lc>')
+def stream(lt, lc):
+    def generate():
+        line = 1
+        with open("spc-eyepi.log") as f:
+            r = "     "
+            while len(r):
+                if line > int(lc):
+                    break
+                line += 1
+                r = f.readline().strip()
+                if lt in r:
+                    yield r+"\n"
+
+    return app.response_class(generate(), mimetype='text/plain')
+
+
 @app.route("/log.log")
 @requires_auth
 def log():
@@ -1045,11 +1072,12 @@ def logfile():
 def get_resource(selector, path):
     return send_from_directory("static", filename=os.path.join(selector, path))
 
-setup_ap()
-def cleanup():
+if os.system("ping -c 1 8.8.8.8") != 0:
+    setup_ap()
+    def cleanup():
         os.system("systemctl stop create_ap.service")
         print("create_ap stopped gracefully")
-import atexit
-atexit.register(cleanup)
+    import atexit
+    atexit.register(cleanup)
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
