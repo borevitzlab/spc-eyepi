@@ -22,7 +22,7 @@
 <br>
 <hr>
 <div id="log-container">
-    <script type="syntaxhighlighter" class="brush: plain; toolbar: false;" id="log-area">
+    <script type="syntaxhighlighter" class="brush: plain; toolbar: false; gutter: false;" id="log-area">
 
     </script>
     <br>
@@ -56,15 +56,10 @@
         var logcontainer = document.getElementById('log-container');
         log.setAttribute("id", "log-area");
         log.setAttribute("type", "syntaxhighlighter");
-        log.setAttribute("class", "brush: plain; toolbar: false;");
+        log.setAttribute("class", "brush: plain; toolbar: false; gutter: false;");
         log.textContent = xhr.responseText;
         logcontainer.appendChild(log);
         SyntaxHighlighter.highlight()
     }
-$("#somebutton").on("click", function(){
-    $.getJSON("/path.json", function(data){
-        console.log(data);
-    })
-})
 </script>
 {% endblock %}

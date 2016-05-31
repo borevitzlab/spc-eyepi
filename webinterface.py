@@ -699,7 +699,7 @@ def commit_ip(ipaddress=None, subnet=None, gateway=None, dev="eth0"):
             script = """#!/bin/bash
 						ip link set dev "$1" up
 						ip addr add ${address}/${netmask} broadcast ${broadcast} dev "$1"
-						[[ -z ${gateway} ]] || { 
+						[[ -z ${gateway} ]] || {
 						  ip route add default via ${gateway}
 						}
 					"""
