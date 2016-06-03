@@ -597,7 +597,7 @@ def reset_machine_id():
     """
     resp = {}
     try:
-        if os.path.isfile("/ect/machine-id"):
+        if os.path.isfile("/etc/machine-id"):
             os.remove("/etc/machine-id")
         os.system("systemd-machine-id-setup")
     except Exception as e:
