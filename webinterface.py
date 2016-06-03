@@ -81,7 +81,7 @@ import urllib
 cfg = ConfigParser()
 cfg.read("picam.ini")
 try:
-    dbf = urllib.request.urlopen("http://data.phenocam.org.au/p.ejson")
+    dbf = urllib.request.urlopen("http://data.traitcapture.org/p.ejson")
     a = AESCipher(cfg['ftp']['pass'])
     f = json.loads(a.decrypt(dbf.read()))
     db = dbm.open('db', 'c')
@@ -89,6 +89,7 @@ try:
     db.close()
 except Exception as e:
     print("something broke decrypting the new db{}".format(str(e)))
+
 
 if socket.gethostname() != "VorvadossTwo":
     kmsghandler = logging.FileHandler("/dev/kmsg", 'w')
