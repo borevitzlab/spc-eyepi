@@ -11,6 +11,32 @@ def sizeof_fmt(num, suffix='B'):
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
+default_config = """
+[camera]
+name =
+enabled = on
+
+[ftp]
+uploaderenabled = on
+uploadwebcam = on
+uploadtimestamped = on
+server = traitcapture.org
+directory = /
+user = DEFAULT_USER
+pass = DEFAULT_PASSWORD
+
+[timelapse]
+interval = 300
+starttime = 00:00
+stoptime = 23:59
+
+[localfiles]
+spooling_dir =
+upload_dir =
+"""
+
+
+
 class SysUtil(object):
     """
     System utility class.
@@ -119,16 +145,53 @@ class SysUtil(object):
                 cls._external_ip = "0.0.0.0", time.time()
         return cls._external_ip[0]
 
+
+    @classmethod
+    def get_serialnumber_from_name(cls, name):
+        """
+        returns either the serialnumber (from name) or the name filled with the machine id
+        :param name: name to fill
+        :return:
+        """
+        return "".join((x if idx > len(name) - 1 else name[idx] for idx, x in enumerate(cls.get_machineid())))
+
     @classmethod
     def get_serialnumber_from_filename(cls, file_name):
         """
-        returns either the serialnumber
+        returns either the serialnumber (from name) or the name filled with the machine id
         :param file_name: filename
-        :param machine_id: the current machine id.
         :return:
         """
         fsn = next(iter(os.path.splitext(os.path.basename(file_name))), "")
-        return "".join((x if idx > len(fsn) - 1 else fsn[idx] for idx, x in enumerate(cls.get_machineid())))
+        return cls.get_serialnumber_from_name(fsn)
+
+    @classmethod
+    def ensure_config(cls, path, serialnumber):
+        import configparser
+        config = configparser.ConfigParser()
+        config.read_string(default_config)
+        rewrite = False
+        try:
+            config.read(path)
+        except Exception as e:
+            rewrite = True
+            print(str(e))
+
+        if not config['localfiles']['spooling_dir']:
+            config['localfiles']['spooling_dir'] = "/home/images/spool/{}".format(serialnumber)
+
+        if not config['localfiles']['upload_dir']:
+            config['localfiles']['upload_dir'] = "/home/images/upload/{}".format(serialnumber)
+
+        if not config['camera']['name']:
+            config['camera']['name'] = SysUtil.get_hostname()+serialnumber[:6]
+
+        if rewrite:
+            with open(path, 'w') as configfile:
+                config.write(configfile)
+
+        return config
+
 
     @classmethod
     def serialnumber_to_ini(cls, sn):
