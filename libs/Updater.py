@@ -1,4 +1,3 @@
-__author__ = 'Gareth Dunstone'
 import datetime
 import http.client
 import json
@@ -15,7 +14,6 @@ from urllib import request, parse
 from schedule import Scheduler
 from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
-
 
 hostname = "traitcapture.org"
 

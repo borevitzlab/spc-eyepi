@@ -1,4 +1,3 @@
-__author__ = 'Gareth Dunstone'
 import datetime
 import ftplib
 import io
@@ -15,8 +14,7 @@ from threading import Thread, Event
 import paramiko
 import pysftp
 from .CryptUtil import SSHManager
-from ..libs import SysUtil
-
+from .SysUtil import SysUtil
 
 def pysftp_connection_init_patch(self, host, username=None, private_key=None, port=22):
     """
@@ -329,7 +327,7 @@ class Uploader(Thread):
                 upload_list = glob(os.path.join(self.upload_directory, '*'))
                 if len(upload_list) == 0:
                     self.logger.info("No files in upload directory")
-                if (len(upload_list) > 0) and self.config.getboolean("ftp", "uploaderenabled"):
+                if (len(upload_list) > 0) and self.config.getboolean("ftp", "enabled"):
                     self.logger.info("Preparing to upload %d files" % len(upload_list))
                     try:
                         l_im = os.path.join(self.upload_directory, "last_image.jpg")

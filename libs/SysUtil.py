@@ -12,14 +12,20 @@ def sizeof_fmt(num, suffix='B'):
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
 default_config = """
+[DEFAULT]
+exposure = 0
+enabled = on
+resize = on
+
 [camera]
 name =
 enabled = on
 
 [ftp]
-uploaderenabled = on
-uploadwebcam = on
-uploadtimestamped = on
+enabled = on
+replace = on
+resize = on
+timestamped = on
 server = traitcapture.org
 directory = /
 user = DEFAULT_USER
