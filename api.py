@@ -10,13 +10,9 @@ import urllib, socket
 from flask import Flask, Response, request, g
 from flask.ext.bcrypt import Bcrypt
 import time
-from libs.AESCipher import AESCipher
 from werkzeug.exceptions import default_exceptions
 from werkzeug.exceptions import HTTPException
 from flask import jsonify
-
-
-
 
 app = Flask(__name__)
 app.debug = True
@@ -58,11 +54,13 @@ def requires_auth(f):
         auth = request.authorization
         if not auth:
             return authenticate()
-        with dbm.open('db', 'r') as passdb:
-            auth_allowed = bcrypt.check_password_hash(passdb[b'admin'].decode('utf-8'), auth.password)
-        if not auth_allowed:
-            return authenticate()
-        return f(*args, **kwargs)
+        try:
+            with dbm.open('db', 'r') as passdb:
+                if bcrypt.check_password_hash(passdb[b'admin'].decode('utf-8'), auth.password):
+                    return f(*args, **kwargs)
+        except Exception as e:
+            print(str(e))
+        return authenticate()
     return decorated
 
 
@@ -106,11 +104,6 @@ def per_request_callbacks(response):
     for func in getattr(g, 'call_after_request', ()):
         response = func(response)
     return response
-
-@app.route("/")
-@requires_auth
-def index():
-    return {"sadgadg": "sadfasdf", "somethingelse": 1}
 
 def reconfigure_systemd():
     """
