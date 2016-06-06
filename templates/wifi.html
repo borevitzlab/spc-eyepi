@@ -1,0 +1,35 @@
+{% extends "layout.html" -%}
+{% set active_page="wifi" -%}
+{% block body %}
+    <h2>Wifi</h2>
+    <hr>
+    <!-- detect cameras button -->
+    <div class="btn-group col-md-4" role="group" aria-label="detect-camera-button-group">
+    </div>
+    <form id="wifi-options">
+        <br>
+        Wifi name:<br>
+        <input type="text" id="wifi-ssid"><br>
+        Wifi password:<br>
+        <input type="text" id="wifi-key"><br>
+        Wifi security:<br>
+        <input type="text" id="wifi-security"><br>
+        <input type="submit" id="wifi-submit" value="Submit"><br>
+
+    </form>
+<script type="text/javascript">
+            $("#wifi-submit").click(function (e) {
+                e.preventDefault();
+                $.post('/wificonfig',
+                        {
+                            security: $("#wifi-security").val(),
+                            ssid: $("#wifi-ssid").val(),
+                            key: $("#wifi-key").val(),
+                        });
+                alert("Connecting to network: " + $("#wifi-ssid").val());
+            });
+</script>
+
+
+{% endblock %}
+

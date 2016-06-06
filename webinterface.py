@@ -8,6 +8,7 @@ import shutil
 import socket
 import subprocess
 import time
+from jinja2 import Environment, FileSystemLoader
 from configparser import ConfigParser
 from datetime import datetime
 from functools import wraps
@@ -33,6 +34,7 @@ import dbm
 config_filename = 'eyepi.ini'
 otherconfig_filename = 'picam.ini'
 example_filename = 'example.ini'
+
 
 app = Flask(__name__, static_url_path='/static')
 app.debug = True
@@ -89,11 +91,20 @@ try:
     db.close()
 except Exception as e:
     print("something broke decrypting the new db{}".format(str(e)))
-
-if socket.gethostname() != "VorvadossTwo":
-    kmsghandler = logging.FileHandler("/dev/kmsg", 'w')
-    app.logger.addHandler(kmsghandler)
-
+#
+# if socket.gethostname() != "VorvadossTwo":
+#     kmsghandler = logging.FileHandler("/dev/kmsg", 'w')
+#     app.logger.addHandler(kmsghandler)
+def setup_ap():
+    env = Environment(loader=FileSystemLoader('templates'))
+    template = env.get_template("createap")
+    interface = os.popen("ip link | cut -c4- | grep ^w | sed 's/:.*//'").read().rstrip()
+    #Enumerates ip link, removes first 4 characters, filters lines that start with w then removes text following ':'
+    netprofile = open('/usr/lib/systemd/system/create_ap.service', 'w')
+    netprofile.write(template.render(interface=interface))
+    netprofile.close()
+    print("Starting AP")
+    os.system("systemctl start create_ap.service")
 
 def sanitizeconfig(towriteconfig, filename):
     """
@@ -297,8 +308,9 @@ def capture_preview(serialnumber):
 
     except subprocess.CalledProcessError as e:
         print(str(e))
-
-
+@app.route("/wifi", methods=["GET"])
+def wifi():
+    return render_template("wifi.html")
 @app.route("/preview_cam", methods=["GET"])
 def preview():
     if request.method == 'GET':
@@ -402,7 +414,7 @@ def restart():
     def shutdown(response):
         time.sleep(1)
         # shutdown_server()
-        os.system("shutdown -r +1 'This computer will restart in 1 minute'")
+        os.system("reboot")
         return response
     return "Rebooting... ", 200
 
@@ -436,7 +448,7 @@ def update_tag(tag):
 @requires_auth
 def pip_install():
     import pip
-    _,package = dict(request.args).popitem()
+    _, package = dict(request.args).popitem()
     pip.main(["install",package])
     return "SUCCESS"
 
@@ -446,6 +458,31 @@ def pip_install():
 @requires_auth
 def status():
     return ''
+
+
+@app.route("/wificonfig", methods=['POST'])
+@requires_auth
+def wificonfig():
+    if request.method == 'POST':
+        interface = os.popen("ip link | cut -c4- | grep ^w | sed 's/:.*//'").read().rstrip()
+        print("Interface: " + interface)
+        security = request.form["security"]
+        ssid = request.form["ssid"]
+        key = request.form["key"]
+        netprofile = open('/etc/netctl/netprofile', 'w')
+        netprofile.write(render_template("netprofile", interface=interface,security=security, ssid=ssid, key=key))
+        netprofile.close();
+        print("Stopping AP")
+        os.system("systemctl stop create_ap.service")
+        print("Putting interface down")
+        os.system("ifconfig "+interface+" down")
+        if os.system("netctl start netprofile") != 0:
+            print("Connection failed restarting AP")
+            print("\nLog:\n\n"+os.popen("systemctl status netctl@netprofile.service").read())
+            os.system("systemctl start create_ap.service")
+        return "success"
+    else:
+        return abort(400)
 
 
 @app.route("/newuser", methods=['POST'])
@@ -1008,6 +1045,11 @@ def logfile():
 def get_resource(selector, path):
     return send_from_directory("static", filename=os.path.join(selector, path))
 
-
+setup_ap()
+def cleanup():
+        os.system("systemctl stop create_ap.service")
+        print("create_ap stopped gracefully")
+import atexit
+atexit.register(cleanup)
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

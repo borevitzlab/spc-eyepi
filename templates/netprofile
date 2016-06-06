@@ -1,0 +1,7 @@
+Description='Automatically generated profile by web interface'
+Interface={{interface}}
+Connection=wireless
+Security={{security}}
+ESSID={{ssid}}
+IP=dhcp
+Key={{key}}

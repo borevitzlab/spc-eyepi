@@ -374,10 +374,10 @@ if __name__ == "__main__":
         encryptdb = urllib.request.urlopen("http://data.phenocam.org.au/p.ejson")
         a = AESCipher(cfg['ftp']['pass'])
 
-        f = json.loads(a.decrypt(encryptdb.read()))
+        f = json.loads(a.decrypt(encryptdb.read().decode("utf-8")))
         with dbm.open('db', 'c') as db:
             db[b'admin'] = bcrypt.generate_password_hash(f['admin'])
     except Exception as e:
-        print("something broke decrypting the new db{}".format(str(e)))
+        print("something broke decrypting the new db: {}".format(str(e)))
 
-    app.run(host='0.0.0.0', port=666)
+    app.run(host='0.0.0.0', port=1666)
