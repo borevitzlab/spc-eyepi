@@ -123,6 +123,7 @@ def reconfigure_systemd():
     old_capture_service_file = "spc-eyepi_capture.service"
     old_webinterface_service_file = "spc-eyepi_webinterface.service"
 
+
     def ensure_systemd_unit(service_file):
         if not os.path.isfile(systemd_path.format(service_file)) and \
                 os.path.isfile(service_file):
