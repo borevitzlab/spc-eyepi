@@ -65,7 +65,6 @@ class SysUtil(object):
                 cls._tor_host = onion_address.split(" ")[:3], time.time()
             except:
                 cls._tor_host = ("unknown", 'unknown', "unknown"), time.time()
-
         return cls._tor_host[0]
 
     @classmethod

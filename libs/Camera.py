@@ -18,7 +18,6 @@ try:
     from PIL import Image
 except ImportError:
     import pip
-
     pip.main(["install", "Pillow"])
 
 __author__ = "Gareth Dunstone"
@@ -53,10 +52,11 @@ class GphotoCamera(Thread):
             Thread.__init__(self, name=name)
         self.stopper = Event()
 
-        if serialnumber != None:
+        if serialnumber:
             self.serialnumber = serialnumber
         else:
-            self.serialnumber = "[no-cam-sn-detected] wtf?"
+            from hashlib import md5
+            self.serialnumber = "AUTO_"+md5(bytes(self.name, 'utf-8')).hexdigest()[len("AUTO_"):]
 
         self.camera_port = camera_port
 
@@ -100,6 +100,7 @@ class GphotoCamera(Thread):
 
         # self.exposure_length = self.config.getint("camera","exposure")
         self.last_config_modify_time = os.stat(self.config_filename).st_mtime
+        self.machine_id_last = os.stat("/etc/machine-id").st_mtime
         # get enabled
         try:
             tval = self.config['timelapse']['starttime']
@@ -305,12 +306,12 @@ class GphotoCamera(Thread):
 
         while True and not self.stopper.is_set():
             # testing for the config modification
-            if os.stat(self.config_filename).st_mtime != self.last_config_modify_time:
+            if os.stat(self.config_filename).st_mtime != self.last_config_modify_time or os.stat("/etc/machine-id").st_mtime != self.machine_id_last:
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
+                self.machine_id_last = os.stat("/etc/machine-id").st_mtime
                 # Resetup()
                 self.logger.info("Change in config file at " + datetime.datetime.now().isoformat() + " reloading")
                 self.setup()
-
             # set a timenow, this is used everywhere ahead, DO NOT REMOVE.
             tn = datetime.datetime.now()
 
@@ -474,7 +475,6 @@ class PiCamera(GphotoCamera):
     """ PiCamera extension to the Camera Class
         extends some functionality and members, modified image capture call and placements.
     """
-
     def capture(self, image_file_basename):
         retcode = 1
         image_file_spoolpath = os.path.join(self.spool_directory,image_file_basename)
@@ -546,12 +546,13 @@ class IVPortCamera(PiCamera):
             # set a timenow this is used locally down here
             tn = datetime.datetime.now()
             # testing for the config modification
-            if os.stat(self.config_filename).st_mtime != self.last_config_modify_time:
+            if os.stat(self.config_filename).st_mtime != self.last_config_modify_time or os.stat(
+                    "/etc/machine-id").st_mtime != self.machine_id_last:
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
+                self.machine_id_last = os.stat("/etc/machine-id").st_mtime
                 # Resetup()
+                self.logger.info("Change in config file at " + datetime.datetime.now().isoformat() + " reloading")
                 self.setup()
-                self.logger.info("change in config at " + datetime.datetime.now().isoformat() + " reloading")
-
             # if self.time2seconds(tn) % (86400 / 24) < self.accuracy:
             #     files = []
             #     # once per hour

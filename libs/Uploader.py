@@ -5,14 +5,38 @@ import io
 import json
 import logging
 import os
+import socket
 import subprocess
 import time
 from configparser import ConfigParser
 from glob import glob
 from socket import socket, SOCK_DGRAM, AF_INET
 from threading import Thread, Event
-
+import paramiko
 import pysftp
+from .CryptUtil import SSHManager
+from ..libs import SysUtil
+
+
+def pysftp_connection_init_patch(self, host, username=None, private_key=None, port=22):
+    """
+    monkeypatch for pysftp to support paramiko.RSAkey
+    :param self:
+    :param host:
+    :param username:
+    :param private_key:
+    :param port:
+    :return:
+    """
+    self._sftp_live = False
+    self._sftp = None
+    self._transport_live = False
+    try:
+        self._transport = paramiko.Transport((host, port))
+        self._transport_live = True
+    except (AttributeError, socket.gaierror):
+        raise pysftp.ConnectionException(host, port)
+    self._transport.connect(username=username, pkey=private_key)
 
 
 class Uploader(Thread):
@@ -28,23 +52,41 @@ class Uploader(Thread):
             Thread.__init__(self, name=name)
         self.stopper = Event()
         # and the same setup stuff that they use as well.
-        self.last_config_modify_time = None
+
         self.config_filename = config_filename
+        self.last_config_modify_time = os.stat(config_filename).st_mtime
+        self.machine_id_last = os.stat("/etc/machine-id").st_mtime
+
         self.logger = logging.getLogger(self.getName())
         self.startup_time = datetime.datetime.now()
         self.total_data_uploaded_tb = 0
         self.total_data_uploaded_b = 0
         # these things are to none now so we can check for None later.
         self.last_upload_time = None
-        self.ipaddress = None
+
         self.setup()
+
+    def get_sn(self, file):
+        """
+        returns either the serialnumber
+        :param file: filename
+        :param machine_id: the current machine id.
+        :return:
+        """
+        fsn = next(iter(os.path.splitext(os.path.basename(file))), "")
+        return "".join((x if idx > len(fsn) - 1 else fsn[idx] for idx, x in enumerate(self.machine_id)))
 
     def setup(self):
         """
         setup to be run each time the config is reloaded
         :return:
         """
+
         # TODO: move the timeinterval to the config file and get it from there, this _should_ avoid too many requests to the sftp server.
+        self.machine_id = SysUtil.get_machineid()
+        self.serialnumber = SysUtil.get_serialnumber_from_filename(self.config_filename, self.machine_id)
+        self.json_path = SysUtil.serialnumber_to_json(self.serialnumber, self.machine_id)
+
         self.timeinterval = 60
         self.config = ConfigParser()
         self.config.read(self.config_filename)
@@ -55,6 +97,7 @@ class Uploader(Thread):
         self.cameraname = self.config["camera"]["name"]
         self.upload_directory = self.config["localfiles"]["upload_dir"]
         self.last_upload_list = []
+        self.ssh_manager = SSHManager()
         self.last_capture_time = datetime.datetime.fromtimestamp(0)
 
     def sendMetadataSFTP(self, datas):
@@ -105,7 +148,7 @@ class Uploader(Thread):
             return False
         return True
 
-    def sftpUpload(self, filenames):
+    def sftp_upload(self, filenames):
         """
         uploads files via sftp. deletes the files as they are uploaded.
         :param filenames: filenames to upload
@@ -114,27 +157,33 @@ class Uploader(Thread):
         try:
             self.logger.debug("Connecting sftp and uploading buddy")
             # open link and create directory if for some reason it doesnt exist
-            link = pysftp.Connection(host=self.hostname, username=self.user, password=self.passwd)
-            link.chdir("/")
-            self.mkdir_p_sftp(link, os.path.join(self.target_directory, self.cameraname))
-            self.logger.debug("Uploading")
-            # dump ze files.
-            for f in filenames:
-                # use sftpuloadtracker to handle the progress
-                try:
-                    link.put(f, os.path.basename(f) + ".tmp")
-                    if link.exists(os.path.basename(f)):
-                        link.remove(os.path.basename(f))
-                    link.rename(os.path.basename(f) + ".tmp", os.path.basename(f))
-                    link.chmod(os.path.basename(f), mode=775)
-                    self.total_data_uploaded_b += os.path.getsize(f)
-                    os.remove(f)
-                    self.logger.debug("Successfuly uploaded %s through sftp and removed from local filesystem" % f)
-                    self.last_upload_time = datetime.datetime.now()
-                except Exception as e:
-                    self.logger.error("sftp:{}".format(str(e)))
-            self.logger.debug("Disconnecting, eh")
-            link.close()
+            params = dict(host=self.hostname, username=self.user)
+            if self.ssh_manager.ssh_agentKey:
+                params['private_key'] = self.ssh_manager.ssh_agentKey
+                pysftp.Connection.__init__ = pysftp_connection_init_patch
+            else:
+                params['password'] = self.passwd
+            with pysftp.Connection(self.hostname, **params) as link:
+                link.chdir("/")
+                self.mkdir_p_sftp(link, os.path.join(self.target_directory, self.cameraname))
+                self.logger.debug("Uploading")
+                # dump ze files.
+                for f in filenames:
+                    # use sftpuloadtracker to handle the progress
+                    try:
+                        link.put(f, os.path.basename(f) + ".tmp")
+                        if link.exists(os.path.basename(f)):
+                            link.remove(os.path.basename(f))
+                        link.rename(os.path.basename(f) + ".tmp", os.path.basename(f))
+                        link.chmod(os.path.basename(f), mode=775)
+                        self.total_data_uploaded_b += os.path.getsize(f)
+                        os.remove(f)
+                        self.logger.debug("Successfuly uploaded %s through sftp and removed from local filesystem" % f)
+                        self.last_upload_time = datetime.datetime.now()
+                    except Exception as e:
+                        self.logger.error("sftp:{}".format(str(e)))
+                self.logger.debug("Disconnecting, eh")
+
             if self.total_data_uploaded_b > 1000000000000:
                 curr = (((self.total_data_uploaded_b / 1024) / 1024) / 1024) / 1024
                 self.total_data_uploaded_b = 0
@@ -146,7 +195,7 @@ class Uploader(Thread):
             return False
         return True
 
-    def ftpUpload(self, filenames):
+    def ftp_upload(self, filenames):
         """
         uploads via ftp
         :param filenames:
@@ -224,70 +273,26 @@ class Uploader(Thread):
         :param list_of_uploads:
         :return:
         """
-
-        def sizeof_fmt(num, suffix='B'):
-            for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
-                if abs(num) < 1024.0:
-                    return "%3.1f%s%s" % (num, unit, suffix)
-                num /= 1024.0
-            return "%.1f%s%s" % (num, 'Yi', suffix)
-
         try:
             data = {}
             # data entries must be strings so just serialise a dict
-
-            s = socket(AF_INET, SOCK_DGRAM)
-            s.connect(("8.8.8.8", 0))
-            self.ipaddress = s.getsockname()[0]
-            onion_address = ""
+            self.serialnumber = SysUtil.get_serialnumber_from_filename(self.config_filename, self.machine_id)
+            SysUtil.serialnumber_to_json(self.serialnumber, self.machine_id)
             self.logger.debug("Collecting metadata")
-            if not os.path.isfile(self.config_filename[:-4].split("/")[-1]+".json"):
-                with open(self.config_filename[:-4].split("/")[-1]+".json",'w') as f:
-                    f.write("{}")
+
             try:
-                with open(self.config_filename[:-4].split("/")[-1]+".json", 'r') as f:
+                with open(SysUtil.serialnumber_to_json(self.serialnumber, self.machine_id), 'r') as f:
                     jsondata = json.load(f)
             except Exception as e:
                 self.logger.debug("Couldn't load json rewriting... EXC: {}".format(str(e)))
-                with open(self.config_filename[:-4].split("/")[-1]+".json",'w') as f:
+                with open(SysUtil.serialnumber_to_json(self.serialnumber, self.machine_id),'w') as f:
                     f.write("{}")
+
             try:
-                with open("/home/tor_private/hostname") as f:
-                    onion_address = f.read().replace('\n', '')
-                jsondata["onion_address"] = onion_address.split(" ")[0]
-                jsondata["onion_cookie_auth"] = onion_address.split(" ")[1]
-                jsondata["onion_cookie_client"] = onion_address.split(" ")[-1]
-            except Exception as e:
-                self.logger.warning("couldnt do onion {}".format(str(e)))
-            if self.last_upload_time is None:
-                fullstr = "<h1>" + str(
-                    self.cameraname) + "</h1><br>Havent uploaded yet<br> Ip address: " + self.ipaddress + "<br>onion_address: " + onion_address + "<br><a href='http://" + self.ipaddress + ":5000'>Config</a>"
-            else:
-                fullstr = "<h1>" + str(self.cameraname) + "</h1><br>Last upload at: " + self.last_upload_time.strftime(
-                    "%y-%m-%d %H:%M:%S") + "<br> Ip address: " + self.ipaddress + "<br>onion_address: " + onion_address + "<br><a href='http://" + self.ipaddress + ":5000'>Config</a>"
-            try:
-                a_statvfs = os.statvfs("/")
-                free_space = sizeof_fmt(a_statvfs.f_frsize * a_statvfs.f_bavail)
-                total_space = sizeof_fmt(a_statvfs.f_frsize * a_statvfs.f_blocks)
-                jsondata["name"] = self.cameraname
-                jsondata["tb_uploaded"] = self.total_data_uploaded_tb
-                jsondata["smaller_uploaded"] = sizeof_fmt(self.total_data_uploaded_b)
-                jsondata["free_space"] = free_space
-                jsondata["total_space"] = total_space
-                jsondata["serialnumber"] = os.path.splitext(os.path.basename(self.config_filename))[0]
-                if jsondata['serialnumber'] == "picam":
-                    try:
-                        with open("/etc/machine-id") as f:
-                            m_id = str(f.read())
-                            m_id = m_id.strip('\n')
-                        jsondata['serialnumber'] = m_id
-                    except Exception as e:
-                        self.logger.error("Couldnt save serialnumber boo hoo...")
-                jsondata["ip_address"] = self.ipaddress
+                jsondata["uploaded"] = SysUtil.sizeof_fmt(self.total_data_uploaded_b)
                 jsondata["list_of_uploads"] = list_of_uploads
                 jsondata["capture_limits"] = self.config['timelapse']['starttime'] + " - " + self.config['timelapse'][
                     'stoptime']
-
                 jsondata['last_upload_time'] = 0
                 # need to check against none because otherwise it gets stuck in a broken loop.
                 if self.last_upload_time is not None:
@@ -297,14 +302,11 @@ class Uploader(Thread):
                         pass
 
                 jsondata['last_upload_time_human'] = datetime.datetime.fromtimestamp(jsondata['last_upload_time']).isoformat()
-                jsondata["version"] = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
             except Exception as e:
                 self.logger.error("Couldnt collect metadata: %s" % str(e))
-            data["metadata.json"] = json.dumps(jsondata, indent=4, separators=(',', ': '), sort_keys=True)
-            data["ipaddress.html"] = fullstr
             self.logger.debug("Sending metadata to server now")
-            with open(str(os.path.splitext(os.path.basename(self.config_filename))[0]) + ".json", 'w') as f:
-                f.write(data['metadata.json'])
+            with open(SysUtil.get_serialnumber_from_filename(self.config_filename), 'w') as f:
+                f.write(json.dumps(jsondata, indent=4, separators=(',', ': '), sort_keys=True))
             if not self.sendMetadataSFTP(data):
                 self.sendMetadataFTP(data)
         except Exception as e:
@@ -317,10 +319,12 @@ class Uploader(Thread):
             # sleep for a while
             time.sleep(self.timeinterval)
             # check and see if config has changed.
-            if os.stat(self.config_filename).st_mtime != self.last_config_modify_time:
-                # reset last change time to last and setup() again
+            if os.stat(self.config_filename).st_mtime != self.last_config_modify_time or os.stat(
+                    "/etc/machine-id").st_mtime != self.machine_id_last:
                 self.last_config_modify_time = os.stat(self.config_filename).st_mtime
+                self.machine_id_last = os.stat("/etc/machine-id").st_mtime
                 self.setup()
+
             try:
                 upload_list = glob(os.path.join(self.upload_directory, '*'))
                 if len(upload_list) == 0:
@@ -334,8 +338,8 @@ class Uploader(Thread):
                     except Exception as e:
                         self.logger.info("Something went wrong sorting the last image to the front: {}".format(str(e)))
 
-                    if not self.sftpUpload(upload_list):
-                        self.ftpUpload(upload_list)
+                    if not self.sftp_upload(upload_list):
+                        self.ftp_upload(upload_list)
                     self.last_upload_time = datetime.datetime.now()
                 try:
                     if not upload_list == []:
