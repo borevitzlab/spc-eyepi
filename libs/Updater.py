@@ -14,7 +14,7 @@ from threading import Thread, Event
 from urllib import request, parse
 from schedule import Scheduler
 from .CryptUtil import SSHManager
-from ..libs import SysUtil
+from .SysUtil import SysUtil
 
 
 hostname = "traitcapture.org"
@@ -140,7 +140,7 @@ class Updater(Thread):
 
         for serialnumber, setdata in data.items():
             config = ConfigParser()
-            config_path = SysUtil.serialnumber_to_ini(serialnumber, machine_id=self.machine_id)
+            config_path = SysUtil.serialnumber_to_ini(serialnumber)
             if not len(config.read(config_path)):
                 continue
 
@@ -156,8 +156,8 @@ class Updater(Thread):
                 config.write(configfile)
 
     def get_camera_data(self, serialnumber):
-        config_path = SysUtil.serialnumber_to_ini(serialnumber, machine_id=self.machine_id)
-        json_path = SysUtil.serialnumber_to_json(serialnumber,machine_id=self.machine_id)
+        config_path = SysUtil.serialnumber_to_ini(serialnumber)
+        json_path = SysUtil.serialnumber_to_json(serialnumber)
         cfg = ConfigParser()
         cfg.read(config_path)
         d = dict((s, dict(cfg.items(s))) for s in cfg.sections())
@@ -185,8 +185,8 @@ class Updater(Thread):
                 free_space_mb=self.free_space,
                 total_space_mb=self.total_space
             ),
-            cameras=dict((SysUtil.get_serialnumber_from_filename(fn, self.machine_id),
-                          self.get_camera_data(SysUtil.get_serialnumber_from_filename(fn, self.machine_id)))
+            cameras=dict((SysUtil.get_serialnumber_from_filename(fn),
+                          self.get_camera_data(SysUtil.get_serialnumber_from_filename(fn)))
                          for fn in glob("*.json"))
         )
 
