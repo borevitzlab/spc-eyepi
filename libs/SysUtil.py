@@ -1,4 +1,3 @@
-__author__ = 'Gareth Dunstone'
 import subprocess
 import random, string, os, socket, json, time
 from glob import glob
@@ -137,7 +136,7 @@ class SysUtil(object):
             if sn == cls.get_serialnumber_from_filename(fn):
                 return fn
         else:
-            return ""
+            return sn+".ini"
 
     @classmethod
     def serialnumber_to_json(cls, sn):
@@ -145,7 +144,7 @@ class SysUtil(object):
             if sn == cls.get_serialnumber_from_filename(fn):
                 return fn
         else:
-            return ""
+            return sn + ".json"
 
     @classmethod
     def add_watch(cls, path, callback):
