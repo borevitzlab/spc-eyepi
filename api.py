@@ -14,6 +14,7 @@ from werkzeug.exceptions import default_exceptions
 from werkzeug.exceptions import HTTPException
 from flask import jsonify
 
+
 app = Flask(__name__)
 app.debug = True
 

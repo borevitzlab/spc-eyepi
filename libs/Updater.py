@@ -15,7 +15,7 @@ from schedule import Scheduler
 from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
 
-hostname = "traitcapture.org"
+remote_server = "traitcapture.org"
 
 
 # hostname = "localhost:5000"
@@ -53,13 +53,10 @@ class Updater(Thread):
         Thread.__init__(self, name="Updater")
         self.scheduler = Scheduler()
         self.scheduler.every(60).seconds.do(self.go)
-        self.scheduler.every(50).minutes.do(self.set_self_data)
         # self.scheduler.every(30).minutes.do(self.upload_log)
         self.logger = logging.getLogger(self.getName())
         self.stopper = Event()
         self.sshkey = SSHManager()
-        self.version = self.hostname = self.internal_ip = self.machine_id = self.onion_address = \
-            self.onion_cookie_auth = self.onion_cookie_client = self.free_space = self.total_space = None
 
     def post_multipart(self, host, selector, fields, files):
         """
@@ -93,8 +90,9 @@ class Updater(Thread):
     def go(self):
         try:
             data = parse.urlencode(self.gather_data())
+            self.sshkey.sign_message(data)
             data = data.encode('utf-8')
-            req = request.Request('https://{}/api/camera/{}/check-in'.format(hostname, self.hostname), data)
+            req = request.Request('https://{}/api/camera/{}/check-in'.format(remote_server, SysUtil.get_machineid()), data)
             # do backwards change if response is valid later.
             tries = 0
             while tries < 120:
@@ -162,33 +160,27 @@ class Updater(Thread):
         d.update(json.loads(json_path))
         return d
 
-    def set_self_data(self):
-        self.version = SysUtil.get_version()
-        self.internal_ip = SysUtil.get_internal_ip()
-        self.external_ip = SysUtil.get_external_ip()
-        self.onion_address, self.onion_cookie_auth, self.onion_cookie_client = SysUtil.get_tor_host()
-        self.free_space, self.total_space = SysUtil.get_fs_space_mb()
-
     def gather_data(self):
-        jsondata = dict(
+        free_mb, total_mb = SysUtil.get_fs_space_mb()
+        onion_address, cookie_auth, cookie_client = SysUtil.get_tor_host()
+        camera_data = dict(
             meta=dict(
-                version=self.version,
-                machine_id=self.machine_id,
-                internal_ip=self.internal_ip,
-                external_ip=self.external_ip,
-                hostname=self.hostname,
-                onion_address=self.onion_address,
-                onion_cookie_auth=self.onion_cookie_auth,
-                onion_cookie_client=self.onion_cookie_client,
-                free_space_mb=self.free_space,
-                total_space_mb=self.total_space
+                version=SysUtil.get_version(),
+                machine=SysUtil.get_machineid(),
+                internal_ip=SysUtil.get_internal_ip(),
+                external_ip=SysUtil.get_internal_ip(),
+                hostname=SysUtil.get_hostname(),
+                onion_address=onion_address,
+                client_cookie=cookie_auth,
+                onion_cookie_client=cookie_client,
+                free_space_mb=free_mb,
+                total_space_mb=total_mb
             ),
             cameras=dict((SysUtil.get_serialnumber_from_filename(fn),
                           self.get_camera_data(SysUtil.get_serialnumber_from_filename(fn)))
                          for fn in glob("*.json"))
         )
-
-        return jsondata
+        return camera_data
 
     def stop(self):
         self.stopper.set()

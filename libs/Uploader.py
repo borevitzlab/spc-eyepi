@@ -289,8 +289,6 @@ class Uploader(Thread):
             try:
                 jsondata["uploaded"] = SysUtil.sizeof_fmt(self.total_data_uploaded_b)
                 jsondata["list_of_uploads"] = list_of_uploads
-                jsondata["capture_limits"] = self.config['timelapse']['starttime'] + " - " + self.config['timelapse'][
-                    'stoptime']
                 jsondata['last_upload_time'] = 0
                 # need to check against none because otherwise it gets stuck in a broken loop.
                 if self.last_upload_time is not None:
