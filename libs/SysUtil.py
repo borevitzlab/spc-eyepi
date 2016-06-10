@@ -4,6 +4,7 @@ from glob import glob
 from urllib import request
 import threading
 
+
 def sizeof_fmt(num, suffix='B'):
     for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
         if abs(num) < 1024.0:
@@ -42,7 +43,6 @@ upload_dir =
 """
 
 
-
 class SysUtil(object):
     """
     System utility class.
@@ -65,6 +65,14 @@ class SysUtil(object):
             SysUtil.thread = threading.Thread(target=self._thread)
             SysUtil.thread.start()
         pass
+
+    @staticmethod
+    def sizeof_fmt(num, suffix='B'):
+        for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
+            if abs(num) < 1024.0:
+                return "%3.1f%s%s" % (num, unit, suffix)
+            num /= 1024.0
+        return "%.1f%s%s" % (num, 'Yi', suffix)
 
     @classmethod
     def get_hostname(cls):
@@ -295,5 +303,3 @@ class Test(object):
         assert not c.completed_setup, "callback was not called from watcher"
         assert not SysUtil.thread, "thread not closed"
         assert not os.path.exists(c.path), 'test didnt remove file'
-
-

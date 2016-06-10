@@ -7,9 +7,10 @@ import socket
 import ssl
 import subprocess
 import time
-import queue
 from configparser import ConfigParser
 from glob import glob
+
+from collections import deque
 from threading import Thread, Event
 from urllib import request, parse
 from schedule import Scheduler
@@ -17,7 +18,6 @@ from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
 
 remote_server = "traitcapture.org"
-
 
 # hostname = "localhost:5000"
 
@@ -49,16 +49,22 @@ def encode_multipart_formdata(fields, files):
     return content_type, body
 
 
-class Updater(Thread, queue.Queue):
-    def __init__(self, CommunicationQueue):
+class Updater(Thread):
+    def __init__(self):
         Thread.__init__(self, name="Updater")
-        self.CommunicationQueue = CommunicationQueue
+        self._communication_queue = deque(tuple(),512)
         self.scheduler = Scheduler()
         self.scheduler.every(60).seconds.do(self.go)
         # self.scheduler.every(30).minutes.do(self.upload_log)
         self.logger = logging.getLogger(self.getName())
         self.stopper = Event()
         self.sshkey = SSHManager()
+
+
+    @property
+    def communication_queue(self):
+        return self._communication_queue
+
 
     def post_multipart(self, host, selector, fields, files):
         """
@@ -119,7 +125,6 @@ class Updater(Thread, queue.Queue):
         except Exception as e:
             print(str(e))
 
-
     def set_configdata(self, data):
         config_map = {
             'name': ('camera', 'name'),
@@ -165,6 +170,22 @@ class Updater(Thread, queue.Queue):
     def gather_data(self):
         free_mb, total_mb = SysUtil.get_fs_space_mb()
         onion_address, cookie_auth, cookie_client = SysUtil.get_tor_host()
+
+        cameras = dict()
+        while len(self._communication_queue):
+            item = self._communication_queue.pop()
+            c = cameras.get(item['serialnumber'], None)
+            if not c:
+                cameras[item['serialnumber']] = item
+                continue
+
+            if item.get("last_capture", datetime.datetime.min) > c.get("last_capture", datetime.datetime.min):
+                cameras[item['serialnumber']].update(item)
+
+            if item.get("last_upload", datetime.datetime.min) > c.get("last_upload", datetime.datetime.min):
+                cameras[item['serialnumber']].update(item)
+
+
         camera_data = dict(
             meta=dict(
                 version=SysUtil.get_version(),
@@ -178,10 +199,9 @@ class Updater(Thread, queue.Queue):
                 free_space_mb=free_mb,
                 total_space_mb=total_mb
             ),
-            cameras=dict((SysUtil.get_serialnumber_from_filename(fn),
-                          self.get_camera_data(SysUtil.get_serialnumber_from_filename(fn)))
-                         for fn in glob("*.json"))
+            cameras=cameras
         )
+
         return camera_data
 
     def stop(self):

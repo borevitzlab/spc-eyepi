@@ -5,7 +5,6 @@ import os
 import shutil
 import subprocess
 import time
-import queue
 from glob import glob
 from threading import Thread, Event
 from libs.SysUtil import SysUtil
@@ -13,6 +12,7 @@ from libs.SysUtil import SysUtil
 from RPi import GPIO
 from PIL import Image
 import picamera
+
 
 def import_or_install(package, import_name=None, namespace_name=None):
     try:
@@ -26,8 +26,8 @@ def import_or_install(package, import_name=None, namespace_name=None):
         finally:
             globals()[namespace_name or import_name or package] = importlib.import_module(import_name or package)
     except Exception as e:
-        print("couldnt install or import {} from {} for some reason".format(namespace_name or import_name or package,
-                                                                            import_name or package))
+        print("couldnt install or import {} from {} for some reason: {}".format(namespace_name or import_name or package,
+                                                                            import_name or package, str(e)))
 
 
 import_or_install("RPi.GPIO", namespace_name="GPIO")
@@ -35,14 +35,15 @@ import_or_install("Pillow", import_name="PIL.Image", namespace_name="Image")
 import_or_install("picamera")
 
 
-class Camera(Thread, queue.Queue):
+class Camera(Thread):
     accuracy = 3
     maxw, maxh = 640, 480
     file_types = ["CR2", "RAW", "NEF", "JPG", "JPEG", "PPM"]
-    def __init__(self, CommunicationQueue, name=None, serialnumber=None):
+
+    def __init__(self, communication_queue, *args, name=None, serialnumber=None, **kwargs):
         # init with name or not, just extending some of the functionality of Thread
         Thread.__init__(self) if not name else Thread.__init__(self, name=name)
-        self.CommunicationQueue = CommunicationQueue
+        self.communication_queue = communication_queue
         self.logger = logging.getLogger(self.getName())
         self.stopper = Event()
         
@@ -184,7 +185,6 @@ class Camera(Thread, queue.Queue):
     def communicate_with_updater(self):
         """
         communication member. This is meant to send some metadata to the updater thread.
-        :param data:
         :return:
         """
         data = dict(
@@ -192,11 +192,8 @@ class Camera(Thread, queue.Queue):
             serialnumber=self.serialnumber,
             failed=self.failed,
             last_capture_time=self.current_capture_time)
+        self.communication_queue.append(data)
         self.failed = list()
-        # todo: send to other thread here
-        self.CommunicationQueue.put(data)
-        print(data)
-        pass
 
     def run(self):
         while True and not self.stopper.is_set():
@@ -257,11 +254,9 @@ class Camera(Thread, queue.Queue):
                         except Exception as e:
                             self.logger.error("Couldnt remove spooled: {}".format(str(e)))
 
-
                     self.communicate_with_updater()
                 except Exception as e:
                     self.logger.critical("Image Capture error - {}".format(str(e)))
-
             time.sleep(0.1)
 
 

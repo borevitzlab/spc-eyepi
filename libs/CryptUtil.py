@@ -69,15 +69,22 @@ class SSHManager(object):
                 self.key = None
 
     @property
+    def paramiko_key(self):
+        return self.ssh_agentKey
+    
+    @paramiko_key.setter
+    def paramiko_key(self, value):
+        key_io = io.StringIO(value.decode("utf-8"))
+        self.ssh_agentKey = paramiko.RSAKey.from_private_key(key_io)
+
+    @property
     def ssh_key(self):
         return self._key
 
     @ssh_key.setter
     def ssh_key(self, value):
         self._key = serialization.load_pem_private_key(value, password=None, backend=default_backend())
-        key_io = io.StringIO(value.decode("utf-8"))
-        self.ssh_agentKey = paramiko.RSAKey.from_private_key(key_io)
-
+        self.paramiko_key = self._key
 
     def get_new_key_from_server(self, token):
         """

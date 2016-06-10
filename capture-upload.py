@@ -79,7 +79,7 @@ def redetect_cameras(camera_workers):
         return False
 
 
-def detect_picam():
+def detect_picam(queue):
     """
     detects whether the pi has a picam installed and enabled.
     on all SPC-OS devices this will return true if the picam is installed
@@ -90,7 +90,7 @@ def detect_picam():
     try:
         cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
         if cmdret[cmdret.find("detected=") + 9: len(cmdret) - 1] == "1":
-            return [PiCamera("picam.ini", name="PiCam",serialnumber="picam"), Uploader("picam.ini", name="PiCam-Uploader")]
+            return [PiCamera(queue, name="PiCam"), Uploader(queue, name="PiCam")]
         else:
             return None
     except subprocess.CalledProcessError:
@@ -98,7 +98,7 @@ def detect_picam():
     return None
 
 
-def create_workers(cameras):
+def create_workers(cameras, queue):
     """
     Creates thread workers from a dict of port:serialnumber strings.
     creates workers for uploaders as well as captures.
@@ -110,9 +110,8 @@ def create_workers(cameras):
     uploadthreads = []
     for port, serialnumber in list(cameras.items()):
         camthreads.append(
-            GphotoCamera(os.path.join("configs_byserial", serialnumber + ".ini"), camera_port=port,
-                         serialnumber=serialnumber,
-                         name=serialnumber))
+            GphotoCamera(serialnumber=serialnumber,
+                         name=serialnumber,camera_port=port))
         uploadthreads.append(
             Uploader(os.path.join("configs_byserial", serialnumber + ".ini"), name=serialnumber + "-Uploader"))
     return (camthreads, uploadthreads)
@@ -146,16 +145,18 @@ if __name__ == "__main__":
     raspberry = None
     # TODO: Fix storage for multiple cameras
     try:
+        updater = Updater()
+
+
         raspberry = detect_picam()
         if raspberry:
             start_workers(raspberry)
 
-        updater = None
-        if os.path.isfile("picam.ini"):
-            updater = Updater()
-            updater.start()
+
 
         cameras = detect_cameras("usb")
+        updater.start()
+
         tries = 0
         while not cameras and tries < 10:
             logger.debug("detecting Cameras")

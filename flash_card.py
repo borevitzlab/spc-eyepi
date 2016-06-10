@@ -115,7 +115,7 @@ def restore(tmpdir, bakdir=None):
     else:
         print("backup dir doesnt exist...")
 
-def update_via_githib(temp_dir):
+def update_via_github(temp_dir):
     eyepi_dir = os.path.join(temp_dir, "/root/home/spc-eyepi/")
     git_dir = os.path.join(eyepi_dir, ".git")
     try:
@@ -147,15 +147,15 @@ def format_create_new(tmpdir=None):
         # get rid of fdisk.
         proc.communicate()
 
-def extract_new(tmpdir, tarfile):
-    with tarfile.open(fileobj=tarfile, mode='r') as tar:
+def extract_new(tmpdir, tar_file_obj):
+    with tarfile.open(fileobj=tar_file_obj, mode='r') as tar:
         try:
             tar.getmember("root")
             tar.getmember("boot")
+
         except KeyError:
             print("tar file doesnt have the correct folders.")
 
-    pass
 
 if __name__ == '__main__':
     temp_dir = None
@@ -168,8 +168,7 @@ if __name__ == '__main__':
     if args.update:
         print("Updating...")
         temp_dir = mkdir_mount()
-        update_via_githib(temp_dir)
-
+        update_via_github(temp_dir)
 
     if args.restore:
         temp_dir = mkdir_mount()
