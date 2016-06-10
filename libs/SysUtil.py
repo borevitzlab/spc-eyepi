@@ -161,67 +161,63 @@ class SysUtil(object):
 
 
     @classmethod
-    def get_serialnumber_from_name(cls, name):
+    def get_identifier_from_name(cls, name):
         """
-        returns either the serialnumber (from name) or the name filled with the machine id
+        returns either the identifier (from name) or the name filled with the machine id
         :param name: name to fill
         :return:
         """
         return "".join((x if idx > len(name) - 1 else name[idx] for idx, x in enumerate(cls.get_machineid())))
 
     @classmethod
-    def get_serialnumber_from_filename(cls, file_name):
+    def get_identifier_from_filename(cls, file_name):
         """
-        returns either the serialnumber (from name) or the name filled with the machine id
+        returns either the identifier (from the file name) or the name filled with the machine id
         :param file_name: filename
         :return:
         """
         fsn = next(iter(os.path.splitext(os.path.basename(file_name))), "")
-        return cls.get_serialnumber_from_name(fsn)
+        return cls.get_identifier_from_name(fsn)
 
     @classmethod
-    def ensure_config(cls, path, serialnumber):
+    def ensure_config(cls, identifier):
         import configparser
         config = configparser.ConfigParser()
         config.read_string(default_config)
-        rewrite = False
+        path = SysUtil.identifier_to_ini(identifier)
         try:
             config.read(path)
+            return config
         except Exception as e:
-            rewrite = True
             print(str(e))
 
         if not config['localfiles']['spooling_dir']:
-            config['localfiles']['spooling_dir'] = "/home/images/spool/{}".format(serialnumber)
+            config['localfiles']['spooling_dir'] = "/home/images/spool/{}".format(identifier)
 
         if not config['localfiles']['upload_dir']:
-            config['localfiles']['upload_dir'] = "/home/images/upload/{}".format(serialnumber)
+            config['localfiles']['upload_dir'] = "/home/images/upload/{}".format(identifier)
 
         if not config['camera']['name']:
-            config['camera']['name'] = SysUtil.get_hostname()+serialnumber[:6]
+            config['camera']['name'] = SysUtil.get_hostname()+identifier[:6]
 
-        if rewrite:
-            with open(path, 'w') as configfile:
-                config.write(configfile)
+        with open(path, 'w') as configfile:
+            config.write(configfile)
+        return config\
 
+    @classmethod
+    def write_config(cls, config, identifier):
+        path = SysUtil.identifier_to_ini(identifier)
+        with open(path, 'w') as configfile:
+            config.write(configfile)
         return config
 
-
     @classmethod
-    def serialnumber_to_ini(cls, sn):
+    def identifier_to_ini(cls, identifier):
         for fn in glob("**/*.ini"):
-            if sn == cls.get_serialnumber_from_filename(fn):
+            if identifier == cls.get_identifier_from_filename(fn):
                 return fn
         else:
-            return sn+".ini"
-
-    @classmethod
-    def serialnumber_to_json(cls, sn):
-        for fn in glob("**/*.json"):
-            if sn == cls.get_serialnumber_from_filename(fn):
-                return fn
-        else:
-            return sn + ".json"
+            return identifier + ".ini"
 
     @classmethod
     def add_watch(cls, path, callback):

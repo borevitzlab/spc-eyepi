@@ -126,65 +126,41 @@ class Updater(Thread):
             print(str(e))
 
     def set_configdata(self, data):
-        config_map = {
-            'name': ('camera', 'name'),
-            'camera_enabled': ('camera', 'enabled'),
-            'upload_enabled': ('ftp', 'uploaderenabled'),
-            'upload_username': ('ftp', 'user'),
-            'upload_pass': ('ftp', 'pass'),
-            'upload_server': ('ftp', 'server'),
-            'upload_timestamped': ('ftp', 'uploadtimestamped'),
-            'upload_webcam': ('ftp', 'uploadwebcam'),
-            'interval_in_seconds': ('timelapse', 'interval'),
-            'starttime': ('timelapse', 'starttime'),
-            'stoptime': ('timelapse', 'stoptime')
-        }
-        tf = {"True": "on", "False": "off", "true": "on", "false": "off", True: "on", False: "off"}
 
-        for serialnumber, setdata in data.items():
-            config = ConfigParser()
-            config_path = SysUtil.serialnumber_to_ini(serialnumber)
-            if not len(config.read(config_path)):
+        for identifier, update_data in data.items():
+            # dont rewrite empty...
+            if not len(update_data):
                 continue
 
-            for key, value in setdata.items():
-                if value in tf.keys():
-                    value = tf[value]
-                if value in ["starttime", "stoptime"]:
-                    # parse datetimes correctly, because they are gonna be messy.
-                    dt = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.Z")
-                    value = dt.strftime('%H:%M')
-                config[config_map[key][0]][config_map[key][1]] = str(value)
-            with open(config_path, 'w') as configfile:
-                config.write(configfile)
+            config = SysUtil.ensure_config(identifier)
+            sections = set(config.sections()).intersection(set(update_data.keys()))
+            for section in sections:
+                update_section = update_data[section]
+                options = set(config.options(section)).intersection(set(update_section.keys()))
+                for option in options:
+                    config.set(section,option,str(update_section[option]))
 
-    def get_camera_data(self, serialnumber):
-        config_path = SysUtil.serialnumber_to_ini(serialnumber)
-        json_path = SysUtil.serialnumber_to_json(serialnumber)
-        cfg = ConfigParser()
-        cfg.read(config_path)
-        d = dict((s, dict(cfg.items(s))) for s in cfg.sections())
-        d.update(json.loads(json_path))
-        return d
+            SysUtil.write_config(config, identifier)
+
+    def process_deque(self):
+        cameras = dict()
+        while len(self._communication_queue):
+            item = self._communication_queue.pop()
+            c = cameras.get(item['identifier'], None)
+            if not c:
+                cameras[item['identifier']] = item
+                continue
+
+            if item.get("last_capture", datetime.datetime.min) > c.get("last_capture", datetime.datetime.min):
+                cameras[item['identifier']].update(item)
+
+            if item.get("last_upload", datetime.datetime.min) > c.get("last_upload", datetime.datetime.min):
+                cameras[item['identifier']].update(item)
+        return cameras
 
     def gather_data(self):
         free_mb, total_mb = SysUtil.get_fs_space_mb()
         onion_address, cookie_auth, cookie_client = SysUtil.get_tor_host()
-
-        cameras = dict()
-        while len(self._communication_queue):
-            item = self._communication_queue.pop()
-            c = cameras.get(item['serialnumber'], None)
-            if not c:
-                cameras[item['serialnumber']] = item
-                continue
-
-            if item.get("last_capture", datetime.datetime.min) > c.get("last_capture", datetime.datetime.min):
-                cameras[item['serialnumber']].update(item)
-
-            if item.get("last_upload", datetime.datetime.min) > c.get("last_upload", datetime.datetime.min):
-                cameras[item['serialnumber']].update(item)
-
 
         camera_data = dict(
             meta=dict(
@@ -199,9 +175,8 @@ class Updater(Thread):
                 free_space_mb=free_mb,
                 total_space_mb=total_mb
             ),
-            cameras=cameras
+            cameras=self.process_deque()
         )
-
         return camera_data
 
     def stop(self):
