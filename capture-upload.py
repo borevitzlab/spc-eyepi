@@ -7,6 +7,7 @@ import subprocess
 import sys
 import time
 import pyudev
+import queue
 from libs.Camera import *
 from libs.Updater import Updater
 from libs.Uploader import Uploader
@@ -20,6 +21,8 @@ __maintainer__ = "Gareth Dunstone"
 __email__ = "gareth.dunstone@anu.edu.au"
 __status__ = "Testing"
 
+#Not sure of best scope to put this in
+CommunicationQueue = queue.Queue
 
 logging.config.fileConfig("logging.ini")
 logging.getLogger("paramiko").setLevel(logging.WARNING)

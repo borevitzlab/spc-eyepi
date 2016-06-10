@@ -7,6 +7,7 @@ import socket
 import ssl
 import subprocess
 import time
+import queue
 from configparser import ConfigParser
 from glob import glob
 from threading import Thread, Event
@@ -48,9 +49,10 @@ def encode_multipart_formdata(fields, files):
     return content_type, body
 
 
-class Updater(Thread):
-    def __init__(self):
+class Updater(Thread, queue.Queue):
+    def __init__(self, CommunicationQueue):
         Thread.__init__(self, name="Updater")
+        self.CommunicationQueue = CommunicationQueue
         self.scheduler = Scheduler()
         self.scheduler.every(60).seconds.do(self.go)
         # self.scheduler.every(30).minutes.do(self.upload_log)

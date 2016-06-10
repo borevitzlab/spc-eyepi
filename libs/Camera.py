@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import time
+import queue
 from glob import glob
 from threading import Thread, Event
 from libs.SysUtil import SysUtil
@@ -20,7 +21,7 @@ def import_or_install(package, import_name=None, namespace_name=None):
             importlib.import_module(import_name or package)
         except ImportError:
             import pip
-            print("couldnt import package. installing.")
+            print("Couldn't import package. installing package "+package)
             pip.main(['install', package])
         finally:
             globals()[namespace_name or import_name or package] = importlib.import_module(import_name or package)
@@ -34,14 +35,14 @@ import_or_install("Pillow", import_name="PIL.Image", namespace_name="Image")
 import_or_install("picamera")
 
 
-class Camera(Thread):
+class Camera(Thread, queue.Queue):
     accuracy = 3
     maxw, maxh = 640, 480
     file_types = ["CR2", "RAW", "NEF", "JPG", "JPEG", "PPM"]
-    def __init__(self, name=None, serialnumber=None):
+    def __init__(self, CommunicationQueue, name=None, serialnumber=None):
         # init with name or not, just extending some of the functionality of Thread
         Thread.__init__(self) if not name else Thread.__init__(self, name=name)
-
+        self.CommunicationQueue = CommunicationQueue
         self.logger = logging.getLogger(self.getName())
         self.stopper = Event()
         
@@ -192,8 +193,8 @@ class Camera(Thread):
             failed=self.failed,
             last_capture_time=self.current_capture_time)
         self.failed = list()
-
         # todo: send to other thread here
+        self.CommunicationQueue.put(data)
         print(data)
         pass
 
