@@ -9,11 +9,6 @@ from glob import glob
 from threading import Thread, Event
 from libs.SysUtil import SysUtil
 
-from RPi import GPIO
-from PIL import Image
-import picamera
-
-
 def import_or_install(package, import_name=None, namespace_name=None):
     try:
         import importlib
