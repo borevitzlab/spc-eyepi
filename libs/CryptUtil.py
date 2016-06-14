@@ -13,10 +13,9 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from paramiko.agent import Agent, AgentKey
-from pysftp import ConnectionException
 from .SysUtil import SysUtil
 
+keyserver = "https://traitcapture.org"
 
 
 def serialize_signature(signature) -> str:
@@ -71,11 +70,6 @@ class SSHManager(object):
     @property
     def paramiko_key(self):
         return self.ssh_agentKey
-    
-    @paramiko_key.setter
-    def paramiko_key(self, value):
-        key_io = io.StringIO(value.decode("utf-8"))
-        self.ssh_agentKey = paramiko.RSAKey.from_private_key(key_io)
 
     @property
     def ssh_key(self):
@@ -84,7 +78,11 @@ class SSHManager(object):
     @ssh_key.setter
     def ssh_key(self, value):
         self._key = serialization.load_pem_private_key(value, password=None, backend=default_backend())
-        self.paramiko_key = self._key
+        pbytes = self._key.private_bytes(encoding=serialization.Encoding.PEM,
+                                                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                                                    encryption_algorithm=serialization.NoEncryption())
+        key_io = io.StringIO(pbytes.decode("utf-8"))
+        self.ssh_agentKey = paramiko.RSAKey.from_private_key(key_io)
 
     def get_new_key_from_server(self, token):
         """
@@ -93,9 +91,9 @@ class SSHManager(object):
         :return:
         """
 
-        req = request.Request('https://traitcapture.org/api/camera/{}/{}/id_rsa/{}'.format(SysUtil.get_hostname(),
-                                                                                           SysUtil.get_machineid(),
-                                                                                           token))
+        req = request.Request(keyserver+'api/camera/id_rsa/{}/{}/{}'.format(token,
+                                                                            SysUtil.get_machineid(),
+                                                                            SysUtil.get_hostname()))
         handler = request.HTTPSHandler(context=ssl.SSLContext(ssl.PROTOCOL_TLSv1_2))
         opener = request.build_opener(handler)
         data = opener.open(req)

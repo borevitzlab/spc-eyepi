@@ -52,7 +52,7 @@ def encode_multipart_formdata(fields, files):
 class Updater(Thread):
     def __init__(self):
         Thread.__init__(self, name="Updater")
-        self._communication_queue = deque(tuple(),512)
+        self._communication_queue = deque(tuple(), 512)
         self.scheduler = Scheduler()
         self.scheduler.every(60).seconds.do(self.go)
         # self.scheduler.every(30).minutes.do(self.upload_log)
@@ -60,11 +60,9 @@ class Updater(Thread):
         self.stopper = Event()
         self.sshkey = SSHManager()
 
-
     @property
     def communication_queue(self):
         return self._communication_queue
-
 
     def post_multipart(self, host, selector, fields, files):
         """
@@ -100,7 +98,7 @@ class Updater(Thread):
             data = parse.urlencode(self.gather_data())
             self.sshkey.sign_message(data)
             data = data.encode('utf-8')
-            req = request.Request('https://{}/api/camera/{}/check-in'.format(remote_server, SysUtil.get_machineid()), data)
+            req = request.Request('https://{}/api/camera/check-in/{}'.format(remote_server, SysUtil.get_machineid()), data)
             # do backwards change if response is valid later.
             tries = 0
             while tries < 120:
