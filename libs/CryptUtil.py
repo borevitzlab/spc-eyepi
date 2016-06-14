@@ -61,7 +61,7 @@ class SSHManager(object):
 
         if os.path.isfile(self.priv_path) and not self.ssh_key:
             try:
-                with open(path, 'rb') as f:
+                with open(self.priv_path, 'rb') as f:
                     self.key = serialization.load_pem_private_key(f.read(), password=None, backend=default_backend())
             except Exception as e:
                 print(str(e))
@@ -121,7 +121,7 @@ class SSHManager(object):
 
         with open(self.authorized_keys_path, 'w') as authorized_keys:
             authorized_keys.write(ssh_key_string)
-        os.chmod(self.path, 0o744)
+        os.chmod(self.authorized_keys_path, 0o744)
 
     @property
     def public_ssh_key_string(self) -> str:
