@@ -62,7 +62,7 @@ class SSHManager(object):
         if os.path.isfile(self.priv_path) and not self._key:
             try:
                 with open(self.priv_path, 'rb') as f:
-                    self._key = serialization.load_pem_private_key(f.read(), password=None, backend=default_backend())
+                    self.ssh_key = f.read()
             except Exception as e:
                 print(str(e))
                 self._key = None

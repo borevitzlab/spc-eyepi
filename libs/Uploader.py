@@ -18,15 +18,6 @@ from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
 
 def pysftp_connection_init_patch(self, host, username=None, private_key=None, port=22):
-    """
-    monkeypatch for pysftp to support paramiko.RSAkey
-    :param self:
-    :param host:
-    :param username:
-    :param private_key:
-    :param port:
-    :return:
-    """
     self._sftp_live = False
     self._sftp = None
     self._transport_live = False
@@ -179,7 +170,7 @@ class Uploader(Thread):
             try:
                 chdir(basename)
             except IOError:
-                self.logger.info("Sorry, just have to make some new directories, eh. (sftp)")
+                self.logger.info("Sorry, just have to make some new directories, eh. ")
                 mkdir(basename)
                 chdir(basename)
         except Exception as e:
