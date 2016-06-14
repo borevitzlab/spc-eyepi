@@ -96,7 +96,7 @@ class Updater(Thread):
     def go(self):
         try:
             data = self.gather_data()
-            data["signature"] = self.sshkey.sign_message(json.dumps(data))
+            data["signature"] = self.sshkey.sign_message(json.dumps(data, sort_keys=True))
             req = request.Request('https://{}/api/camera/check-in/{}'.format(remote_server,
                                                                              SysUtil.get_machineid()),
                                   json.dumps(data))

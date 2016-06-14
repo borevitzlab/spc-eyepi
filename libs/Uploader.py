@@ -102,8 +102,8 @@ class Uploader(Thread):
             self.logger.debug("Connecting sftp and uploading buddy")
             # open link and create directory if for some reason it doesnt exist
             params = dict(host=self.hostname, username=self.user)
-            if self.ssh_manager.ssh_agentKey:
-                params['private_key'] = self.ssh_manager.ssh_agentKey
+            if self.ssh_manager.paramiko_key:
+                params['private_key'] = self.ssh_manager.paramiko_key
                 pysftp.Connection.__init__ = pysftp_connection_init_patch
             else:
                 params['password'] = self.password

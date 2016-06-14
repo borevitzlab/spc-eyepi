@@ -372,6 +372,8 @@ class PiCamera(Camera):
     def capture(self, image_file_basename):
         if "picamera" in globals():
             try:
+
+                image_file_spoolpath = os.path.join(self.spool_directory, image_file_basename)
                 with picamera.PiCamera() as camera:
                     if self.config.has_section("picam_size"):
                         camera.resolution = (self.config.getint("picam_size", "width"),
@@ -379,7 +381,7 @@ class PiCamera(Camera):
 
                     camera.start_preview()
                     time.sleep(2)  # Camera warm-up time
-                    camera.capture(image_file_basename+".jpg")
+                    camera.capture(image_file_spoolpath+".jpg")
                     return True
             except Exception as e:
                 self.logger.critical("EPIC FAIL, trying other method.")

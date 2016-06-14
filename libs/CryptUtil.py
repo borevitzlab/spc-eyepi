@@ -59,13 +59,13 @@ class SSHManager(object):
             self.get_new_key_from_server(token)
             os.remove(self.token_path)
 
-        if os.path.isfile(self.priv_path) and not self.ssh_key:
+        if os.path.isfile(self.priv_path) and not self._key:
             try:
                 with open(self.priv_path, 'rb') as f:
-                    self.key = serialization.load_pem_private_key(f.read(), password=None, backend=default_backend())
+                    self._key = serialization.load_pem_private_key(f.read(), password=None, backend=default_backend())
             except Exception as e:
                 print(str(e))
-                self.key = None
+                self._key = None
 
     @property
     def paramiko_key(self):
@@ -129,19 +129,19 @@ class SSHManager(object):
         gets the public ssh key string.
         :return:
         """
-        if self.ssh_key:
-            return ssh_public_key(self.ssh_key)
+        if self._key:
+            return ssh_public_key(self._key)
         return str()
 
     def sign_message(self, message) -> str:
         """
         signs a text message.
         :param message: utf-8 encoded string
-        :return str: formatted string with message\nsignature
+        :return str: signature for message.
         """
-        if not self.ssh_key:
+        if not self._key:
             return message
-        signer = self.ssh_key.signer(
+        signer = self._key.signer(
             padding.PSS(
                 mgf=padding.MGF1(hashes.SHA256()),
                 salt_length=padding.PSS.MAX_LENGTH
