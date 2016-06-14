@@ -202,14 +202,13 @@ class SysUtil(object):
         if not config['camera']['name']:
             config['camera']['name'] = SysUtil.get_hostname()+identifier[:6]
 
-        with open(path, 'w') as configfile:
-            config.write(configfile)
-        return config\
+        SysUtil.write_config(config, identifier)
+        return config
 
     @classmethod
     def write_config(cls, config, identifier):
         path = SysUtil.identifier_to_ini(identifier)
-        with open(path, 'w') as configfile:
+        with open(path, 'w+') as configfile:
             config.write(configfile)
         return config
 
