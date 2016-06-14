@@ -95,10 +95,13 @@ class Updater(Thread):
 
     def go(self):
         try:
-            data = parse.urlencode(self.gather_data())
-            self.sshkey.sign_message(data)
-            data = data.encode('utf-8')
-            req = request.Request('https://{}/api/camera/check-in/{}'.format(remote_server, SysUtil.get_machineid()), data)
+            data = self.gather_data()
+            data["signature"] = self.sshkey.sign_message(json.dumps(data))
+            req = request.Request('https://{}/api/camera/check-in/{}'.format(remote_server,
+                                                                             SysUtil.get_machineid()),
+                                  json.dumps(data))
+            req.add_header('Content-Type', 'application/json')
+
             # do backwards change if response is valid later.
             tries = 0
             while tries < 120:

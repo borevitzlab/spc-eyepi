@@ -141,10 +141,11 @@ class SSHManager(object):
         """
         if not self.ssh_key:
             return message
-        signer = self.ssh_key.signer(padding.PSS(
-            mgf=padding.MGF1(hashes.SHA256()),
-            salt_length=padding.PSS.MAX_LENGTH
-        ),
+        signer = self.ssh_key.signer(
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
             hashes.SHA256())
         signer.update(bytes(message, "utf-8"))
         return serialize_signature(signer.finalize())
