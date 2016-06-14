@@ -135,18 +135,21 @@ class Camera(Thread):
         returns False if the conditions where the camera should NOT capture are met.
         :return:
         """
+
+        current_naive_time = self.current_capture_time.time()
+
         if not self.config.getboolean("camera", "enabled"):
             # if the camera is disabled, never take photos
             return False
 
         if self.begin_capture < self.end_capture:
             # where the start capture time is less than the end capture time
-            if not self.begin_capture <= self.current_capture_time <= self.end_capture:
+            if not self.begin_capture <= current_naive_time <= self.end_capture:
                 return False
         else:
             # where the start capture time is greater than the end capture time
             # i.e. capturing across midnight.
-            if self.end_capture <= self.current_capture_time <= self.begin_capture:
+            if self.end_capture <= current_naive_time <= self.begin_capture:
                 return False
 
         # capture interval

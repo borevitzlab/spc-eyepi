@@ -188,8 +188,8 @@ class SysUtil(object):
         config.read_string(default_config)
         path = SysUtil.identifier_to_ini(identifier)
         try:
-            config.read(path)
-            return config
+            if len(config.read(path)):
+                return config
         except Exception as e:
             print(str(e))
 
