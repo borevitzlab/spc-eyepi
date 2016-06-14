@@ -15,7 +15,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from paramiko.agent import Agent, AgentKey
 from pysftp import ConnectionException
-from ..libs import SysUtil
+from .SysUtil import SysUtil
 
 
 
