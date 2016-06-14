@@ -64,7 +64,7 @@ class Camera(Thread):
         :return:
         """
         self.logger.info("Re-init...")
-        self.config = SysUtil.ensure_config(self.config_filename, self.identifier)
+        self.config = SysUtil.ensure_config(self.identifier)
         
         self.camera_name = self.config["camera"]["name"]
         self.interval = self.config.getint("timelapse", "interval")
