@@ -48,13 +48,13 @@ class Uploader(Thread):
         self.config_filename = SysUtil.identifier_to_ini(self.identifier)
         self.ssh_manager = SSHManager()
         self.machine_id = SysUtil.get_machineid()
-        self.last_capture_time = datetime.datetime.fromtimestamp(0)
+        self.last_upload_time = datetime.datetime.fromtimestamp(0)
         self.last_upload_list = []
 
         self.total_data_uploaded_tb = \
-            self.total_data_uploaded_b = \
-            self.last_upload_time = \
-            self.config = \
+            self.total_data_uploaded_b = 0
+
+        self.config = \
             self.hostname = \
             self.user = \
             self.password = \
@@ -81,7 +81,6 @@ class Uploader(Thread):
         self.upload_directory = self.config["localfiles"]["upload_dir"]
         self.replace = self.config.getboolean("ftp", "replace")
         self.last_upload_list = []
-        self.last_capture_time = datetime.datetime.fromtimestamp(0)
 
     def upload(self, file_names):
         """
@@ -100,7 +99,6 @@ class Uploader(Thread):
                 params['password'] = self.password
 
             with pysftp.Connection(**params) as link:
-                link.chdir("/")
                 self.mkdir_recursive(link, os.path.join(self.target_directory, self.camera_name))
                 self.logger.debug("Uploading")
                 # dump ze files.
