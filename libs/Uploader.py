@@ -45,11 +45,11 @@ class Uploader(Thread):
     # upload interval
     upload_interval = 60
 
-    def __init__(self, communication_queue, identifier):
+    def __init__(self, identifier, queue=None):
         # same thread name hackery that the Camera threads use
         Thread.__init__(self, name=identifier+"-Uploader")
         self.stopper = Event()
-        self.communication_queue = communication_queue
+        self.communication_queue = queue
         self.identifier = identifier
         self.logger = logging.getLogger(self.getName())
         self.startup_time = datetime.datetime.now()
@@ -190,6 +190,9 @@ class Uploader(Thread):
         communication member. This is meant to send some metadata to the updater thread.
         :return:
         """
+        if not self.communication_queue:
+            return
+
         try:
             self.logger.debug("Collecting metadata")
             data = dict(
@@ -200,7 +203,7 @@ class Uploader(Thread):
             )
             self.communication_queue.append(data)
         except Exception as e:
-            self.logger.error(str(e))
+            self.logger.error("thread communication error: {}".format(str(e)))
 
     def run(self):
         """ Main upload loop

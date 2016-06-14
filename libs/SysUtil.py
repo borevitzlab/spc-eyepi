@@ -164,10 +164,12 @@ class SysUtil(object):
     def get_identifier_from_name(cls, name):
         """
         returns either the identifier (from name) or the name filled with the machine id
+        clamps to 32 characters.
         :param name: name to fill
         :return:
         """
-        return "".join((x if idx > len(name) - 1 else name[idx] for idx, x in enumerate(cls.get_machineid())))
+        identifier = "".join((x if idx > len(name) - 1 else name[idx] for idx, x in enumerate(cls.get_machineid())))
+        return identifier[:32]
 
     @classmethod
     def get_identifier_from_filename(cls, file_name):

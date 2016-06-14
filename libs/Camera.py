@@ -40,10 +40,10 @@ class Camera(Thread):
     maxw, maxh = 640, 480
     file_types = ["CR2", "RAW", "NEF", "JPG", "JPEG", "PPM"]
 
-    def __init__(self, communication_queue, identifier, *args, **kwargs):
+    def __init__(self, identifier, *args, queue=None, **kwargs):
         # init with name or not, just extending some of the functionality of Thread
         Thread.__init__(self, name=identifier)
-        self.communication_queue = communication_queue
+        self.communication_queue = queue
         self.logger = logging.getLogger(self.getName())
         self.stopper = Event()
         self.identifier = identifier
@@ -176,13 +176,19 @@ class Camera(Thread):
         communication member. This is meant to send some metadata to the updater thread.
         :return:
         """
-        data = dict(
-            name=self.camera_name,
-            identifier=self.identifier,
-            failed=self.failed,
-            last_capture_time=self.current_capture_time)
-        self.communication_queue.append(data)
-        self.failed = list()
+        if not self.communication_queue:
+            self.failed = list()
+            return
+        try:
+            data = dict(
+                name=self.camera_name,
+                identifier=self.identifier,
+                failed=self.failed,
+                last_capture_time=self.current_capture_time)
+            self.communication_queue.append(data)
+            self.failed = list()
+        except Exception as e:
+            self.logger.error("thread communication error: {}".format(str(e)))
 
     def run(self):
         while True and not self.stopper.is_set():
@@ -254,8 +260,8 @@ class GphotoCamera(Camera):
     Camera class
     other cameras inherit from this class.
     """
-    def __init__(self, queue,identifier, port, **kwargs):
-        super(GphotoCamera, self).__init__(queue, identifier, **kwargs)
+    def __init__(self, identifier, port, **kwargs):
+        super(GphotoCamera, self).__init__(identifier, **kwargs)
         # only gphoto cameras have a camera port.
         self.camera_port = port
         self.exposure_length = self.config.get('camera',"exposure")
@@ -319,7 +325,6 @@ class GphotoCamera(Camera):
                 return None
         except:
             return None
-
 
 
 class WebCamera(Camera):
