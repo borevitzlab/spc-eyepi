@@ -158,10 +158,7 @@ class Uploader(Thread):
             elif isinstance(link, ftplib.FTP):
                 mkdir, chdir = link.mkd, link.cwd
         try:
-            if remote_directory == '/':
-                chdir('/')
-                return
-            if remote_directory == '':
+            if remote_directory in ('', "/"):
                 return
             remote_dirname, basename = os.path.split(remote_directory)
             self.mkdir_recursive(link, os.path.dirname(remote_directory), mkdir=mkdir, chdir=chdir)
