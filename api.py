@@ -375,4 +375,4 @@ if __name__ == "__main__":
     except Exception as e:
         print("something broke decrypting the new db: {}".format(str(e)))
 
-    app.run(host='0.0.0.0', port=1666)
+    app.run(host='0.0.0.0', port=666)
