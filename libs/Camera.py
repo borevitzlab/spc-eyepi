@@ -9,6 +9,7 @@ from glob import glob
 from threading import Thread, Event
 from libs.SysUtil import SysUtil
 
+
 def import_or_install(package, import_name=None, namespace_name=None):
     try:
         import importlib
@@ -16,13 +17,14 @@ def import_or_install(package, import_name=None, namespace_name=None):
             importlib.import_module(import_name or package)
         except ImportError:
             import pip
-            print("Couldn't import package. installing package "+package)
+            print("Couldn't import package. installing package " + package)
             pip.main(['install', package])
         finally:
             globals()[namespace_name or import_name or package] = importlib.import_module(import_name or package)
     except Exception as e:
-        print("couldnt install or import {} from {} for some reason: {}".format(namespace_name or import_name or package,
-                                                                            import_name or package, str(e)))
+        print(
+            "couldnt install or import {} from {} for some reason: {}".format(namespace_name or import_name or package,
+                                                                              import_name or package, str(e)))
 
 
 import_or_install("RPi.GPIO", namespace_name="GPIO")
@@ -65,7 +67,7 @@ class Camera(Thread):
         """
         self.logger.info("Re-init...")
         self.config = SysUtil.ensure_config(self.identifier)
-        
+
         self.camera_name = self.config["camera"]["name"]
         self.interval = self.config.getint("timelapse", "interval")
         self.spool_directory = self.config["localfiles"]["spooling_dir"]
@@ -231,13 +233,13 @@ class Camera(Thread):
                                     shutil.copy(os.path.join("/dev/shm", self.identifier + ".jpg"),
                                                 os.path.join(self.upload_directory, "last_image.jpg"))
                             except Exception as e:
-                                self.logger.error("Couldnt resize for replace upload :( {}".format(str(e)))
+                                self.logger.error("Couldn't resize for replace upload :( {}".format(str(e)))
 
                         try:
                             if self.config.getboolean("ftp", "timestamped"):
                                 shutil.move(fn, self.upload_directory)
                         except Exception as e:
-                            self.logger.error("Couldnt move for timestamped: {}".format(str(e)))
+                            self.logger.error("Couldn't move for timestamped: {}".format(str(e)))
 
                         self.logger.info("Captured and stored - {}".format(os.path.basename(basename)))
 
@@ -245,7 +247,7 @@ class Camera(Thread):
                             if os.path.isfile(fn):
                                 os.remove(fn)
                         except Exception as e:
-                            self.logger.error("Couldnt remove spooled: {}".format(str(e)))
+                            self.logger.error("Couldn't remove spooled: {}".format(str(e)))
 
                     self.communicate_with_updater()
                 except Exception as e:
@@ -258,24 +260,18 @@ class GphotoCamera(Camera):
     Camera class
     other cameras inherit from this class.
     """
+
     def __init__(self, identifier, port, **kwargs):
         super(GphotoCamera, self).__init__(identifier, **kwargs)
         # only gphoto cameras have a camera port.
         self.camera_port = port
-        self.exposure_length = self.config.get('camera',"exposure")
+        self.exposure_length = self.config.get('camera', "exposure")
 
     def re_init(self):
         super(GphotoCamera, self).re_init()
         self.exposure_length = self.config.getint("camera", "exposure")
 
     def capture(self, image_file_basename):
-        # stuff for checking bulb. not active yet
-        # is_bulbspeed = subprocess.check_output("gphoto2 --port "+self.camera_port+" --get-config shutterspeed", shell=True).splitlines()
-        # bulb = is_bulbspeed[3][is_bulbspeed[3].find("Current: ")+9: len(is_bulbspeed[3])]
-        # if bulb.find("bulb") != -1:
-        #    cmd = ["gphoto2 --port "+ self.camera_port+" --set-config capturetarget=sdram --set-config eosremoterelease=5 --wait-event="+str(self.exposure_length)+"ms --set-config eosremoterelease=11 --wait-event-and-download=2s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
-        # else:
-        # cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --wait-event-and-download=36s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
 
         fn = os.path.join(self.spool_directory, image_file_basename) + ".%C"
         cmd = ["gphoto2",
@@ -381,13 +377,13 @@ class PiCamera(Camera):
 
                     camera.start_preview()
                     time.sleep(2)  # Camera warm-up time
-                    camera.capture(image_file_spoolpath+".jpg")
+                    camera.capture(image_file_spoolpath + ".jpg")
                     return True
             except Exception as e:
                 self.logger.critical("EPIC FAIL, trying other method.")
 
         retcode = 1
-        image_file_spoolpath = os.path.join(self.spool_directory,image_file_basename)
+        image_file_spoolpath = os.path.join(self.spool_directory, image_file_basename)
         # take the image using os.system(), pretty hacky but its never exactly be run on windows.
         if self.config.has_section("picam_size"):
             w, h = self.config["picam_size"]["width"], self.config["picam_size"]["height"]
@@ -396,8 +392,9 @@ class PiCamera(Camera):
                                                                                                          height=h,
                                                                                                          filename=image_file_spoolpath))
         else:
-            retcode = os.system("/opt/vc/bin/raspistill --nopreview -o \"{filename}.jpg\"".format(filename=image_file_spoolpath))
-        os.chmod(image_file_spoolpath+".jpg", 755)
+            retcode = os.system(
+                "/opt/vc/bin/raspistill --nopreview -o \"{filename}.jpg\"".format(filename=image_file_spoolpath))
+        os.chmod(image_file_spoolpath + ".jpg", 755)
         if retcode != 0:
             return False
         return True
@@ -443,75 +440,8 @@ class IVPortCamera(PiCamera):
                         "/opt/vc/bin/raspistill --nopreview -o \"{filename}\"".format(filename=image_numbered))
                 os.chmod(image_numbered, 755)
             except Exception as e:
-                self.logger.critical("Couldnt capture (IVPORT) with camera {} {}".format(c, str(e)))
+                self.logger.critical("Couldn't capture (IVPORT) with camera {} {}".format(c, str(e)))
             filenames.append(image_numbered)
-            time.sleep(2)
+            time.sleep(0.2)
+
         return filenames
-
-    def run(self):
-        # set next_capture, this isnt really used much anymore except for logging.
-        self.next_capture = datetime.datetime.now()
-        # this is to test and see if the config has been modified
-        while True and not self.stopper.is_set():
-            # set a timenow this is used locally down here
-            tn = datetime.datetime.now()
-
-            if self.get_is_capture(tn.time()):
-                try:
-                    filenames = []
-                    # change the next_capture for logging. not really used much anymore.
-                    self.next_capture = tn + datetime.timedelta(seconds=self.interval)
-
-                    # The time now is within the operating times
-                    self.logger.info("Capturing Image now for picam")
-                    # TODO: once timestamped imagename is more agnostic this will require a jpeg append.
-                    image_file = self.timestamped_imagename(tn)
-
-                    image_file = os.path.join(self.spool_directory, image_file)
-                    filenames = self.capture(image_file)
-
-                    self.logger.debug("Capture Complete")
-                    self.logger.debug("Copying the image to the web service, buddy")
-                    # Copy the image file to the static webdir
-                    for filename in filenames:
-                        try:
-                            if self.config.getboolean("ftp", "uploadtimestamped"):
-                                self.logger.debug("saving timestamped image for you, buddy")
-                                shutil.copy(filename, os.path.join(self.upload_directory, os.path.basename(filename)))
-                        except Exception as e:
-                            self.logger.error("Couldnt copy image for timestamped: {}".format(str(e)))
-                        try:
-                            self.logger.debug("deleting file buddy")
-                            os.remove(filename)
-                        except Exception as e:
-                            self.logger.error("Couldnt remove file from filesystem: {}".format(str(e)))
-                            # Do some logging.
-
-                    try:
-                        if not os.path.isfile("ivport.json"):
-                            with open("ivport.json", 'w+') as f:
-                                f.write("{}")
-                        with open("ivport.json", 'r') as f:
-                            js = json.loads(f.read())
-
-                        with open("ivport.json", 'w') as f:
-                            if len(filenames):
-                                js['last_capture_time'] = (tn - datetime.datetime.fromtimestamp(
-                                    0)).total_seconds() - time.daylight * 3600
-                                js['last_capture_time_human'] = tn.isoformat()
-                            f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
-                    except Exception as e:
-                        with open("ivport.json", 'w') as f:
-                            f.write("{}")
-                        self.logger.error("Couldnt log ivport capture json why? {}".format(str(e)))
-
-                    if self.next_capture.time() < self.endcapture:
-                        self.logger.info("Next capture at {}".format(self.next_capture.isoformat()))
-                    else:
-                        self.logger.info("Capture will stop at {}".format(self.endcapture.isoformat()))
-
-                except Exception as e:
-                    self.next_capture = datetime.datetime.now()
-                    self.logger.error("Image Capture error - {}".format(str(e)))
-
-            time.sleep(0.1)

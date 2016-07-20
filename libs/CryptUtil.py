@@ -79,8 +79,8 @@ class SSHManager(object):
     def ssh_key(self, value):
         self._key = serialization.load_pem_private_key(value, password=None, backend=default_backend())
         pbytes = self._key.private_bytes(encoding=serialization.Encoding.PEM,
-                                                    format=serialization.PrivateFormat.TraditionalOpenSSL,
-                                                    encryption_algorithm=serialization.NoEncryption())
+                                         format=serialization.PrivateFormat.TraditionalOpenSSL,
+                                         encryption_algorithm=serialization.NoEncryption())
         key_io = io.StringIO(pbytes.decode("utf-8"))
         self.ssh_agentKey = paramiko.RSAKey.from_private_key(key_io)
 
@@ -91,9 +91,9 @@ class SSHManager(object):
         :return:
         """
 
-        req = request.Request(keyserver+'api/camera/id_rsa/{}/{}/{}'.format(token,
-                                                                            SysUtil.get_machineid(),
-                                                                            SysUtil.get_hostname()))
+        req = request.Request(keyserver + 'api/camera/id_rsa/{}/{}/{}'.format(token,
+                                                                              SysUtil.get_machineid(),
+                                                                              SysUtil.get_hostname()))
         handler = request.HTTPSHandler(context=ssl.SSLContext(ssl.PROTOCOL_TLSv1_2))
         opener = request.build_opener(handler)
         data = opener.open(req)
