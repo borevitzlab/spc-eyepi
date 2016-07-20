@@ -1,7 +1,12 @@
 {% extends "layout.html" -%}
 {% set active_page="logfile" -%}
 {% block body %}
+<link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />
+<script src="js/shCore.js" type="text/javascript"></script>
+<script src="js/shAutoloader.js" type="text/javascript"></script>
+<script src="js/shBrushPlain.js" type="text/javascript"></script>
 <h2>Log</h2>
+<h4>Version: {{ version }}</h4>
 <hr>
 <div class="col-md-5">
 <input type="search" class="form-control" placeholder="Filter" id="log-search-box"> 
@@ -9,60 +14,52 @@
 <div class="btn-group col-md-5 pull-right" role="button">
 	<div class="col-md-3">
 		<div class="form-group">
-			<input type="number" class="form-control col-md-2" value="4" id="updateinterval" min="1" max="3600"></input>
+            Line count:<input type="number" class="form-control col-md-2" value="100" id="line-count" min="1" max="3600">
 		</div>
 	</div>
-	<div class="btn-group" data-toggle="buttons">
-		<label class="btn btn-primary">
-			<input type="checkbox" id="autoup" autocomplete="off">Auto Update</input>
-		</label>
-	</div>
-		<button class="btn btn-default" ><a href="/rotatelogfile" role="button"> Rotate</a></button>
-		<button class="btn btn-default" ><a href="/log.log" role="button"> Download </a></button>
+    <button class="btn btn-default" id="update-btn"> Update</button>
 </div>
 <br>
 <hr>
-<div class="col-md-12 panel panel-default">
-        <table class="table" id="changeme">
+<div id="log-container">
+    <script type="syntaxhighlighter" class="brush: plain; toolbar: false; gutter: false;" id="log-area">
 
-        </table>
+    </script>
+    <br>
 </div>
 
 <script type='text/javascript'>
-$(document).ready(function(){
-               $('#log-search-box').bind('input',function(){
-                      if($(this).val().length > 4){
-                        var squery = $('#log-search-box').val()
-                          $.post('/getfilteredlog',
-                                {query:squery},
-                                function(data, status, xhr){
-                                        $('#changeme').html(data)
-                        });
-                       }else if($(this).val()=="*"){
-                        var squery = $('#log-search-box').val()
-                          $.post('/getfilteredlog',
-                                {query:squery},
-                                function(data, status, xhr){
-                                        $('#changeme').html(data)
-                        });
-                      }
-	       });
-});
+    var xhr = new XMLHttpRequest();
+    var timer;
+    var output = document.getElementById('log-area');
+    SyntaxHighlighter.highlight()
+    var position = 0;
+    $(document).ready(function(){
+        SyntaxHighlighter.highlight()
+        $('#update-btn').click('input',function(){
+            xhr = new XMLHttpRequest();
+            xhr.open('GET', '/log/'+$("#log-search-box").val()+"/"+$("#line-count").val());
+            xhr.send();
+                timer = setInterval(function() {
+                    // check the response for new data
+                    handleNewData();
+                    // stop checking once the response has ended
+                    if (xhr.readyState == XMLHttpRequest.DONE) {
+                        clearInterval(timer);
+                    }
+                }, 200);
+        });
+    });
+    function handleNewData() {
+        $("#log-area").remove();
+        var log = document.createElement("script");
+        var logcontainer = document.getElementById('log-container');
+        log.setAttribute("id", "log-area");
+        log.setAttribute("type", "syntaxhighlighter");
+        log.setAttribute("class", "brush: plain; toolbar: false; gutter: false;");
+        log.textContent = xhr.responseText;
+        logcontainer.appendChild(log);
+        SyntaxHighlighter.highlight()
+    }
 </script>
-<script type='text/javascript'>
-window.setInterval(
-function(){
-if($("#autoup").is(":checked")){
-        var squery = $('#log-search-box').val()
-        $.post('/getfilteredlog',
-         {query:squery},
-         function(data, status, xhr){
-		$('#changeme').html(data)
-		}
-	); 
-}
-}
-,$("#updateinterval").val()*1000 );
-</script>
-
 {% endblock %}

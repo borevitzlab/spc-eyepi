@@ -1,47 +1,81 @@
-__author__ = 'Gareth Dunstone'
 import datetime
 import http.client
 import json
+import logging
 import os
 import socket
+import ssl
 import subprocess
 import time
-import ssl
 from configparser import ConfigParser
 from glob import glob
+
+from collections import deque
 from threading import Thread, Event
 from urllib import request, parse
-import logging
-
 from schedule import Scheduler
+from .CryptUtil import SSHManager
+from .SysUtil import SysUtil
 
-from .AESCipher import AESCipher
+remote_server = "traitcapture.org"
 
-hostname = "traitcapture.org"
 # hostname = "localhost:5000"
+
+def encode_multipart_formdata(fields, files):
+    """
+    Black magic that does multipart form encoding.
+    :param fields:
+    :param files: iterable of tuple with (key, filename, file as bytes
+    :return:
+    """
+    BOUNDARY_STR = '----------ThIs_Is_tHe_bouNdaRY_$'
+    CRLF = bytes("\r\n", "ASCII")
+    L = []
+    for (key, value) in fields:
+        L.append(bytes("--" + BOUNDARY_STR, "ASCII"))
+        L.append(bytes('Content-Disposition: form-data; name="{}"'.format(key), "ASCII"))
+        L.append(b'')
+        L.append(bytes(value, "ASCII"))
+    for (key, filename, value) in files:
+        L.append(bytes('--' + BOUNDARY_STR, "ASCII"))
+        L.append(bytes('Content-Disposition: form-data; name="{}"; filename="{}"'.format(key, filename), "ASCII"))
+        L.append(bytes('Content-Type: application/octet-stream', "ASCII"))
+        L.append(b'')
+        L.append(value)
+    L.append(bytes('--' + BOUNDARY_STR + '--', "ASCII"))
+    L.append(b'')
+    body = CRLF.join(L)
+    content_type = 'multipart/form-data; boundary=' + BOUNDARY_STR
+    return content_type, body
+
 
 class Updater(Thread):
     def __init__(self):
         Thread.__init__(self, name="Updater")
-
+        self._communication_queue = deque(tuple(), 512)
         self.scheduler = Scheduler()
         self.scheduler.every(60).seconds.do(self.go)
-        self.scheduler.every(30).minutes.do(self.upload_log)
+        # self.scheduler.every(30).minutes.do(self.upload_log)
         self.logger = logging.getLogger(self.getName())
         self.stopper = Event()
-        self.go()
+        self.sshkey = SSHManager()
+
+    @property
+    def communication_queue(self):
+        return self._communication_queue
 
     def post_multipart(self, host, selector, fields, files):
         """
         httplib form encoding. more black magic.
         only does https, no http.
         suck it, actually does https requests
+        todo: work out how to sign this.
         :param selector:
         :param fields:
         :param files:
         :return:
         """
-        content_type, body = self.encode_multipart_formdata(fields, files)
+        content_type, body = encode_multipart_formdata(fields, files)
         # Choose between http and https connections
         h = http.client.HTTPSConnection(host)
         h.putrequest('POST', selector)
@@ -52,72 +86,21 @@ class Updater(Thread):
         response = h.getresponse()
         return response.read()
 
-    def encode_multipart_formdata(self, fields, files):
+    def upload_logs(self):
         """
-        Black magic that does multipart form encoding.
-        :param fields:
-        :param files:
+        this will soon use
         :return:
         """
-        BOUNDARY_STR = '----------ThIs_Is_tHe_bouNdaRY_$'
-        CRLF = bytes("\r\n", "ASCII")
-        L = []
-        for (key, value) in fields:
-            L.append(bytes("--" + BOUNDARY_STR, "ASCII"))
-            L.append(bytes('Content-Disposition: form-data; name="{}"'.format(key), "ASCII"))
-            L.append(b'')
-            L.append(bytes(value, "ASCII"))
-        for (key, filename, value) in files:
-            L.append(bytes('--' + BOUNDARY_STR, "ASCII"))
-            L.append(bytes('Content-Disposition: form-data; name="{}"; filename="{}"'.format(key, filename), "ASCII"))
-            L.append(bytes('Content-Type: application/octet-stream', "ASCII"))
-            L.append(b'')
-            L.append(value)
-        L.append(bytes('--' + BOUNDARY_STR + '--', "ASCII"))
-        L.append(b'')
-        body = CRLF.join(L)
-        content_type = 'multipart/form-data; boundary=' + BOUNDARY_STR
-        return content_type, body
-
-    @staticmethod
-    def get_cipher():
-        rpiconfig = ConfigParser()
-        rpiconfig.read("picam.ini")
-        return AESCipher(rpiconfig["ftp"]['pass'])
-
-    def upload_log(self):
-        logfile = "spc-eyepi.log"
-        fl = glob('configs_byserial/*.ini')
-        names = {}
-        try:
-            for fn in fl:
-                c = ConfigParser()
-                c.read(fn)
-                try:
-                    names[os.path.split(os.path.splitext(fn)[0])[-1]] = c['camera']['name']
-                except:
-                    pass
-
-            aes_crypt = self.get_cipher()
-            n = aes_crypt.encrypt(json.dumps(names)).decode('utf-8')
-            with open(logfile, 'r') as f:
-                encrypted_data = aes_crypt.encrypt(f.read())
-                self.post_multipart("{}".format(hostname), "https://{}/api/camera/post-log".format(hostname), [("names", n)],
-                                    [("file", "log", encrypted_data)])
-        except Exception as e:
-            print(str(e))
+        pass
 
     def go(self):
         try:
-            rpiconfig = ConfigParser()
-            rpiconfig.read("picam.ini")
-            jsondata = self.gather_data(rpiconfig)
-            aes_crypt = self.get_cipher()
-            ciphertext = aes_crypt.encrypt(json.dumps(jsondata))
-
-            data = parse.urlencode({'data': ciphertext})
-            data = data.encode('utf-8')
-            req = request.Request('https://{}/api/camera/check-in'.format(hostname), data)
+            data = self.gather_data()
+            data["signature"] = self.sshkey.sign_message(json.dumps(data, sort_keys=True))
+            req = request.Request('https://{}/api/camera/check-in/{}'.format(remote_server,
+                                                                             SysUtil.get_machineid()),
+                                  json.dumps(data))
+            req.add_header('Content-Type', 'application/json')
 
             # do backwards change if response is valid later.
             tries = 0
@@ -128,7 +111,7 @@ class Updater(Thread):
                     data = opener.open(req)
                     if data.getcode() == 200:
                         # do config modify/parse of command here.
-                        data = json.loads(aes_crypt.decrypt(data.read().decode("utf-8")))
+                        data = json.loads(data.read().decode("utf-8"))
                         for key, value in data.copy().items():
                             if value == {}:
                                 del data[str(key)]
@@ -143,148 +126,59 @@ class Updater(Thread):
         except Exception as e:
             print(str(e))
 
-    def writecfg(self, config, filename):
-        with open(filename, 'w') as configfile:
-            config.write(configfile)
-
     def set_configdata(self, data):
-        config_map = {
-            'name': ('camera', 'name'),
-            'camera_enabled': ('camera', 'enabled'),
-            'upload_enabled': ('ftp', 'uploaderenabled'),
-            'upload_username': ('ftp', 'user'),
-            'upload_pass': ('ftp', 'pass'),
-            'upload_server': ('ftp', 'server'),
-            'upload_timestamped': ('ftp', 'uploadtimestamped'),
-            'upload_webcam': ('ftp', 'uploadwebcam'),
-            'interval_in_seconds': ('timelapse', 'interval'),
-            'starttime': ('timelapse', 'starttime'),
-            'stoptime': ('timelapse', 'stoptime')
-        }
-        tf = {"True": "on", "False": "off", "true": "on", "false": "off", True: "on", False: "off"}
 
-        for serialnumber, setdata in data.items():
-            config = ConfigParser()
-            with open("/etc/machine-id") as f:
-                m_id = str(f.read())
-                m_id = m_id.strip('\n')
-            if m_id == serialnumber:
-                # modify picam file if machine id is the sn
-                config_path = "picam.ini"
-                config.read(config_path)
-                for key, value in setdata.items():
-                    if value in tf.keys():
-                        value = tf[value]
-                    if value in ["starttime", "stoptime"]:
-                        # parse datetimes correctly, because they are gonna be messy.
-                        dt = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.Z")
-                        value = dt.strftime('%H:%M')
-                    try:
-                        config[config_map[key][0]][config_map[key][1]] = str(value)
-                    except Exception as e:
-                        self.logger.error("Couldnt set item {}:{}, {}".format(key, value, str(e)))
-                self.logger.info("Saving Pi config")
-                self.writecfg(config, config_path)
+        for identifier, update_data in data.items():
+            # dont rewrite empty...
+            if not len(update_data):
+                continue
 
-            if os.path.isfile(os.path.join("configs_byserial", serialnumber + ".ini")):
-                # modify camera by serial if available, otherwise 404.
-                config_path = os.path.join("configs_byserial", serialnumber + ".ini")
-                config.read(config_path)
-                for key, value in setdata.items():
-                    if value in tf.keys():
-                        value = tf[value]
-                    if value in ["starttime", "stoptime"]:
-                        # parse datetimes correctly, because they are gonna be messy.
-                        dt = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.Z")
-                        value = dt.strftime('%H:%M')
-                    config[config_map[key][0]][config_map[key][1]] = str(value)
-                self.writecfg(config, config_path)
+            config = SysUtil.ensure_config(identifier)
+            sections = set(config.sections()).intersection(set(update_data.keys()))
+            for section in sections:
+                update_section = update_data[section]
+                options = set(config.options(section)).intersection(set(update_section.keys()))
+                for option in options:
+                    config.set(section,option,str(update_section[option]))
 
-    def gather_data(self, piconf):
-        jsondata = {}
-        version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
-        jsondata["version"] = version.strip("\n")
-        hn = None
-        try:
-            jsondata["external_ip"] = \
-                json.loads(request.urlopen('https://api.ipify.org/?format=json', timeout=10).read().decode('utf-8'))[
-                    'ip']
-        except Exception as e:
-            self.logger.error(str(e))
+            SysUtil.write_config(config, identifier)
 
-        with open("/etc/hostname", "r") as fn:
-            hn = fn.readlines()[0]
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.connect(("8.8.8.8", 0))
-            jsondata['internal_ip'] = s.getsockname()[0]
-        except Exception as e:
-            self.logger.error(str(e))
+    def process_deque(self):
+        cameras = dict()
+        while len(self._communication_queue):
+            item = self._communication_queue.pop()
+            c = cameras.get(item['identifier'], None)
+            if not c:
+                cameras[item['identifier']] = item
+                continue
 
-        try:
-            with open("/home/tor_private/hostname") as f:
-                onion_address = f.read().replace('\n', '')
-            jsondata["onion_address"] = onion_address.split(" ")[0]
-            jsondata["onion_cookie_auth"] = onion_address.split(" ")[1]
-            jsondata["onion_cookie_client"] = onion_address.split(" ")[-1]
-        except Exception as e:
-            self.logger.error(str(e))
+            if item.get("last_capture", datetime.datetime.min) > c.get("last_capture", datetime.datetime.min):
+                cameras[item['identifier']].update(item)
 
-        metadatas = {}
-        metadatas_from_cameras_fn = glob("*.json")
-        for fn in metadatas_from_cameras_fn:
-            with open(fn, 'r') as f:
-                metadatas[os.path.splitext(fn)[0]] = json.loads(f.read())
+            if item.get("last_upload", datetime.datetime.min) > c.get("last_upload", datetime.datetime.min):
+                cameras[item['identifier']].update(item)
+        return cameras
 
-        jsondata['metadata'] = metadatas
+    def gather_data(self):
+        free_mb, total_mb = SysUtil.get_fs_space_mb()
+        onion_address, cookie_auth, cookie_client = SysUtil.get_tor_host()
 
-        a_statvfs = os.statvfs("/")
-        free_space = a_statvfs.f_frsize * a_statvfs.f_bavail
-        total_space = a_statvfs.f_frsize * a_statvfs.f_blocks
-        for x in range(0, 2):
-            free_space /= 1024.0
-            total_space /= 1024.0
-        jsondata['free_space_mb'] = free_space
-        jsondata['total_space_mb'] = total_space
-        jsondata["name"] = hn
-
-        piconf = ConfigParser()
-        piconf.read("picam.ini")
-
-        configs = {}
-        for file in glob(os.path.join("configs_byserial", "*.ini")):
-            configs[os.path.basename(file)[:-4]] = ConfigParser()
-            configs[os.path.basename(file)[:-4]].read(file)
-
-        if os.path.isfile("webcam.ini"):
-            configs["webcam"] = ConfigParser()
-            configs["webcam"].read("webcam.ini")
-
-        jsondata['cameras'] = {}
-        for serial, cam_config in configs.items():
-            conf = {}
-            for section in cam_config.sections():
-                if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter":
-                    conf[section] = dict(cam_config.items(section))
-            jsondata['cameras'][serial] = conf
-        rpc = {}
-
-        for section in piconf.sections():
-            if not section == "formatter_logfileformatter" and not section == "formatter_simpleFormatter":
-                rpc[section] = dict(piconf.items(section))
-        try:
-            with open("/etc/machine-id") as f:
-                ser = str(f.read())
-                ser = ser.strip('\n')
-                jsondata['cameras'][ser] = rpc
-                jsondata['metadata'][ser] = jsondata['metadata']['picam']
-                del jsondata['metadata']['picam']
-        except Exception as e:
-            jsondata['cameras']['picam'] = rpc
-            jsondata['cameras']['picam']['error'] = str(e)
-            self.logger.warning("Using picam as key in json metadata {}".format(str(e)))
-
-        return jsondata
+        camera_data = dict(
+            meta=dict(
+                version=SysUtil.get_version(),
+                machine=SysUtil.get_machineid(),
+                internal_ip=SysUtil.get_internal_ip(),
+                external_ip=SysUtil.get_internal_ip(),
+                hostname=SysUtil.get_hostname(),
+                onion_address=onion_address,
+                client_cookie=cookie_auth,
+                onion_cookie_client=cookie_client,
+                free_space_mb=free_mb,
+                total_space_mb=total_mb
+            ),
+            cameras=self.process_deque()
+        )
+        return camera_data
 
     def stop(self):
         self.stopper.set()

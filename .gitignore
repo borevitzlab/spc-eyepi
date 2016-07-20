@@ -4,3 +4,4 @@ db
 .idea/
 configs_byserial/*
 spc-eyepi.log*
+keys/*

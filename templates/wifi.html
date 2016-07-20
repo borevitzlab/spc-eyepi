@@ -1,0 +1,63 @@
+{% extends "layout.html" -%}
+{% set active_page="wifi" -%}
+{% block body %}
+    <h2>Wifi</h2>
+    <hr>
+    <div class="panel panel-default col-md-4 pull-left">
+    <form id="wifi-options">
+        <br>
+        Wifi name:<br>
+        <select id="wifi-ssid">
+        </select> <br>
+        Wifi password:<br>
+        <input type="text" id="wifi-key"><br><br>
+        <input type="submit" id="wifi-submit" value="Submit"><br>
+        <br>
+    </form>
+    </div>
+<script>
+    var form = document.getElementById('wifi-ssid');
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/available_networks');
+    xhr.send();
+    var position = 0;
+
+    function handleNewData() {
+        var messages = xhr.responseText.split('\n');
+        messages.slice(position, -1).forEach(function(value) {
+            var item = document.createElement('option');
+            item.textContent = value;
+            item.value = value;
+            form.appendChild(item);
+        });
+        position = messages.length - 1;
+    }
+
+    var timer;
+    timer = setInterval(function() {
+        // check the response for new data
+        handleNewData();
+        // stop checking once the response has ended
+        if (xhr.readyState == XMLHttpRequest.DONE) {
+            clearInterval(timer);
+            latest.textContent = 'Done';
+        }
+    }, 1000);
+</script>
+<script type="text/javascript">
+            $("#wifi-submit").click(function (e) {
+                e.preventDefault();
+                $.post('/wificonfig',
+                        {
+                            security: $("#wifi-security").val(),
+                            ssid: $("#wifi-ssid").val(),
+                            key: $("#wifi-key").val(),
+                        });
+                alert("Connecting to network: " + $("#wifi-ssid").val());
+            });
+</script>
+
+
+{% endblock %}
+

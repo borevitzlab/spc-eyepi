@@ -5,140 +5,99 @@ import os
 import shutil
 import subprocess
 import time
-from configparser import ConfigParser
 from glob import glob
 from threading import Thread, Event
+from libs.SysUtil import SysUtil
 
-try:
-    from RPi import GPIO
-except ImportError:
-    print("Couldnt import gpio")
-
-try:
-    from PIL import Image
-except ImportError:
-    import pip
-
-    pip.main(["install", "Pillow"])
-
-__author__ = "Gareth Dunstone"
-__copyright__ = "Copyright 2016, Borevitz Lab"
-__credits__ = ["Gareth Dunstone", "Tim Brown", "Justin Borevitz", "Kevin Murray"]
-__license__ = "GPL"
-__version__ = "3.1.2"
-__maintainer__ = "Gareth Dunstone"
-__email__ = "gareth.dunstone@anu.edu.au"
-__status__ = "Testing"
-
-# default config variables
-# TODO: move this to a defaultdict within the camera class
-timestartfrom = datetime.time.min
-timestopat = datetime.time.max
-
-# Acceptable filetypes
-filetypes = ["CR2", "RAW", "NEF", "JPG", "JPEG", "PPM"]
+def import_or_install(package, import_name=None, namespace_name=None):
+    try:
+        import importlib
+        try:
+            importlib.import_module(import_name or package)
+        except ImportError:
+            import pip
+            print("Couldn't import package. installing package "+package)
+            pip.main(['install', package])
+        finally:
+            globals()[namespace_name or import_name or package] = importlib.import_module(import_name or package)
+    except Exception as e:
+        print("couldnt install or import {} from {} for some reason: {}".format(namespace_name or import_name or package,
+                                                                            import_name or package, str(e)))
 
 
-class GphotoCamera(Thread):
-    """
-    Camera class
-    other cameras inherit from this class.
-    """
+import_or_install("RPi.GPIO", namespace_name="GPIO")
+import_or_install("Pillow", import_name="PIL.Image", namespace_name="Image")
+import_or_install("picamera")
 
-    def __init__(self, config_filename, name=None, serialnumber=None, camera_port=None):
+
+class Camera(Thread):
+    accuracy = 3
+    maxw, maxh = 640, 480
+    file_types = ["CR2", "RAW", "NEF", "JPG", "JPEG", "PPM"]
+
+    def __init__(self, identifier, *args, queue=None, **kwargs):
         # init with name or not, just extending some of the functionality of Thread
-        if name == None:
-            Thread.__init__(self)
-        else:
-            Thread.__init__(self, name=name)
-        self.stopper = Event()
-
-        if serialnumber != None:
-            self.serialnumber = serialnumber
-        else:
-            self.serialnumber = "[no-cam-sn-detected] wtf?"
-
-        self.camera_port = camera_port
-
-        # variable setting and config file jiggery.
-        self.last_config_modify_time = None
-        self.config_filename = config_filename
-        if not os.path.isfile(self.config_filename):
-            if type(self) is GphotoCamera:
-                eosserial = self.get_eos_serial(self.camera_port)
-            else:
-                eosserial = None
-            self.create_config(name, eosserial=eosserial)
-            self.config_filename = os.path.join("configs_byserial", serialnumber + ".ini")
+        Thread.__init__(self, name=identifier)
+        self.communication_queue = queue
         self.logger = logging.getLogger(self.getName())
+        self.stopper = Event()
+        self.identifier = identifier
+        self.config_filename = SysUtil.identifier_to_ini(self.identifier)
+        self.config = \
+            self.camera_name = \
+            self.interval = \
+            self.spool_directory = \
+            self.upload_directory = \
+            self.begin_capture = \
+            self.end_capture = \
+            self.begin_capture = \
+            self.end_capture = \
+            self.current_capture_time = None
+        self.failed = list()
+        self.re_init()
+        SysUtil().add_watch(self.config_filename, self.re_init)
 
-        # run setup(), there is a separate setup() function so that it can be called again in the event of settings changing
-        self.setup()
-
-    def setup(self):
-        # setup new config parser and parse config
-        self.logger.info("Setting up.")
-        self.config = ConfigParser()
-        self.config.read(self.config_filename)
-        # accuracy is really the timeout before it gives up and waits for the next time period
-        self.accuracy = 3
-        # get details from config file
-        self.cameraname = self.config["camera"]["name"]
+    def re_init(self):
+        """
+        re-initialisation.
+        this causes all the confiuration values to be reacquired, and a config to be recreated as valid if it is broken.
+        :return:
+        """
+        self.logger.info("Re-init...")
+        self.config = SysUtil.ensure_config(self.identifier)
+        
+        self.camera_name = self.config["camera"]["name"]
         self.interval = self.config.getint("timelapse", "interval")
         self.spool_directory = self.config["localfiles"]["spooling_dir"]
         self.upload_directory = self.config["localfiles"]["upload_dir"]
-        # self.type = "other"
-        # DISABLED: apparently we dont need this right now.
-        # we kinda do....
-        # if self.camera_port:
-        #     cmd = ["".join(["gphoto2 --port ", self.camera_port, " --get-config manufacturer"])]
-        #     output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
-        #     if "Canon" in output:
-        #         self.type = "Canon"
-        #     if "Nikon" in output:
-        #         self.type = "Nikon"
-
-        # self.exposure_length = self.config.getint("camera","exposure")
-        self.last_config_modify_time = os.stat(self.config_filename).st_mtime
-        # get enabled
+        self.begin_capture = datetime.time(0, 0)
+        self.end_capture = datetime.time(23, 59)
         try:
-            tval = self.config['timelapse']['starttime']
-            if len(tval) == 5:
-                if tval[2] == ':':
-                    self.begincapture = datetime.time(int(tval[:2]), int(tval[3:]))
-                    self.logger.info("Starting at {}".format(self.begincapture.isoformat()))
+            self.begin_capture = datetime.time(*map(int, self.config['timelapse']['starttime'].split(":")))
+            self.logger.info("Starting capture at {}".format(self.begin_capture.isoformat()))
         except Exception as e:
-            self.begincapture = datetime.time(0, 0)
             self.logger.error("Time conversion error startime - {}".format_map(str(e)))
         try:
-            tval = self.config['timelapse']['stoptime']
-            if len(tval) == 5:
-                if tval[2] == ':':
-                    self.endcapture = datetime.time(int(tval[:2]), int(tval[3:]))
-                    self.logger.info("Stopping at {}".format(self.endcapture.isoformat()))
+            self.end_capture = datetime.time(*map(int, self.config['timelapse']['stoptime'].split(":")))
+            self.logger.info("Stopping capture at {}".format(self.end_capture.isoformat()))
         except Exception as e:
-            self.endcapture = datetime.time(23, 59)
             self.logger.error("Time conversion error stoptime - {}".format(str(e)))
 
-        # create spooling and upload directories if they dont exist, and delete files in the spooling dir
         if not os.path.exists(self.spool_directory):
-            # All images stored in their own seperate directory
-            self.logger.info("Creating Image Storage directory {}".format(self.spool_directory))
+            self.logger.info("Creating spoool dir {}".format(self.spool_directory))
             os.makedirs(self.spool_directory)
         else:
-            for the_file in os.listdir(self.spool_directory):
-                file_path = os.path.join(self.spool_directory, the_file)
-                try:
-                    if os.path.isfile(file_path):
-                        os.unlink(file_path)
-                        self.logger.info("Deleting previous file in the spool eh, Sorry.")
-                except Exception as e:
-                    self.logger.error("Sorry, buddy! Couldn't delete the files in spool, eh! Error: {}".format(str(e)))
+            shutil.rmtree(self.spool_directory)
+            os.makedirs(self.spool_directory)
+
         if not os.path.exists(self.upload_directory):
-            self.logger.info("creating copyfrom dir {}".format(self.upload_directory))
+            self.logger.info("Creating upload dir {}".format(self.upload_directory))
             os.makedirs(self.upload_directory)
 
-    def timestamp(self, tn):
+        self.current_capture_time = datetime.datetime.now()
+
+    @staticmethod
+    def timestamp(tn):
         """
         creates a properly formatted timestamp.
         :param tn:
@@ -147,46 +106,55 @@ class GphotoCamera(Thread):
         st = tn.strftime('%Y_%m_%d_%H_%M_%S')
         return st
 
-    def timestamped_imagename(self, time_now):
+    @staticmethod
+    def time2seconds(t):
+        """
+        converts a datetime to an integer of seconds since epoch
+        """
+        try:
+            return int(t.timestamp())
+        except:
+            # only implemented in python3.3
+            # this is an old compatibility thing
+            return t.hour * 60 * 60 + t.minute * 60 + t.second
+
+    @property
+    def timestamped_imagename(self):
         """
         builds a timestamped image basename without extension from a datetime.
         :param time_now:
         :return: string image basename
         """
-        return '{cameraname}_{timestamp}'.format(cameraname=self.cameraname, timestamp=self.timestamp(time_now))
+        return '{camera_name}_{timestamp}'.format(camera_name=self.camera_name,
+                                                  timestamp=Camera.timestamp(self.current_capture_time))
 
-    def time2seconds(self, t):
-        """ Converts a time to seconds
-        """
-        # TODO: a better implementation of this such as datetime.timesinceepoch or some sorcery
-        return t.hour * 60 * 60 + t.minute * 60 + t.second
-
-    def get_is_capture(self, time_now):
+    @property
+    def time_to_capture(self):
         """
         filters out times for capture, returns True by default
         returns False if the conditions where the camera should NOT capture are met.
-        :param time_now:
         :return:
         """
+
+        current_naive_time = self.current_capture_time.time()
 
         if not self.config.getboolean("camera", "enabled"):
             # if the camera is disabled, never take photos
             return False
 
-        if self.begincapture < self.endcapture:
+        if self.begin_capture < self.end_capture:
             # where the start capture time is less than the end capture time
-            if not self.begincapture <= time_now <= self.endcapture:
+            if not self.begin_capture <= current_naive_time <= self.end_capture:
                 return False
         else:
             # where the start capture time is greater than the end capture time
             # i.e. capturing across midnight.
-            if self.endcapture <= time_now <= self.begincapture:
+            if self.end_capture <= current_naive_time <= self.begin_capture:
                 return False
 
         # capture interval
-        if not (self.time2seconds(time_now) % self.interval < self.accuracy):
+        if not (self.time2seconds(self.current_capture_time) % self.interval < Camera.accuracy):
             return False
-
         return True
 
     def capture(self, image_file_basename):
@@ -196,97 +164,155 @@ class GphotoCamera(Thread):
         :param image_file_basename: image basename without ext
         :return: True if capture is successful, otherwise False if retries all failed
         """
-        # try 3 times
-        fn = os.path.join(self.spool_directory, image_file_basename) + ".%C"
-        for tries in range(6):
-            # if self.type == "Canon":
-            #     # focusmode = (tries % 2) + 1
-            #     # not moving through the focusmode because of choice 2.
-            #     # focusmode
-            #     # Choice: 0 One Shot -- no capture in dark -- autofocus nonmoving
-            #     # Choice: 1 AI Focus -- no capture in dark -- autofocus for movement.
-            #     # Choice: 2 AI Servo -- capture in dark -- apparently this does actually do autofocus...
-            #
-            #     # was going to disable autofocus but not now.
-            #     self.logger.info("Capturing with a Canon")
-            #     cmd = ["".join(
-            #         ["gphoto2 --port ", self.camera_port,
-            #          " --set-config capturetarget=sdram",
-            #          " --set-config focusmode=2",
-            #          " --capture-image-and-download",
-            #          " --filename='", fn])]
-            #
-            # elif self.type == "Nikon":
-            #     # DISABLED, focusmode set t
-            #     # focusmode2
-            #     # Choice: 0 AF-S -- no capture in dark -- autofocus nonmoving -- use first.
-            #     # Choice: 1 AF-C -- no capture in dark -- autofocus moving
-            #     # Choice: 2 AF-A -- no capture in dark -- autofocus auto
-            #     # Choice: 3 MF (fixed) -- cannot select, this is the switch
-            #     # Choice: 4 MF (selection) -- totally manual -- set to this last.
-            #     self.logger.info("Capturing with a Nikon")
-            #     focusmode = (tries % 2) * 4
-            #     cmd = ["".join(
-            #         ["gphoto2 --port ", self.camera_port,
-            #          " --set-config capturetarget=sdram",
-            #          " --set-config focusmode2=" + str(focusmode),
-            #          " --capture-image-and-download",
-            #          " --filename='", fn])]
-            #
-            # else:
-            self.logger.info("Capturing... ")
+        return False
 
-            # this is the new method of this stuff
-            cmd = ["gphoto2",
-                   "--port={}".format(self.camera_port),
-                   "--set-config=capturetarget=0",
-                   "--force-overwrite",
-                   "--capture-image-and-download",
-                   '--filename={}'.format(fn)
-                   ]
-            self.logger.info("CMD: {}".format(" ".join(cmd)))
+    def stop(self):
+        self.stopper.set()
+
+    def communicate_with_updater(self):
+        """
+        communication member. This is meant to send some metadata to the updater thread.
+        :return:
+        """
+        if not self.communication_queue:
+            self.failed = list()
+            return
+        try:
+            data = dict(
+                name=self.camera_name,
+                identifier=self.identifier,
+                failed=self.failed,
+                last_capture_time=self.current_capture_time)
+            self.communication_queue.append(data)
+            self.failed = list()
+        except Exception as e:
+            self.logger.error("thread communication error: {}".format(str(e)))
+
+    def run(self):
+        while True and not self.stopper.is_set():
+
+            self.current_capture_time = datetime.datetime.now()
+            # checking if enabled and other stuff
+            if self.time_to_capture:
+                try:
+                    raw_image = self.timestamped_imagename
+
+                    self.logger.info("Capturing Image for {}".format(self.identifier))
+
+                    # capture. if capture didnt happen dont continue with the rest.
+                    if not self.capture(raw_image):
+                        self.failed.append(self.current_capture_time)
+                        continue
+
+                    # glob together all filetypes in filetypes array
+                    files = []
+                    for ft in Camera.file_types:
+                        files.extend(glob(os.path.join(self.spool_directory, "*." + ft.upper())))
+                        files.extend(glob(os.path.join(self.spool_directory, "*." + ft.lower())))
+
+                    # copying/renaming for files
+                    for fn in files:
+                        basename = os.path.basename(fn)
+                        ext = os.path.splitext(fn)[-1].lower()
+
+                        # copy jpegs to the static web dir, and to the upload dir (if upload webcam flag is set)
+                        if ext == ".jpeg" or ext == ".jpg":
+                            try:
+                                if self.config.getboolean("ftp", "replace"):
+                                    if self.config.getboolean("ftp", "resize") and "Image" in globals():
+                                        self.logger.info("resizing image {}".format(fn))
+                                        im = Image.open(fn)
+                                        im.thumbnail((Camera.maxw, Camera.maxh), Image.NEAREST)
+
+                                        im.save(os.path.join("/dev/shm", self.identifier + ".jpg"))
+                                    else:
+                                        shutil.copy(fn, os.path.join("/dev/shm", self.identifier + ".jpg"))
+
+                                    shutil.copy(os.path.join("/dev/shm", self.identifier + ".jpg"),
+                                                os.path.join(self.upload_directory, "last_image.jpg"))
+                            except Exception as e:
+                                self.logger.error("Couldnt resize for replace upload :( {}".format(str(e)))
+
+                        try:
+                            if self.config.getboolean("ftp", "timestamped"):
+                                shutil.move(fn, self.upload_directory)
+                        except Exception as e:
+                            self.logger.error("Couldnt move for timestamped: {}".format(str(e)))
+
+                        self.logger.info("Captured and stored - {}".format(os.path.basename(basename)))
+
+                        try:
+                            if os.path.isfile(fn):
+                                os.remove(fn)
+                        except Exception as e:
+                            self.logger.error("Couldnt remove spooled: {}".format(str(e)))
+
+                    self.communicate_with_updater()
+                except Exception as e:
+                    self.logger.critical("Image Capture error - {}".format(str(e)))
+            time.sleep(0.1)
+
+
+class GphotoCamera(Camera):
+    """
+    Camera class
+    other cameras inherit from this class.
+    """
+    def __init__(self, identifier, port, **kwargs):
+        super(GphotoCamera, self).__init__(identifier, **kwargs)
+        # only gphoto cameras have a camera port.
+        self.camera_port = port
+        self.exposure_length = self.config.get('camera',"exposure")
+
+    def re_init(self):
+        super(GphotoCamera, self).re_init()
+        self.exposure_length = self.config.getint("camera", "exposure")
+
+    def capture(self, image_file_basename):
+        # stuff for checking bulb. not active yet
+        # is_bulbspeed = subprocess.check_output("gphoto2 --port "+self.camera_port+" --get-config shutterspeed", shell=True).splitlines()
+        # bulb = is_bulbspeed[3][is_bulbspeed[3].find("Current: ")+9: len(is_bulbspeed[3])]
+        # if bulb.find("bulb") != -1:
+        #    cmd = ["gphoto2 --port "+ self.camera_port+" --set-config capturetarget=sdram --set-config eosremoterelease=5 --wait-event="+str(self.exposure_length)+"ms --set-config eosremoterelease=11 --wait-event-and-download=2s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
+        # else:
+        # cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --wait-event-and-download=36s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
+
+        fn = os.path.join(self.spool_directory, image_file_basename) + ".%C"
+        cmd = ["gphoto2",
+               "--port={}".format(self.camera_port),
+               "--set-config=capturetarget=0",
+               "--force-overwrite",
+               "--capture-image-and-download",
+               '--filename={}'.format(fn)
+               ]
+        self.logger.info("Capture start: {}".format(fn))
+        for tries in range(6):
+            self.logger.debug("CMD: {}".format(" ".join(cmd)))
             try:
                 output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True)
 
                 if "error" in output.lower():
                     raise subprocess.CalledProcessError("non-zero exit status", cmd=cmd, output=output)
                 else:
-                    # success
+                    self.logger.info("capture success: {}".format(fn))
                     for line in output.splitlines():
-                        self.logger.info("GPHOTO2: {}".format(line))
+                        self.logger.debug("GPHOTO2: {}".format(line))
 
                     time.sleep(1 + (self.accuracy * 2))
+
                     return True
 
             except subprocess.CalledProcessError as e:
-                if tries >= 5:
-                    self.logger.critical("Really bad stuff happened. too many tries capturing.")
-                    return False
-
                 self.logger.error("failed {} times".format(tries))
                 for line in e.output.splitlines():
                     if not line.strip() == "" and "***" not in line:
                         self.logger.error(line.strip())
-        return True
+        else:
+            self.logger.critical("Really bad stuff happened. too many tries capturing.")
+            return False
 
-    def create_config(self, serialnumber, eosserial=None):
-        if not os.path.exists("configs_byserial"):
-            os.makedirs("configs_byserial")
-        thiscfg = ConfigParser()
-        if type(self) is PiCamera:
-            thiscfg.read("picam.ini")
-        if type(self) is GphotoCamera:
-            thiscfg.read("eyepi.ini")
-
-        thiscfg["localfiles"]["spooling_dir"] = os.path.join(thiscfg["localfiles"]["spooling_dir"], serialnumber)
-        thiscfg["localfiles"]["upload_dir"] = os.path.join(thiscfg["localfiles"]["upload_dir"], serialnumber)
-        thiscfg["camera"]["name"] = thiscfg["camera"]["name"] + "-" + serialnumber
-        if eosserial and type(self) is GphotoCamera:
-            thiscfg["eosserialnumber"]["value"] = str(eosserial)
-        with open(os.path.join("configs_byserial", serialnumber + '.ini'), 'w') as configfile:
-            thiscfg.write(configfile)
-
-    def get_eos_serial(self, port):
+    @staticmethod
+    def get_eos_serial(port):
         try:
             cmdret = subprocess.check_output('gphoto2 --port "' + port + '" --get-config eosserialnumber',
                                              shell=True).decode()
@@ -298,157 +324,25 @@ class GphotoCamera(Thread):
         except:
             return None
 
-    def run(self):
-        # set the next capture time to now just because
-        self.next_capture = datetime.datetime.now()
-        # this is to test and see if the config has been modified
 
-        while True and not self.stopper.is_set():
-            # testing for the config modification
-            if os.stat(self.config_filename).st_mtime != self.last_config_modify_time:
-                self.last_config_modify_time = os.stat(self.config_filename).st_mtime
-                # Resetup()
-                self.logger.info("Change in config file at " + datetime.datetime.now().isoformat() + " reloading")
-                self.setup()
-
-            # set a timenow, this is used everywhere ahead, DO NOT REMOVE.
-            tn = datetime.datetime.now()
-
-            # if self.time2seconds(tn) % (86400 / 24) < self.accuracy:
-            #     files = []
-            #     # once per hour
-            #     # remove weird images that appear in the working dir.
-            #     # TODO: fix this so its not so hacky, need to find out why the
-            #     # picam is leaving jpegs in the working directoy.
-            #     for filetype in filetypes:
-            #         files.extend(glob("/home/spc-eyepi/*." + filetype.upper() + "\~"))
-            #         files.extend(glob("/home/spc-eyepi/*." + filetype.lower() + "\~"))
-            #         files.extend(glob("/home/spc-eyepi/*." + filetype.upper()))
-            #         files.extend(glob("/home/spc-eyepi/*." + filetype.lower()))
-            #     for fn in files:
-            #         os.remove(fn)
-
-            # checking if enabled and other stuff
-            if self.get_is_capture(tn.time()):
-                try:
-                    did_capture = False
-                    # set the next capture period to print to the log (not used anymore, really due to time modulo)
-                    self.next_capture = tn + datetime.timedelta(seconds=self.interval)
-                    # The time now is within the operating times
-                    self.logger.info("Capturing Image now for {}".format(self.serialnumber))
-
-                    # setting variables for saving files
-                    # TODO: Here is where the raw_image should be just timestamped imagename minus extension so that things are more extension agnostic
-                    raw_image = self.timestamped_imagename(tn)
-
-                    # TODO: put other camera settings in another call to setup camera (iso, aperture etc) using gphoto2 --set-config (nearly done)
-
-                    # No conversion needed, just take 2 files, 1 jpeg and 1 raw
-                    # if self.camera_port:
-                    # stuff for checking bulb. not active yet
-                    # is_bulbspeed = subprocess.check_output("gphoto2 --port "+self.camera_port+" --get-config shutterspeed", shell=True).splitlines()
-                    # bulb = is_bulbspeed[3][is_bulbspeed[3].find("Current: ")+9: len(is_bulbspeed[3])]
-                    # if bulb.find("bulb") != -1:
-                    #    cmd = ["gphoto2 --port "+ self.camera_port+" --set-config capturetarget=sdram --set-config eosremoterelease=5 --wait-event="+str(self.exposure_length)+"ms --set-config eosremoterelease=11 --wait-event-and-download=2s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
-                    # else:
-                    # cmd = ["gphoto2 --port "+self.camera_port+" --set-config capturetarget=sdram --capture-image-and-download --wait-event-and-download=36s --filename='"+os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])+".%C'"]
-
-
-                    # CAPTURE
-                    did_capture = self.capture(raw_image)
-
-                    # glob together all filetypes in filetypes array
-                    files = []
-                    for filetype in filetypes:
-                        files.extend(glob(os.path.join(self.spool_directory, "*." + filetype.upper())))
-                        files.extend(glob(os.path.join(self.spool_directory, "*." + filetype.lower())))
-                    # copying/renaming for files
-                    for fn in files:
-                        # get the extension and basename
-                        # name = os.path.splitext(raw_image)
-
-                        basename = os.path.basename(fn)
-                        ext = os.path.splitext(fn)[-1].lower()
-
-                        # copy jpegs to the static web dir, and to the upload dir (if upload webcam flag is set)
-                        if ext == ".jpeg" or ext == ".jpg":
-                            try:
-                                if self.config.getboolean("ftp", "uploadwebcam"):
-                                    if type(self) is GphotoCamera:
-                                        self.logger.info("resizing image {}".format(fn))
-                                        im = Image.open(fn)
-                                        im.thumbnail((640, 480), Image.NEAREST)
-                                        im.save(os.path.join(self.upload_directory, "last_image.jpg"))
-                                        shutil.copy(os.path.join(self.upload_directory, "last_image.jpg"),
-                                                    os.path.join("/dev/shm", self.serialnumber + ".jpg"))
-                                    else:
-                                        shutil.copy(fn, os.path.join("/dev/shm", self.serialnumber + ".jpg"))
-                                        shutil.copy(fn, os.path.join(self.upload_directory, "last_image.jpg"))
-                            except Exception as e:
-                                self.logger.error("Couldnt resize for webcam upload :( {}".format(str(e)))
-
-                        try:
-                            if self.config.getboolean("ftp", "uploadtimestamped"):
-                                self.logger.debug("saving timestamped image for you, buddy")
-                                # shutil move is preferable over copy
-                                shutil.copy(fn, self.upload_directory)
-
-                        except Exception as e:
-                            self.logger.error("Couldnt copy for timestamped: {}".format(str(e)))
-                        self.logger.info("Captured and stored - {}".format(os.path.basename(basename)))
-
-                        try:
-                            if os.path.isfile(fn):
-                                os.remove(fn)
-                        except Exception as e:
-                            self.logger.error("Couldnt remove spooled: {}".format(str(e)))
-
-                    try:
-                        if not os.path.isfile(self.serialnumber + ".json"):
-                            with open(self.serialnumber + ".json", 'w+') as f:
-                                f.write("{}")
-                        with open(self.serialnumber + ".json", 'r') as f:
-                            js = json.loads(f.read())
-
-                        with open(self.serialnumber + ".json", 'w') as f:
-                            if did_capture:
-                                js['last_capture_time'] = (tn - datetime.datetime.fromtimestamp(
-                                    0)).total_seconds() - time.daylight * 3600
-                                js['last_capture_time_human'] = tn.isoformat()
-                            f.write(json.dumps(js, indent=4, separators=(',', ': '), sort_keys=True))
-                    except Exception as e:
-                        # clear the files if it cant be opened.
-                        with open(self.serialnumber + ".json", 'w+') as f:
-                            f.write("{}")
-                        self.logger.error("Couldnt log camera capture json why? {}".format(str(e)))
-
-                    # Log Delay/next shots
-                    if self.next_capture.time() < self.endcapture:
-                        self.logger.info("Next capture at - {}".format(self.next_capture.isoformat()))
-                    else:
-                        self.logger.info("Capture will stop at - {}".format(self.endcapture.isoformat()))
-                except Exception as e:
-                    self.next_capture = datetime.datetime.now()
-                    # TODO: This needs to catch errors from subprocess.call because it doesn't
-                    self.logger.error("Image Capture error - {}".format(str(e)))
-
-            time.sleep(0.1)
-
-    def stop(self):
-        self.stopper.set()
-
-
-class WebCamera(GphotoCamera):
+class WebCamera(Camera):
     def capture(self, raw_image):
+        """
+        subprocess capture... not efficient.
+        todo: check if opencv is imported and use that.
+        :param raw_image:
+        :return:
+        """
         fn = os.path.join(self.spool_directory, os.path.splitext(raw_image)[0]) + ".ppm"
+        self.logger.info("Capturing with a USB webcam")
+        cmd = ["".join(
+            ["streamer",
+             " -b 8",
+             " -j 100",
+             " -s 4224x3156",
+             " -o '" + fn + "'"])]
+
         for tries in range(6):
-            self.logger.info("Capturing with a USB webcam")
-            cmd = ["".join(
-                ["streamer",
-                 " -b 8",
-                 " -j 100",
-                 " -s 4224x3156",
-                 " -o '" + fn + "'"])]
             try:
                 output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
                 time.sleep(1 + (self.accuracy * 2))
@@ -458,24 +352,40 @@ class WebCamera(GphotoCamera):
 
                 for line in output.splitlines():
                     self.logger.info("STREAMER: " + line)
-                break
+
+                return True
             except subprocess.CalledProcessError as e:
-                if tries >= 5:
-                    self.logger.critical("Really bad stuff happened. too many tries capturing.")
-                    return False
                 self.logger.error("failed {} times".format(tries))
                 for line in e.output.splitlines():
                     if not line.strip() == "" and not "***" in line:
                         self.logger.error(line.strip())
-        return True
+        else:
+            self.logger.critical("Really bad stuff happened. too many tries capturing.")
+            return False
 
 
-class PiCamera(GphotoCamera):
-    """ PiCamera extension to the Camera Class
-        extends some functionality and members, modified image capture call and placements.
+class PiCamera(Camera):
+    """
+    Picamera extension to the Camera abstract class.
     """
 
     def capture(self, image_file_basename):
+        if "picamera" in globals():
+            try:
+
+                image_file_spoolpath = os.path.join(self.spool_directory, image_file_basename)
+                with picamera.PiCamera() as camera:
+                    if self.config.has_section("picam_size"):
+                        camera.resolution = (self.config.getint("picam_size", "width"),
+                                             self.config.getint("picam_size", "height"))
+
+                    camera.start_preview()
+                    time.sleep(2)  # Camera warm-up time
+                    camera.capture(image_file_spoolpath+".jpg")
+                    return True
+            except Exception as e:
+                self.logger.critical("EPIC FAIL, trying other method.")
+
         retcode = 1
         image_file_spoolpath = os.path.join(self.spool_directory,image_file_basename)
         # take the image using os.system(), pretty hacky but its never exactly be run on windows.
@@ -545,26 +455,6 @@ class IVPortCamera(PiCamera):
         while True and not self.stopper.is_set():
             # set a timenow this is used locally down here
             tn = datetime.datetime.now()
-            # testing for the config modification
-            if os.stat(self.config_filename).st_mtime != self.last_config_modify_time:
-                self.last_config_modify_time = os.stat(self.config_filename).st_mtime
-                # Resetup()
-                self.setup()
-                self.logger.info("change in config at " + datetime.datetime.now().isoformat() + " reloading")
-
-            # if self.time2seconds(tn) % (86400 / 24) < self.accuracy:
-            #     files = []
-            #     # once per hour
-            #     # remove weird images that appear in the working dir.
-            #     # TODO: fix this so its not so hacky, need to find out why the
-            #     # picam is leaving jpegs in the working directoy.
-            #     for filetype in filetypes:
-            #         files.extend(glob("/home/spc-eyepi/*." + filetype.upper() + "\~"))
-            #         files.extend(glob("/home/spc-eyepi/*." + filetype.lower() + "\~"))
-            #         files.extend(glob("/home/spc-eyepi/*." + filetype.upper()))
-            #         files.extend(glob("/home/spc-eyepi/*." + filetype.lower()))
-            #     for fn in files:
-            #         os.remove(fn)
 
             if self.get_is_capture(tn.time()):
                 try:

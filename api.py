@@ -10,12 +10,9 @@ import urllib, socket
 from flask import Flask, Response, request, g
 from flask.ext.bcrypt import Bcrypt
 import time
-from libs.AESCipher import AESCipher
 from werkzeug.exceptions import default_exceptions
 from werkzeug.exceptions import HTTPException
 from flask import jsonify
-
-
 
 
 app = Flask(__name__)
@@ -58,11 +55,13 @@ def requires_auth(f):
         auth = request.authorization
         if not auth:
             return authenticate()
-        with dbm.open('db', 'r') as passdb:
-            auth_allowed = bcrypt.check_password_hash(passdb[b'admin'].decode('utf-8'), auth.password)
-        if not auth_allowed:
-            return authenticate()
-        return f(*args, **kwargs)
+        try:
+            with dbm.open('db', 'r') as passdb:
+                if bcrypt.check_password_hash(passdb[b'admin'].decode('utf-8'), auth.password):
+                    return f(*args, **kwargs)
+        except Exception as e:
+            print(str(e))
+        return authenticate()
     return decorated
 
 
@@ -107,11 +106,6 @@ def per_request_callbacks(response):
         response = func(response)
     return response
 
-@app.route("/")
-@requires_auth
-def index():
-    return {"sadgadg": "sadfasdf", "somethingelse": 1}
-
 def reconfigure_systemd():
     """
     reconfigures systemd service files for api, webinterface and capture.
@@ -129,6 +123,7 @@ def reconfigure_systemd():
 
     old_capture_service_file = "spc-eyepi_capture.service"
     old_webinterface_service_file = "spc-eyepi_webinterface.service"
+
 
     def ensure_systemd_unit(service_file):
         if not os.path.isfile(systemd_path.format(service_file)) and \
@@ -374,10 +369,10 @@ if __name__ == "__main__":
         encryptdb = urllib.request.urlopen("http://data.phenocam.org.au/p.ejson")
         a = AESCipher(cfg['ftp']['pass'])
 
-        f = json.loads(a.decrypt(encryptdb.read()))
+        f = json.loads(a.decrypt(encryptdb.read().decode("utf-8")))
         with dbm.open('db', 'c') as db:
             db[b'admin'] = bcrypt.generate_password_hash(f['admin'])
     except Exception as e:
-        print("something broke decrypting the new db{}".format(str(e)))
+        print("something broke decrypting the new db: {}".format(str(e)))
 
     app.run(host='0.0.0.0', port=666)
