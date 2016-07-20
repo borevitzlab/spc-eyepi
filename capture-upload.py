@@ -14,12 +14,13 @@ from libs.Uploader import Uploader
 
 __author__ = "Gareth Dunstone"
 __copyright__ = "Copyright 2016, Borevitz Lab"
-__credits__ = ["Gareth Dunstone", "Tim Brown", "Justin Borevitz", "Kevin Murray"]
+__credits__ = ["Gareth Dunstone", "Tim Brown", "Justin Borevitz", "Kevin Murray", "Jack Adamson"]
 __license__ = "GPL"
-__version__ = "3.2.5"
+__version__ = "3.2.6"
 __maintainer__ = "Gareth Dunstone"
 __email__ = "gareth.dunstone@anu.edu.au"
 __status__ = "Testing"
+
 
 #Not sure of best scope to put this in
 CommunicationQueue = queue.Queue
