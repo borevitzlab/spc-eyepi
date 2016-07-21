@@ -15,7 +15,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from .SysUtil import SysUtil
 
-keyserver = "https://traitcapture.org"
+keyserver = "traitcapture.org"
 
 
 def serialize_signature(signature) -> str:
@@ -91,7 +91,7 @@ class SSHManager(object):
         :return:
         """
         try:
-            req = request.Request(keyserver + 'api/camera/id_rsa/{}/{}/{}'.format(token,
+            req = request.Request('https://{}/api/camera/id_rsa/{}/{}/{}'.format(keyserver, token,
                                                                                   SysUtil.get_machineid(),
                                                                                   SysUtil.get_hostname()))
             handler = request.HTTPSHandler(context=ssl.SSLContext(ssl.PROTOCOL_TLSv1_2))
