@@ -130,7 +130,7 @@ def update_via_github(temp_dir):
                                     shell=True, universal_newlines=True)
         q = subprocess.check_output(["git --git-dir={} --work-tree={} log -1 --pretty=%B".format(git_dir, eyepi_dir)],
                                     shell=True, universal_newlines=True)
-        z = subprocess.check_output(["git --git-dir={} --work-tree={} show -s --format=%ci".format(git_dir, eyepi_dir)],
+        z = subprocess.check_output(["git --git-dir={} --work-tree={} show -s --format=%cd --date=local".format(git_dir, eyepi_dir)],
                                             shell=True, universal_newlines=True)
 
         print("Now at:\n\n{}{}{}".format(v,z, q))
