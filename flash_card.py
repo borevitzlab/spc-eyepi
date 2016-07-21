@@ -57,8 +57,8 @@ def mkdir_mount():
 def cleanup(tmpdir):
     dirs = glob.glob(os.path.join(tmpdir, "*"))
     for mp in dirs:
-        print("umount {}".format(mp))
         os.system("umount {}".format(mp))
+        print("unmounted {}".format(mp))
     shutil.rmtree(tmpdir)
     os.sync()
 
@@ -130,8 +130,10 @@ def update_via_github(temp_dir):
                                     shell=True, universal_newlines=True)
         q = subprocess.check_output(["git --git-dir={} --work-tree={} log -1 --pretty=%B".format(git_dir, eyepi_dir)],
                                     shell=True, universal_newlines=True)
+        z = subprocess.check_output(["git --git-dir={} --work-tree={} show -s --format=%ci".format(git_dir, eyepi_dir)],
+                                            shell=True, universal_newlines=True)
 
-        print("Now at:\n{}\n{}".format(v, q))
+        print("Now at:\n\n{}{}{}".format(v,z, q))
     except Exception as e:
         print("Coulndt update from git, {}".format(str(e)))
 
