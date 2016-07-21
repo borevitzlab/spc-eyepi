@@ -1,3 +1,4 @@
+#!/bin/python3
 import glob
 import os
 import random
@@ -64,19 +65,21 @@ def cleanup(tmpdir):
 
 def write_api_token(tmpdir):
     import requests, json
-    resp = requests.get("https://traitcapture.org/api/code/new/14?token=" + args.api_token)
+    resp = requests.get("https://traitcapture.org/api/code/new/14.jsonp?token=" + args.api_token)
     if resp.status_code == 200:
         try:
             js = json.loads(resp.text)
+            from pprint import pprint
+            pprint(js)
             ssh_dir = os.path.join(tmpdir, "root", "home", ".ssh")
             os.makedirs(ssh_dir, exist_ok=True)
             with open(os.path.join(ssh_dir, "token"), 'w') as f:
                 f.write(js['code'])
         except Exception as e:
-            print("Couldnt get token using key")
+            print("Couldnt get token using key", str(e))
 
     else:
-        print("invalid response from server")
+        print("invalid response from server", str(resp))
 
 
 def backup_old(tmpdir):
@@ -190,20 +193,20 @@ if __name__ == '__main__':
     temp_dir = None
     if args.tarfile:
         print("Formatting and extracting")
-        format_create_new()
+        temp_dir = temp_dir if temp_dir else mkdir_mount()
         temp_dir = mkdir_mount()
         extract_new(temp_dir, args.tarfile)
         set_hostname(temp_dir, gname)
 
     if args.update:
         print("Updating")
-        temp_dir = mkdir_mount()
+        temp_dir = temp_dir if temp_dir else mkdir_mount()
         update_via_github(temp_dir)
         set_hostname(temp_dir, gname)
 
     if args.restore:
         print("Restoring from backup")
-        temp_dir = mkdir_mount()
+        temp_dir = temp_dir if temp_dir else mkdir_mount()
         restore(temp_dir, bakdir=args.backup_directory)
     elif args.backup:
         print("Backing up")
@@ -212,8 +215,8 @@ if __name__ == '__main__':
 
     if args.api_token:
         print("Writing api token")
+        temp_dir = temp_dir if temp_dir else mkdir_mount()
         write_api_token(temp_dir)
-
 
     if temp_dir:
         cleanup(temp_dir)

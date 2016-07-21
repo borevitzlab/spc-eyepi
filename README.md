@@ -25,7 +25,9 @@ Features in active  development:
  * Webinterface pages for the ad-hoc wifi network.
  * DB-based camera management system.
  * Weatherproof and solar powered camera housing  for full remote timelapse solution 
-
+ * USB Cameras like webcams
+ 
+To get into the web interface using the wifi the default ip address is 192.168.12.1 and you will need to use the user admin:spceyepidefaultaccess
 
 
 **REQUIREMENTS**

@@ -40,61 +40,13 @@ app = Flask(__name__, static_url_path='/static')
 app.debug = True
 bcrypt = Bcrypt(app)
 
-from Crypto import Random
-from Crypto.Cipher import AES
-import base64
-import hashlib
-
-
-class AESCipher(object):
-    """
-    AES cipher
-    for encrypting data between the server and the
-    pi when we cant be sure to leave passwords in plaintext on a git repo.
-    """
-
-    def __init__(self, key):
-        self.bs = 32
-        self.key = hashlib.sha256(key.encode()).digest()
-
-    def encrypt(self, raw):
-        raw = self._pad(raw)
-        iv = Random.new().read(AES.block_size)
-        cipher = AES.new(self.key, AES.MODE_CBC, iv)
-        return base64.b64encode(iv + cipher.encrypt(raw))
-
-    def decrypt(self, enc):
-        enc = base64.b64decode(enc)
-        iv = enc[:AES.block_size]
-        cipher = AES.new(self.key, AES.MODE_CBC, iv)
-        return self._unpad(cipher.decrypt(enc[AES.block_size:])).decode('utf-8')
-
-    def _pad(self, s):
-        return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
-
-    @staticmethod
-    def _unpad(s):
-        return s[:-ord(s[len(s) - 1:])]
-
-
-# TODO: deprecate this almost as soon as the python3 migrate is finished.
-import urllib
-
 cfg = ConfigParser()
 cfg.read("picam.ini")
-try:
-    dbf = urllib.request.urlopen("http://data.phenocam.org.au/p.ejson")
-    a = AESCipher(cfg['ftp']['pass'])
-    f = json.loads(a.decrypt(dbf.read()))
-    db = dbm.open('db', 'c')
-    db[bytes('admin', 'utf-8')] = bcrypt.generate_password_hash(f['admin'])
-    db.close()
-except Exception as e:
-    print("something broke decrypting the new db{}".format(str(e)))
-#
-# if socket.gethostname() != "VorvadossTwo":
-#     kmsghandler = logging.FileHandler("/dev/kmsg", 'w')
-#     app.logger.addHandler(kmsghandler)
+
+if socket.gethostname() != "VorvadossTwo":
+    kmsghandler = logging.FileHandler("/dev/kmsg", 'w')
+    app.logger.addHandler(kmsghandler)
+
 def setup_ap():
     env = Environment(loader=FileSystemLoader('templates'))
     template = env.get_template("createap")
@@ -253,7 +205,7 @@ def add_user(username, password_to_set, adminpass):
     :param adminpass:
     :return:
     """
-    hash = bcrypt.generate_password_hash('hunter2')
+    hash = bcrypt.generate_password_hash(password_to_set)
     db = dbm.open('db', 'c')
     # later only allow users control over their own password and admin to add later.
     # allow global admin password to change everything.
@@ -1079,5 +1031,6 @@ if os.system("ping -c 1 8.8.8.8") != 0:
         print("create_ap stopped gracefully")
     import atexit
     atexit.register(cleanup)
+
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port=80)

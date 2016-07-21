@@ -1,6 +1,6 @@
 eyepi.ini
 picam.ini
-db
+db_private
 .idea/
 configs_byserial/*
 spc-eyepi.log*
