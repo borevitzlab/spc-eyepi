@@ -190,33 +190,38 @@ def set_hostname(tmpdir, hostname):
 
 
 if __name__ == '__main__':
-    temp_dir = None
+    temp_dir = mkdir_mount()
+    if not temp_dir:
+        import sys
+        print("something went wrong and I couldnt create a temp dir.")
+        sys.exit(1)
     if args.tarfile:
         print("Formatting and extracting")
-        temp_dir = temp_dir if temp_dir else mkdir_mount()
-        temp_dir = mkdir_mount()
         extract_new(temp_dir, args.tarfile)
         set_hostname(temp_dir, gname)
 
     if args.update:
         print("Updating")
-        temp_dir = temp_dir if temp_dir else mkdir_mount()
         update_via_github(temp_dir)
         set_hostname(temp_dir, gname)
 
     if args.restore:
         print("Restoring from backup")
-        temp_dir = temp_dir if temp_dir else mkdir_mount()
         restore(temp_dir, bakdir=args.backup_directory)
     elif args.backup:
         print("Backing up")
-        temp_dir = mkdir_mount()
         backup_old(temp_dir)
 
     if args.api_token:
         print("Writing api token")
-        temp_dir = temp_dir if temp_dir else mkdir_mount()
         write_api_token(temp_dir)
+
+    if os.path.isfile("db"):
+        shutil.copy("db", os.path.join(temp_dir, "root","home","spc-eyepi","db"))
+
+
+    if os.path.isfile("db_private"):
+        shutil.copy("db_private", os.path.join(temp_dir, "root","home","spc-eyepi","db"))
 
     if temp_dir:
         cleanup(temp_dir)
