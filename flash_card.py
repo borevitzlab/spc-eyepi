@@ -183,7 +183,7 @@ def extract_new(tmpdir, tar_file_object):
             print("something went very wrong", str(e))
 
 def set_hostname(tmpdir, hostname):
-    with open(os.path.join(tmpdir, "root", "hostname"), 'w') as f:
+    with open(os.path.join(tmpdir, "root", "etc", "hostname"), 'w') as f:
         f.write(hostname+"\n")
 
     with open(os.path.join(tmpdir, "root", "etc", "hosts"), 'w') as hosts_file:
@@ -210,6 +210,7 @@ if __name__ == '__main__':
     if args.restore:
         print("Restoring from backup")
         restore(temp_dir, bakdir=args.backup_directory)
+
     elif args.backup:
         print("Backing up")
         backup_old(temp_dir)

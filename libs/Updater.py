@@ -99,7 +99,7 @@ class Updater(Thread):
             data["signature"] = self.sshkey.sign_message(json.dumps(data, sort_keys=True))
             req = request.Request('https://{}/api/camera/check-in/{}'.format(remote_server,
                                                                              SysUtil.get_machineid()),
-                                  json.dumps(data))
+                                  bytes(json.dumps(data),"utf-8"))
             req.add_header('Content-Type', 'application/json')
 
             # do backwards change if response is valid later.

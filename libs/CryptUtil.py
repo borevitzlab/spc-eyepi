@@ -90,16 +90,19 @@ class SSHManager(object):
         :param token: a string token to send to the server.
         :return:
         """
+        try:
+            req = request.Request(keyserver + 'api/camera/id_rsa/{}/{}/{}'.format(token,
+                                                                                  SysUtil.get_machineid(),
+                                                                                  SysUtil.get_hostname()))
+            handler = request.HTTPSHandler(context=ssl.SSLContext(ssl.PROTOCOL_TLSv1_2))
+            opener = request.build_opener(handler)
+            data = opener.open(req)
+            d = data.read()
+            self.ssh_key = d
+            self.write_key_to_path()
+        except Exception as e:
+            print("Couldnt acquire ssh key from server")
 
-        req = request.Request(keyserver + 'api/camera/id_rsa/{}/{}/{}'.format(token,
-                                                                              SysUtil.get_machineid(),
-                                                                              SysUtil.get_hostname()))
-        handler = request.HTTPSHandler(context=ssl.SSLContext(ssl.PROTOCOL_TLSv1_2))
-        opener = request.build_opener(handler)
-        data = opener.open(req)
-        d = data.read()
-        self.ssh_key = d
-        self.write_key_to_path()
 
     def write_key_to_path(self):
         """
