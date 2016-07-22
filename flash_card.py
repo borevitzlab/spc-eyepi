@@ -73,7 +73,7 @@ def write_api_token(tmpdir):
             pprint(js)
             ssh_dir = os.path.join(tmpdir, "root", "home", ".ssh")
             os.makedirs(ssh_dir, exist_ok=True)
-            with open(os.path.join(ssh_dir, "token"), 'w') as f:
+            with open(os.path.join(ssh_dir, "key_token"), 'w') as f:
                 f.write(js['code'])
         except Exception as e:
             print("Couldnt get token using key", str(e))
