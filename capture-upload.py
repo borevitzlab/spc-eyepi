@@ -80,7 +80,7 @@ def redetect_cameras(camera_workers):
         return False
 
 
-def detect_picam(q=None):
+def detect_picam(q):
     """
     detects whether the pi has a picam installed and enabled.
     on all SPC-OS devices this will return true if the picam is installed
@@ -107,7 +107,7 @@ def detect_picam(q=None):
         logger.error("picam detection: {}".format(str(e)))
     return tuple()
 
-def detect_ivport(q=None):
+def detect_ivport(q):
     """
     meant to detect ivport, uninplemented as of 14/06/2016
     :param q:
@@ -115,7 +115,7 @@ def detect_ivport(q=None):
     """
     return tuple()
 
-def detect_webcam(q=None):
+def detect_webcam(q):
     """
     meant to detect webcams, uninplemented as of 14/06/2016
     :param q:
@@ -123,7 +123,7 @@ def detect_webcam(q=None):
     """
     return tuple()
 
-def detect_gphoto(q=None):
+def detect_gphoto(q):
     """
     detects gphoto cameras and creates thread workers for them.
     :param q: thread safe updater queue object.
@@ -189,13 +189,13 @@ if __name__ == "__main__":
         updater = Updater()
         updater.start()
 
-        raspberry = detect_picam(q=updater.communication_queue) or detect_ivport(q=updater.communication_queue)
-        webcams = detect_webcam(q=updater.communication_queue)
+        raspberry = detect_picam(updater.communication_queue) or detect_ivport(updater.communication_queue)
+        webcams = detect_webcam(updater.communication_queue)
 
         # try 10 times to detect gphoto cameras. Maybe they arent awake yet.
         for x in range(10):
             logger.debug("detecting Cameras")
-            gphoto_workers = detect_gphoto(q=updater.communication_queue)
+            gphoto_workers = detect_gphoto(updater.communication_queue)
             if gphoto_workers:
                 break
             time.sleep(1)

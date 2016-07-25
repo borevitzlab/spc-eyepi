@@ -52,17 +52,13 @@ def encode_multipart_formdata(fields, files):
 class Updater(Thread):
     def __init__(self):
         Thread.__init__(self, name="Updater")
-        self._communication_queue = deque(tuple(), 512)
+        self.communication_queue = deque(tuple(), 512)
         self.scheduler = Scheduler()
         self.scheduler.every(60).seconds.do(self.go)
         # self.scheduler.every(30).minutes.do(self.upload_log)
         self.logger = logging.getLogger(self.getName())
         self.stopper = Event()
         self.sshkey = SSHManager()
-
-    @property
-    def communication_queue(self):
-        return self._communication_queue
 
     def post_multipart(self, host, selector, fields, files):
         """
