@@ -237,7 +237,7 @@ class SysUtil(object):
 
     @classmethod
     def add_watch(cls, path, callback):
-        cls._watches["path"] = os.stat(path).st_mtime, callback
+        cls._watches[path] = os.stat(path).st_mtime, callback
 
     @classmethod
     def _thread(cls):
