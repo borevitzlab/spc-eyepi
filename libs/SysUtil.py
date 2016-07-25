@@ -236,7 +236,7 @@ class SysUtil(object):
         return data
 
     @classmethod
-    def add_watch(cls, path, callback, obj):
+    def add_watch(cls, path, callback):
         cls._watches.append((path, os.stat(path).st_mtime, callback))
 
     @classmethod
