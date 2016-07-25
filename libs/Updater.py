@@ -103,28 +103,23 @@ class Updater(Thread):
             req.add_header('Content-Type', 'application/json')
 
             # do backwards change if response is valid later.
-            tries = 0
-            while tries < 120:
-                try:
-                    handler = request.HTTPSHandler(context=ssl.SSLContext(ssl.PROTOCOL_TLSv1_2))
-                    opener = request.build_opener(handler)
-                    data = opener.open(req)
-                    if data.getcode() == 200:
-                        # do config modify/parse of command here.
-                        data = json.loads(data.read().decode("utf-8"))
-                        for key, value in data.copy().items():
-                            if value == {}:
-                                del data[str(key)]
-                        if len(data) > 0:
-                            self.set_config_data(data)
-                        break
-                except Exception as e:
-                    self.logger.error("Error getting the data {}".format(str(e)))
-                time.sleep(5)
-                tries += 1
+            try:
+                handler = request.HTTPSHandler(context=ssl.SSLContext(ssl.PROTOCOL_TLSv1_2))
+                opener = request.build_opener(handler)
+                data = opener.open(req)
+                if data.getcode() == 200:
+                    # do config modify/parse of command here.
+                    data = json.loads(data.read().decode("utf-8"))
+                    for key, value in data.copy().items():
+                        if value == {}:
+                            del data[str(key)]
+                    if len(data) > 0:
+                        self.set_config_data(data)
+            except Exception as e:
+                self.logger.error("Error getting the data {}".format(str(e)))
 
         except Exception as e:
-            print(str(e))
+            print("Error collecting the data {}".format(str(e)))
 
     def set_config_data(self, data):
         for identifier, update_data in data.items():
@@ -142,16 +137,6 @@ class Updater(Thread):
 
             SysUtil.write_config(config, identifier)
 
-    def get_config_data(self, data):
-        for identifier, misc_data in data.items():
-            config = SysUtil.ensure_config(identifier)
-            for section in config.sections():
-                if not type(misc_data.get(section, None)) is dict:
-                    misc_data[section] = dict()
-
-                for option in config.options(section):
-                    misc_data[section][option] = config.get(section, option)
-        return data
 
     def process_deque(self):
         cameras = dict()
@@ -172,6 +157,10 @@ class Updater(Thread):
     def gather_data(self):
         free_mb, total_mb = SysUtil.get_fs_space_mb()
         onion_address, cookie_auth, cookie_client = SysUtil.get_tor_host()
+        cameras = SysUtil.all_config_data()
+        rt = self.process_deque()
+        # udpate every camera
+        [v.update(rt.get(k, dict())) for k, v in cameras.items()]
 
         camera_data = dict(
             meta=dict(
@@ -186,7 +175,7 @@ class Updater(Thread):
                 free_space_mb=free_mb,
                 total_space_mb=total_mb
             ),
-            cameras=self.get_config_data(self.process_deque())
+            cameras=cameras
         )
         return camera_data
 
