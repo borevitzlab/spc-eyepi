@@ -3,6 +3,7 @@ import random, string, os, socket, json, time
 from glob import glob
 from urllib import request
 import threading
+import configparser
 
 
 def sizeof_fmt(num, suffix='B'):
@@ -150,6 +151,10 @@ class SysUtil(object):
 
     @classmethod
     def get_external_ip(cls):
+        """
+        returns the external IP address of the raspberry pi.
+        :return:
+        """
         if abs(cls._external_ip[-1] - time.time()) > 60:
             try:
                 url = 'https://api.ipify.org/?format=json'
@@ -183,10 +188,9 @@ class SysUtil(object):
 
     @classmethod
     def ensure_config(cls, identifier):
-        import configparser
         config = configparser.ConfigParser()
         config.read_string(default_config)
-        path = SysUtil.identifier_to_ini(identifier)
+        path = cls.identifier_to_ini(identifier)
         try:
             if len(config.read(path)):
                 return config
@@ -200,9 +204,9 @@ class SysUtil(object):
             config['localfiles']['upload_dir'] = "/home/images/upload/{}".format(identifier)
 
         if not config['camera']['name']:
-            config['camera']['name'] = SysUtil.get_hostname()+identifier[:6]
+            config['camera']['name'] = cls.get_hostname()+identifier[:6]
 
-        SysUtil.write_config(config, identifier)
+        cls.write_config(config, identifier)
         return config
 
     @classmethod
@@ -214,11 +218,22 @@ class SysUtil(object):
 
     @classmethod
     def identifier_to_ini(cls, identifier):
-        for fn in glob("**/*.ini"):
+        for fn in glob("configs_byserial/*.ini"):
             if identifier == cls.get_identifier_from_filename(fn):
                 return fn
         else:
-            return identifier + ".ini"
+            return os.path.join("configs_byserial/", identifier) + ".ini"
+
+    @classmethod
+    def all_config_data(cls):
+        data = dict()
+        for ini in glob("configs_byserial/*.ini", recursive=True):
+            cfg = configparser.ConfigParser()
+            cfg.read(ini)
+            d = dict()
+            d = {section: dict(cfg.items(section)) for section in cfg.sections()}
+            data[cls.get_identifier_from_filename(ini)] = d
+        return data
 
     @classmethod
     def add_watch(cls, path, callback):
