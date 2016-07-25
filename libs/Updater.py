@@ -138,8 +138,7 @@ class Updater(Thread):
             SysUtil.write_config(config, identifier)
 
 
-    def process_deque(self):
-        cameras = dict()
+    def process_deque(self, cameras):
         while len(self._communication_queue):
             item = self._communication_queue.pop()
             c = cameras.get(item['identifier'], None)
@@ -158,9 +157,6 @@ class Updater(Thread):
         free_mb, total_mb = SysUtil.get_fs_space_mb()
         onion_address, cookie_auth, cookie_client = SysUtil.get_tor_host()
         cameras = SysUtil.all_config_data()
-        rt = self.process_deque()
-        # udpate every camera
-        [v.update(rt.get(k, dict())) for k, v in cameras.items()]
 
         camera_data = dict(
             meta=dict(
@@ -175,7 +171,7 @@ class Updater(Thread):
                 free_space_mb=free_mb,
                 total_space_mb=total_mb
             ),
-            cameras=cameras
+            cameras=self.process_deque(cameras),
         )
         return camera_data
 
