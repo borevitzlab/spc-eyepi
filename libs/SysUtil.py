@@ -57,7 +57,7 @@ class SysUtil(object):
     _version = "Unknown spc-eyepi version", 0
     a_statvfs = os.statvfs("/")
     _fs = (a_statvfs.f_frsize * a_statvfs.f_bavail, a_statvfs.f_frsize * a_statvfs.f_blocks), 0
-    _watches = dict()
+    _watches = list()
     thread = None
     stop = False
 
