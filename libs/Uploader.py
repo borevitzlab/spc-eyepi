@@ -64,7 +64,7 @@ class Uploader(Thread):
             self.replace = None
 
         self.re_init()
-        SysUtil().add_watch(self.config_filename, self.re_init)
+        SysUtil().add_watch(self.config_filename, self.re_init, self)
 
     def re_init(self):
         """
