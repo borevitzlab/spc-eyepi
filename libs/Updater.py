@@ -147,10 +147,10 @@ class Updater(Thread):
                 cameras[item['identifier']] = item
                 continue
 
-            if item.get("last_capture", datetime.datetime.min) > c.get("last_capture", datetime.datetime.min):
+            if item.get("last_capture", 0) > c.get("last_capture", 0):
                 cameras[item['identifier']].update(item)
 
-            if item.get("last_upload", datetime.datetime.min) > c.get("last_upload", datetime.datetime.min):
+            if item.get("last_upload", 0) > c.get("last_upload", 0):
                 cameras[item['identifier']].update(item)
         return cameras
 
