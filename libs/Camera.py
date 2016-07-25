@@ -181,7 +181,7 @@ class Camera(Thread):
                 name=self.camera_name,
                 identifier=self.identifier,
                 failed=self.failed,
-                last_capture_time=self.current_capture_time)
+                last_capture=self.current_capture_time)
             self.communication_queue.append(data)
             self.failed = list()
         except Exception as e:
