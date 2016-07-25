@@ -237,19 +237,19 @@ class SysUtil(object):
 
     @classmethod
     def add_watch(cls, path, callback, obj):
-        cls._watches[path] = os.stat(path).st_mtime, callback, obj
+        cls._watches.append((path, os.stat(path).st_mtime, callback))
 
     @classmethod
     def _thread(cls):
         while True and not cls.stop:
             try:
-                for path, (mtime, callback, obj) in cls._watches.items():
+                for index, (path, mtime, callback) in enumerate(cls._watches):
                     tmt = os.stat(path).st_mtime
                     if tmt != mtime:
-                        cls._watches[path] = tmt, callback, obj
+                        cls._watches[index] = (path, tmt, callback)
                         try:
                             print("calling {}".format(callback))
-                            callback(obj)
+                            callback()
                         except Exception as e:
                             print(str(e))
                 time.sleep(1)

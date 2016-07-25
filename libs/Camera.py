@@ -57,7 +57,7 @@ class Camera(Thread):
             self.current_capture_time = None
         self.failed = list()
         self.re_init()
-        SysUtil().add_watch(self.config_filename, self.re_init(), self)
+        SysUtil().add_watch(self.config_filename, self.re_init)
 
     def re_init(self):
         """
