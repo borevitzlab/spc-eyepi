@@ -176,9 +176,6 @@ class Camera(Thread):
         communication member. This is meant to send some metadata to the updater thread.
         :return:
         """
-        if not self.communication_queue:
-            self.failed = list()
-            return
         try:
             data = dict(
                 name=self.camera_name,
