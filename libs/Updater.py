@@ -116,7 +116,7 @@ class Updater(Thread):
                             if value == {}:
                                 del data[str(key)]
                         if len(data) > 0:
-                            self.set_configdata(data)
+                            self.set_config_data(data)
                         break
                 except Exception as e:
                     self.logger.error("Error getting the data {}".format(str(e)))
@@ -126,8 +126,7 @@ class Updater(Thread):
         except Exception as e:
             print(str(e))
 
-    def set_configdata(self, data):
-
+    def set_config_data(self, data):
         for identifier, update_data in data.items():
             # dont rewrite empty...
             if not len(update_data):
@@ -139,9 +138,20 @@ class Updater(Thread):
                 update_section = update_data[section]
                 options = set(config.options(section)).intersection(set(update_section.keys()))
                 for option in options:
-                    config.set(section,option,str(update_section[option]))
+                    config.set(section, option, str(update_section[option]))
 
             SysUtil.write_config(config, identifier)
+
+    def get_config_data(self, data):
+        for identifier, misc_data in data.items():
+            config = SysUtil.ensure_config(identifier)
+            for section in config.sections():
+                if not type(misc_data.get(section, None)) is dict:
+                    misc_data[section] = dict()
+
+                for option in config.options(section):
+                    misc_data[section][option] = config.get(section, option)
+        return data
 
     def process_deque(self):
         cameras = dict()
@@ -176,7 +186,7 @@ class Updater(Thread):
                 free_space_mb=free_mb,
                 total_space_mb=total_mb
             ),
-            cameras=self.process_deque()
+            cameras=self.get_config_data(self.process_deque())
         )
         return camera_data
 

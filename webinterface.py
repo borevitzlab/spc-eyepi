@@ -485,14 +485,14 @@ def update_camera_config(serialnumber):
 
     config_map = {
         'name': ('camera', 'name'),
-        'camera_enabled': ('camera', 'enabled'),
-        'upload_enabled': ('ftp', 'uploaderenabled'),
-        'upload_username': ('ftp', 'user'),
-        'upload_pass': ('ftp', 'pass'),
-        'upload_server': ('ftp', 'server'),
-        'upload_timestamped': ('ftp', 'uploadtimestamped'),
-        'upload_webcam': ('ftp', 'uploadwebcam'),
-        'interval_in_seconds': ('timelapse', 'interval'),
+        'capture': ('camera', 'enabled'),
+        'upload': ('ftp', 'enabled'),
+        'username': ('ftp', 'username'),
+        'password': ('ftp', 'password'),
+        'server': ('ftp', 'server'),
+        'timestamp': ('ftp', 'timestamp'),
+        'replace': ('ftp', 'replace'),
+        'interval': ('timelapse', 'interval'),
         'starttime': ('timelapse', 'starttime'),
         'stoptime': ('timelapse', 'stoptime')
     }
@@ -806,9 +806,9 @@ def writecfg():
         aconfig.read(config_path)
         # this is required because the default behaviour of checkboxes is that they do not trigger if they are unchecked.
         aconfig["camera"]["enabled"] = "off"
-        aconfig["ftp"]["uploaderenabled"] = "off"
-        aconfig["ftp"]["uploadwebcam"] = "off"
-        aconfig["ftp"]["uploadtimestamped"] = "off"
+        aconfig["ftp"]["upload"] = "off"
+        aconfig["ftp"]["replace"] = "off"
+        aconfig["ftp"]["timestamp"] = "off"
         for key, value in request.form.items(multi=True):
             # print"key:" + key +"  value:"+value
             if value != "" and key != "config-name":

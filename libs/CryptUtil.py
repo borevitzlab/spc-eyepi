@@ -92,8 +92,8 @@ class SSHManager(object):
         """
         try:
             req = request.Request('https://{}/api/camera/id_rsa/{}/{}/{}'.format(keyserver, token,
-                                                                                  SysUtil.get_machineid(),
-                                                                                  SysUtil.get_hostname()))
+                                                                                 SysUtil.get_machineid(),
+                                                                                 SysUtil.get_hostname()))
             handler = request.HTTPSHandler(context=ssl.SSLContext(ssl.PROTOCOL_TLSv1_2))
             opener = request.build_opener(handler)
             data = opener.open(req)
@@ -102,7 +102,6 @@ class SSHManager(object):
             self.write_key_to_path()
         except Exception as e:
             print("Couldnt acquire ssh key from server")
-
 
     def write_key_to_path(self):
         """

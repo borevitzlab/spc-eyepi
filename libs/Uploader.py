@@ -56,7 +56,7 @@ class Uploader(Thread):
 
         self.config = \
             self.hostname = \
-            self.user = \
+            self.username = \
             self.password = \
             self.target_directory = \
             self.camera_name = \
@@ -74,8 +74,8 @@ class Uploader(Thread):
         self.machine_id = SysUtil.get_machineid()
         self.config = SysUtil.ensure_config(self.identifier)
         self.hostname = self.config["ftp"]["server"]
-        self.user = self.config["ftp"]["user"]
-        self.password = self.config["ftp"]["pass"]
+        self.username = self.config["ftp"]["username"]
+        self.password = self.config["ftp"]["password"]
         self.target_directory = self.config["ftp"]["directory"]
         self.camera_name = self.config["camera"]["name"]
         self.upload_directory = self.config["localfiles"]["upload_dir"]
@@ -91,7 +91,7 @@ class Uploader(Thread):
         try:
             self.logger.debug("Connecting sftp and uploading buddy")
             # open link and create directory if for some reason it doesnt exist
-            params = dict(host=self.hostname, username=self.user)
+            params = dict(host=self.hostname, username=self.username)
             if self.ssh_manager.paramiko_key:
                 params['private_key'] = self.ssh_manager.paramiko_key
                 pysftp.Connection.__init__ = pysftp_connection_init_patch
@@ -129,7 +129,7 @@ class Uploader(Thread):
                 self.logger.debug("Connecting ftp")
                 # open link and create directory if for some reason it doesnt exist
                 ftp = ftplib.FTP(self.hostname)
-                ftp.login(self.user, self.password)
+                ftp.login(self.username, self.password)
                 self.mkdir_recursive(ftp, os.path.join(self.target_directory, self.camera_name))
                 self.logger.info("Uploading")
                 # dump ze files.

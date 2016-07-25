@@ -29,8 +29,8 @@ resize = on
 timestamped = on
 server = sftp.traitcapture.org
 directory = /
-user = DEFAULT_USER
-pass = DEFAULT_PASSWORD
+username = DEFAULT_USER
+password = DEFAULT_PASSWORD
 
 [timelapse]
 interval = 300
