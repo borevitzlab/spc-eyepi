@@ -52,13 +52,17 @@ def encode_multipart_formdata(fields, files):
 class Updater(Thread):
     def __init__(self):
         Thread.__init__(self, name="Updater")
-        self.communication_queue = deque(tuple(), 512)
+        self._communication_queue = deque(tuple(), 512)
         self.scheduler = Scheduler()
         self.scheduler.every(60).seconds.do(self.go)
         # self.scheduler.every(30).minutes.do(self.upload_log)
         self.logger = logging.getLogger(self.getName())
         self.stopper = Event()
         self.sshkey = SSHManager()
+
+    @property
+    def communication_queue(self):
+        return self._communication_queue
 
     def post_multipart(self, host, selector, fields, files):
         """
@@ -133,8 +137,9 @@ class Updater(Thread):
 
             SysUtil.write_config(config, identifier)
 
-
-    def process_deque(self, cameras):
+    def process_deque(self, cameras=None):
+        if not cameras:
+            cameras = dict()
         while len(self._communication_queue):
             item = self._communication_queue.pop()
             c = cameras.get(item['identifier'], None)
@@ -167,7 +172,7 @@ class Updater(Thread):
                 free_space_mb=free_mb,
                 total_space_mb=total_mb
             ),
-            cameras=self.process_deque(cameras),
+            cameras=self.process_deque(cameras=cameras),
         )
         return camera_data
 
