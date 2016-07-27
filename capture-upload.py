@@ -117,8 +117,8 @@ def detect_ivport(q):
 
 def detect_webcam(q):
     """
-    meant to detect webcams, uninplemented as of 14/06/2016
     :param q:
+    meant to detect webcams, NOW IMPLEMENTED!!!! YAY!
     :return:
     """
     try:
