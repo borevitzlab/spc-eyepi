@@ -131,8 +131,14 @@ def detect_webcam(q):
                     serial = serial[:6]
             identifier = default_identifier(prefix="USB-{}-".format(serial))
             sys_number = device.sys_number
-            workers.append((WebCamera(identifier, sys_number, queue=q)))
-            workers.append((Uploader(identifier, queue=q)))
+
+            try:
+                # logger.warning("adding {} on {}".format(identifier, sys_number))
+                workers.append(WebCamera(identifier, sys_number, queue=q))
+                # workers.append(Uploader(identifier, queue=q))
+            except Exception as e:
+                logger.error("couldnt start usb camera {} on {}".format(identifier, sys_number))
+                logger.error("{}".format(str(e)))
         return start_workers(workers)
     except Exception as e:
         logger.error("couldnt detect the usb cameras {}".format(str(e)))

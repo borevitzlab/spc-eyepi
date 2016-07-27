@@ -331,23 +331,30 @@ class WebCamera(Camera):
         :param sys_number:
         :param kwargs:
         """
-        super(WebCamera, self).__init__(identifier, **kwargs)
         # only webcams have a v4l sys_number.
-        self.sys_number = sys_number
-        self.video_capture = cv2.VideoCapture()
+        self.sys_number = int(sys_number)
+        self.video_capture = None
+        try:
+            self.video_capture = cv2.VideoCapture()
+        except Exception as e:
+            self.logger.fatal("couldnt open video capture device on {}".format(self.sys_number))
+
+        super(WebCamera, self).__init__(identifier, **kwargs)
+
 
     def re_init(self):
         super(WebCamera, self).re_init()
+
         try:
             if not self.video_capture.open(self.sys_number):
-                self.logger.fatal("Couldnt open a video capture device")
+                self.logger.fatal("Couldnt open a video capture device on {}".format(self.sys_number))
         except Exception as e:
             self.logger.fatal("Couldnt open a video capture device")
         # 3 -> width 4->height 5->fps just max them out to get the highest resolution.
         self.video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 100000)
         self.video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 100000)
-        self.logger.info("Capturing at {w}x{h}".format(w=self.video_capture.set(cv2.CAP_PROP_FRAME_WIDTH),
-                                                       h=self.video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT)))
+        self.logger.info("Capturing at {w}x{h}".format(w=self.video_capture.get(cv2.CAP_PROP_FRAME_WIDTH),
+                                                       h=self.video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
     def stop(self):
         try:
@@ -364,14 +371,16 @@ class WebCamera(Camera):
         """
         fn = os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])
 
-        self.logger.info("Capturing with a USB webcam")
+        self.logger.info("Capturing...")
         try:
             if not self.video_capture.isOpened():
                 self.video_capture.open(self.sys_number)
             status, frame = self.video_capture.read()
             if status:
+                self.logger.info("Captured, saving...")
                 cv2.imwrite(fn+".tif", frame)
                 cv2.imwrite(fn+".jpeg", frame)
+                time.sleep(1 + (self.accuracy * 2))
             else:
                 self.logger.error("Error webcam capture did not read")
             return status
