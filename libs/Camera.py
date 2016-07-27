@@ -5,6 +5,11 @@ import os
 import shutil
 import subprocess
 import time
+try:
+    import cv2
+except ImportError:
+    print("Couldnt import cv2... no webcam capture")
+
 from glob import glob
 from threading import Thread, Event
 from libs.SysUtil import SysUtil
@@ -35,7 +40,7 @@ import_or_install("picamera")
 class Camera(Thread):
     accuracy = 3
     maxw, maxh = 640, 480
-    file_types = ["CR2", "RAW", "NEF", "JPG", "JPEG", "PPM"]
+    file_types = ["CR2", "RAW", "NEF", "JPG", "JPEG", "PPM", "TIF", "TIFF"]
 
     def __init__(self, identifier, *args, queue=None, **kwargs):
         # init with name or not, just extending some of the functionality of Thread
@@ -319,42 +324,60 @@ class GphotoCamera(Camera):
 
 
 class WebCamera(Camera):
+    def __init__(self, identifier, sys_number, **kwargs):
+        """
+        webcamera init. must have a sys_number (the 0 from /dev/video0) to capture from
+        :param identifier:
+        :param sys_number:
+        :param kwargs:
+        """
+        super(WebCamera, self).__init__(identifier, **kwargs)
+        # only webcams have a v4l sys_number.
+        self.sys_number = sys_number
+        self.video_capture = cv2.VideoCapture()
+
+    def re_init(self):
+        super(WebCamera, self).re_init()
+        try:
+            if not self.video_capture.open(self.sys_number):
+                self.logger.fatal("Couldnt open a video capture device")
+        except Exception as e:
+            self.logger.fatal("Couldnt open a video capture device")
+        # 3 -> width 4->height 5->fps just max them out to get the highest resolution.
+        self.video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 100000)
+        self.video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 100000)
+        self.logger.info("Capturing at {w}x{h}".format(w=self.video_capture.set(cv2.CAP_PROP_FRAME_WIDTH),
+                                                       h=self.video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT)))
+
+    def stop(self):
+        try:
+            self.video_capture.release()
+        except Exception as e:
+            self.logger.error("Couldnt release cv2 device {}".format(str(e)))
+        self.stopper.set()
+
     def capture(self, raw_image):
         """
         subprocess capture... not efficient.
-        todo: check if opencv is imported and use that.
-        :param raw_image:
+        :param raw_image: filename to output
         :return:
         """
-        fn = os.path.join(self.spool_directory, os.path.splitext(raw_image)[0]) + ".ppm"
+        fn = os.path.join(self.spool_directory, os.path.splitext(raw_image)[0])
+
         self.logger.info("Capturing with a USB webcam")
-        cmd = ["".join(
-            ["streamer",
-             " -b 8",
-             " -j 100",
-             " -s 4224x3156",
-             " -o '" + fn + "'"])]
-
-        for tries in range(6):
-            try:
-                output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True, shell=True)
-                time.sleep(1 + (self.accuracy * 2))
-
-                if "error" in output.lower():
-                    raise subprocess.CalledProcessError("non-zero exit status", cmd=cmd, output=output)
-
-                for line in output.splitlines():
-                    self.logger.info("STREAMER: " + line)
-
-                return True
-            except subprocess.CalledProcessError as e:
-                self.logger.error("failed {} times".format(tries))
-                for line in e.output.splitlines():
-                    if not line.strip() == "" and not "***" in line:
-                        self.logger.error(line.strip())
-        else:
-            self.logger.critical("Really bad stuff happened. too many tries capturing.")
-            return False
+        try:
+            if not self.video_capture.isOpened():
+                self.video_capture.open(self.sys_number)
+            status, frame = self.video_capture.read()
+            if status:
+                cv2.imwrite(fn+".tif", frame)
+                cv2.imwrite(fn+".jpeg", frame)
+            else:
+                self.logger.error("Error webcam capture did not read")
+            return status
+        except Exception as e:
+            self.logger.error("Error webcam capture: {}".format(str(e)))
+        return False
 
 
 class PiCamera(Camera):
@@ -362,17 +385,27 @@ class PiCamera(Camera):
     Picamera extension to the Camera abstract class.
     """
 
+
     def capture(self, image_file_basename):
         if "picamera" in globals():
             try:
 
                 image_file_spoolpath = os.path.join(self.spool_directory, image_file_basename)
                 with picamera.PiCamera() as camera:
-                    if self.config.has_section("picam_size"):
-                        camera.resolution = (self.config.getint("picam_size", "width"),
-                                             self.config.getint("picam_size", "height"))
+                    try:
+                        camera.resolution = camera.MAX_RESOLUTION
+                        if self.config.has_option("camera", "width") and self.config.has_option("camera", "height"):
+                            camera.resolution = (self.config.getint("camera", "width"),
+                                                 self.config.getint("camera", "height"))
+                        if self.config.has_option("shutter_speed"):
+                            camera.shutter_speed = self.config.getfloat("camera", "shutter_speed")
+                        if self.config.option("camera", "iso"):
+                            camera.iso = self.config.getint("camera", "iso")
 
-                    camera.start_preview()
+
+                    except Exception as e:
+                        self.logger.error("error setting resolution...")
+                    # camera.start_preview()
                     time.sleep(2)  # Camera warm-up time
                     camera.capture(image_file_spoolpath + ".jpg")
                     return True
@@ -382,8 +415,8 @@ class PiCamera(Camera):
         retcode = 1
         image_file_spoolpath = os.path.join(self.spool_directory, image_file_basename)
         # take the image using os.system(), pretty hacky but its never exactly be run on windows.
-        if self.config.has_section("picam_size"):
-            w, h = self.config["picam_size"]["width"], self.config["picam_size"]["height"]
+        if self.config.has_option("camera", "width") and self.config.has_option("camera", "height"):
+            w, h = self.config["camera"]["width"], self.config["camera"]["height"]
             retcode = os.system(
                 "/opt/vc/bin/raspistill -w {width} -h {height} --nopreview -o \"{filename}.jpg\"".format(width=w,
                                                                                                          height=h,

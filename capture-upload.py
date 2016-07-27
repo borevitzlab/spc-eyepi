@@ -95,7 +95,7 @@ def detect_picam(q):
     try:
         cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
         if cmdret[cmdret.find("detected=") + len("detected="): len(cmdret) - 1] == "1":
-            workers = (PiCamera(default_identifier(prefix="PiCam"), queue=q), Uploader(
+            workers = (PiCamera(default_identifier(prefix="PiCam-"), queue=q), Uploader(
                 default_identifier(prefix="PiCam"), queue=q))
             return start_workers(workers)
         else:
@@ -121,6 +121,21 @@ def detect_webcam(q):
     :param q:
     :return:
     """
+    try:
+        workers = []
+        for device in pyudev.Context().list_devices(subsystem="video4linux"):
+            serial = device.get("ID_SERIAL_SHORT", None)
+            if not serial:
+                serial = device.get("ID_SERIAL", None)
+                if len(serial) > 6:
+                    serial = serial[:6]
+            identifier = default_identifier(prefix="USB-{}-".format(serial))
+            sys_number = device.sys_number
+            workers.append((WebCamera(identifier, sys_number, queue=q)))
+            workers.append((Uploader(identifier, queue=q)))
+        return start_workers(workers)
+    except Exception as e:
+        logger.error("couldnt detect the usb cameras {}".format(str(e)))
     return tuple()
 
 def detect_gphoto(q):
