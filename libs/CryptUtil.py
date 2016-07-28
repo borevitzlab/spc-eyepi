@@ -104,9 +104,9 @@ class SSHManager(object):
             self.write_key_to_path()
             return True
         except request.HTTPError as e:
-            self.logger.error("Couldnt get key, server returned{}".format(str(e)))
+            self.logger.error("Couldnt get key, server returned {}".format(str(e)))
         except Exception as e:
-            self.logger.error("Couldnt acquire ssh key from server")
+            self.logger.error("Couldnt acquire ssh key from server: {}".format(str(e)))
         return False
 
     def write_key_to_path(self):
