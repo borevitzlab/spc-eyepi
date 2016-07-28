@@ -95,8 +95,8 @@ def detect_picam(q):
     try:
         cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
         if cmdret[cmdret.find("detected=") + len("detected="): len(cmdret) - 1] == "1":
-            workers = (PiCamera(default_identifier(prefix="PiCam-"), queue=q), Uploader(
-                default_identifier(prefix="PiCam"), queue=q))
+            workers = (PiCamera(default_identifier(prefix="picam-"), queue=q), Uploader(
+                default_identifier(prefix="picam-"), queue=q))
             return start_workers(workers)
         else:
             return tuple()
