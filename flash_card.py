@@ -59,12 +59,20 @@ parser.add_argument("blockdevice", metavar='d', type=str, nargs=1,
                     help="Block device/devices to copy data to")
 parser.add_argument("--tarfile", metavar="t", type=argparse.FileType('rb'),
                     help="tar/tar.gz file to flash to the card")
+parser.add_argument("--to-tarfile", metavar="w", type=str,
+                    help="Copy from card")
+
 parser.add_argument("--api-token", metavar='k', type=str,
                     help="traitcapture api token for automated addition to database")
-parser.add_argument("--update", default=False,action='store_true',
+
+parser.add_argument("--update", default=False, action='store_true',
                     help="dont flash new data to the card, update the software and set the name if required.")
-parser.add_argument("--removekeys", default=False, action='store_true',
+parser.add_argument("--remove-keys", default=False, action='store_true',
                     help="clear ssh keys.")
+parser.add_argument("--remove-tor", default=False, action='store_true',
+                    help="clear tor private keys.")
+parser.add_argument("--reset-machine-id", default=False, action='store_true',
+                    help="clear tor private keys.")
 parser.add_argument("--backup", metavar='b',
                     help="backup the tor encryption keys, ssh encryption keys, and camera config files to a directory.")
 parser.add_argument("--restore", metavar='r',
@@ -262,9 +270,13 @@ def format_create_new(tmpdir=None):
 
 class ProgressFileObject(io.FileIO):
     def __init__(self, path, *args, **kwargs):
-        self._total_size = os.path.getsize(path)
+        self._total_size = max(os.path.getsize(path), 3038243840)
         super().__init__(path, *args, **kwargs)
         # io.FileIO.__init__(self, path, *args, **kwargs)
+
+    def write(self, *args, **kwargs):
+        progressbar(self.tell(), self._total_size)
+        return io.FileIO.write(self, *args, **kwargs)
 
     def read(self, size=-1):
         progressbar(self.tell(), self._total_size)
@@ -280,6 +292,8 @@ def extract_new(tmpdir, tar_file_object):
         try:
             tar.extractall(path=tmpdir)
             print("")
+            global global_char_pos
+            global_char_pos = 0
             printc("Tar extraction completed", BColors.header)
         except KeyError:
             printc("tar file doesnt have the correct subdirs", BColors.fail)
@@ -307,7 +321,10 @@ def remove_torfiles(tmpdir):
 
 def reset_machineid(tmpdir):
     printc("Resetting machine-id", BColors.warn)
-    os.remove(os.path.join(tmpdir, "root", "etc", "machine-id"))
+    try:
+        os.remove(os.path.join(tmpdir, "root", "etc", "machine-id"))
+    except:
+        pass
     cmd = "systemd-machine-id-setup --root {}".format(os.path.join(tmpdir, "root"))
     try:
         v = subprocess.check_output([cmd], shell=True, universal_newlines=True)
@@ -329,12 +346,29 @@ def remove_ssh_keys(tmpdir):
         else:
             printc(".ssh dir has key token", BColors.green)
 
+def create_tarfile(tmpdir, fn):
+    printc("Creating new tarfile: {}".format(fn), BColors.header)
+    if os.path.isfile(fn):
+        os.remove(fn)
+    with open(fn, "w") as f:
+        f.write("")
+    with tarfile.open(mode="w", fileobj=ProgressFileObject(fn, mode='w')) as tar:
+        global global_char_pos
+        global_char_pos = 0
+        printc("Adding /boot", BColors.blue)
+        tar.add(os.path.join(tmpdir, "boot"), "boot")
+        global_char_pos = 0
+        printc("Adding /", BColors.blue)
+        tar.add(os.path.join(tmpdir, "root"),"root")
+
+
 if __name__ == '__main__':
     temp_dir = mkdir_mount()
     if not temp_dir:
         import sys
         printc("Something went horribly wrong and I couldnt create a temp dir correctly.", BColors.warn)
         sys.exit(1)
+
     if args.tarfile:
         printc("Formatting", BColors.header)
         format_create_new(temp_dir)
@@ -346,6 +380,14 @@ if __name__ == '__main__':
         reset_machineid(temp_dir)
         remove_torfiles(temp_dir)
         remove_ssh_keys(temp_dir)
+
+    if args.to_tarfile:
+        printc("Creating new tarfile", BColors.header)
+        update_via_github(temp_dir)
+        set_hostname(temp_dir, "BLANK_FLASH")
+        remove_torfiles(temp_dir)
+        remove_ssh_keys(temp_dir)
+        create_tarfile(temp_dir, args.to_tarfile)
 
     if args.update:
         printc("Updating", BColors.header)
