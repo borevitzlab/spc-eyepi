@@ -35,15 +35,14 @@ def printc(text, *args):
 def printr(text):
     print("\x1b[1G\x1b[K", text, sep="", end="")
 
-
+global global_char_pos
 global_char_pos = 0
 
-def progressbar(current,total):
+def progressbar(current, total):
     global global_char_pos
     term_width = shutil.get_terminal_size((80, 20)).columns-2
     progress_char_pos = int((current / total) * term_width)
     if progress_char_pos != global_char_pos:
-        global_char_pos = progress_char_pos
         col = BColors.green
         if progress_char_pos <= term_width/3:
             col = BColors.warn
@@ -51,6 +50,7 @@ def progressbar(current,total):
             col = BColors.header
         s = "".join("X" if x < progress_char_pos else " " for x in range(term_width))
         printr(col+"[{}]".format(s)+BColors.endc)
+        global_char_pos = progress_char_pos
         os.sync()
 
 
@@ -71,6 +71,8 @@ parser.add_argument("--remove-keys", default=False, action='store_true',
                     help="clear ssh keys.")
 parser.add_argument("--remove-tor", default=False, action='store_true',
                     help="clear tor private keys.")
+parser.add_argument("--remove-configs", default=False, action='store_true',
+                    help="clear previous configs.")
 parser.add_argument("--reset-machine-id", default=False, action='store_true',
                     help="clear tor private keys.")
 parser.add_argument("--backup", metavar='b',
@@ -270,7 +272,7 @@ def format_create_new(tmpdir=None):
 
 class ProgressFileObject(io.FileIO):
     def __init__(self, path, *args, **kwargs):
-        self._total_size = max(os.path.getsize(path), 3038243840)
+        self._total_size = max(os.path.getsize(path), 2666188800)
         super().__init__(path, *args, **kwargs)
         # io.FileIO.__init__(self, path, *args, **kwargs)
 
@@ -359,8 +361,14 @@ def create_tarfile(tmpdir, fn):
         tar.add(os.path.join(tmpdir, "boot"), "boot")
         global_char_pos = 0
         printc("Adding /", BColors.blue)
-        tar.add(os.path.join(tmpdir, "root"),"root")
+        tar.add(os.path.join(tmpdir, "root"), "root")
 
+
+def remove_configs(tmpdir):
+    printc("Removing old configs", BColors.header)
+    configs = glob.glob(os.path.join(tmpdir, "root", "home", "spc-eyepi", "configs_byserial","*"))
+    for path in configs:
+        os.remove(path)
 
 if __name__ == '__main__':
     temp_dir = mkdir_mount()
@@ -380,6 +388,7 @@ if __name__ == '__main__':
         reset_machineid(temp_dir)
         remove_torfiles(temp_dir)
         remove_ssh_keys(temp_dir)
+        remove_configs(temp_dir)
 
     if args.to_tarfile:
         printc("Creating new tarfile", BColors.header)
@@ -387,6 +396,7 @@ if __name__ == '__main__':
         set_hostname(temp_dir, "BLANK_FLASH")
         remove_torfiles(temp_dir)
         remove_ssh_keys(temp_dir)
+        remove_configs(temp_dir)
         create_tarfile(temp_dir, args.to_tarfile)
 
     if args.update:
@@ -416,6 +426,9 @@ if __name__ == '__main__':
 
     if args.remove_tor:
         remove_torfiles(temp_dir)
+
+    if args.remove_configs:
+        remove_configs(temp_dir)
 
     if args.reset_machine_id:
         reset_machineid(temp_dir)
