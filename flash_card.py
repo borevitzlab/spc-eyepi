@@ -300,6 +300,35 @@ def set_hostname(tmpdir, hostname):
         printc("Couldnt fix hostname {}".format(str(e)), BColors.fail)
     printc(hostname, BColors.bold, BColors.header)
 
+
+def remove_torfiles(tmpdir):
+    for path in glob.glob(os.path.join(tmpdir, "root", "home", "tor_private", "*")):
+        os.remove(path)
+
+def reset_machineid(tmpdir):
+    printc("Resetting machine-id", BColors.warn)
+    os.remove(os.path.join(tmpdir, "root", "etc", "machine-id"))
+    cmd = "systemd-machine-id-setup --root {}".format(os.path.join(tmpdir, "root"))
+    try:
+        v = subprocess.check_output([cmd], shell=True, universal_newlines=True)
+        printc(v,BColors.blue)
+        with open(os.path.join(tmpdir, "root", "etc", "machine-id"), 'r') as f:
+            printc("machine-id: {}".format(f.read()), BColors.blue)
+        printc("machine-id reset", BColors.header)
+    except subprocess.CalledProcessError as e:
+        printc("Couldnt call git: {}".format(str(e)), BColors.fail)
+    except Exception as e:
+        printc("Exception while updating from github: {}".format(str(e)), BColors.fail)
+
+def remove_ssh_keys(tmpdir):
+    printc("Removing old ssh keys", BColors.header)
+    ssh_files = glob.glob(os.path.join(tmpdir, "root", "home", ".ssh", "*"))
+    for path in ssh_files:
+        if not os.path.basename(path) == "key_token":
+            os.remove(path)
+        else:
+            printc(".ssh dir has key token", BColors.green)
+
 if __name__ == '__main__':
     temp_dir = mkdir_mount()
     if not temp_dir:
@@ -312,7 +341,11 @@ if __name__ == '__main__':
         printc("Extracting", BColors.header)
         temp_dir = mkdir_mount()
         extract_new(temp_dir, args.tarfile)
+        update_via_github(temp_dir)
         set_hostname(temp_dir, gname)
+        reset_machineid(temp_dir)
+        remove_torfiles(temp_dir)
+        remove_ssh_keys(temp_dir)
 
     if args.update:
         printc("Updating", BColors.header)
@@ -339,14 +372,14 @@ if __name__ == '__main__':
         printc("Writing private db file", BColors.header)
         shutil.copy("db_private", os.path.join(temp_dir, "root", "home", "spc-eyepi", "db"))
 
-    if args.removekeys:
-        printc("Removing ssh keys", BColors.header)
-        ssh_files = glob.glob(os.path.join(temp_dir,"root","home",".ssh","*"))
-        for path in ssh_files:
-            if not os.path.basename(path) == "key_token":
-                os.remove(path)
-            else:
-                printc(".ssh dir has key token", BColors.green)
+    if args.remove_tor:
+        remove_torfiles(temp_dir)
+
+    if args.reset_machine_id:
+        reset_machineid(temp_dir)
+
+    if args.remove_keys:
+        remove_ssh_keys(temp_dir)
 
     if temp_dir:
         cleanup(temp_dir, args.blockdevice)
