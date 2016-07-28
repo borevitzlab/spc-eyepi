@@ -92,9 +92,10 @@ class SSHManager(object):
         :return:
         """
         try:
-            req = request.Request('https://{}/api/camera/id_rsa/{}/{}/{}'.format(keyserver, token,
-                                                                                 SysUtil.get_machineid(),
-                                                                                 SysUtil.get_hostname()))
+            url = 'https://{}/api/camera/id_rsa/{}/{}/{}'.format(keyserver, token, SysUtil.get_machineid(),
+                                                                                 SysUtil.get_hostname())
+            self.logger.info("attempting to acquire key from {}".format(url))
+            req = request.Request(url)
             handler = request.HTTPSHandler(context=ssl.SSLContext(ssl.PROTOCOL_TLSv1_2))
             opener = request.build_opener(handler)
             data = opener.open(req)
