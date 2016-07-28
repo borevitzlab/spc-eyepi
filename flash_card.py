@@ -63,6 +63,8 @@ parser.add_argument("--api-token", metavar='k', type=str,
                     help="traitcapture api token for automated addition to database")
 parser.add_argument("--update", default=False,action='store_true',
                     help="dont flash new data to the card, update the software and set the name if required.")
+parser.add_argument("--removekeys", default=False, action='store_true',
+                    help="clear ssh keys.")
 parser.add_argument("--backup", metavar='b',
                     help="backup the tor encryption keys, ssh encryption keys, and camera config files to a directory.")
 parser.add_argument("--restore", metavar='r',
@@ -82,7 +84,7 @@ gname = "Picam-"+RAND if not args.name else args.name
 def mkdir_mount():
     os.getenv("TMPDIR")
     temp_directory = os.path.join('/tmp/spc_os/', RAND)
-    printc("Termporary directory: {}".format(temp_directory), BColors.under)
+    printc("Temporary directory: {}".format(temp_directory), BColors.under)
     d = glob.glob(args.blockdevice[0]+"*")
     d.sort()
     d.pop(0)
@@ -286,14 +288,17 @@ def extract_new(tmpdir, tar_file_object):
 
 
 def set_hostname(tmpdir, hostname):
-    printc("Fixing hostname and hosts file", BColors.header)
-    with open(os.path.join(tmpdir, "root", "etc", "hostname"), 'w') as f:
-        f.write(hostname+"\n")
+    printc("Fixing hostname and hosts file:", BColors.header)
+    try:
+        with open(os.path.join(tmpdir, "root", "etc", "hostname"), 'w') as f:
+            f.write(hostname+"\n")
 
-    with open(os.path.join(tmpdir, "root", "etc", "hosts"), 'w') as hosts_file:
-        h_tmpl = "127.0.0.1\tlocalhost.localdomain localhost {hostname}\n::1\tlocalhost.localdomain localhost {hostname}\n"
-        hosts_file.write(h_tmpl.format(hostname=hostname))
-
+        with open(os.path.join(tmpdir, "root", "etc", "hosts"), 'w') as hosts_file:
+            h_tmpl = "127.0.0.1\tlocalhost.localdomain localhost {hostname}\n::1\tlocalhost.localdomain localhost {hostname}\n"
+            hosts_file.write(h_tmpl.format(hostname=hostname))
+    except Exception as e:
+        printc("Couldnt fix hostname {}".format(str(e)), BColors.fail)
+    printc(hostname, BColors.bold, BColors.header)
 
 if __name__ == '__main__':
     temp_dir = mkdir_mount()
@@ -333,6 +338,15 @@ if __name__ == '__main__':
     if os.path.isfile("db_private"):
         printc("Writing private db file", BColors.header)
         shutil.copy("db_private", os.path.join(temp_dir, "root", "home", "spc-eyepi", "db"))
+
+    if args.removekeys:
+        printc("Removing ssh keys", BColors.header)
+        ssh_files = glob.glob(os.path.join(temp_dir,"root","home",".ssh","*"))
+        for path in ssh_files:
+            if not os.path.basename(path) == "key_token":
+                os.remove(path)
+            else:
+                printc(".ssh dir has key token", BColors.green)
 
     if temp_dir:
         cleanup(temp_dir, args.blockdevice)

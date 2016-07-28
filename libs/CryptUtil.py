@@ -1,12 +1,12 @@
 __author__ = 'Gareth Dunstone'
 import io
 import os
-import socket
+import logging
 import ssl
 import struct
 import textwrap
 from base64 import b64encode
-from urllib import request, parse
+from urllib import request
 import paramiko
 from cryptography import utils
 from cryptography.hazmat.backends import default_backend
@@ -48,7 +48,7 @@ class SSHManager(object):
     def __init__(self, path="/home/.ssh"):
         self._key = self.ssh_agentKey = None
         self.path = path
-
+        self.logger = logging.getLogger("SFTP Key Manager")
         self.token_path = os.path.join(path, "key_token")
         self.priv_path = os.path.join(path, "id_rsa")
         self.pub_path = os.path.join(path, "id_rsa.pub")
@@ -56,15 +56,16 @@ class SSHManager(object):
         if os.path.isfile(self.token_path):
             with open(self.token_path, 'r') as key_token_file:
                 token = key_token_file.read().strip()
-            self.get_new_key_from_server(token)
-            os.remove(self.token_path)
+            self.logger.warn("Attempting to get new key from server with {}".format(token))
+            if self.get_new_key_from_server(token):
+                os.remove(self.token_path)
 
         if os.path.isfile(self.priv_path) and not self._key:
             try:
                 with open(self.priv_path, 'rb') as f:
                     self.ssh_key = f.read()
             except Exception as e:
-                print(str(e))
+                self.logger.error("couldnt find ssh key: {}".format(str(e)))
                 self._key = None
 
     @property
@@ -98,10 +99,15 @@ class SSHManager(object):
             opener = request.build_opener(handler)
             data = opener.open(req)
             d = data.read()
+
             self.ssh_key = d
             self.write_key_to_path()
+            return True
+        except request.HTTPError as e:
+            self.logger.error("Couldnt get key, server returned{}".format(str(e)))
         except Exception as e:
-            print("Couldnt acquire ssh key from server")
+            self.logger.error("Couldnt acquire ssh key from server")
+        return False
 
     def write_key_to_path(self):
         """
