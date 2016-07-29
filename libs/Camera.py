@@ -406,7 +406,7 @@ class PiCamera(Camera):
                         if self.config.has_option("camera", "width") and self.config.has_option("camera", "height"):
                             camera.resolution = (self.config.getint("camera", "width"),
                                                  self.config.getint("camera", "height"))
-                        if self.config.has_option("shutter_speed"):
+                        if self.config.has_option("camera", "shutter_speed"):
                             camera.shutter_speed = self.config.getfloat("camera", "shutter_speed")
                         if self.config.option("camera", "iso"):
                             camera.iso = self.config.getint("camera", "iso")

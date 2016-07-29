@@ -101,7 +101,7 @@ def progressbar(current, total):
     :return:
     """
     global global_char_pos
-    term_width = shutil.get_terminal_size((80, 20)).columns - 2
+    term_width = shutil.get_terminal_size((80, 20)).columns - 6
     progress_char_pos = int((current / total) * term_width)
     if progress_char_pos != global_char_pos:
         col = BColors.green
@@ -110,7 +110,7 @@ def progressbar(current, total):
         elif term_width / 3 <= progress_char_pos <= term_width * (2 / 3):
             col = BColors.header
         s = "".join("X" if x < progress_char_pos else " " for x in range(term_width))
-        printr(col + "[{}]".format(s) + BColors.endc)
+        printr(col + "-=[{}]=-".format(s) + BColors.endc)
         global_char_pos = progress_char_pos
 
 
@@ -343,7 +343,7 @@ def set_hostname(tmpdir, hostname):
     :param hostname: hostname to set to.
     :return:
     """
-    printc("Fixing hostname and hosts file:", BColors.header)
+    printc("Fixing hostname and hosts file:", BColors.blue)
     try:
         with open(os.path.join(tmpdir, "root", "etc", "hostname"), 'w') as f:
             f.write(hostname + "\n")
@@ -354,7 +354,7 @@ def set_hostname(tmpdir, hostname):
             hosts_file.write(h_tmpl.format(hostname=hostname))
     except Exception as e:
         printc("Couldnt fix hostname {}".format(str(e)), BColors.fail)
-    printc(hostname, BColors.bold, BColors.header)
+    printc(hostname, BColors.bold, BColors.blue)
 
 
 def remove_torfiles(tmpdir):
@@ -518,7 +518,7 @@ if __name__ == '__main__':
                 sys.exit(1)
 
             if command_line_args.tarfile:
-                printc("Extracting {}".format(command_line_args.tarfile), BColors.header)
+                printc("Extracting {}".format(command_line_args.tarfile.name), BColors.header)
                 extract(temp_dir, command_line_args.tarfile)
                 update_via_github(temp_dir)
                 set_hostname(temp_dir, gname)
