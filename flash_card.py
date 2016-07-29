@@ -27,6 +27,8 @@ parser.add_argument("--tarfile", metavar="t", type=argparse.FileType('rb'),
                     help="tar/tar.gz file to flash to the card")
 parser.add_argument("--to-tarfile", metavar="w", type=str,
                     help="Copy from card")
+parser.add_argument("--update-boot", metavar="w", type=str,
+                    help="update raspberry pi boot partition from a directory")
 
 parser.add_argument("--api-token", metavar='k', type=str,
                     help="traitcapture api token for automated addition to database")
@@ -422,6 +424,29 @@ def remove_configs(tmpdir):
     for path in configs:
         os.remove(path)
 
+def copy_boot(tmpdir):
+    """
+    copys the files for the raspberry pi boot partition over
+    :param tmpdir:
+    :return:
+    """
+    try:
+        boot = os.path.join(tmpdir, "boot")
+        files = glob.glob(os.path.join(boot, "*"))
+        newfiles = glob.glob(os.path.join(command_line_args.update_boot, "*"))
+        for file in files:
+            if os.path.isfile(file):
+                os.remove(file)
+            if os.path.isdir(file):
+                shutil.rmtree(file)
+
+        for file in newfiles:
+            if os.path.isfile(file):
+                shutil.copy(file, os.path.join(tmpdir, file))
+            if os.path.isdir(file):
+                shutil.copytree(file, os.path.join(tmpdir, file))
+    except Exception as e:
+        printc("Failed copying the boot dir: {}".format(str(e)))
 
 def create_tarfile(tmpdir, fn):
     """
@@ -526,6 +551,11 @@ if __name__ == '__main__':
                 remove_torfiles(temp_dir)
                 remove_ssh_keys(temp_dir)
                 remove_configs(temp_dir)
+
+            if command_line_args.update_boot:
+                printc("Updating boot partition with whatever is in {}".format(command_line_args.update_boot), BColors.header)
+                copy_boot(temp_dir)
+
 
             if command_line_args.to_tarfile:
                 printc("Creating new tarfile", BColors.header)
