@@ -92,11 +92,13 @@ def detect_picam(q):
     :param q: thread safe updater queue
     :return:
     """
+    if not (os.path.exists("/opt/vc/bin/vcgencmd")):
+        return tuple()
     try:
         cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
-        if cmdret[cmdret.find("detected=") + len("detected="): len(cmdret) - 1] == "1":
-            workers = (PiCamera(default_identifier(prefix="picam"), queue=q), Uploader(
-                default_identifier(prefix="picam"), queue=q))
+        if "detected=1" in cmdret:
+            workers = (PiCamera(default_identifier(prefix="picam"), queue=q),
+                       Uploader(default_identifier(prefix="picam"), queue=q))
             return start_workers(workers)
         else:
             return tuple()
@@ -129,13 +131,13 @@ def detect_webcam(q):
                 serial = device.get("ID_SERIAL", None)
                 if len(serial) > 6:
                     serial = serial[:6]
-            identifier = default_identifier(prefix="USB-{}-".format(serial))
+            identifier = default_identifier(prefix="USB-{}".format(serial))
             sys_number = device.sys_number
 
             try:
                 # logger.warning("adding {} on {}".format(identifier, sys_number))
                 workers.append(WebCamera(identifier, sys_number, queue=q))
-                # workers.append(Uploader(identifier, queue=q))
+                workers.append(Uploader(identifier, queue=q))
             except Exception as e:
                 logger.error("couldnt start usb camera {} on {}".format(identifier, sys_number))
                 logger.error("{}".format(str(e)))
@@ -143,6 +145,7 @@ def detect_webcam(q):
     except Exception as e:
         logger.error("couldnt detect the usb cameras {}".format(str(e)))
     return tuple()
+
 
 def detect_gphoto(q):
     """
