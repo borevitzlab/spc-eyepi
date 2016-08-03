@@ -424,6 +424,7 @@ def remove_configs(tmpdir):
     for path in configs:
         os.remove(path)
 
+
 def copy_boot(tmpdir):
     """
     copys the files for the raspberry pi boot partition over
@@ -509,6 +510,11 @@ def mkdirs_and_mount(tmpdir):
     return False
 
 
+def fix_boot(tmpdir):
+    with open(os.path.join(tmpdir,"boot","config.txt"), 'w') as f:
+        f.write("hdmi_force_hotplug=1\ngpu_mem=256\nconsoleblank=0\ndisable_camera_led=1\nstart_x=1")
+
+
 def sync_unmount():
     """
     unmounts block device and syncs filesystem
@@ -571,6 +577,7 @@ if __name__ == '__main__':
                 update_via_github(temp_dir)
                 set_hostname(temp_dir, gname)
 
+
             if command_line_args.restore:
                 printc("Restoring", BColors.blue)
                 restore(temp_dir, bakdir=command_line_args.backup_directory)
@@ -602,6 +609,8 @@ if __name__ == '__main__':
 
             if command_line_args.remove_keys:
                 remove_ssh_keys(temp_dir)
+
+            fix_boot(temp_dir)
 
             sync_unmount()
         except Exception as e:

@@ -273,6 +273,8 @@ def available_networks():
 @app.route("/wifi", methods=["GET"])
 def wifi():
     return render_template("wifi.html")
+
+
 @app.route("/preview_cam", methods=["GET"])
 def preview():
     if request.method == 'GET':

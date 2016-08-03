@@ -39,16 +39,18 @@ def detect_gphoto_cameras():
     :return: a dict of port:serialnumber values corresponding to the currently connected gphoto2 cameras.
     """
     try:
+        cams = {}
         a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
         a = a.replace(" ", "").replace("\n", "").replace("-", "")
-        cams = {}
         for pstring in re.finditer("usb:", a):
             port = a[pstring.start():pstring.end() + 7]
             cmdret = subprocess.check_output(
                 'gphoto2 --port "' + port + '" --get-config serialnumber',
                 shell=True).decode()
             cur = cmdret.split("\n")[-2]
-            cams[port] = cur.split(" ")[-1]
+            sn = cur.split(" ")[-1]
+            if sn.lower() != "none":
+                cams[port] = sn
         return cams
     except Exception as e:
         logger.error("Could not detect camera for some reason: {}".format(str(e)))
@@ -156,8 +158,11 @@ def detect_gphoto(q):
     try:
         cameras = detect_gphoto_cameras()
         # this is something else...
-        workers = list(sum(((GphotoCamera(default_identifier(prefix=sn), port, queue=q), Uploader(
-            default_identifier(prefix=sn), queue=q)) for port, sn in cameras.items()), ()))
+        workers = []
+        for port, sn in cameras.items():
+            print(port, sn)
+            workers.append(GphotoCamera(default_identifier(prefix=sn), port, queue=q))
+            workers.append(Uploader(default_identifier(prefix=sn), queue=q))
         return start_workers(workers)
     except Exception as e:
         logger.error("Detecting gphoto cameras failed {}".format(str(e)))

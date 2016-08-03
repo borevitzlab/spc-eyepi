@@ -8,7 +8,7 @@ from functools import wraps
 from glob import glob
 import urllib, socket
 from flask import Flask, Response, request, g
-from flask.ext.bcrypt import Bcrypt
+from flask_bcrypt import Bcrypt
 import time
 from werkzeug.exceptions import default_exceptions
 from werkzeug.exceptions import HTTPException
@@ -18,18 +18,7 @@ from flask import jsonify
 app = Flask(__name__)
 app.debug = True
 
-def make_json_error(ex):
-    response = jsonify(message=str(ex))
-    response.status_code = (ex.code
-                            if isinstance(ex, HTTPException)
-                            else 500)
-    return response
-
-
-for code in default_exceptions.keys():
-    app.error_handler_spec[None][code] = make_json_error
 bcrypt = Bcrypt(app)
-
 
 
 def systemctl(options):
@@ -220,9 +209,9 @@ def pip_install():
         _, package = dict(request.args).popitem()
         pip.main(["install", package])
     except Exception as e:
-        return {"status":False,"message":str(e)},500
+        return {"status":False, "message":str(e)},500
 
-    return {"status":True,"message":"Package installed"}
+    return {"status":True, "message":"Package installed"}
 
 
 @app.route("/rev_met")
@@ -339,13 +328,13 @@ if __name__ == "__main__":
                     DataDirectory /var/lib/tor
                     HiddenServiceDir /home/tor_private/
                     HiddenServicePort 80 127.0.0.1:5000
-                    HiddenServicePort 6666 127.0.0.1:666
+                    HiddenServicePort 666 127.0.0.1:666
                     HiddenServiceAuthorizeClient basic bvz"""
         new_torrc = "\n".join(q.lstrip("                ") for q in new_torrc.splitlines())
 
         restart_tor = False
 
-        with open('/etc/tor/torrc','r') as torrc:
+        with open('/etc/tor/torrc', 'r') as torrc:
             if torrc.read() != new_torrc:
                 restart_tor = True
 
@@ -362,17 +351,5 @@ if __name__ == "__main__":
             os.system("systemd-machine-id-setup")
     except:
         print("something went wrong, oh well...")
-
-    cfg = ConfigParser()
-    cfg.read("picam.ini")
-    try:
-        encryptdb = urllib.request.urlopen("http://data.phenocam.org.au/p.ejson")
-        a = AESCipher(cfg['ftp']['pass'])
-
-        f = json.loads(a.decrypt(encryptdb.read().decode("utf-8")))
-        with dbm.open('db', 'c') as db:
-            db[b'admin'] = bcrypt.generate_password_hash(f['admin'])
-    except Exception as e:
-        print("something broke decrypting the new db: {}".format(str(e)))
 
     app.run(host='0.0.0.0', port=666)
