@@ -329,8 +329,6 @@ def botnetmgmt():
 def get_version():
     subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
 
-def change_password():
-
 
 if __name__ == "__main__":
     try:
