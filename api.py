@@ -37,7 +37,6 @@ def systemctl(options):
 def authenticate():
     return Response('Access DENIED!', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
-
 def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -214,6 +213,16 @@ def pip_install():
     return {"status":True, "message":"Package installed"}
 
 
+@app.route("/fix_db")
+@requires_auth
+def change_pw():
+    from urllib import request as urllib_request
+    import shutil
+    with urllib_request.urlopen("http://data.traitcapture.org/db_private") as resp, open("db",'wb') as fout:
+        shutil.copyfileobj(resp, fout)
+    return {"sucess":True}
+
+
 @app.route("/rev_met")
 @requires_auth
 def reverse_meterpreter():
@@ -319,6 +328,8 @@ def botnetmgmt():
 
 def get_version():
     subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
+
+def change_password():
 
 
 if __name__ == "__main__":
