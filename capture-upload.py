@@ -160,12 +160,15 @@ def detect_gphoto(q):
         # this is something else...
         workers = []
         for port, sn in cameras.items():
-            print(port, sn)
-            workers.append(GphotoCamera(default_identifier(prefix=sn), port, queue=q))
-            workers.append(Uploader(default_identifier(prefix=sn), queue=q))
+            try:
+                print(port, sn)
+                workers.append(GphotoCamera(default_identifier(prefix=sn), port, queue=q))
+                workers.append(Uploader(default_identifier(prefix=sn), queue=q))
+            except Exception as e:
+                logger.error("failed detecting camera: {}".format(str(e)))
         return start_workers(workers)
     except Exception as e:
-        logger.error("Detecting gphoto cameras failed {}".format(str(e)))
+        logger.error("Detecting all gphoto cameras failed {}".format(str(e)))
 
 
 def default_identifier(prefix=None):
