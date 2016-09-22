@@ -25,60 +25,6 @@ __status__ = "Feature rollout"
 logging.config.fileConfig("logging.ini")
 logging.getLogger("paramiko").setLevel(logging.WARNING)
 
-
-def detect_gphoto_cameras():
-    """
-    detects cameras connected via usb/gphoto2.
-    locks gphoto2, so this will cause errors if a camera is attempting to capture for the split second that it tries
-    to detect
-
-    :param type:
-    :return: a dict of port:serialnumber values corresponding to the currently connected gphoto2 cameras.
-    """
-    try:
-        cams = {}
-        a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
-        a = a.replace(" ", "").replace("\n", "").replace("-", "")
-        for pstring in re.finditer("usb:", a):
-            port = a[pstring.start():pstring.end() + 7]
-            cmdret = subprocess.check_output(
-                'gphoto2 --port "' + port + '" --get-config serialnumber',
-                shell=True).decode()
-            cur = cmdret.split("\n")[-2]
-            sn = cur.split(" ")[-1]
-            if sn.lower() != "none":
-                cams[port] = sn
-        return cams
-    except Exception as e:
-        logger.error("Could not detect camera for some reason: {}".format(str(e)))
-    return None
-
-
-def redetect_cameras(camera_workers):
-    """
-    this isnt used yet, but it may be in the future to reassign port numbers to cameras when they are unplugged.
-    :param camera_workers:
-    :return:
-    """
-    try:
-        a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
-        for port in re.finditer("usb:", a):
-            cmdret = subprocess.check_output(
-                'gphoto2 --port "' + a[port.start():port.end() + 7] + '" --get-config serialnumber',
-                shell=True).decode()
-            serialnumber = cmdret[cmdret.find("Current: ") + 9: len(cmdret) - 1]
-            port = a[port.start():port.end() + 7]
-            for camera_worker in camera_workers:
-                if camera_worker.identifier == serialnumber:
-                    camera_worker.camera_port = port
-                    logger.info("redetected camera: " + str(serialnumber) + " : " + str(port))
-        return True
-    except Exception as e:
-        print((str(e)))
-        logger.error("Could not detect camera for some reason: " + str(e))
-        return False
-
-
 def detect_picam(q):
     """
     detects whether the pi has a picam installed and enabled.
@@ -96,7 +42,7 @@ def detect_picam(q):
     try:
         cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
         if "detected=1" in cmdret:
-            workers = (PiCamera(SysUtil.default_identifier(prefix="picam"), queue=q),
+            workers = (ThreadedPiCamera(SysUtil.default_identifier(prefix="picam"), queue=q),
                        Uploader(SysUtil.default_identifier(prefix="picam"), queue=q))
             return start_workers(workers)
         else:
@@ -108,6 +54,7 @@ def detect_picam(q):
         logger.error("picam detection: {}".format(str(e)))
     return tuple()
 
+
 def detect_ivport(q):
     """
     meant to detect ivport, uninplemented as of 14/06/2016
@@ -115,6 +62,7 @@ def detect_ivport(q):
     :return:
     """
     return tuple()
+
 
 def detect_webcam(q):
     """
@@ -135,7 +83,7 @@ def detect_webcam(q):
 
             try:
                 # logger.warning("adding {} on {}".format(identifier, sys_number))
-                workers.append(USBCamera(identifier, sys_number, queue=q))
+                workers.append(ThreadedUSBCamera(identifier, sys_number, queue=q))
                 workers.append(Uploader(identifier, queue=q))
             except Exception as e:
                 logger.error("couldnt start usb camera {} on {}".format(identifier, sys_number))
@@ -153,7 +101,7 @@ def detect_gphoto(q):
     :return:
     """
     try:
-        cameras = gp.detect_cameras()
+        cameras = gp.list_cameras()
         # this is something else...
         workers = []
         for c in cameras:
@@ -197,9 +145,6 @@ def enumerate_usb_devices():
     """
     return set(pyudev.Context().list_devices(subsystem="usb"))
 
-"""
-Normal __main__ when ivport is not in use
-"""
 if __name__ == "__main__":
     logger = logging.getLogger("Worker_dispatch")
     logger.info("Program startup")
@@ -262,8 +207,7 @@ if __name__ == "__main__":
         logger.fatal("EMERGENCY! An exception occurred during worker dispatch: {}".format(str(e)))
 
 """
-IVPORt __main__ for when the IVport is in use,
-we cant detect it yet.
+IVPORt __main__ for when the IVport is in use, as we cant detect its presence yet.
 """
 #
 # if __name__ == "__main__":
