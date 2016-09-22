@@ -445,12 +445,11 @@ class Camera(object):
                     if self.config.getboolean("ftp", "replace"):
                         st = time.time()
                         thumb = self._image
-
+                        resize_t = 0.0
                         if self.config.getboolean("ftp", "resize"):
-                            sq = time.time()
                             thumb = cv2.resize(self._image, (Camera.default_width, Camera.default_height),
                                                interpolation=cv2.INTER_NEAREST)
-                            self.logger.info("Resize: {0:.2f}s".format(time.time() - sq))
+                            resize_t = time.time() - st
 
                         s = cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"),
                                         cv2.cvtColor(thumb, cv2.COLOR_BGR2RGB))
@@ -458,7 +457,7 @@ class Camera(object):
                         shutil.copy(os.path.join("/dev/shm", self.identifier + ".jpg"),
                                     os.path.join(self.upload_directory, "last_image.jpg"))
 
-                        self.logger.info("Resize, replace, copy: {0:.2f}s".format(time.time() - st))
+                        self.logger.info("Resize {0:.3f}s, total: {0:.3f}s".format(resize_t, time.time() - st))
 
                     # copying/renaming for files
                     oldfiles = files[:]
