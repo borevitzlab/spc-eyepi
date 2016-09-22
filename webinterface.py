@@ -1008,4 +1008,4 @@ application = DispatcherMiddleware(app, mounts={
 })
 
 if __name__ == "__main__":
-    run_simple("0.0.0.0", 5000, application, use_debugger=True, use_reloader=True, threaded=True)
+    run_simple("0.0.0.0", 80, application, use_debugger=True, use_reloader=True, threaded=True)
