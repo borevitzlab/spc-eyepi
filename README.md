@@ -41,15 +41,15 @@ To get into the web interface using the wifi the default ip address is 192.168.1
  * flask
  * flask-bcrypt<sup>[pip](https://pypi.python.org/pypi/Flask-Bcrypt)</sup>
  * pycrypto<sup>[pip](https://pypi.python.org/pypi/pycrypto)</sup>
- * gphoto2
  * pyudev<sup>[pip](https://pypi.python.org/pypi/pyudev)</sup>
  * pillow<sup>[pip](https://pypi.python.org/pypi/Pillow/3.1.1)</sup>
-
+ * browsepy<sup>[pip](https://pypi.python.org/pypi/browsepy/0.4.0)</sup>
+ * gphoto2-cffi<sup>[git](https://github.com/borevitzlab/gphoto2-cffi)</sup>
 ---
 
 *os extras:*
  * create_ap<sup>[aur](https://aur.archlinux.org/packages/create_ap)</sup>
- * tor
+ * [tor](https://www.torproject.org/)
 
 
 Code automatically detects connected usb DSLRs and the raspberry pi camera (just duplicate "example.ini" to "picam.ini" and "eyepi.ini"). DSLR's are given a unique ID based on hardware serial. Camera name can be easily changed to a user friendly value.
