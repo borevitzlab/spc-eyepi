@@ -24,7 +24,7 @@ from threading import Thread, Event
 
 from libs.SysUtil import SysUtil
 from gphoto2cffi.errors import GPhoto2Error
-# import picamera.array
+import picamera.array
 
 logging.config.fileConfig("logging.ini")
 logging.getLogger("paramiko").setLevel(logging.WARNING)
