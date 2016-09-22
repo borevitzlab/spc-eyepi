@@ -31,6 +31,11 @@
 			padding-top 50px;
 			margin-left: 5%;
 		}
+        html, body {
+             height:100%;
+        }
+        .container-fluid,
+        .row-fluid { height: inherit; }
 		#vers{float:right;}
 		img {
           	display: block;
@@ -70,10 +75,11 @@
     </nav>
 </div>
 <br><br><br>
-	<div class="container col-md-12">
+	<div class="container-fluid col-md-12">
 	  {% block body %}
 	  {% endblock %}
-	  </div>
+   </div>
 	  {% for message in get_flashed_messages() %}
 	    <div class=flash>{{ message }}</div>
 	  {% endfor %}
+</html>

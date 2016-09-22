@@ -99,17 +99,19 @@ class Updater(Thread):
             data["signature"] = self.sshkey.sign_message(json.dumps(data, sort_keys=True))
             req = request.Request('https://{}/api/camera/check-in/{}'.format(remote_server,
                                                                              SysUtil.get_machineid()),
-                                  bytes(json.dumps(data),"utf-8"))
+                                  bytes(json.dumps(data), "utf-8"))
             req.add_header('Content-Type', 'application/json')
-
             # do backwards change if response is valid later.
             try:
                 handler = request.HTTPSHandler(context=ssl.SSLContext(ssl.PROTOCOL_TLSv1_2))
                 opener = request.build_opener(handler)
                 data = opener.open(req)
+
                 if data.getcode() == 200:
                     # do config modify/parse of command here.
-                    data = json.loads(data.read().decode("utf-8"))
+                    d = data.read().decode("utf-8")
+                    self.logger.debug(d)
+                    data = json.loads(d)
                     for key, value in data.copy().items():
                         if value == {}:
                             del data[str(key)]
@@ -126,7 +128,6 @@ class Updater(Thread):
             # dont rewrite empty...
             if not len(update_data):
                 continue
-
             config = SysUtil.ensure_config(identifier)
             sections = set(config.sections()).intersection(set(update_data.keys()))
             for section in sections:
@@ -136,6 +137,9 @@ class Updater(Thread):
                     config.set(section, option, str(update_section[option]))
 
             SysUtil.write_config(config, identifier)
+
+    def set_yaml_data(self, data):
+        pass
 
     def process_deque(self, cameras=None):
         if not cameras:
@@ -157,6 +161,7 @@ class Updater(Thread):
     def gather_data(self):
         free_mb, total_mb = SysUtil.get_fs_space_mb()
         onion_address, cookie_auth, cookie_client = SysUtil.get_tor_host()
+
         cameras = SysUtil.all_config_data()
 
         camera_data = dict(

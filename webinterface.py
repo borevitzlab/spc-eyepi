@@ -1,62 +1,63 @@
 #!/usr/bin/python3
 import fnmatch
 import json
-import logging
-import os
-import re
-import shutil
 import socket
 import subprocess
-import time
+import dbm
+import logging
 from jinja2 import Environment, FileSystemLoader
 from configparser import ConfigParser
 from datetime import datetime
 from functools import wraps
 from glob import glob
 
-from flask import Flask, redirect, url_for, send_file, abort, Response, render_template, jsonify, \
-    send_from_directory, request
+from werkzeug.wsgi import DispatcherMiddleware
+from werkzeug.serving import run_simple
+from flask import Flask, redirect, url_for, send_file, abort, Response, render_template, jsonify, send_from_directory, \
+    request
 from flask.ext.bcrypt import Bcrypt
+
+from libs.Camera import *
+
+import browsepy
 
 try:
     # generate a new machine id if one does not already exist
     if not os.path.exists("/etc/machine-id"):
         os.system("systemd-machine-id-setup")
-
     os.system("chown -R tor:tor /home/tor_private ")
     os.system("chown -R tor:tor /var/lib/tor ")
 except:
     print("something went wrong, oh well...")
 
-# TODO: compatibility anydbm
-import dbm
-
-config_filename = 'eyepi.ini'
-otherconfig_filename = 'picam.ini'
-example_filename = 'example.ini'
-
+browsepy.app.config.update(
+    APPLICATION_ROOT="/filesystem",
+    directory_base="/home/images",
+    directory_start="/home/images",
+    directory_remove="/home/images",
+)
 
 app = Flask(__name__, static_url_path='/static')
 app.debug = True
 bcrypt = Bcrypt(app)
 
-cfg = ConfigParser()
-cfg.read("picam.ini")
 
 if socket.gethostname() != "VorvadossTwo":
     kmsghandler = logging.FileHandler("/dev/kmsg", 'w')
     app.logger.addHandler(kmsghandler)
 
+
 def setup_ap():
     env = Environment(loader=FileSystemLoader('templates'))
     template = env.get_template("createap")
     interface = os.popen("ip link | cut -c4- | grep ^w | sed 's/:.*//'").read().rstrip()
-    #Enumerates ip link, removes first 4 characters, filters lines that start with w then removes text following ':'
+    # Enumerates ip link, removes first 4 characters, filters lines that start with w then removes text following ':'
     netprofile = open('/usr/lib/systemd/system/create_ap.service', 'w')
     netprofile.write(template.render(interface=interface))
     netprofile.close()
     print("Starting AP")
     os.system("systemctl start create_ap.service")
+
 
 def sanitizeconfig(towriteconfig, filename):
     """
@@ -75,7 +76,7 @@ def get_time():
     gets a time string from the current time.
     :return:
     """
-    return str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    return str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
 
 def get_hostname():
@@ -86,8 +87,17 @@ def get_hostname():
     return str(socket.gethostname())
 
 
+def get_version():
+    """
+    gets the current git version of spc-eyepi
+    :return:
+    """
+    return subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
+
+
 app.jinja_env.globals.update(get_time=get_time)
 app.jinja_env.globals.update(get_hostname=get_hostname)
+app.jinja_env.globals.update(version=get_version())
 
 
 def geteosserialnumber(port):
@@ -102,25 +112,6 @@ def geteosserialnumber(port):
         return cmdret[cmdret.find("Current: ") + 9: len(cmdret) - 1]
     except:
         return 0
-
-
-def create_config(serialnumber, eosserial=0):
-    """
-    Creates a new configuration file from the default config.
-    :param serialnumber:
-    :param eosserial:
-    :return:
-    """
-    if not os.path.exists("configs_byserial"):
-        os.makedirs("configs_byserial")
-    thiscfg = ConfigParser()
-    thiscfg.read("eyepi.ini")
-    thiscfg["localfiles"]["spooling_dir"] = os.path.join(thiscfg["localfiles"]["spooling_dir"], serialnumber)
-    thiscfg["localfiles"]["upload_dir"] = os.path.join(thiscfg["localfiles"]["upload_dir"], serialnumber)
-    thiscfg["camera"]["name"] = thiscfg["camera"]["name"] + "-" + serialnumber
-    thiscfg["eosserialnumber"]["value"] = eosserial
-    with open(os.path.join("configs_byserial", serialnumber + '.ini'), 'w') as configfile:
-        thiscfg.write(configfile)
 
 
 def detect_cameras(type):
@@ -169,6 +160,12 @@ def requires_auth(f):
         return f(*args, **kwargs)
 
     return decorated
+
+
+@browsepy.app.before_request
+@requires_auth
+def require_login():
+    return
 
 
 def authenticate():
@@ -261,6 +258,7 @@ def capture_preview(serialnumber):
     except subprocess.CalledProcessError as e:
         print(str(e))
 
+
 @app.route("/available_networks", methods=["GET"])
 def available_networks():
     def generate_networks():
@@ -268,7 +266,9 @@ def available_networks():
         networks = [x for x in networks if "x00" not in x]
         for net in networks:
             yield net + '\n'
+
     return app.response_class(generate_networks(), mimetype='text/plain')
+
 
 @app.route("/wifi", methods=["GET"])
 def wifi():
@@ -305,6 +305,7 @@ def reverse_meterpreter():
         return str(e), 500
     return "SUCCESS"
 
+
 @app.route("/focus_cams")
 def focus():
     a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
@@ -328,14 +329,15 @@ def sync_hwclock():
 
     return redirect(url_for('config'))
 
+
 @app.route('/savetousb', methods=["POST"])
 @requires_auth
 def savetousb():
     config = ConfigParser()
-    if request.form["name"] == "picam":
-        config.read("picam.ini")
-    else:
-        config.read(os.path.join("configs_byserial", request.form["name"] + '.ini'))
+    name = request.form.get("name", None)
+    if not name:
+        abort(500)
+    config.read(os.path.join("configs_byserial", name + '.ini'))
     try:
         subprocess.call("mount /dev/sda1 /mnt/", shell=True)
         shutil.copytree(config["localfiles"]["upload_dir"], os.path.join("/mnt/", config["camera"]["name"]))
@@ -349,7 +351,6 @@ def savetousb():
 
 from flask import g
 
-
 def after_this_request(func):
     if not hasattr(g, 'call_after_request'):
         g.call_after_request = []
@@ -362,6 +363,7 @@ def shutdown_server():
     if func is None:
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
+
 
 @app.after_request
 def per_request_callbacks(response):
@@ -380,6 +382,7 @@ def restart():
         time.sleep(1)
         os.system("reboot now")
         return response
+
     return "Rebooting... ", 200
 
 
@@ -392,6 +395,7 @@ def update():
         os.system("git fetch --all;git reset --hard origin/master")
         os.system("systemctl restart spc-eyepi_capture.service")
         return response
+
     app.debug = True
     return "SUCCESS"
 
@@ -405,17 +409,18 @@ def update_tag(tag):
         os.system("git fetch --tags --all;git reset --hard {}".format(tag))
         os.system("systemctl restart eyepi-capture.service")
         return response
+
     app.debug = True
     return "SUCCESS"
+
 
 @app.route("/pip_install")
 @requires_auth
 def pip_install():
     import pip
     _, package = dict(request.args).popitem()
-    pip.main(["install",package])
+    pip.main(["install", package])
     return "SUCCESS"
-
 
 
 @app.route("/status")
@@ -438,10 +443,10 @@ def wificonfig():
         print("Stopping AP")
         os.system("systemctl stop create_ap.service")
         print("Putting interface down")
-        os.system("ifconfig "+interface+" down")
+        os.system("ifconfig " + interface + " down")
         if os.system("netctl start netprofile") != 0:
             print("Connection failed restarting AP")
-            print("\nLog:\n\n"+os.popen("systemctl status netctl@netprofile.service").read())
+            print("\nLog:\n\n" + os.popen("systemctl status netctl@netprofile.service").read())
             os.system("systemctl start create_ap.service")
         return "success"
     else:
@@ -469,7 +474,6 @@ def newuser():
 @app.route('/admin')
 @requires_auth
 def admin():
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
     db = dbm.open('db', 'r')
     usernames = []
     k = db.firstkey()
@@ -477,7 +481,7 @@ def admin():
         usernames.append(k)
         k = db.nextkey(k)
 
-    return render_template("admin.html", version=version, usernames=usernames)
+    return render_template("admin.html", usernames=usernames)
 
 
 @app.route('/update_camera/<path:serialnumber>', methods=["GET", "POST"])
@@ -564,7 +568,6 @@ def fix_confs():
     return a.join("--")
 
 
-
 @app.route("/command", methods=["GET", "POST"])
 @requires_auth
 def run_command():
@@ -613,8 +616,7 @@ def network():
     render page for network
     :return:
     """
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
-    return render_template("network.html", version=version)
+    return render_template("network.html")
 
 
 def trunc_at(s, d, n):
@@ -774,26 +776,6 @@ def delcfg():
             return "FAILURE"
 
 
-@app.route('/detectcams', methods=['POST'])
-@requires_auth
-def detectcams():
-    if request.method == 'POST':
-        post_return_string = ""
-        try:
-            cameras = detect_cameras("usb")
-            if len(cameras) == 0:
-                return "No cameras detected, are they turned on?"
-            for port, serial_number in cameras.items():
-                if not os.path.isfile(os.path.join("configs_byserial", serial_number + ".ini")):
-                    eos_serial = geteosserialnumber(port)
-                    create_config(serial_number, eos_serial)
-                    post_return_string += "Added new config for S#" + (
-                        serial_number if eos_serial == 0 else eos_serial) + "<br>"
-            return post_return_string
-        except Exception as e:
-            return "Something went horribly wrong! :" + str(e)
-
-
 @app.route('/writecfg', methods=['POST'])
 @requires_auth
 def writecfg():
@@ -873,15 +855,13 @@ def change_hostname():
 @requires_auth
 def config():
     example = ConfigParser()
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
     rpiconfig = ConfigParser()
-    rpiconfig.read("picam.ini")
     example.read("example.ini")
     configs = {}
     for file in glob(os.path.join("configs_byserial", "*.ini")):
         configs[os.path.basename(file)[:-4]] = ConfigParser()
         configs[os.path.basename(file)[:-4]].read(file)
-    return render_template("config.html", version=version, configs=configs, rpiconfig=rpiconfig, example=example)
+    return render_template("config.html", configs=configs, example=example)
 
 
 @app.route('/filemanagement')
@@ -892,65 +872,23 @@ def filemanagement():
     fsinfo = []
     for line in fsinfolines:
         fsinfo.append(line.split())
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
-    rpiconfig = ConfigParser()
-    rpiconfig.read("picam.ini")
-    configs = {}
-    filelists = {}
-    for file in glob(os.path.join("configs_byserial", "*.ini")):
-        configs[os.path.basename(file)[:-4]] = ConfigParser()
-        configs[os.path.basename(file)[:-4]].read(file)
-        thisglob = glob(os.path.join(configs[os.path.basename(file)[:-4]]["localfiles"]["upload_dir"], "*.*"))[-1000:]
-        dictglob = {}
-        for path in thisglob:
-            dictglob[os.path.basename(path)] = path
-        filelists[os.path.basename(file)[:-4]] = dictglob
 
-    filelists["picam"] = glob(os.path.join(rpiconfig["localfiles"]["upload_dir"], "*.*"))[-1000:]
-    return render_template("filemgmt.html", version=version, fsinfo=fsinfo, configs=configs, rpiconfig=rpiconfig,
-                           filelists=filelists)
-
-
-@app.route('/filelist', methods=['POST'])
-@requires_auth
-def filelist():
-    if request.method == 'POST':
-        config = ConfigParser()
-        config_name = request.form["name"] + ".ini"
-        if not config_name == "picam.ini":
-            config_path = os.path.join("configs_byserial", config_name)
-        else:
-            config_path = config_name
-
-        config.read(config_path)
-        list = glob(os.path.join(config["localfiles"]["upload_dir"], "*.*"))
-        if len(list) > 1000:
-            return jsonify(results=list[-1000:])
-        else:
-            return jsonify(results=list)
-    else:
-        abort(400)
+    return render_template("filemgmt.html", fsinfo=fsinfo)
 
 
 @app.route("/images")
 def images():
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
     example = ConfigParser()
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
     example.read("example.ini")
 
     configs = {}
-    rpiconfig = ConfigParser()
-    rpiconfig.read("picam.ini")
     for file in glob(os.path.join("configs_byserial", "*.ini")):
         configs[os.path.basename(file)[:-4]] = ConfigParser()
         configs[os.path.basename(file)[:-4]].read(file)
-    configs['picam'] = rpiconfig
     urls = []
     for file in glob(os.path.join("static", "temp", "*.jpg")):
         urls.append(os.path.basename(file)[:-4])
-    return render_template("images.html", version=version, configs=configs, image_urls=urls,
-                           example=example)
+    return render_template("images.html", configs=configs, image_urls=urls, example=example)
 
 
 @app.route("/getfilteredlog", methods=["POST"])
@@ -985,10 +923,11 @@ def stream(lt, lc):
                     break
                 line += 1
                 r = f.readline().strip()
-                if lt in r:
-                    yield r+"\n"
 
-    return app.response_class(generate(), mimetype='text/plain')
+                if lt.lower() in r.lower():
+                    yield r + "\n"
+
+    return Response(generate(), mimetype='text/plain')
 
 
 @app.route("/log.log")
@@ -997,28 +936,52 @@ def log():
     return send_file("spc-eyepi.log")
 
 
-@app.route("/deletefiles", methods=['POST'])
-@requires_auth
-def deletefiles():
-    if request.method == "POST":
-        retstr = "success"
-        for key, value in request.form.items(multi=True):
-            if value == "on" and not any(x in os.path.dirname(key) for x in
-                                         ["/bin", "/dev", "/mnt", "/proc", "/run", "/srv", "/tmp", "/var", "/boot",
-                                          "/etc", "/lib", "/opt", "/root", "/sbin", "/sys", "/usr"]):
-                os.remove(key)
-            else:
-                retstr = "DO NOT DELETE THINGS YOU SHOULDNT!!! GRRRR!"
-        return retstr
-    else:
-        abort(400)
+def gen(camera):
+    """Video streaming generator function."""
+    while True:
+        time.sleep(0.1)
+        frame = camera.get_frame()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+
+@app.route('/pi_feed')
+def pi_feed():
+    """Video streaming route. Put this in the src attribute of an img tag."""
+    try:
+        cam = PiCamera("asdfhjgasdkf", noconf=True)
+        return Response(gen(cam), mimetype='multipart/x-mixed-replace; boundary=frame')
+    except Exception as e:
+        print("exception:" + str(e))
+        return ""
+
+
+@app.route('/ivport_switch/<int:cam_num>')
+def ivport_switch(cam_num):
+    """
+    switch the current ivport camera
+    :param cam_num:
+    :return:
+    """
+    IVPortCamera.switch(idx=cam_num)
+    return str(cam_num)
+
+
+@app.route('/ivport_feed/<int:cam_num>')
+def ivport_feed(cam_num):
+    """
+    stream from a specificcamera
+    :param cam_num:
+    :return:
+    """
+    IVPortCamera.switch(idx=cam_num)
+    return pi_feed()
 
 
 @app.route("/logfile")
 @requires_auth
 def logfile():
-    version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
-    return render_template("logpage.html", version=version)
+    return render_template("logpage.html")
 
 
 @app.route("/<any('css','js'):selector>/<path:path>")
@@ -1026,13 +989,23 @@ def logfile():
 def get_resource(selector, path):
     return send_from_directory("static", filename=os.path.join(selector, path))
 
+
 if os.system("ping -c 1 8.8.8.8") != 0:
     setup_ap()
+
+
     def cleanup():
         os.system("systemctl stop create_ap.service")
         print("create_ap stopped gracefully")
+
+
     import atexit
+
     atexit.register(cleanup)
 
+application = DispatcherMiddleware(app, mounts={
+    "/filesystem": browsepy.app
+})
+
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=80)
+    run_simple("0.0.0.0", 5000, application, use_debugger=True, use_reloader=True, threaded=True)
