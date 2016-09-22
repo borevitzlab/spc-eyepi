@@ -45,6 +45,7 @@ To get into the web interface using the wifi the default ip address is 192.168.1
  * pillow<sup>[pip](https://pypi.python.org/pypi/Pillow/3.1.1)</sup>
  * browsepy<sup>[pip](https://pypi.python.org/pypi/browsepy/0.4.0)</sup>
  * gphoto2-cffi<sup>[git](https://github.com/borevitzlab/gphoto2-cffi)</sup>
+ 
 ---
 
 *os extras:*
