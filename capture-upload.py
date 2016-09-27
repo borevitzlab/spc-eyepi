@@ -106,7 +106,9 @@ def detect_gphoto(q):
         workers = []
         for c in cameras:
             try:
-                camera = ThreadedGPCamera(usb_address=c._usb_address, queue=q)
+                camera = ThreadedGPCamera(identifier=c.status.serialnumber,
+                                          usb_address=c._usb_address,
+                                          queue=q)
                 uploader = Uploader(camera.identifier, queue=q)
                 workers.extend([camera, uploader])
             except Exception as ef:
