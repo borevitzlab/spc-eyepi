@@ -25,7 +25,7 @@ __status__ = "Feature rollout"
 logging.config.fileConfig("logging.ini")
 logging.getLogger("paramiko").setLevel(logging.WARNING)
 
-def detect_picam(q):
+def detect_picam(updater):
     """
     detects whether the pi has a picam installed and enabled.
     on all SPC-OS devices this will return true if the picam is installed
@@ -42,8 +42,9 @@ def detect_picam(q):
     try:
         cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
         if "detected=1" in cmdret:
-            workers = (ThreadedPiCamera(SysUtil.default_identifier(prefix="picam"), queue=q),
-                       Uploader(SysUtil.default_identifier(prefix="picam"), queue=q))
+            camera = ThreadedPiCamera(SysUtil.default_identifier(prefix="picam"), queue=updater.communication_queue)
+            updater.add_to_identifiers(camera.identifier)
+            workers = (camera, Uploader(SysUtil.default_identifier(prefix="picam"), queue=updater.communication_queue))
             return start_workers(workers)
         else:
             return tuple()
@@ -55,7 +56,7 @@ def detect_picam(q):
     return tuple()
 
 
-def detect_ivport(q):
+def detect_ivport(updater):
     """
     meant to detect ivport, uninplemented as of 14/06/2016
     :param q:
@@ -64,10 +65,10 @@ def detect_ivport(q):
     return tuple()
 
 
-def detect_webcam(q):
+def detect_webcam(updater):
     """
-    :param q:
     meant to detect webcams, NOW IMPLEMENTED!!!! YAY!
+    :param updater: updater to send information to.
     :return:
     """
     try:
@@ -83,8 +84,12 @@ def detect_webcam(q):
 
             try:
                 # logger.warning("adding {} on {}".format(identifier, sys_number))
-                workers.append(ThreadedUSBCamera(identifier, sys_number, queue=q))
-                workers.append(Uploader(identifier, queue=q))
+                camera = ThreadedUSBCamera(identifier=identifier,
+                                  sys_number=sys_number,
+                                  queue=updater.communication_queue)
+                updater.add_to_temp_identifiers(camera.identifier)
+                workers.append(camera)
+                workers.append(Uploader(identifier, queue=updater.communication_queue))
             except Exception as e:
                 logger.error("couldnt start usb camera {} on {}".format(identifier, sys_number))
                 logger.error("{}".format(str(e)))
@@ -94,7 +99,7 @@ def detect_webcam(q):
     return tuple()
 
 
-def detect_gphoto(q):
+def detect_gphoto(updater):
     """
     detects gphoto cameras and creates thread workers for them.
     :param q: thread safe updater queue object.
@@ -108,8 +113,9 @@ def detect_gphoto(q):
             try:
                 camera = ThreadedGPCamera(identifier=c.status.serialnumber,
                                           usb_address=c._usb_address,
-                                          queue=q)
-                uploader = Uploader(camera.identifier, queue=q)
+                                          queue=updater.communication_queue)
+                updater.add_to_temp_identifiers(camera.identifier)
+                uploader = Uploader(camera.identifier, queue=updater.communication_queue)
                 workers.extend([camera, uploader])
             except Exception as ef:
                 logger.error("Couldnt detect camera {}".format(str(ef)))
@@ -161,20 +167,21 @@ if __name__ == "__main__":
         # start the updater. this is the first thing that should happen.
         updater = Updater()
         updater.start()
+        raspberry = detect_picam(updater) or detect_ivport(updater)
+        webcams = detect_webcam(updater)
 
-        raspberry = detect_picam(updater.communication_queue) or detect_ivport(updater.communication_queue)
-        webcams = detect_webcam(updater.communication_queue)
 
         # try 10 times to detect gphoto cameras. Maybe they arent awake yet.
         for x in range(10):
             logger.debug("detecting Cameras")
-            gphoto_workers = detect_gphoto(updater.communication_queue)
+            gphoto_workers = detect_gphoto(updater)
             if gphoto_workers:
                 break
             time.sleep(1)
         else:
             logger.warning("no gphoto cameras detected. Something might be wrong.")
 
+        updater.identifiers.extend([cam.identifier for cam in gphoto_workers])
         # enumerate the usb devices to compare them later on.
         usb_devices = enumerate_usb_devices()
 
@@ -183,16 +190,18 @@ if __name__ == "__main__":
                 if usb_devices != enumerate_usb_devices():
                     logger.error("change in usb dev list")
                     kill_workers(gphoto_workers)
+                    updater.temp_identifiers = set()
+                    gphoto_workers = detect_gphoto(updater)
 
-                    gphoto_workers = detect_gphoto(q=updater.communication_queue)
-
+                    # should redetect webcams.
+                    webcams = detect_webcam(updater)
                     usb_devices = enumerate_usb_devices()
 
                 time.sleep(1)
             except (KeyboardInterrupt, SystemExit) as e:
                 kill_workers(gphoto_workers)
-                kill_workers(raspberry)
                 kill_workers(webcams)
+                kill_workers(raspberry)
                 kill_workers([updater])
                 raise e
             except Exception as e:
@@ -223,8 +232,8 @@ IVPORt __main__ for when the IVport is in use, as we cant detect its presence ye
 #         updater = Updater()
 #         updater.start()
 #
-#         ivport = (ThreadedIVPortCamera(SysUtil.default_identifier(prefix="IVPort"), updater.communication_queue),
-#                   Uploader(SysUtil.default_identifier(prefix="IVPort"), queue=updater.communication_queue))
+#         ivport = (ThreadedIVPortCamera(SysUtil.default_identifier(prefix="IVPort"), updater),
+#                   Uploader(SysUtil.default_identifier(prefix="IVPort"), queue=updater))
 #         start_workers(ivport)
 #
 #     except (KeyboardInterrupt, SystemExit):

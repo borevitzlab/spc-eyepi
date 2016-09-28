@@ -7,7 +7,9 @@ import configparser
 import yaml
 import logging
 import fcntl
+
 USBDEVFS_RESET = 21780
+
 
 def sizeof_fmt(num, suffix='B'):
     for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
@@ -15,6 +17,7 @@ def sizeof_fmt(num, suffix='B'):
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
+
 
 default_config = """
 [DEFAULT]
@@ -66,14 +69,13 @@ class SysUtil(object):
     logger = logging.getLogger("SysUtil")
 
     def __init__(self):
-
         if SysUtil.thread is None:
             SysUtil.thread = threading.Thread(target=self._thread)
             SysUtil.thread.start()
         pass
 
     @staticmethod
-    def reset_usb_device(bus: int, dev: int)->bool:
+    def reset_usb_device(bus: int, dev: int) -> bool:
         """
         resets a usb device.
         :param bus:
@@ -87,7 +89,6 @@ class SysUtil(object):
             return True
         except Exception as e:
             SysUtil.logger.error("Couldnt reset usb device (possible filenotfound): {}".format(str(e)))
-
 
     @staticmethod
     def default_identifier(prefix=None):
@@ -131,7 +132,15 @@ class SysUtil(object):
                             yield result
 
     @staticmethod
-    def sizeof_fmt(num, suffix='B'):
+    def sizeof_fmt(num, suffix='B')->str:
+        """
+        formats a number of bytes in to a human readable string.
+        returns in SI units
+        eg sizeof_fmt(1234) returns '1.2KiB'
+        :param num: number of bytes to format
+        :param suffix:
+        :return:
+        """
         for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
             if abs(num) < 1024.0:
                 return "%3.1f%s%s" % (num, unit, suffix)
@@ -139,7 +148,12 @@ class SysUtil(object):
         return "%.1f%s%s" % (num, 'Yi', suffix)
 
     @classmethod
-    def get_hostname(cls):
+    def get_hostname(cls)->str:
+        """
+        gets the current hostname.
+        if there is no /etc/hostname file, sets the hostname randomly.
+        :return:
+        """
         if abs(cls._hostname[-1] - time.time()) > 10:
             if not os.path.isfile("/etc/hostname"):
                 hostname = "".join(random.choice(string.ascii_letters) for _ in range(8))
@@ -150,9 +164,12 @@ class SysUtil(object):
             cls._hostname = hostname, time.time()
         return cls._hostname[0]
 
-
     @classmethod
-    def get_machineid(cls):
+    def get_machineid(cls)->str:
+        """
+        gets the machine id, or initialises the machine id if it doesnt exist.
+        :return: str
+        """
         if abs(cls._machine_id[-1] - time.time()) > 10:
             if not os.path.isfile("/etc/machine-id"):
                 os.system("systemd-machine-id-setup")
@@ -161,7 +178,11 @@ class SysUtil(object):
         return cls._machine_id[0]
 
     @classmethod
-    def get_tor_host(cls):
+    def get_tor_host(cls)->tuple:
+        """
+        gets a tuple of the current tor host.
+        :return: tuple of hostname(onion address), client key, client name
+        """
         if abs(cls._tor_host[-1] - time.time()) > 10:
             try:
                 with open("/home/tor_private/hostname") as f:
@@ -172,7 +193,7 @@ class SysUtil(object):
         return cls._tor_host[0]
 
     @classmethod
-    def get_fs_space(cls):
+    def get_fs_space(cls)->tuple:
         """
         returns free/total
         :return:
@@ -180,13 +201,18 @@ class SysUtil(object):
         if abs(cls._fs[-1] - time.time()) > 10:
             try:
                 a_statvfs = os.statvfs("/")
-                cls._fs = (a_statvfs.f_frsize * a_statvfs.f_bavail, a_statvfs.f_frsize * a_statvfs.f_blocks), time.time()
+                cls._fs = (
+                          a_statvfs.f_frsize * a_statvfs.f_bavail, a_statvfs.f_frsize * a_statvfs.f_blocks), time.time()
             except:
                 cls._fs = (0, 0), time.time()
         return cls._fs[0]
 
     @classmethod
-    def get_fs_space_mb(cls):
+    def get_fs_space_mb(cls)->tuple:
+        """
+        returns the filesystems free space in mebibytes
+        :return:
+        """
         free_space, total_space = SysUtil.get_fs_space()
         for x in range(0, 2):
             free_space /= 1024.0
@@ -194,16 +220,26 @@ class SysUtil(object):
         return free_space, total_space
 
     @classmethod
-    def get_version(cls):
+    def get_version(cls)->str:
+        """
+        gets the version of the git repo as a string.
+        :return:
+        """
         if abs(cls._version[-1] - time.time()) > 10:
             try:
-                cls._version = subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode().strip("\n"), time.time()
+
+                cmd = "/usr/bin/git describe --always"
+                cls._version = subprocess.check_output([cmd], shell=True).decode().strip("\n"), time.time()
             except:
                 cls._version = "unknown", time.time()
         return cls._version[0]
 
     @classmethod
     def get_internal_ip(cls):
+        """
+        gets the internal ip by attempting to connect to googles DNS
+        :return:
+        """
         if abs(cls._ip_address[-1] - time.time()) > 10:
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -216,18 +252,17 @@ class SysUtil(object):
     @classmethod
     def get_external_ip(cls):
         """
-        returns the external IP address of the raspberry pi.
+        returns the external IP address of the raspberry pi through api.ipify.org
         :return:
         """
         if abs(cls._external_ip[-1] - time.time()) > 60:
             try:
                 url = 'https://api.ipify.org/?format=json'
-                cls._external_ip = json.loads(request.urlopen(url,
-                                                              timeout=10).read().decode('utf-8'))['ip'], time.time()
+                response = request.urlopen(url,timeout=10).read().decode('utf-8')
+                cls._external_ip = json.loads(response)['ip'], time.time()
             except:
                 cls._external_ip = "0.0.0.0", time.time()
         return cls._external_ip[0]
-
 
     @classmethod
     def get_identifier_from_name(cls, name):
@@ -252,6 +287,12 @@ class SysUtil(object):
 
     @classmethod
     def ensure_config(cls, identifier):
+        """
+        ensures a configuration file exists for this identifier.
+        if a config file doesnt exist then it will create a default one.
+        :param identifier:
+        :return:
+        """
         config = configparser.ConfigParser()
         config.read_string(default_config)
         path = cls.identifier_to_ini(identifier)
@@ -268,20 +309,31 @@ class SysUtil(object):
             config['localfiles']['upload_dir'] = "/home/images/upload/{}".format(identifier)
 
         if not config['camera']['name']:
-            config['camera']['name'] = cls.get_hostname()+identifier[:6]
+            config['camera']['name'] = cls.get_hostname() + identifier[:6]
 
         cls.write_config(config, identifier)
         return config
 
     @classmethod
-    def write_config(cls, config, identifier):
+    def write_config(cls, config: configparser.ConfigParser, identifier: str):
+        """
+        writes a configuration file to an correct config file path.
+        :param config: configuration file (configparser object)
+        :param identifier:
+        :return: configparser object
+        """
         path = SysUtil.identifier_to_ini(identifier)
         with open(path, 'w+') as configfile:
             config.write(configfile)
         return config
 
     @classmethod
-    def identifier_to_ini(cls, identifier):
+    def identifier_to_ini(cls, identifier: str)->str:
+        """
+        gets a valid .ini path for an identifier.
+        :param identifier:
+        :return:
+        """
         for fn in glob("configs_byserial/*.ini"):
             if identifier == cls.get_identifier_from_filename(fn):
                 return fn
@@ -289,7 +341,12 @@ class SysUtil(object):
             return os.path.join("configs_byserial/", identifier) + ".ini"
 
     @classmethod
-    def identifier_to_yml(cls, identifier):
+    def identifier_to_yml(cls, identifier: str)->str:
+        """
+        the same as identifier_to_ini but for yml files
+        :param identifier:
+        :return:
+        """
         for fn in glob("configs_byserial/*.yml"):
             if identifier == cls.get_identifier_from_filename(fn):
                 return fn
@@ -297,9 +354,15 @@ class SysUtil(object):
             return os.path.join("configs_byserial/", identifier) + ".yml"
 
     @classmethod
-    def all_config_data(cls):
+    def configs_from_identifiers(cls, identifiers: set) -> dict:
+        """
+        given a set of identifiers, returns a dictionary of the data contained in those config files with the key
+        for each config file data being the identifier
+        :param identifiers:
+        :return: dictionary of configuration datas
+        """
         data = dict()
-        for ini in glob("configs_byserial/*.ini", recursive=True):
+        for ini in ["configs_byserial/{}.ini".format(x) for x in identifiers]:
             cfg = configparser.ConfigParser()
             cfg.read(ini)
             d = dict()
@@ -308,11 +371,22 @@ class SysUtil(object):
         return data
 
     @classmethod
-    def add_watch(cls, path, callback):
+    def add_watch(cls, path: str, callback):
+        """
+        adds a watch that calls the callback on file change
+        :param path: path of the file to watch
+        :param callback: function signature to call when the file is changed
+        :return:
+        """
         cls._watches.append((path, os.stat(path).st_mtime, callback))
 
     @classmethod
     def open_yaml(cls, filename):
+        """
+        opens a yaml file using yaml.load
+        :param filename:
+        :return:
+        """
         try:
             with open(filename) as e:
                 q = yaml.load(e.read())
@@ -322,6 +396,10 @@ class SysUtil(object):
 
     @classmethod
     def _thread(cls):
+        """
+        runs the watchers
+        :return:
+        """
         while True and not cls.stop:
             try:
                 for index, (path, mtime, callback) in enumerate(cls._watches):
@@ -353,7 +431,6 @@ class Test(object):
         self.passed = 0
         self.failed = []
 
-
     def test_caching(self, function, private):
         lasttime = private[-1]
         time.sleep(20)
@@ -374,7 +451,6 @@ class Test(object):
                 lasttime2 = SysUtil._machine_id[-1]
         except Exception as e:
             self.failed.append(e)
-
 
     def test_watcher(self):
         c = Test.testCLS()

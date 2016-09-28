@@ -59,6 +59,8 @@ class Updater(Thread):
         self.logger = logging.getLogger(self.getName())
         self.stopper = Event()
         self.sshkey = SSHManager()
+        self.identifiers = set()
+        self.temp_identifiers = set()
 
     def post_multipart(self, host, selector, fields, files):
         """
@@ -88,6 +90,22 @@ class Updater(Thread):
         :return:
         """
         pass
+
+    def add_to_identifiers(self, identifier: str):
+        """
+        adds an identifier to the set of identifiers.
+        :param identifier: identifier to add
+        :return:
+        """
+        self.identifiers.add(identifier)
+
+    def add_to_temp_identifiers(self, temp_identifier: str):
+        """
+        adds an identifier to the set of temporary identifiers.
+        :param temp_identifier: identifier to add
+        :return:
+        """
+        self.temp_identifiers.add(temp_identifier)
 
     def go(self):
         try:
@@ -119,7 +137,7 @@ class Updater(Thread):
         except Exception as e:
             print("Error collecting the data {}".format(str(e)))
 
-    def set_config_data(self, data):
+    def set_config_data(self, data: dict):
         for identifier, update_data in data.items():
             # dont rewrite empty...
             if not len(update_data):
@@ -158,7 +176,7 @@ class Updater(Thread):
         free_mb, total_mb = SysUtil.get_fs_space_mb()
         onion_address, cookie_auth, cookie_client = SysUtil.get_tor_host()
 
-        cameras = SysUtil.all_config_data()
+        cameras = SysUtil.configs_from_identifiers(self.identifiers | self.temp_identifiers)
 
         camera_data = dict(
             meta=dict(

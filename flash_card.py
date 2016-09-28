@@ -33,6 +33,9 @@ parser.add_argument("--update-boot", metavar="w", type=str,
 parser.add_argument("--api-token", metavar='k', type=str,
                     help="traitcapture api token for automated addition to database")
 
+parser.add_argument("--spc-eyepi", metavar='s', type=str,
+                    help="path to new spc-eyepi directory")
+
 parser.add_argument("--update", default=False, action='store_true',
                     help="dont flash new data to the card, update the software and set the name if required.")
 parser.add_argument("--remove-keys", default=False, action='store_true',
@@ -42,7 +45,7 @@ parser.add_argument("--remove-tor", default=False, action='store_true',
 parser.add_argument("--remove-configs", default=False, action='store_true',
                     help="clear previous configs.")
 parser.add_argument("--reset-machine-id", default=False, action='store_true',
-                    help="clear tor private keys.")
+                    help="Resets the machine ID.")
 parser.add_argument("--backup", metavar='b',
                     help="backup the tor encryption keys, ssh encryption keys, and camera config files to a directory.")
 parser.add_argument("--restore", metavar='r',
@@ -558,10 +561,12 @@ if __name__ == '__main__':
                 remove_ssh_keys(temp_dir)
                 remove_configs(temp_dir)
 
+            if command_line_args.name:
+                set_hostname(command_line_args.name)
+
             if command_line_args.update_boot:
                 printc("Updating boot partition with whatever is in {}".format(command_line_args.update_boot), BColors.header)
                 copy_boot(temp_dir)
-
 
             if command_line_args.to_tarfile:
                 printc("Creating new tarfile", BColors.header)
