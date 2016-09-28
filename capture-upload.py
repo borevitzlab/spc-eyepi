@@ -170,7 +170,6 @@ if __name__ == "__main__":
         raspberry = detect_picam(updater) or detect_ivport(updater)
         webcams = detect_webcam(updater)
 
-
         # try 10 times to detect gphoto cameras. Maybe they arent awake yet.
         for x in range(10):
             logger.debug("detecting Cameras")
