@@ -166,7 +166,7 @@ if __name__ == "__main__":
     try:
         # start the updater. this is the first thing that should happen.
         updater = Updater()
-        updater.start()
+        start_workers((updater))
         raspberry = detect_picam(updater) or detect_ivport(updater)
         webcams = detect_webcam(updater)
 
