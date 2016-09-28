@@ -1261,9 +1261,14 @@ class GPCamera(Camera):
             else:
                 raise IOError("No cameras available")
 
-        self._serialnumber = identifier
-        self.usb_address = usb_address
+        for camera in gp.list_cameras():
+            sn = camera.status.serialnumber
+            if sn in identifier:
+                self._serialnumber = sn
 
+        self.usb_address = usb_address
+        self._camera = gp.Camera(bus=self.usb_address[0], device=self.usb_address[1])
+        self._serialnumber = self._camera.status.serialnumber
         super(GPCamera, self).__init__(identifier, **kwargs)
 
         self.exposure_length = self.config.get('camera', "exposure")
