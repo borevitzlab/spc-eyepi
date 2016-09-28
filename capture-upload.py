@@ -84,7 +84,7 @@ def detect_webcam(updater):
 
             try:
                 # logger.warning("adding {} on {}".format(identifier, sys_number))
-                camera = ThreadedUSBCamera(identifier=SysUtil.default_identifier(prefix=identifier),
+                camera = ThreadedUSBCamera(identifier=identifier,
                                   sys_number=sys_number,
                                   queue=updater.communication_queue)
                 updater.add_to_temp_identifiers(camera.identifier)
@@ -111,7 +111,8 @@ def detect_gphoto(updater):
         workers = []
         for c in cameras:
             try:
-                camera = ThreadedGPCamera(identifier=c.status.serialnumber,
+                identifier = SysUtil.default_identifier(prefix=c.status.serialnumber)
+                camera = ThreadedGPCamera(identifier=identifier,
                                           usb_address=c._usb_address,
                                           queue=updater.communication_queue)
                 updater.add_to_temp_identifiers(camera.identifier)
