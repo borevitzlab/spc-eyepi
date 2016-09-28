@@ -2,6 +2,7 @@ import datetime
 import http.client
 import json
 import logging
+import logging.config
 import os
 import socket
 import ssl
@@ -17,6 +18,7 @@ from schedule import Scheduler
 from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
 
+logging.config.fileConfig("logging.ini")
 remote_server = "traitcapture.org"
 
 # hostname = "localhost:5000"
