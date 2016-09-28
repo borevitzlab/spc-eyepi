@@ -180,7 +180,6 @@ if __name__ == "__main__":
         else:
             logger.warning("no gphoto cameras detected. Something might be wrong.")
 
-        updater.identifiers.extend([cam.identifier for cam in gphoto_workers])
         # enumerate the usb devices to compare them later on.
         usb_devices = enumerate_usb_devices()
 
