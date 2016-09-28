@@ -113,15 +113,26 @@ class Camera(object):
 
     @classmethod
     def _stream_thread(cls):
+        """
+        boilerplate stream thread.
+        override this with the correct method of opening anc closing the camera
+        make sure to set cls.frame
+        :return:
+        """
         print("Unimplemented classmethod call: _stream_thread")
         print("You should not create a Camera object directly")
 
-        with get_camera() as camera:
+        def get_camera():
+            """
+            boilerplate
+            :return: some camera object or context or whatever is meant to happen
+            """
+            pass
 
+        with get_camera() as camera:
             # let camera warm up
-            stream = BytesIO()
             while True:
-                cls.frame = stream.read()
+                cls.frame = camera.get_frame().read()
                 # if there hasn't been any clients asking for frames in
                 # the last 10 seconds stop the thread
                 if time.time() - cls.last_access > 10:
@@ -133,11 +144,12 @@ class Camera(object):
         Initialiser for cameras...
         :param identifier: unique identified for this camera, MANDATORY
         :param queue: deque to push info into
-        :param noconf: dont create a config, or watch anything. This is used mainly for temporarily streaming from a camera
+        :param noconf: dont create a config, or watch anything. Used for temporarily streaming from a camera
         :param kwargs:
         """
-
-        self.communication_queue = queue or deque(tuple(), 256)
+        if queue is None:
+            queue = deque(tuple(), 256)
+        self.communication_queue = queue
         self.logger = logging.getLogger(identifier)
         self.stopper = Event()
         self.identifier = identifier

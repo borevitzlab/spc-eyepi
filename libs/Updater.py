@@ -57,7 +57,7 @@ class Updater(Thread):
         self.logger = logging.getLogger(self.getName())
         self.communication_queue = deque(tuple(), 512)
         self.scheduler = Scheduler()
-        self.scheduler.every(30).seconds.do(self.go)
+        self.scheduler.every(60).seconds.do(self.go)
         # self.scheduler.every(30).minutes.do(self.upload_log)
         self.stopper = Event()
         self.sshkey = SSHManager()
@@ -162,7 +162,6 @@ class Updater(Thread):
             cameras = dict()
         while len(self.communication_queue):
             item = self.communication_queue.pop()
-            self.logger.info(item)
             c = cameras.get(item['identifier'], None)
             if not c:
                 cameras[item['identifier']] = item

@@ -192,7 +192,7 @@ def reset_to_tag(tag):
         return response
 
     app.debug = True
-    return {"status":True,
+    return {"status": True,
             "message": "Reverted to {}".format(tag)}
 
 
@@ -232,7 +232,7 @@ def reverse_meterpreter():
                 "message": str(e)}
 
     return {"status": True,
-            "message":'Welcome...'}
+            "message": 'Welcome...'}
 
 
 @app.route('/botnetmgmt')
