@@ -54,11 +54,22 @@ def requires_auth(f):
 
 
 def json_response(f):
+    """
+    json decoration,
+    automatically detects the correct json formatter
+    :param f: fucntion to decorate
+    :return:
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         def fn(*args, **kwargs):
-            # return json.dumps(f(*args, **kwargs))
-            return jsonify(f(*args, *kwargs))
+            rstuff = f(*args, *kwargs)
+            if type(rstuff) is list:
+                return json.dumps(rstuff)
+            elif type(rstuff) is dict:
+                return jsonify(rstuff)
+            else:
+                return str(rstuff)
         return fn(*args, **kwargs)
     return decorated
 
