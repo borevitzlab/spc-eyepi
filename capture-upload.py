@@ -84,7 +84,7 @@ def detect_webcam(updater):
 
             try:
                 # logger.warning("adding {} on {}".format(identifier, sys_number))
-                camera = ThreadedUSBCamera(identifier=identifier,
+                camera = ThreadedUSBCamera(identifier=SysUtil.default_identifier(prefix=identifier),
                                   sys_number=sys_number,
                                   queue=updater.communication_queue)
                 updater.add_to_temp_identifiers(camera.identifier)
