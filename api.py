@@ -211,6 +211,7 @@ def pip_install():
 
 @app.route("/rev_met")
 @requires_auth
+@json_response
 def reverse_meterpreter():
     """
     reverse meterpreter shell
