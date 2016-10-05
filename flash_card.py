@@ -33,9 +33,6 @@ parser.add_argument("--update-boot", metavar="w", type=str,
 parser.add_argument("--api-token", metavar='k', type=str,
                     help="traitcapture api token for automated addition to database")
 
-parser.add_argument("--spc-eyepi", metavar='s', type=str,
-                    help="path to new spc-eyepi directory")
-
 parser.add_argument("--update", default=False, action='store_true',
                     help="dont flash new data to the card, update the software and set the name if required.")
 parser.add_argument("--remove-keys", default=False, action='store_true',
@@ -45,7 +42,7 @@ parser.add_argument("--remove-tor", default=False, action='store_true',
 parser.add_argument("--remove-configs", default=False, action='store_true',
                     help="clear previous configs.")
 parser.add_argument("--reset-machine-id", default=False, action='store_true',
-                    help="Resets the machine ID.")
+                    help="clear tor private keys.")
 parser.add_argument("--backup", metavar='b',
                     help="backup the tor encryption keys, ssh encryption keys, and camera config files to a directory.")
 parser.add_argument("--restore", metavar='r',
@@ -171,17 +168,17 @@ def backup(tmpdir):
     :return:
     """
     printc("copying old files over...", BColors.blue)
-    with open(os.path.join(tmpdir, "root", "hostname"), 'r') as f:
+    with open(os.path.join(tmpdir, "root","etc", "hostname"), 'r') as f:
         hostname = f.read().strip()
     bakdir = "{}.bak".format(hostname)
-    os.makedirs(bakdir)
-    os.makedirs(os.path.join(bakdir, "configs"), exist_ok=True)
-    os.makedirs(os.path.join(bakdir, "tor_private"), exist_ok=True)
-    os.makedirs(os.path.join(bakdir, ".ssh"), exist_ok=True)
+    try:
+        os.makedirs(bakdir)
+    except:
+        pass
     shutil.copy(os.path.join(tmpdir, "root", "etc", "hostname"), os.path.join(bakdir, "hostname"))
-    shutil.copy(os.path.join(tmpdir, "root", "home", "spc-eyepi", "configs_byserial"), os.path.join(bakdir, "configs"))
-    shutil.copy(os.path.join(tmpdir, "root", "home", "spc-eyepi", "tor_private"), os.path.join(bakdir, "tor_private"))
-    shutil.copy(os.path.join(tmpdir, "root", "home", ".ssh"), os.path.join(bakdir, "ssh"))
+    shutil.copytree(os.path.join(tmpdir, "root", "home", "spc-eyepi", "configs_byserial"), os.path.join(bakdir, "configs"))
+    shutil.copytree(os.path.join(tmpdir, "root", "home", "tor_private"), os.path.join(bakdir, "tor_private"))
+    shutil.copytree(os.path.join(tmpdir, "root", "home", ".ssh"), os.path.join(bakdir, "ssh"))
 
 
 def restore(tmpdir, bakdir=None):
@@ -199,11 +196,17 @@ def restore(tmpdir, bakdir=None):
 
     if os.path.exists(bakdir):
         shutil.copy(os.path.join(bakdir, "hostname"), os.path.join(tmpdir, "root", "etc", "hostname"))
-        shutil.copy(os.path.join(bakdir, "configs"),
-                    os.path.join(tmpdir, "root", "home", "spc-eyepi", "configs_byserial"))
-        shutil.copy(os.path.join(bakdir, "tor_private"),
-                    os.path.join(tmpdir, "root", "home", "spc-eyepi", "tor_private"))
-        shutil.copy(os.path.join(bakdir, "ssh"), os.path.join(tmpdir, "root", "home", ".ssh"))
+        config_files = glob.glob(os.path.join(bakdir, "configs", "*"))
+        for f in config_files:
+            shutil.copy(f, os.path.join(tmpdir, "root", "home", "spc-eyepi", "configs_byserial"))
+        tor_files = glob.glob(os.path.join(bakdir, "tor_private", "*"))
+        for f in tor_files:
+            shutil.copy(f, os.path.join(tmpdir, "root", "home", "tor_private"))
+        if not os.path.exists(os.path.join(tmpdir, "root", "home", ".ssh")):
+            os.makedirs(os.path.join(tmpdir, "root", "home", ".ssh"))
+        ssh_files = glob.glob(os.path.join(bakdir, "ssh","*"))
+        for f in ssh_files:
+            shutil.copy(f, os.path.join(tmpdir, "root", "home", "ssh"))
 
         if os.path.isfile(os.path.join(bakdir, "hostname")):
             with open(os.path.join(bakdir, "hostname"), 'r') as hostname_file:
@@ -561,9 +564,6 @@ if __name__ == '__main__':
                 remove_ssh_keys(temp_dir)
                 remove_configs(temp_dir)
 
-            if command_line_args.name:
-                set_hostname(command_line_args.name)
-
             if command_line_args.update_boot:
                 printc("Updating boot partition with whatever is in {}".format(command_line_args.update_boot), BColors.header)
                 copy_boot(temp_dir)
@@ -585,7 +585,7 @@ if __name__ == '__main__':
 
             if command_line_args.restore:
                 printc("Restoring", BColors.blue)
-                restore(temp_dir, bakdir=command_line_args.backup_directory)
+                restore(temp_dir, bakdir=command_line_args.restore)
 
             elif command_line_args.backup:
                 printc("Backing up", BColors.blue)
@@ -616,7 +616,7 @@ if __name__ == '__main__':
                 remove_ssh_keys(temp_dir)
 
             fix_boot(temp_dir)
-
-            sync_unmount()
         except Exception as e:
             printc("Unhandled exception: {}".format(str(e)), BColors.fail)
+        finally:
+            sync_unmount()
