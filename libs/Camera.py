@@ -466,13 +466,12 @@ class Camera(object):
 
                         cv2.putText(self._image,
                                     self.timestamped_imagename,
-                                    org=(20, 20),
+                                    org=(20, self._image.shape[0]-20),
                                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                                     fontScale=1,
                                     color=(255, 0, 0),
                                     thickness=2,
-                                    lineType=cv2.LINE_AA,
-                                    bottomLeftOrigin=True)
+                                    lineType=cv2.LINE_AA)
 
                         s = cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"),
                                         cv2.cvtColor(self._image, cv2.COLOR_BGR2RGB))
