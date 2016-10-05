@@ -24,8 +24,10 @@ from threading import Thread, Event
 
 from libs.SysUtil import SysUtil
 from gphoto2cffi.errors import GPhoto2Error
-import picamera.array
-
+try:
+    import picamera.array
+except:
+    pass
 logging.config.fileConfig("logging.ini")
 logging.getLogger("paramiko").setLevel(logging.WARNING)
 
@@ -456,16 +458,24 @@ class Camera(object):
 
                     if self.config.getboolean("ftp", "replace"):
                         st = time.time()
-                        thumb = self._image
                         resize_t = 0.0
                         if self.config.getboolean("ftp", "resize"):
-                            thumb = cv2.resize(self._image, (Camera.default_width, Camera.default_height),
+                            self._image = cv2.resize(self._image, (Camera.default_width, Camera.default_height),
                                                interpolation=cv2.INTER_NEAREST)
                             resize_t = time.time() - st
 
-                        s = cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"),
-                                        cv2.cvtColor(thumb, cv2.COLOR_BGR2RGB))
+                        cv2.putText(self._image,
+                                    self.timestamped_imagename,
+                                    org=(20, 20),
+                                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                                    fontScale=1,
+                                    color=(255, 0, 0),
+                                    thickness=2,
+                                    lineType=cv2.LINE_AA,
+                                    bottomLeftOrigin=True)
 
+                        s = cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"),
+                                        cv2.cvtColor(self._image, cv2.COLOR_BGR2RGB))
                         shutil.copy(os.path.join("/dev/shm", self.identifier + ".jpg"),
                                     os.path.join(self.upload_directory, "last_image.jpg"))
 
@@ -482,14 +492,12 @@ class Camera(object):
                             files.append(fn)
 
                     for fn in files:
-                        self.logger.info(fn)
                         try:
                             if self.config.getboolean("ftp", "timestamped"):
                                 shutil.move(fn, self.upload_directory)
+                                self.logger.info("Captured and stored - {}".format(os.path.basename(fn)))
                         except Exception as e:
                             self.logger.error("Couldn't move for timestamped: {}".format(str(e)))
-
-                        self.logger.info("Captured and stored - {}".format(os.path.basename(fn)))
 
                         try:
                             if os.path.isfile(fn):
@@ -1353,19 +1361,28 @@ class GPCamera(Camera):
             try:
                 self._assert_valid_camera()
                 successes = list()
+                size = 0
                 for idx, image in enumerate(list(self._camera.capture(img_expect_count=2, timeout=20))):
                     with image:
                         try:
+                            size += image.size
                             fn = (filename or os.path.splitext(image.filename)[0]) + os.path.splitext(image.filename)[-1]
                             if idx == 0:
                                 self._image = cv2.imdecode(np.fromstring(image.read(), np.uint8), cv2.IMREAD_COLOR)
                             image.save(fn)
                             successes.append(fn)
+                            try:
+                                image.remove()
+                            except Exception as e:
+                                self.logger.info("Couldnt remove image for some reason (probably already gone)")
+                            del image
                             self.logger.debug("Captured and stored: {}".format(fn))
                         except:
                             # cant do anything if failure here.
                             pass
+
                 self.logger.debug("Took {0:.2f}s to capture".format(time.time() - st))
+                self.logger.info("Filesize {}".format(size))
                 if filename:
                     return successes
                 return self._image
@@ -1417,11 +1434,18 @@ class GPCamera(Camera):
 
 
 class USBCamera(Camera):
-
+    """
+    USB Camera Class
+    """
     @classmethod
     def _stream_thread(cls):
+        """
+        usb camera stream thread.
+        TODO: Needs to be aware of multiple cameras.
+        :return:
+        """
         print("ThreadStartup ...")
-        cam = cv2.VideoCapture(0)
+        cam = cv2.VideoCapture()
 
         # camera setup
         # let camera warm up
@@ -1463,6 +1487,11 @@ class USBCamera(Camera):
         super(USBCamera, self).__init__(identifier, **kwargs)
 
     def re_init(self):
+        """
+        re-initialisation of webcamera
+        todo: fix release of camera otherwise it could be locked forever.
+        :return:
+        """
         super(USBCamera, self).re_init()
         self._assert_capture_device()
         try:
@@ -1477,6 +1506,10 @@ class USBCamera(Camera):
                                                        h=self.video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
     def stop(self):
+        """
+        releases the video device and stops the camera thread
+        :return:
+        """
         try:
             self.video_capture.release()
         except Exception as e:
@@ -1537,6 +1570,10 @@ class PiCamera(Camera):
     """
     @classmethod
     def _stream_thread(cls):
+        """
+        picamera streaming thread target.
+        :return:
+        """
         import picamera
         print("start thread")
         try:
@@ -1614,6 +1651,10 @@ class PiCamera(Camera):
 
 
 class IVPortCamera(PiCamera):
+    """
+    IVPort class for multiple capture.
+    the 4 tags on the IVport are setout below.
+    """
     current_camera_index = 0
 
     # these are for the video streaming
@@ -1736,9 +1777,11 @@ class IVPortCamera(PiCamera):
         except Exception as e:
             self.logger.error("Couldnt acquire picam: {}".format(str(e)))
 
+
 """
 Threaded implementations
 """
+
 
 class ThreadedCamera(Thread):
     def __init__(self, *args, **kwargs):
