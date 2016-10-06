@@ -469,7 +469,7 @@ class Camera(object):
                                     org=(20, self._image.shape[0]-20),
                                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                                     fontScale=1,
-                                    color=(255, 0, 0),
+                                    color=(0, 0, 255),
                                     thickness=2,
                                     lineType=cv2.LINE_AA)
 
