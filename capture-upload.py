@@ -106,14 +106,14 @@ def detect_gphoto(updater):
     :return:
     """
     try:
-        cameras = gp.list_cameras()
-        # this is something else...
+        cameras = gp.list_cameras(lazy=False)
+        info = [(c._usb_address,c.status.serialnumber) for c in cameras]
         workers = []
-        for c in cameras:
+        for usb_add, serialnumber in info:
             try:
-                identifier = SysUtil.default_identifier(prefix=c.status.serialnumber)
+                identifier = SysUtil.default_identifier(prefix=serialnumber)
                 camera = ThreadedGPCamera(identifier=identifier,
-                                          usb_address=c._usb_address,
+                                          usb_address=usb_add,
                                           queue=updater.communication_queue)
                 updater.add_to_temp_identifiers(camera.identifier)
                 uploader = Uploader(camera.identifier, queue=updater.communication_queue)
@@ -197,6 +197,7 @@ if __name__ == "__main__":
                     usb_devices = enumerate_usb_devices()
 
                 time.sleep(1)
+                print(gphoto_workers)
             except (KeyboardInterrupt, SystemExit) as e:
                 kill_workers(gphoto_workers)
                 kill_workers(webcams)
