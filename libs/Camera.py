@@ -1259,7 +1259,7 @@ class GPCamera(Camera):
 
         if identifier:
             self.identifier = identifier
-            for cam in gp.list_cameras():
+            for cam in gp.list_cameras(lazy=False):
                 sn = cam.status.serialnumber
                 if sn in identifier:
                     camera = cam
@@ -1325,10 +1325,19 @@ class GPCamera(Camera):
         return exif
 
     def _get_camera(self):
+        try:
+            camera = gp.Camera(bus=self.usb_address[0], device=self.usb_address[1])
+            if self._serialnumber == camera.status.serialnumber:
+                return camera
+        except Exception as e:
+            self.logger.debug("Camera wasnt at the correct usb address or something: {}".format(str(e)))
 
         for camera in gp.list_cameras():
-            if camera.status.serialnumber == self._serialnumber:
-                return camera
+            try:
+                if camera.status.serialnumber == self._serialnumber:
+                    return camera
+            except Exception as e:
+                self.logger.debug("Couldnt acquire log on camera. Probably not my camera")
         else:
             raise FileNotFoundError("Camera cannot be found")
 
