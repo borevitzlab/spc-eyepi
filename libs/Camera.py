@@ -1299,18 +1299,6 @@ class GPCamera(Camera):
         :return:
         """
         super(GPCamera, self).re_init()
-        #
-        # try:
-        #     cam = gp.Camera(bus=self.usb_address[0], device=self.usb_address[1])
-        #     if cam.status.serialnumber in self.identifier:
-        #         self.logger.info("Found Camera @ {}:{}".format(*self.usb_address))
-        #         self._serialnumber = self._camera.status.serialnumber
-        #     else:
-        #         raise NameError("Camera serialnumber doesnt match {}".format(self.identifier))
-        # except Exception as e:
-        #     self.logger.info("Error recreating camera using old camera port. "
-        #                      "The port has probably changed since instantiation. Trying to just work it out")
-
         for cam in gp.list_cameras():
             try:
                 if cam.status.serialnumber in self.identifier:
@@ -1321,7 +1309,7 @@ class GPCamera(Camera):
                 self.logger.error("had some error checking the camera on reinit {}".format(str(e)))
         else:
             self.logger.error("Camera not found!!! {}".format(self.identifier))
-
+        self.logger.info("Camera now at {}:{}".format(*self.usb_address))
         self.exposure_length = self.config.getint("camera", "exposure")
 
     def get_exif_fields(self):
@@ -1347,6 +1335,7 @@ class GPCamera(Camera):
         return exif
 
     def _get_camera(self):
+
         for camera in gp.list_cameras():
             if camera.status.serialnumber == self._serialnumber:
                 return camera
