@@ -221,6 +221,7 @@ class Uploader(Thread):
                         self.logger.info("Something went wrong sorting the last image to the front: {}".format(str(e)))
                     self.upload(upload_list)
                     self.communicate_with_updater()
+                    self.logger.info("Successfully uploaded")
             except Exception as e:
                 self.logger.error("ERROR: UPLOAD {}".format(str(e)))
             time.sleep(Uploader.upload_interval)

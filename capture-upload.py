@@ -199,7 +199,6 @@ if __name__ == "__main__":
                     usb_devices = enumerate_usb_devices()
 
                 time.sleep(1)
-                print(gphoto_workers)
             except (KeyboardInterrupt, SystemExit) as e:
                 kill_workers(gphoto_workers)
                 kill_workers(webcams)
