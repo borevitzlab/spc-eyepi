@@ -111,6 +111,7 @@ def detect_gphoto(updater):
         workers = []
         for usb_add, serialnumber in info:
             try:
+
                 identifier = SysUtil.default_identifier(prefix=serialnumber)
                 camera = ThreadedGPCamera(identifier=identifier,
                                           usb_address=usb_add,
@@ -118,6 +119,7 @@ def detect_gphoto(updater):
                 updater.add_to_temp_identifiers(camera.identifier)
                 uploader = Uploader(camera.identifier, queue=updater.communication_queue)
                 workers.extend([camera, uploader])
+                time.sleep(3)
             except Exception as ef:
                 logger.error("Couldnt detect camera {}".format(str(ef)))
         return start_workers(workers)
