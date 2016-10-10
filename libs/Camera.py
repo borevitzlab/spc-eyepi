@@ -1299,16 +1299,6 @@ class GPCamera(Camera):
         :return:
         """
         super(GPCamera, self).re_init()
-        for cam in gp.list_cameras():
-            try:
-                if cam.status.serialnumber in self.identifier:
-                    self.usb_address = cam._usb_address
-                    self._serialnumber = cam.status.serialnumber
-                    break
-            except Exception as e:
-                self.logger.error("had some error checking the camera on reinit {}".format(str(e)))
-        else:
-            self.logger.error("Camera not found!!! {}".format(self.identifier))
         self.logger.info("Camera now at {}:{}".format(*self.usb_address))
         self.exposure_length = self.config.getint("camera", "exposure")
 
