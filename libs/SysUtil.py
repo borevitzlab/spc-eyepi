@@ -7,9 +7,11 @@ import configparser
 import yaml
 import logging
 import fcntl
+import datetime
 
 USBDEVFS_RESET = 21780
 
+logging.config.fileConfig("logging.ini")
 
 def sizeof_fmt(num, suffix='B'):
     for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
@@ -49,6 +51,31 @@ spooling_dir =
 upload_dir =
 """
 
+default_light_config = """
+
+[light]
+max_power = 1000
+min_power = 0
+wavelengths = "400nm,420nm,450nm,530nm,630nm,660nm,735nm"
+csv_keys = "LED1,LED2,LED3,LED4,LED5,LED6,LED7"
+file_path = "lights_byserial/{identifier}.scf"
+
+[telnet]
+telnet_host = "192.168.2.124"
+telnet_port = 50630
+set_all_command = setall {power}
+set_wavelength_command = setwlrelpower {wavelength} {power}
+set_all_wavelength_command = setwlsrelpower {} {} {} {} {} {} {}
+get_wavelength_command = getwlrelpower {wavelength}
+
+[url]
+url_host = "192.168.2.124"
+control_uri = /cgi-bin/userI.cgi
+set_all_command = "setAllTo": {percent}, "setAllSub": "set"
+set_all_wavelength_command = "wl1":{}, "wl2":{}, "wl3":{}, "wl4":{}, "wl5":{}, "wl6":{}, "wl7":{}
+
+"""
+
 
 class SysUtil(object):
     """
@@ -67,6 +94,7 @@ class SysUtil(object):
     thread = None
     stop = False
     logger = logging.getLogger("SysUtil")
+
 
     def __init__(self):
         if SysUtil.thread is None:
@@ -339,6 +367,110 @@ class SysUtil(object):
                 return fn
         else:
             return os.path.join("configs_byserial/", identifier) + ".ini"
+
+    @classmethod
+    def ensure_light_config(cls, identifier):
+        """
+        ensures a configuration file exists for this identifier.
+        if a config file doesnt exist then it will create a default one.
+        :param identifier:
+        :return:
+        """
+        config = configparser.ConfigParser()
+        config.read_string(default_light_config)
+        path = cls.identifier_to_ini(identifier)
+        try:
+            if len(config.read(path)):
+                return config
+        except Exception as e:
+            print(str(e))
+        if "{identifier}" in config.get("light", "file_path"):
+            config.set("light", "file_path",
+                       config.get('light', "file_path").format(identifier=identifier))
+        cls.write_light_config(config, identifier)
+        return config
+
+    @classmethod
+    def write_light_config(cls, config: configparser.ConfigParser, identifier: str):
+        """
+        writes a configuration file to an correct config file path.
+        :param config: configuration file (configparser object)
+        :param identifier:
+        :return: configparser object
+        """
+        path = SysUtil.identifier_to_ini(identifier)
+        with open(path, 'w+') as configfile:
+            config.write(configfile)
+        return config
+
+    @classmethod
+    def load_or_fix_solarcalc(cls, fp: str)->list:
+        lx = []
+        fp =os.path.join(os.getcwd(),fp)
+        path, ext = os.path.splitext(fp)
+        header10 = ['datetime', 'temp', 'relativehumidity', 'LED1', 'LED2', 'LED3', 'LED4', 'LED5', 'LED6', 'LED7',
+                    'LED8', 'LED9', 'LED10', 'total_solar_watt', 'simulated_datetime']
+        header7 = ['datetime', 'temp', 'relativehumidity', 'LED1', 'LED2', 'LED3', 'LED4', 'LED5', 'LED6', 'LED7',
+                   'total_solar_watt', 'simulated_datetime']
+        if not os.path.isfile(fp):
+            print("No solarcalc File")
+            print(fp)
+            SysUtil.logger.error("no SolarCalc file.")
+            raise FileNotFoundError()
+        print("lasjdfhlkjashdflkjahsdlfkjh")
+        if ext == ".slc":
+            with open(fp) as f:
+                lx = [x.strip().split(",") for x in f.readlines()]
+        else:
+            with open(fp) as f:
+                l = [x.strip().split(",") for x in f.readlines()]
+
+                def get_lines(li):
+                    """
+                    gets lines from a list and formats them into the new solarcalc format
+                    :param li:
+                    :return:
+                    """
+                    print("Loading csv")
+                    for idx, line in enumerate(li):
+                        try:
+                            yield [
+                                datetime.datetime.strptime("{}_{}".format(line[0], line[1]), "%d/%m/%Y_%H:%M").isoformat(),
+                                *line[2:-1],
+                                datetime.datetime.strptime(line[-1], "%d %b %Y %H:%M").isoformat()
+                            ]
+                        except Exception as e:
+                            SysUtil.logger.error("Couldnt fix solarcalc file. {}".format(str(e)))
+                            print(l)
+
+                lx.extend(get_lines(l))
+
+                if len(l[0]) == 15:
+                    lx.insert(0, header10)
+                else:
+                    lx.insert(0, header7)
+
+            with open(path+".slc", 'w') as f:
+                f.write("\n".join([",".join(x) for x in lx]))
+
+        for idx, x in enumerate(lx[1:]):
+            lx[idx+1][0] = datetime.datetime.strptime(x[0], "%Y-%m-%dT%H:%M:%S")
+            lx[idx+1][-1] = datetime.datetime.strptime(x[-1], "%Y-%m-%dT%H:%M:%S")
+        return lx[1:]
+
+
+    @classmethod
+    def light_identifier_to_ini(cls, identifier: str)->str:
+        """
+        gets a valid .ini path for an identifier.
+        :param identifier:
+        :return:
+        """
+        for fn in glob("lights_byipaddress/*.ini"):
+            if identifier == cls.get_identifier_from_filename(fn):
+                return fn
+        else:
+            return os.path.join("lights_byipaddress/", identifier) + ".ini"
 
     @classmethod
     def identifier_to_yml(cls, identifier: str)->str:

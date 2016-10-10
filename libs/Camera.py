@@ -461,7 +461,7 @@ class Camera(object):
                         resize_t = 0.0
                         if self.config.getboolean("ftp", "resize"):
                             self._image = cv2.resize(self._image, (Camera.default_width, Camera.default_height),
-                                               interpolation=cv2.INTER_NEAREST)
+                                                     interpolation=cv2.INTER_NEAREST)
                             resize_t = time.time() - st
 
                         cv2.putText(self._image,
@@ -1254,31 +1254,42 @@ class GPCamera(Camera):
         :param usb_address: desired camera usb address. second to serialnumber, useful if recreating camera
         :param kwargs:
         """
-        self._camera = self._serialnumber = None
-        if not identifier and not usb_address:
-            for camera in gp.list_cameras():
+        self._serialnumber = None
+        camera = None
+
+        if identifier:
+            for cam in gp.list_cameras():
+                sn = cam.status.serialnumber
+                if sn in identifier:
+                    camera = cam
+                    break
+            else:
+                raise IOError("Camera not available or connected")
+        elif usb_address and not identifier:
+            try:
+                camera = gp.Camera(bus=usb_address[0], device=usb_address[1])
+                sn = str(camera.status.serialnumber)
+                self.identifier = SysUtil.default_identifier(prefix=sn)
+            except Exception as e:
+                raise IOError("Camera not found or not supported")
+        else:
+            for cam in gp.list_cameras():
                 try:
-                    self._camera = camera
-                    identifier = SysUtil.default_identifier(prefix=self._camera.status.serialnumber)
-                    self.usb_address = self._camera._usb_address
-                    usb_address = self._camera._usb_address
+                    serialnumber = cam.status.serialnumber
+                    sn = str(cam.status.serialnumber)
+                    self.identifier = SysUtil.default_identifier(prefix=sn)
+                    camera = cam
                     break
                 except:
                     pass
             else:
                 raise IOError("No cameras available")
-
-        for camera in gp.list_cameras():
-            sn = camera.status.serialnumber
-            if sn in identifier:
-                self._serialnumber = sn
-
-        self.usb_address = usb_address
-        self._camera = gp.Camera(bus=self.usb_address[0], device=self.usb_address[1])
-        self._serialnumber = self._camera.status.serialnumber
+        identifier = self.identifier
+        self.usb_address = camera._usb_address
+        self._serialnumber = camera.status.serialnumber
         super(GPCamera, self).__init__(identifier, **kwargs)
 
-        self.exposure_length = self.config.get('camera', "exposure")
+        # self.exposure_length = self.config.get('camera', "exposure")
 
     def re_init(self):
         """
@@ -1288,28 +1299,20 @@ class GPCamera(Camera):
         super(GPCamera, self).re_init()
 
         try:
-            if self._camera:
-                self._camera.release()
-                del self._camera
-        except Exception as e:
-            self.logger.info("Cannot release/delete camera (probably already gone, or didnt exist), {}".format(str(e)))
-
-        try:
             cam = gp.Camera(bus=self.usb_address[0], device=self.usb_address[1])
             if cam.status.serialnumber in self.identifier:
-                self._camera = cam
+                self.logger.info("Found Camera @ {}:{}".format(*self.usb_address))
                 self._serialnumber = self._camera.status.serialnumber
             else:
                 raise NameError("Camera serialnumber doesnt match {}".format(self.identifier))
         except Exception as e:
-            self.logger.info("Error recreating camera using old camera port. The port has probably changed.")
+            self.logger.info("Error recreating camera using old camera port. The port has probably changed since instantiation. Trying to just work it out")
 
         for cam in gp.list_cameras():
             try:
                 if cam.status.serialnumber in self.identifier:
-                    self._camera = cam
-                    self.usb_address = self._camera._usb_address
-                    self._serialnumber = self._camera.status.serialnumber
+                    self.usb_address = cam._usb_address
+                    self._serialnumber = cam.status.serialnumber
                     break
             except Exception as e:
                 self.logger.error("had some error checking the camera on reinit {}".format(str(e)))
@@ -1319,10 +1322,15 @@ class GPCamera(Camera):
         self.exposure_length = self.config.getint("camera", "exposure")
 
     def get_exif_fields(self):
-        self._assert_valid_camera()
+        """
+        This is meant to get the exif fields for the image if we want to manually save them.
+        This is incomplete.
+        :return:
+        """
+        camera = self._get_camera()
         exif = super(GPCamera, self).get_exif_fields()
-        exif['Exif.Image.Make'] = getattr(self._camera.status, 'manufacturer', 'Make')
-        exif['Exif.Image.Model'] = getattr(self._camera.status, 'cameramodel', 'Model')
+        exif['Exif.Image.Make'] = getattr(camera.status, 'manufacturer', 'Make')
+        exif['Exif.Image.Model'] = getattr(camera.status, 'cameramodel', 'Model')
         exif['Exif.Image.BodySerialNumber'] = self.eos_serial_number
         exif['Exif.Image.CameraSerialNumber'] = self.serial_number
         try:
@@ -1335,33 +1343,22 @@ class GPCamera(Camera):
             pass
         return exif
 
-    def _assert_valid_camera(self):
-        """
-        ensures that the _camera member belonging to this GPCamera is the same camera.
-        This is to account for cameras being unplugged and replugged, the gphoto device address will change
-        :return:
-        """
-        try:
-            assert self._serialnumber == self._camera.status.serialnumber, "Serial numbers don't match"
-        except Exception as e:
-            self.logger.error("Serialnumbers dont match, or couldnt get serialnumber")
-            self.logger.error(str(e))
-            for camera in gp.list_cameras():
-                if camera.status.serialnumber == self._serialnumber:
-                    del self._camera
-                    self._camera = camera
-                    self.usb_address = self._camera._usb_address
-        if not self._camera:
+    def _get_camera(self):
+        for camera in gp.list_cameras():
+            if camera.status.serialnumber == self._serialnumber:
+                return camera
+        else:
             raise FileNotFoundError("Camera cannot be found")
 
     def _capture(self, filename=None):
         st = time.time()
+        camera = None
         for x in range(10):
             try:
-                self._assert_valid_camera()
+                camera = self._get_camera()
                 successes = list()
                 size = 0
-                for idx, image in enumerate(list(self._camera.capture(img_expect_count=2, timeout=20))):
+                for idx, image in enumerate(list(camera.capture(img_expect_count=2, timeout=20))):
                     with image:
                         try:
                             size += image.size
@@ -1389,7 +1386,8 @@ class GPCamera(Camera):
                 self.logger.error("Error Capturing with DSLR: {}".format(str(e)))
                 time.sleep(1)
             finally:
-                self._camera.release()
+                if camera:
+                    camera.release()
         else:
             self.logger.fatal("(10) Tries capturing failed")
             if filename:
@@ -1404,12 +1402,16 @@ class GPCamera(Camera):
         return self._serialnumber
 
     def focus(self):
-        self._assert_valid_camera()
+        """
+        this is meant to trigger the autofocus. currently not in use because it causes some distortion in the images.
+        :return:
+        """
+        camera = self._get_camera()
         try:
             pass
-            # cam._get_config()['actions']['eosremoterelease'].set("Release Full")
-            # cam._get_config()['actions']['eosremoterelease'].set("Press 1")
-            # cam._get_config()['actions']['eosremoterelease'].set("Release Full")
+            # camera._get_config()['actions']['eosremoterelease'].set("Release Full")
+            # camera._get_config()['actions']['eosremoterelease'].set("Press 1")
+            # camera._get_config()['actions']['eosremoterelease'].set("Release Full")
         except Exception as e:
             print(str(e))
 
@@ -1419,8 +1421,10 @@ class GPCamera(Camera):
         returns the eosserialnumber of supported cameras, otherwise the normal serialnumber
         :return:
         """
-        self._assert_valid_camera()
-        return vars(self._camera.status).get("eosserialnumber", self.serial_number)
+        camera = self._get_camera()
+        sn = vars(camera.status).get("eosserialnumber", self.serial_number)
+        camera.release()
+        return sn
 
     def _config(self, field: str)->list:
         """
@@ -1429,7 +1433,10 @@ class GPCamera(Camera):
         :return: list of matching fields, should mostly be len 1
         """
         fields_found = []
-        return list(_nested_lookup(field, self._camera._get_config()))
+        camera = self._get_camera()
+        config = camera._get_config()
+        camera.release()
+        return list(_nested_lookup(field, config))
 
 
 class USBCamera(Camera):
