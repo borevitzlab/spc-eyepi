@@ -106,7 +106,7 @@ def detect_gphoto(updater):
     :return:
     """
     try:
-        cameras = gp.list_cameras(lazy=False)
+        cameras = gp.list_cameras()
         info = [(c._usb_address,c.status.serialnumber) for c in cameras]
         workers = []
         for usb_add, serialnumber in info:
