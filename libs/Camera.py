@@ -1258,6 +1258,7 @@ class GPCamera(Camera):
         camera = None
 
         if identifier:
+            self.identifier = identifier
             for cam in gp.list_cameras():
                 sn = cam.status.serialnumber
                 if sn in identifier:
@@ -1284,6 +1285,7 @@ class GPCamera(Camera):
                     pass
             else:
                 raise IOError("No cameras available")
+
         identifier = self.identifier
         self.usb_address = camera._usb_address
         self._serialnumber = camera.status.serialnumber
