@@ -1,55 +1,19 @@
-import datetime
-import http.client
 import json
 import logging
 import logging.config
-import os
-import socket
 import ssl
-import subprocess
 import time
-from configparser import ConfigParser
-from glob import glob
 
 from collections import deque
 from threading import Thread, Event
 from urllib import request, parse
+import requests
 from schedule import Scheduler
 from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
 
 logging.config.fileConfig("logging.ini")
 remote_server = "traitcapture.org"
-
-# hostname = "localhost:5000"
-
-def encode_multipart_formdata(fields, files):
-    """
-    Black magic that does multipart form encoding.
-    :param fields:
-    :param files: iterable of tuple with (key, filename, file as bytes
-    :return:
-    """
-    BOUNDARY_STR = '----------ThIs_Is_tHe_bouNdaRY_$'
-    CRLF = bytes("\r\n", "ASCII")
-    L = []
-    for (key, value) in fields:
-        L.append(bytes("--" + BOUNDARY_STR, "ASCII"))
-        L.append(bytes('Content-Disposition: form-data; name="{}"'.format(key), "ASCII"))
-        L.append(b'')
-        L.append(bytes(value, "ASCII"))
-    for (key, filename, value) in files:
-        L.append(bytes('--' + BOUNDARY_STR, "ASCII"))
-        L.append(bytes('Content-Disposition: form-data; name="{}"; filename="{}"'.format(key, filename), "ASCII"))
-        L.append(bytes('Content-Type: application/octet-stream', "ASCII"))
-        L.append(b'')
-        L.append(value)
-    L.append(bytes('--' + BOUNDARY_STR + '--', "ASCII"))
-    L.append(b'')
-    body = CRLF.join(L)
-    content_type = 'multipart/form-data; boundary=' + BOUNDARY_STR
-    return content_type, body
-
 
 class Updater(Thread):
     def __init__(self):
@@ -64,27 +28,6 @@ class Updater(Thread):
         self.identifiers = set()
         self.temp_identifiers = set()
 
-    def post_multipart(self, host, selector, fields, files):
-        """
-        httplib form encoding. more black magic.
-        only does https, no http.
-        suck it, actually does https requests
-        todo: work out how to sign this.
-        :param selector:
-        :param fields:
-        :param files:
-        :return:
-        """
-        content_type, body = encode_multipart_formdata(fields, files)
-        # Choose between http and https connections
-        h = http.client.HTTPSConnection(host)
-        h.putrequest('POST', selector)
-        h.putheader('content-type', content_type)
-        h.putheader('content-length', str(len(body)))
-        h.endheaders()
-        h.send(body)
-        response = h.getresponse()
-        return response.read()
 
     def upload_logs(self):
         """
@@ -99,6 +42,7 @@ class Updater(Thread):
         :param identifier: identifier to add
         :return:
         """
+        self.logger.debug("Adding {} to list of identifiers.".format(identifier))
         self.identifiers.add(identifier)
 
     def add_to_temp_identifiers(self, temp_identifier: str):
@@ -107,34 +51,28 @@ class Updater(Thread):
         :param temp_identifier: identifier to add
         :return:
         """
+        self.logger.debug("Adding {} to list of temporary identifiers.".format(temp_identifier))
         self.temp_identifiers.add(temp_identifier)
 
     def go(self):
+        self.logger.debug("Announcing to server.")
         try:
             data = self.gather_data()
             data["signature"] = self.sshkey.sign_message(json.dumps(data, sort_keys=True))
-            req = request.Request('https://{}/api/camera/check-in/{}'.format(remote_server,
-                                                                             SysUtil.get_machineid()),
-                                  bytes(json.dumps(data), "utf-8"))
-            req.add_header('Content-Type', 'application/json')
+            uri = 'https://{}/api/camera/check-in/{}'.format(remote_server, SysUtil.get_machineid())
+            response = requests.post(uri, json=data)
             # do backwards change if response is valid later.
             try:
-                handler = request.HTTPSHandler(context=ssl.SSLContext(ssl.PROTOCOL_TLSv1_2))
-                opener = request.build_opener(handler)
-                data = opener.open(req)
-
-                if data.getcode() == 200:
+                if response.status_code == 200:
                     # do config modify/parse of command here.
-                    d = data.read().decode("utf-8")
-                    self.logger.debug(d)
-                    data = json.loads(d)
+                    data = response.json()
                     for key, value in data.copy().items():
                         if value == {}:
                             del data[str(key)]
                     if len(data) > 0:
                         self.set_config_data(data)
             except Exception as e:
-                self.logger.error("Error getting the data {}".format(str(e)))
+                self.logger.error("Error getting data from config/status server {}".format(str(e)))
 
         except Exception as e:
             print("Error collecting the data {}".format(str(e)))
@@ -144,6 +82,14 @@ class Updater(Thread):
             # dont rewrite empty...
             if not len(update_data):
                 continue
+
+            if identifier == "meta":
+                hostname = update_data.get("hostname", None)
+                if hostname:
+                    SysUtil.set_hostname(hostname)
+                if update_data.get("update", False):
+                    SysUtil.update_from_git()
+
             config = SysUtil.ensure_config(identifier)
             sections = set(config.sections()).intersection(set(update_data.keys()))
             for section in sections:
@@ -178,6 +124,7 @@ class Updater(Thread):
         onion_address, cookie_auth, cookie_client = SysUtil.get_tor_host()
 
         cameras = SysUtil.configs_from_identifiers(self.identifiers | self.temp_identifiers)
+        self.logger.debug("Announcing for {}".format(str(list(self.identifiers | self.temp_identifiers))))
 
         camera_data = dict(
             meta=dict(

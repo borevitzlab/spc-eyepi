@@ -212,6 +212,7 @@ class Uploader(Thread):
                 if len(upload_list) == 0:
                     self.logger.info("No files in upload directory")
                 if (len(upload_list) > 0) and self.upload_enabled:
+                    start_upload_time = time.time()
                     self.logger.info("Preparing to upload %d files" % len(upload_list))
                     try:
                         l_im = os.path.join(self.upload_directory, "last_image.jpg")
@@ -221,7 +222,9 @@ class Uploader(Thread):
                         self.logger.info("Something went wrong sorting the last image to the front: {}".format(str(e)))
                     self.upload(upload_list)
                     self.communicate_with_updater()
-                    self.logger.info("Successfully uploaded")
+                    self.logger.info(
+                        "Average upload time: {0:.2f}s".format((time.time() - start_upload_time) / len(upload_list)))
+                    self.logger.info("Total upload time: {0:.2f}s".format(time.time() - start_upload_time))
             except Exception as e:
                 self.logger.error("ERROR: UPLOAD {}".format(str(e)))
             time.sleep(Uploader.upload_interval)

@@ -446,6 +446,7 @@ class Camera(object):
 
             if self.time_to_capture:
                 try:
+                    start_capture_time = time.time()
                     raw_image = self.timestamped_imagename
 
                     self.logger.info("Capturing Image for {}".format(self.identifier))
@@ -503,7 +504,7 @@ class Camera(object):
                                 os.remove(fn)
                         except Exception as e:
                             self.logger.error("Couldn't remove spooled: {}".format(str(e)))
-
+                    self.logger.info("Total capture time: {0:.2f}s".format(time.time() - start_capture_time))
                     self.communicate_with_updater()
                 except Exception as e:
                     self.logger.critical("Image Capture error - {}".format(str(e)))
@@ -1247,7 +1248,7 @@ class GPCamera(Camera):
     identifier and usb_address are NOT OPTIONAL
     """
 
-    def __init__(self, identifier: str=None, usb_address: tuple=None, **kwargs):
+    def __init__(self, identifier: str=None, usb_address: tuple=None, lock=None, **kwargs):
         """
         this needs to be fixed for multiple cameras.
         :param identifier: serialnumber of camera or None for next camera.
@@ -1255,40 +1256,42 @@ class GPCamera(Camera):
         :param kwargs:
         """
         self._serialnumber = None
+        self.lock = lock
         camera = None
-
-        if identifier:
-            self.identifier = identifier
-            for cam in gp.list_cameras(lazy=False):
-                sn = cam.status.serialnumber
-                if sn in identifier:
-                    camera = cam
-                    break
-            else:
-                raise IOError("Camera not available or connected")
-        elif usb_address and not identifier:
-            try:
-                camera = gp.Camera(bus=usb_address[0], device=usb_address[1])
-                sn = str(camera.status.serialnumber)
-                self.identifier = SysUtil.default_identifier(prefix=sn)
-            except Exception as e:
-                raise IOError("Camera not found or not supported")
-        else:
-            for cam in gp.list_cameras():
+        with self.lock:
+            if identifier:
+                self.identifier = identifier
+                for cam in gp.list_cameras():
+                    sn = cam.status.serialnumber
+                    if sn in identifier:
+                        camera = cam
+                        break
+                else:
+                    raise IOError("Camera not available or connected")
+            elif usb_address and not identifier:
                 try:
-                    serialnumber = cam.status.serialnumber
-                    sn = str(cam.status.serialnumber)
+                    camera = gp.Camera(bus=usb_address[0], device=usb_address[1])
+                    sn = str(camera.status.serialnumber)
                     self.identifier = SysUtil.default_identifier(prefix=sn)
-                    camera = cam
-                    break
-                except:
-                    pass
+                except Exception as e:
+                    raise IOError("Camera not found or not supported")
             else:
-                raise IOError("No cameras available")
+                for cam in gp.list_cameras():
+                    try:
+                        serialnumber = cam.status.serialnumber
+                        sn = str(cam.status.serialnumber)
+                        self.identifier = SysUtil.default_identifier(prefix=sn)
+                        camera = cam
+                        break
+                    except:
+                        pass
+                else:
+                    raise IOError("No cameras available")
 
-        identifier = self.identifier
-        self.usb_address = camera._usb_address
-        self._serialnumber = camera.status.serialnumber
+            identifier = self.identifier
+            self.usb_address = camera._usb_address
+            self._serialnumber = camera.status.serialnumber
+
         super(GPCamera, self).__init__(identifier, **kwargs)
 
         self.exposure_length = self.config.get('camera', "exposure")
@@ -1299,7 +1302,7 @@ class GPCamera(Camera):
         :return:
         """
         super(GPCamera, self).re_init()
-        self.logger.info("Camera now at {}:{}".format(*self.usb_address))
+        self.logger.info("Camera detected at usb port {}:{}".format(*self.usb_address))
         self.exposure_length = self.config.getint("camera", "exposure")
 
     def get_exif_fields(self):
@@ -1325,21 +1328,23 @@ class GPCamera(Camera):
         return exif
 
     def _get_camera(self):
-        try:
-            camera = gp.Camera(bus=self.usb_address[0], device=self.usb_address[1])
-            if self._serialnumber == camera.status.serialnumber:
-                return camera
-        except Exception as e:
-            self.logger.debug("Camera wasnt at the correct usb address or something: {}".format(str(e)))
-
-        for camera in gp.list_cameras():
+        with self.lock:
             try:
-                if camera.status.serialnumber == self._serialnumber:
+                camera = gp.Camera(bus=self.usb_address[0], device=self.usb_address[1])
+                if self._serialnumber == camera.status.serialnumber:
+                    self.logger.debug("Camera matched for {}:{}".format(*self.usb_address))
                     return camera
             except Exception as e:
-                self.logger.debug("Couldnt acquire log on camera. Probably not my camera")
-        else:
-            raise FileNotFoundError("Camera cannot be found")
+                self.logger.info("Camera wasnt at the correct usb address or something: {}".format(str(e)))
+
+            for camera in gp.list_cameras():
+                try:
+                    if camera.status.serialnumber == self._serialnumber:
+                        return camera
+                except Exception as e:
+                    self.logger.info("Couldnt acquire lock for camera. {}".format(str(e)))
+            else:
+                raise FileNotFoundError("Camera cannot be found")
 
     def _capture(self, filename=None):
         st = time.time()
@@ -1369,7 +1374,7 @@ class GPCamera(Camera):
                             pass
 
                 self.logger.debug("Took {0:.2f}s to capture".format(time.time() - st))
-                self.logger.info("Filesize {}".format(size))
+                self.logger.debug("Filesize {}".format(size))
                 if filename:
                     return successes
                 return self._image

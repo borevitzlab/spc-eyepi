@@ -176,6 +176,11 @@ class SysUtil(object):
         return "%.1f%s%s" % (num, 'Yi', suffix)
 
     @classmethod
+    def update_from_git(cls):
+        os.system("git fetch --all;git reset --hard origin/master")
+        os.system("systemctl restart spc-eyepi_capture.service")
+
+    @classmethod
     def get_hostname(cls)->str:
         """
         gets the current hostname.
@@ -191,6 +196,24 @@ class SysUtil(object):
                     hostname = fn.read().strip()
             cls._hostname = hostname, time.time()
         return cls._hostname[0]
+
+    @classmethod
+    def set_hostname(cls, hostname: str):
+        """
+        sets the machines hosname
+        :param hostname:
+        :return:
+        """
+        try:
+            with open(os.path.join("/etc/", "hostname"), 'w') as f:
+                f.write(hostname + "\n")
+
+            with open(os.path.join("/etc/", "hosts"), 'w') as hosts_file:
+                h_tmpl = "127.0.0.1\tlocalhost.localdomain localhost {hostname}\n"
+                h_tmpl += "::1\tlocalhost.localdomain localhost {hostname}\n"
+                hosts_file.write(h_tmpl.format(hostname=hostname))
+        except Exception as e:
+            cls.logger.error("Failed setting hostname for machine. {}".format(str(e)))
 
     @classmethod
     def get_machineid(cls)->str:

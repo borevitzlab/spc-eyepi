@@ -11,6 +11,7 @@ import queue
 from libs.Camera import *
 from libs.Updater import Updater
 from libs.Uploader import Uploader
+from threading import Lock
 
 __author__ = "Gareth Dunstone"
 __copyright__ = "Copyright 2016, Borevitz Lab"
@@ -37,7 +38,9 @@ def detect_picam(updater):
     :param q: thread safe updater queue
     :return:
     """
+    logger.info("Detecting picamera")
     if not (os.path.exists("/opt/vc/bin/vcgencmd")):
+        logger.error("vcgencmd not found, cannot detect picamera.")
         return tuple()
     try:
         cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
@@ -48,18 +51,18 @@ def detect_picam(updater):
             return start_workers(workers)
         else:
             return tuple()
-    except subprocess.CalledProcessError:
-        logger.error("couldnt call picamera command to check. No picam.")
+    except subprocess.CalledProcessError as e:
+        logger.error("Couldn't detect picamera. Error calling vcgencmd. {}".format(str(e)))
         pass
     except Exception as e:
-        logger.error("picam detection: {}".format(str(e)))
+        logger.error("General Exception in picamera detection. {}".format(str(e)))
     return tuple()
 
 
 def detect_ivport(updater):
     """
     meant to detect ivport, uninplemented as of 14/06/2016
-    :param q:
+    :param updater:
     :return:
     """
     return tuple()
@@ -72,6 +75,7 @@ def detect_webcam(updater):
     :return:
     """
     try:
+        logger.info("Detecting USB web cameras.")
         workers = []
         for device in pyudev.Context().list_devices(subsystem="video4linux"):
             serial = device.get("ID_SERIAL_SHORT", None)
@@ -79,6 +83,10 @@ def detect_webcam(updater):
                 serial = device.get("ID_SERIAL", None)
                 if len(serial) > 6:
                     serial = serial[:6]
+                logger.info("Detected USB camera. Using default machine id serial {}".format(str(serial)))
+            else:
+                logger.info("Detected USB camera {}".format(str(serial)))
+
             identifier = SysUtil.default_identifier(prefix="USB-{}".format(serial))
             sys_number = device.sys_number
 
@@ -91,7 +99,7 @@ def detect_webcam(updater):
                 workers.append(camera)
                 workers.append(Uploader(identifier, queue=updater.communication_queue))
             except Exception as e:
-                logger.error("couldnt start usb camera {} on {}".format(identifier, sys_number))
+                logger.error("Unable to start usb webcamera {} on {}".format(identifier, sys_number))
                 logger.error("{}".format(str(e)))
         return start_workers(workers)
     except Exception as e:
@@ -106,20 +114,24 @@ def detect_gphoto(updater):
     :return:
     """
     try:
-        cameras = gp.list_cameras()
-        info = [(c._usb_address,c.status.serialnumber) for c in cameras]
+        logger.info("Detecting DSLRs")
+        lock = Lock()
+        with lock:
+            cameras = gp.list_cameras()
+            info = [(c._usb_address, c.status.serialnumber) for c in cameras]
         workers = []
+        logger.debug("List of cameras is {} long".format(str(len(info))))
         for usb_add, serialnumber in info:
             try:
-
                 identifier = SysUtil.default_identifier(prefix=serialnumber)
                 camera = ThreadedGPCamera(identifier=identifier,
                                           usb_address=usb_add,
+                                          lock=lock,
                                           queue=updater.communication_queue)
                 updater.add_to_temp_identifiers(camera.identifier)
                 uploader = Uploader(camera.identifier, queue=updater.communication_queue)
                 workers.extend([camera, uploader])
-                time.sleep(3)
+                logger.debug("Sucessfully detected {} @ {}".format(serialnumber, ":".join(str(si) for si in usb_add)))
             except Exception as ef:
                 logger.error("Couldnt detect camera {}".format(str(ef)))
         return start_workers(workers)
@@ -133,32 +145,34 @@ def start_workers(worker_objects):
     :param worker_objects:
     :return:
     """
+    logger.debug("Starting {} worker threads".format(str(len(worker_objects))))
     for thread in worker_objects:
         thread.daemon = True
         thread.start()
     return worker_objects
 
 
-def kill_workers(objects):
+def kill_workers(worker_objects):
     """
     calls the stop method of the workers (they should all implement this)
-    :param objects:
+    :param worker_objects:
     :return:
     """
-    for thread in objects:
+    logger.debug("Killing {} worker threads".format(str(len(worker_objects))))
+    for thread in worker_objects:
         thread.stop()
 
 
 def enumerate_usb_devices():
     """
-    usb dev list is very important
+    Gets a set of the current usb devices from pyudev
     :return:
     """
     return set(pyudev.Context().list_devices(subsystem="usb"))
 
 if __name__ == "__main__":
     logger = logging.getLogger("Worker_dispatch")
-    logger.info("Program startup")
+    logger.info("Program startup...")
     # The main loop for capture
 
     # these should be all detected at some point.
@@ -168,6 +182,7 @@ if __name__ == "__main__":
     updater = None
     try:
         # start the updater. this is the first thing that should happen.
+        logger.debug("Starting up the updater")
         updater = Updater()
         start_workers((updater,))
         raspberry = detect_picam(updater) or detect_ivport(updater)
@@ -175,7 +190,6 @@ if __name__ == "__main__":
 
         # try 10 times to detect gphoto cameras. Maybe they arent awake yet.
         for x in range(10):
-            logger.debug("detecting Cameras")
             gphoto_workers = detect_gphoto(updater)
             if gphoto_workers:
                 break
@@ -189,15 +203,14 @@ if __name__ == "__main__":
         while True:
             try:
                 if usb_devices != enumerate_usb_devices():
-                    logger.error("change in usb dev list")
+                    logger.warning("USB device list change. Killing camera threads")
                     kill_workers(gphoto_workers)
                     updater.temp_identifiers = set()
                     gphoto_workers = detect_gphoto(updater)
-
                     # should redetect webcams.
+
                     webcams = detect_webcam(updater)
                     usb_devices = enumerate_usb_devices()
-
                 time.sleep(1)
             except (KeyboardInterrupt, SystemExit) as e:
                 kill_workers(gphoto_workers)
