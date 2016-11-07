@@ -71,6 +71,8 @@ class CallbackModule(object):
 
         # If output is a dict
         if type(output) is dict:
+            for k, v in output:
+                output[k] = self._format_output(v)
             return pformat(output)
 
         # If output is a list of dicts
