@@ -46,7 +46,7 @@
 
 - name: Restart and Enable spc-eyepi systemd units
   systemd:
-    name: "{{item}}"
+    name: "{{item.unit}}"
     state: "{{'restarted' if unit.restart else 'started'}}"
     enabled: "{{True if unit.enabled else False}}"
     masked: no
