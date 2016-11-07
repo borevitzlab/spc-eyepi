@@ -54,12 +54,13 @@ class CallbackModule(object):
     CALLBACK_NEEDS_WHITELIST = False
 
     def human_log(self, data):
+        print(data)
         if type(data) == dict:
             for field in FIELDS:
                 no_log = data.get('_ansible_no_log')
                 if field in data.keys() and data[field] and no_log != True:
                     output = self._format_output(data[field])
-                    print("\n{0}: {1}".format(field, output.replace("\\n","\n")))
+                    print("\n{0}: {1}".format(field, output.replace("\\n", "\n")))
 
     def _format_output(self, output):
         if type(output) is bytes:
