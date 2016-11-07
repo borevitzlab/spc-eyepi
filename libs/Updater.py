@@ -130,8 +130,8 @@ class Updater(Thread):
             meta=dict(
                 version=SysUtil.get_version(),
                 machine=SysUtil.get_machineid(),
-                internal_ip=SysUtil.get_external_ip(),
-                external_ip=SysUtil.get_internal_ip(),
+                internal_ip=SysUtil.get_internal_ip(),
+                external_ip=SysUtil.get_external_ip(),
                 hostname=SysUtil.get_hostname(),
                 onion_address=onion_address,
                 client_cookie=cookie_auth,
