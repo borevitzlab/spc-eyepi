@@ -66,6 +66,7 @@ class CallbackModule(object):
                 no_log = data.get('_ansible_no_log')
                 if field in data.keys() and data[field] and no_log is not True:
                     output = self._format_output(data[field])
+                    print(output)
                     print("\n{0}: {1}".format(field, output.replace("\\n", "\n")))
 
     def _format_output(self, output):
