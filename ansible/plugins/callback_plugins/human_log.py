@@ -103,12 +103,13 @@ class CallbackModule(object):
             for item in output:
                 if "\n" in item:
                     for string in item.split("\n"):
-                        real_output.append(string)
+                        real_output.append(self._format_output(string))
                 else:
-                    real_output.append(item)
+                    real_output.append(self._format_output(item))
             return pformat(real_output)
 
         # Otherwise it's a string, (or an int, float, etc.) just return it
+
         return str(output)
 
     def on_any(self, *args, **kwargs):
