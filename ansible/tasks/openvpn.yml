@@ -1,0 +1,33 @@
+- name: Install OpenVPN
+  pacman:
+    update_cache: yes
+    name: openvpn
+    state: present
+
+- name: "check local for {{vpn_config_file}}"
+  local_action: stat path="{{vpn_config_file}}"
+  register: ovpn_conf
+
+- debug: msg="OpenVPN configuration file exists, using {{vpn_config_file}}"
+  when: ovpn_conf.stat.exists
+
+- debug: msg="OpenVPN configuration file doesnt exist... {{vpn_config_file}}"
+  when: not ovpn_conf.stat.exists
+
+- name: Ensure /etc/openvpn dir exists
+  file: path=/etc/openvpn state=directory
+
+- name: Install openvpn conf
+  copy:
+    src: "{{vpn_config_file}}"
+    dest: "/etc/openvpn/vpn.conf"
+  when: ovpn_conf.stat.exists
+
+- name: Start openvpn systemd service
+  systemd:
+    name: openvpn@vpn
+    state: started
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  when: ovpn_conf.stat.exists

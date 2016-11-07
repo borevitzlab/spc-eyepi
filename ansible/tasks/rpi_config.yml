@@ -1,0 +1,4 @@
+- name: Rewrite /boot/config.txt
+  template:
+    src: templates/rpi_config.txt
+    dest: /boot/config.txt

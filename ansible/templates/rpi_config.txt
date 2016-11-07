@@ -1,0 +1,18 @@
+# ANSIBLE MANAGED FILE
+
+# increases the maximum available current to usb
+max_usb_current=1
+
+# sets gpu_mem for different versions of rpi, thsi is required for the raspberry pi camera to work.
+gpu_mem_1024=256
+gpu_mem_512=192
+gpu_mem_256=128
+
+# enable the camera module
+start_x=1
+# disable the camera led because it interferes with plants.
+disable_camera_led=1
+
+# setup the RTC communication over i2c
+dtparam=i2c_arm=on
+dtoverlay=i2c-rtc,pcf2127

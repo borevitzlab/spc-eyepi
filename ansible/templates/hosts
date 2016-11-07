@@ -1,0 +1,18 @@
+#
+# /etc/hosts: static lookup table for host names
+#
+
+#<ip-address> <hostname.domain.org> <hostname>
+
+{% if hostname is defined %}
+127.0.0.1 {{hostname}}.ncris.vpn {{hostname}} localhost.localdomain localhost
+{% endif %}
+{% if hostname_short is defined%}
+127.0.0.1 {{hostname_short}}.ncris.vpn {{hostname_short}} localhost.localdomain localhost
+{% endif %}
+{% if (hostname is not defined) and (hostname_short is not defined) %}
+127.0.0.1 localhost.localdomain localhost
+{% endif %}
+::1 localhost.localdomain localhost
+
+# End of file

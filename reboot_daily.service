@@ -1,0 +1,6 @@
+[Unit]
+Description=Unit file for daily reboots
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/reboot

@@ -1,0 +1,25 @@
+packages_base:
+  - sudo
+  - mlocate
+  - nano
+  - curl
+  - fish
+  - git
+  - gnupg
+  - gzip
+  - htop
+  - iftop
+  - lua-filesystem
+  - lua
+  - ncdu
+  - parallel
+  - rsync
+  - screen
+  - tar
+  - tor
+  - tree
+  - zsh
+  - wget
+  - python
+  - python-pip
+  - glances

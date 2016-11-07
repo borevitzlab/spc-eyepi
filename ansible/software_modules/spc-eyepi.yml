@@ -1,0 +1,53 @@
+- name: Download spc-eyepi
+  git:
+    repo: https://github.com/borevitzlab/spc-eyepi.git
+    clone: yes
+    update: yes
+    force: yes
+    version: "HEAD"
+    dest: "{{home_dir}}/spc-eyepi"
+
+- copy:
+    remote_src: yes
+    src: "{{home_dir}}/spc-eyepi/eyepi-webinterface.service"
+    dest: "/etc/systemd/system/eyepi-webinterface.service"
+
+- copy:
+    remote_src: yes
+    src: "{{home_dir}}/spc-eyepi/eyepi-api.service"
+    dest: "/etc/systemd/system/eyepi-api.service"
+
+- copy:
+    remote_src: yes
+    src: "{{home_dir}}/spc-eyepi/eyepi-capture.service"
+    dest: "/etc/systemd/system/eyepi-capture.service"
+
+- file:
+    dest: "{{home_dir}}/spc-eyepi"
+    state: directory
+    group: users
+    mode: 0775
+
+- file:
+    dest: "{{home_dir}}/images"
+    state: directory
+    group: users
+    mode: 0775
+
+- systemd:
+    name: "eyepi-webinterface"
+    state: started
+    enabled: yes
+    masked: no
+
+- systemd:
+    name: "eyepi-api"
+    state: started
+    enabled: yes
+    masked: no
+
+- systemd:
+    name: "eyepi-capture"
+    state: restarted
+    enabled: yes
+    masked: no

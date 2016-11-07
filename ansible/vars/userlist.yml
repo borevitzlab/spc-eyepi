@@ -1,0 +1,12 @@
+# for the love of god dont remove the "alarm" user from this list and dont remove the "clear_password" attr
+# it is required that the clear_password parameter be used so that the password can be unset from just alarm
+users:
+  - {name: alarm,  shell: /bin/bash, groups: [wheel, adm, users],
+      clear_password: yes,
+      keys: [backend.pub, gareth.pub]}
+  - {name: gareth,  shell: /usr/bin/fish, groups: [wheel, adm, users],
+      keys: [gareth.pub]}
+  - {name: kevin, shell: /bin/zsh,  groups: [wheel, adm, users],
+      keys: [kevin.pub]}
+  - {name: tim, shell: /bin/bash, groups: [wheel, adm, users],
+      keys: [timb.pub]}

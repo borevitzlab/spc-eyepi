@@ -1,0 +1,28 @@
+- name: Make users
+  user:
+    name: "{{item.name}}"
+    state: present
+    generate_ssh_key: yes
+    shell: "{{item.shell}}"
+    groups: "{{','.join(item.groups)}}"
+  with_items:
+    - "{{users}}"
+
+- name: Change passwords
+  user:
+    name: "{{item.name}}"
+    password: ""
+    update_password: always
+  with_items:
+    - "{{users}}"
+  when: item.clear_password is defined and item.clear_password
+
+- name: Add ssh public key
+  authorized_key:
+    user: "{{item.0.name}}"
+    key: "{{lookup('file', 'keys/' + item.1)}}"
+  register: keyfiles
+  with_subelements:
+    - "{{users}}"
+    - keys
+    - {skip_missing: True}

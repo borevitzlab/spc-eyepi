@@ -1,0 +1,22 @@
+- name: Install TOR
+  pacman:
+    name: tor
+    state: present
+
+- name: Rewrite torrc
+  template:
+    src: templates/torrc
+    dest: /etc/tor/torrc
+
+- file:
+    dest: "{{home_dir}}/tor_private"
+    state: directory
+    owner: tor
+    group: tor
+    mode: 0700
+
+- systemd:
+    name: "tor"
+    state: restarted
+    enabled: yes
+    masked: no

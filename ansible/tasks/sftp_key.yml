@@ -1,0 +1,46 @@
+- name: check local for api key
+  local_action: stat path=secure/api_key.yml
+  register: api_keyfile
+
+- include_vars:
+    file: secure/api_key.yml
+  when: api_keyfile.stat.exists
+
+- uri:
+    name: Gets a token from the server
+    url: "https://traitcapture.org/api/code/new/1.jsonp?token={{api_key}}"
+    return_content: True
+  register: reg_code
+  when: api_key is defined
+
+- debug: msg="API token worked, using temporary registration token {{(reg_code.content|from_json)['code']}}"
+  when: reg_code.content is defined and reg_code.content.json is defined
+
+- debug: msg="API token has probably expired or is wrong. Skipping."
+  when: reg_code.content is defined and reg_code.content.json is not defined
+
+- name: Create .ssh dir and set permissions
+  file:
+    path: /home/.ssh
+    owner: root
+    state: directory
+    mode: 700
+
+- name: Gets a new ssh key from the server.
+  get_url:
+    url: "https://traitcapture.org/api/camera/id_rsa/{{(reg_code.content|from_json)['code']}}/{{ansible_machine_id}}/{{inventory_hostname}}"
+    dest: /home/.ssh/id_rsa
+  when: reg_code.content is defined and reg_code.content.json is defined
+
+- name: stat id_rsa
+  stat:
+    path: /home/.ssh/id_rsa
+  register: stat_id_rsa
+
+- name: own id_rsa
+  file:
+    path: /home/.ssh/id_rsa
+    state: file
+    mode: 600
+    owner: root
+  when: stat_id_rsa.stat.exists

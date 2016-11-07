@@ -1,0 +1,38 @@
+- include: libgphoto2.yml
+
+- name: Sets vars for gphoto2 path
+  set_fact:
+    gphoto2_src: "{{source_dir}}/gphoto2-{{version or 'latest'}}"
+    gphoto2_build: "{{build_dir}}/gphoto2"
+
+- name: Download gphoto2
+  git:
+    repo: https://github.com/gphoto/gphoto2.git
+    clone: yes
+    force: yes
+    update: yes
+    version: "{{version or 'HEAD'}}"
+    dest: "{{gphoto2_src}}"
+
+- name: Remove build dir
+  file:
+    state: absent
+    path: "{{gphoto2_build}}/"
+
+- name: Create build dir
+  file:
+    path: "{{gphoto2_build}}"
+    state: directory
+
+- name: Copy gphoto2 to build dir
+  command: "rsync -a {{gphoto2_src}}/ {{gphoto2_build}}"
+
+- name: Build gphoto2
+  shell: >
+    cd "{{gphoto2_build}}" &&
+    autoreconf --install --symlink &&
+    ./configure --prefix /usr &&
+    make -j2 &&
+    make install
+  args:
+    creates: "/usr/local/bin/gphoto2"

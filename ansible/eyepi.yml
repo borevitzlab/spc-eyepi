@@ -1,0 +1,53 @@
+- hosts: all
+  vars_files:
+    - vars/pkgs_base.yml
+    - vars/userlist.yml
+    - vars/pkgs.yml
+    - vars/hostmap.yml
+
+  vars:
+    - source_dir: /opt/source
+    - soft_dir: /opt/apps
+    - build_dir: /opt/build
+    - home_dir: /home
+    - vpn_conf: secure/vpn.conf
+
+  tasks:
+    - include: tasks/base_setup.yml hostnames="{{hostmapping}}"
+      tags: base,setup
+
+    - include: tasks/rpi_config.yml
+      tags: base,setup
+
+    - include: tasks/users.yml
+      tags: base,users
+
+    - include: tasks/updatepkgs.yml
+      tags: base
+
+    - include: tasks/installpkgs.yml suite="Base" pkgs="{{packages_base}}"
+      tags: pkgs,base
+
+    - include: tasks/installpkgs.yml suite="Eyepi" pkgs="{{pacman_pkgs}}"
+      tags: pkgs
+
+    - stat: path=secure/vpn.conf
+      register: ovpn_conf
+
+    - include: tasks/openvpn.yml vpn_config_file="{{vpn_conf}}"
+      tags: network
+
+    - include: tasks/tor.yml
+      tags: network
+
+    - include: tasks/sftp_key.yml
+      tags: network,sftp
+
+    - include: software_modules/gphoto2.yml version=HEAD
+      tags: modules,gphoto2
+
+    - include: tasks/python_modules.yml modules="{{python_pkgs}}"
+      tags: pkgs,python
+
+    - include: software_modules/spc-eyepi.yml
+      tags: modules,spc_eyepi
