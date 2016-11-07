@@ -65,18 +65,16 @@ class CallbackModule(object):
             for field in FIELDS:
                 no_log = data.get('_ansible_no_log')
                 if field in data.keys() and data[field] and no_log is not True:
-                    print(data[field])
                     output = self._format_output(data[field])
                     print("\n{0}: {1}".format(field, output.replace("\\n", "\n")))
 
     def _format_output(self, output):
-        print(type(output))
         if type(output) is bytes:
             output = output.decode("utf-8")
 
         # Strip unicode
         if type(output) is str:
-            output = output.encode(sys.getdefaultencoding(), 'replace')
+            output = output.encode(sys.getdefaultencoding(), 'ignore').decode(sys.getdefaultencoding())
 
         # If output is a dict
         if type(output) is dict:
@@ -110,7 +108,6 @@ class CallbackModule(object):
             return pformat(real_output)
 
         # Otherwise it's a string, (or an int, float, etc.) just return it
-
         return str(output)
 
     def on_any(self, *args, **kwargs):
