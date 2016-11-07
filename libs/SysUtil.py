@@ -6,6 +6,7 @@ import threading
 import configparser
 import yaml
 import logging
+import logging.config
 import fcntl
 import datetime
 
