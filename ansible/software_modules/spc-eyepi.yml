@@ -6,15 +6,15 @@
       - {unit: "reboot_daily.service",        enable: no,   restart: no}
       - {unit: "eyepi-api.service",           enable: yes,  restart: no}
       - {unit: "eyepi-webinterface.service",  enable: yes,  restart: no}
-
-- name: Download gphoto2-cffi
-  git:
-    repo: https://github.com/borevitzlab/gphoto-cffi.git
-    clone: yes
-    update: yes
-    force: yes
-    version: "HEAD"
-    dest: "{{home_dir}}/gphoto2-cffi"
+#
+#- name: Download gphoto2-cffi
+#  git:
+#    repo: https://github.com/borevitzlab/gphoto-cffi.git
+#    clone: yes
+#    update: yes
+#    force: yes
+#    version: "HEAD"
+#    dest: "{{home_dir}}/gphoto2-cffi"
 
 - name: Download spc-eyepi
   git:
