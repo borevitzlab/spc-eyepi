@@ -49,5 +49,5 @@
   lineinfile:
     state: present
     line: "sftp.traitcapture.org ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBDA0sQQQX5oUhD8IJ5p1hgnHqGJSTW8faO68xYrVJwa0u9nXTYJzccK3YoyOBjfflp7dldL6cRO8DWhTfN8TyM8="
-    regex: "^.*sftp.traitcapture.org.*"
+    regexp: "^.*sftp.traitcapture.org.*"
     dest: /home/.ssh/known_hosts
