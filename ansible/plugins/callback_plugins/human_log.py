@@ -40,8 +40,15 @@ except ImportError:
     import json
 
 # Fields to reformat output for
-FIELDS = ['cmd', 'command', 'start', 'end', 'delta', 'msg', 'stdout',
-          'stderr', 'results']
+FIELDS = ['cmd',
+          'command',
+          'start',
+          'end',
+          'delta',
+          'msg',
+          'stdout',
+          'stderr',
+          'results']
 
 
 class CallbackModule(object):
@@ -62,6 +69,7 @@ class CallbackModule(object):
                     print("\n{0}: {1}".format(field, output.replace("\\n", "\n")))
 
     def _format_output(self, output):
+        print(type(output))
         if type(output) is bytes:
             output = output.decode("utf-8")
 
