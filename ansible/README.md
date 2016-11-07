@@ -1,8 +1,8 @@
 # Requirements
 
-You need `ansible` version 2.2 installed locally
+You need `ansible` version 2.3 installed locally
 
-    sudo pip install git+https://github.com/ansible/ansible/releases/tag/v2.2.0.0-1
+    sudo pip install git+https://github.com/ansible/ansible
 
 Make add your ssh key to the `keys` folder (you can probably delete ours from there, unless you really want to trust us).
 
