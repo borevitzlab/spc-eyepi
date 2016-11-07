@@ -1,11 +1,11 @@
 - name: Set units for spc-eyepi
   set_fact:
     systemd_units:
-      - {unit: "eyepi-capture.service",       enable: yes,  state: restarted  }
-      - {unit: "reboot_daily.timer",          enable: yes,  state: restarted  }
-      - {unit: "reboot_daily.service",        enable: no,   state: reloaded   }
-      - {unit: "eyepi-api.service",           enable: yes,  state: started    }
-      - {unit: "eyepi-webinterface.service",  enable: yes,  state: started    }
+      - {unit: "eyepi-capture.service",       enabled: yes,  state: restarted  }
+      - {unit: "reboot_daily.timer",          enabled: yes,  state: restarted  }
+      - {unit: "reboot_daily.service",        enabled: no,   state: reloaded   }
+      - {unit: "eyepi-api.service",           enabled: yes,  state: started    }
+      - {unit: "eyepi-webinterface.service",  enabled: yes,  state: started    }
 #
 #- name: Download gphoto2-cffi
 #  git:
