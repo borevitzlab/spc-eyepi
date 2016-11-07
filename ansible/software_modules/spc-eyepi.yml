@@ -3,7 +3,7 @@
     systemd_units:
       - {unit: "eyepi-capture.service",       enabled: yes,  state: restarted  }
       - {unit: "reboot_daily.timer",          enabled: yes,  state: restarted  }
-      - {unit: "reboot_daily.service",        enabled: no,   state: reloaded   }
+      - {unit: "reboot_daily.service",        enabled: no,   state: stopped    }
       - {unit: "eyepi-api.service",           enabled: yes,  state: started    }
       - {unit: "eyepi-webinterface.service",  enabled: yes,  state: started    }
 #
@@ -47,6 +47,7 @@
 - name: Restart and Enable spc-eyepi systemd units
   systemd:
     name: "{{item.unit}}"
+    daemon_reload: yes
     state: "{{item.state}}"
     enabled: "{{True if item.enabled else False}}"
     masked: no
