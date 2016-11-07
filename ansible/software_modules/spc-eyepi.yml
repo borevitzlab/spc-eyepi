@@ -1,11 +1,11 @@
 - name: Set units for spc-eyepi
   set_fact:
     systemd_units:
-      - {unit: "eyepi-capture.service",       enable: yes,  restart: yes}
-      - {unit: "reboot_daily.timer",          enable: yes,  restart: yes}
-      - {unit: "reboot_daily.service",        enable: no,   restart: no}
-      - {unit: "eyepi-api.service",           enable: yes,  restart: no}
-      - {unit: "eyepi-webinterface.service",  enable: yes,  restart: no}
+      - {unit: "eyepi-capture.service",       enable: yes,  state: restarted  }
+      - {unit: "reboot_daily.timer",          enable: yes,  state: restarted  }
+      - {unit: "reboot_daily.service",        enable: no,   state: reloaded   }
+      - {unit: "eyepi-api.service",           enable: yes,  state: started    }
+      - {unit: "eyepi-webinterface.service",  enable: yes,  state: started    }
 #
 #- name: Download gphoto2-cffi
 #  git:
@@ -47,8 +47,8 @@
 - name: Restart and Enable spc-eyepi systemd units
   systemd:
     name: "{{item.unit}}"
-    state: "{{'restarted' if unit.restart else 'started'}}"
-    enabled: "{{True if unit.enabled else False}}"
+    state: "{{item.state}}"
+    enabled: "{{True if item.enabled else False}}"
     masked: no
   with_items:
     - "{{systemd_units}}"
