@@ -1,3 +1,21 @@
+- name: Set units for spc-eyepi
+  set_fact:
+    systemd_units:
+      - {unit: "eyepi-capture.service",       enable: yes,  restart: yes}
+      - {unit: "reboot_daily.timer",          enable: yes,  restart: yes}
+      - {unit: "reboot_daily.service",        enable: no,   restart: no}
+      - {unit: "eyepi-api.service",           enable: yes,  restart: no}
+      - {unit: "eyepi-webinterface.service",  enable: yes,  restart: no}
+
+- name: Download gphoto2-cffi
+  git:
+    repo: https://github.com/borevitzlab/gphoto-cffi.git
+    clone: yes
+    update: yes
+    force: yes
+    version: "HEAD"
+    dest: "{{home_dir}}/gphoto2-cffi"
+
 - name: Download spc-eyepi
   git:
     repo: https://github.com/borevitzlab/spc-eyepi.git
@@ -7,47 +25,30 @@
     version: "HEAD"
     dest: "{{home_dir}}/spc-eyepi"
 
-- copy:
-    remote_src: yes
-    src: "{{home_dir}}/spc-eyepi/eyepi-webinterface.service"
-    dest: "/etc/systemd/system/eyepi-webinterface.service"
-
-- copy:
-    remote_src: yes
-    src: "{{home_dir}}/spc-eyepi/eyepi-api.service"
-    dest: "/etc/systemd/system/eyepi-api.service"
-
-- copy:
-    remote_src: yes
-    src: "{{home_dir}}/spc-eyepi/eyepi-capture.service"
-    dest: "/etc/systemd/system/eyepi-capture.service"
-
-- file:
-    dest: "{{home_dir}}/spc-eyepi"
+- name: Create Directories for spc-eyepi
+  file:
+    dest: "{{home_dir}}/{{item}}"
     state: directory
     group: users
     mode: 0775
+  with_items:
+    - "spc-eyepi"
+    - "spc-eyepi/configs_byserial"
+    - "images"
 
-- file:
-    dest: "{{home_dir}}/images"
-    state: directory
-    group: users
-    mode: 0775
+- name: Copy systemd units
+- copy:
+    remote_src: yes
+    src: "{{home_dir}}/spc-eyepi/{{item.unit}}"
+    dest: "/etc/systemd/system/{{item.unit}}"
+  with_items:
+    - "{{systemd_units}}"
 
-- systemd:
-    name: "eyepi-webinterface"
-    state: started
-    enabled: yes
+- name: Restart and Enable spc-eyepi systemd units
+  systemd:
+    name: "{{item}}"
+    state: "{{'restarted' if unit.restart else 'started'}}"
+    enabled: "{{True if unit.enabled else False}}"
     masked: no
-
-- systemd:
-    name: "eyepi-api"
-    state: started
-    enabled: yes
-    masked: no
-
-- systemd:
-    name: "eyepi-capture"
-    state: restarted
-    enabled: yes
-    masked: no
+  with_items:
+    - "{{systemd_units}}"

@@ -14,21 +14,23 @@
 # Inspired from: https://github.com/redhat-openstack/khaleesi/blob/master/plugins/callbacks/human_log.py
 # Further improved support Ansible 2.0
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+# Modified by Gareth Dunstone for python3 compatibility
 
-try:
-    from importlib import reload
-except:
-    pass
 
 try:
     from imp import reload
 except:
     pass
 
+try:
+    from importlib import reload
+except:
+    pass
+
+
 import sys
 reload(sys)
+# this doesnt exist in python3
 # sys.setdefaultencoding('utf-8')
 
 try:
@@ -42,7 +44,6 @@ FIELDS = ['cmd', 'command', 'start', 'end', 'delta', 'msg', 'stdout',
 
 
 class CallbackModule(object):
-
     """
     Ansible callback plugin for human-readable result logging
     """
@@ -60,36 +61,38 @@ class CallbackModule(object):
                     print("\n{0}: {1}".format(field, output.replace("\\n","\n")))
 
     def _format_output(self, output):
+        if type(output) is bytes:
+            output = output.decode("utf-8")
+
         # Strip unicode
-        if type(output) == str:
+        if type(output) is str:
             output = output.encode(sys.getdefaultencoding(), 'replace')
 
         # If output is a dict
-        if type(output) == dict:
+        if type(output) is dict:
             return json.dumps(output, indent=2)
 
         # If output is a list of dicts
-        if type(output) == list and type(output[0]) == dict:
+        if type(output) is list and type(output[0]) is dict:
             # This gets a little complicated because it potentially means
             # nested results, usually because of with_items.
             real_output = list()
             for index, item in enumerate(output):
                 copy = item
-                if type(item) == dict:
-                    for field in FIELDS:
-                        if field in item.keys():
-                            copy[field] = self._format_output(item[field])
+                if type(item) is dict:
+                    for field in [x for x in FIELDS if x in item.keys()]:
+                        copy[field] = self._format_output(item[field])
                 real_output.append(copy)
             return json.dumps(output, indent=2)
 
         # If output is a list of strings
-        if type(output) == list and type(output[0]) != dict:
+        if type(output) is list and type(output[0]) is str:
             # Strip newline characters
             real_output = list()
             for item in output:
                 if "\n" in item:
                     for string in item.split("\n"):
-                        real_output.append(string.decode("unicode"))
+                        real_output.append(string)
                 else:
                     real_output.append(item)
 
