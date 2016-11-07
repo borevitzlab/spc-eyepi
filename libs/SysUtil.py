@@ -316,7 +316,7 @@ class SysUtil(object):
         if abs(cls._external_ip[-1] - time.time()) > 60:
             try:
                 url = 'https://api.ipify.org/?format=json'
-                response = request.urlopen(url,timeout=10).read().decode('utf-8')
+                response = request.urlopen(url, timeout=10).read().decode('utf-8')
                 cls._external_ip = json.loads(response)['ip'], time.time()
             except:
                 cls._external_ip = "0.0.0.0", time.time()
