@@ -4,6 +4,12 @@ You need `ansible` version 2.3 installed locally
 
     sudo pip install git+https://github.com/ansible/ansible
 
+You must also have the sshpass program (according to ansible), this is ussed only for first setup of ssh keyfile access.
+
+    sudo apt-get install sshpass
+    
+    sudo pacman -S sshpass
+
 Make add your ssh key to the `keys` folder (you can probably delete ours from there, unless you really want to trust us).
 
 Make sure that your you have an entry in `userlist.yml` and that it has a reference to your ssh key if you want a local user account.
