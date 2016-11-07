@@ -30,6 +30,7 @@ except:
 
 import sys
 reload(sys)
+from pprint import pformat
 # this doesnt exist in python3
 # sys.setdefaultencoding('utf-8')
 
@@ -83,7 +84,7 @@ class CallbackModule(object):
                     for field in [x for x in FIELDS if x in item.keys()]:
                         copy[field] = self._format_output(item[field])
                 real_output.append(copy)
-            return json.dumps(output, indent=2)
+            return pformat(real_output)
 
         # If output is a list of strings
         if type(output) is list and type(output[0]) is str:
@@ -95,13 +96,14 @@ class CallbackModule(object):
                         real_output.append(string)
                 else:
                     real_output.append(item)
-
-            # Reformat lists with line breaks only if the total length is
-            # >75 chars
-            if len("".join(real_output)) > 75:
-                return "\n" + "\n".join(real_output)
-            else:
-                return " ".join(real_output)
+            return pformat(real_output)
+            # # Reformat lists with line breaks only if the total length is
+            # # >75 chars
+            # if len("".join(real_output)) > 75:
+            #     return "\n" + "\n".join(real_output)
+            # else:
+            #     return " ".join(real_output)
+            #
 
         # Otherwise it's a string, (or an int, float, etc.) just return it
         return str(output)

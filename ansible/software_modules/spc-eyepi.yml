@@ -6,7 +6,7 @@
       - {unit: "reboot_daily.service",        enabled: no,   state: stopped    }
       - {unit: "eyepi-api.service",           enabled: yes,  state: started    }
       - {unit: "eyepi-webinterface.service",  enabled: yes,  state: started    }
-#
+
 #- name: Download gphoto2-cffi
 #  git:
 #    repo: https://github.com/borevitzlab/gphoto-cffi.git
