@@ -13,17 +13,17 @@ from .SysUtil import SysUtil
 
 logging.config.fileConfig("logging.ini")
 logging.getLogger("paramiko").setLevel(logging.WARNING)
-
-def pysftp_connection_init_patch(self, host, username=None, private_key=None, port=22):
-    self._sftp_live = False
-    self._sftp = None
-    self._transport_live = False
-    try:
-        self._transport = paramiko.Transport((host, port))
-        self._transport_live = True
-    except (AttributeError, gaierror):
-        raise pysftp.ConnectionException(host, port)
-    self._transport.connect(username=username, pkey=private_key)
+#
+# def pysftp_connection_init_patch(self, host, username=None, private_key=None, port=22):
+#     self._sftp_live = False
+#     self._sftp = None
+#     self._transport_live = False
+#     try:
+#         self._transport = paramiko.Transport((host, port))
+#         self._transport_live = True
+#     except (AttributeError, gaierror):
+#         raise pysftp.ConnectionException(host, port)
+#     self._transport.connect(username=username, pkey=private_key)
 
 
 class Uploader(Thread):
@@ -104,9 +104,12 @@ class Uploader(Thread):
             self.logger.debug("Connecting sftp and uploading buddy")
             # open link and create directory if for some reason it doesnt exist
             params = dict(host=self.hostname, username=self.username)
-            if self.ssh_manager.paramiko_key:
-                params['private_key'] = self.ssh_manager.paramiko_key
-                pysftp.Connection.__init__ = pysftp_connection_init_patch
+            params['cnopts'] = pysftp.CnOpts(knownhosts='/home/.ssh/known_hosts')
+            params['cnopts'].hostkeys = None
+
+            if os.path.exists("/home/.ssh/id_rsa") and os.path.exists('/home/.ssh/known_hosts'):
+                params['private_key'] = "/home/.ssh/id_rsa"
+                params['cnopts'] = pysftp.CnOpts(knownhosts='/home/.ssh/known_hosts')
             else:
                 params['password'] = self.password
 
