@@ -37,7 +37,7 @@
     - "images"
 
 - name: Copy systemd units
-- copy:
+  copy:
     remote_src: yes
     src: "{{home_dir}}/spc-eyepi/{{item.unit}}"
     dest: "/etc/systemd/system/{{item.unit}}"
