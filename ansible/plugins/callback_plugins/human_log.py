@@ -48,17 +48,16 @@ class CallbackModule(object):
     """
     Ansible callback plugin for human-readable result logging
     """
-    CALLBACK_VERSION = 2.2
+    CALLBACK_VERSION = 2.3
     CALLBACK_TYPE = 'notification'
     CALLBACK_NAME = 'human_log'
     CALLBACK_NEEDS_WHITELIST = False
 
     def human_log(self, data):
-        print(data)
-        if type(data) == dict:
+        if type(data) is dict:
             for field in FIELDS:
                 no_log = data.get('_ansible_no_log')
-                if field in data.keys() and data[field] and no_log != True:
+                if field in data.keys() and data[field] and no_log is not True:
                     output = self._format_output(data[field])
                     print("\n{0}: {1}".format(field, output.replace("\\n", "\n")))
 
@@ -72,7 +71,7 @@ class CallbackModule(object):
 
         # If output is a dict
         if type(output) is dict:
-            return json.dumps(output, indent=2)
+            return pformat(output)
 
         # If output is a list of dicts
         if type(output) is list and type(output[0]) is dict:
@@ -98,13 +97,6 @@ class CallbackModule(object):
                 else:
                     real_output.append(item)
             return pformat(real_output)
-            # # Reformat lists with line breaks only if the total length is
-            # # >75 chars
-            # if len("".join(real_output)) > 75:
-            #     return "\n" + "\n".join(real_output)
-            # else:
-            #     return " ".join(real_output)
-            #
 
         # Otherwise it's a string, (or an int, float, etc.) just return it
         return str(output)
