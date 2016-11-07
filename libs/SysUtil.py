@@ -291,11 +291,18 @@ class SysUtil(object):
         gets the internal ip by attempting to connect to googles DNS
         :return:
         """
+
         if abs(cls._ip_address[-1] - time.time()) > 10:
             try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.connect(("8.8.8.8", 0))
-                cls._ip_address = s.getsockname()[0], time.time()
+                try:
+                    import netifaces
+                    ip = netifaces.ifaddresses("tun0")[netifaces.AF_INET][0]["addr"]
+                    cls._ip_address = ip, time.time()
+                except:
+                    import socket
+                    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    s.connect(("8.8.8.8", 0))
+                    cls._ip_address = s.getsockname()[0], time.time()
             except:
                 cls._ip_address = "0.0.0.0", time.time()
         return cls._ip_address[0]
@@ -428,6 +435,11 @@ class SysUtil(object):
 
     @classmethod
     def load_or_fix_solarcalc(cls, fp: str)->list:
+        """
+        function to either load an existing fixed up solarcalc file or to coerce one into the fixed format.
+        :param fp: file path of the solarcalc file
+        :return: light timing data as a list of lists.
+        """
         lx = []
         fp =os.path.join(os.getcwd(),fp)
         path, ext = os.path.splitext(fp)
@@ -436,7 +448,6 @@ class SysUtil(object):
         header7 = ['datetime', 'temp', 'relativehumidity', 'LED1', 'LED2', 'LED3', 'LED4', 'LED5', 'LED6', 'LED7',
                    'total_solar_watt', 'simulated_datetime']
         if not os.path.isfile(fp):
-            print("No solarcalc File")
             print(fp)
             SysUtil.logger.error("no SolarCalc file.")
             raise FileNotFoundError()
