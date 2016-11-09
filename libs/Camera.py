@@ -260,29 +260,27 @@ class Camera(object):
         return self._image
 
     @staticmethod
-    def timestamp(tn: datetime.datetime):
+    def timestamp(tn: datetime.datetime)->str:
         """
         creates a properly formatted timestamp.
         :param tn: datetime to format to timestream timestamp string
-        :return:
-        """
-        st = tn.strftime('%Y_%m_%d_%H_%M_%S')
-        return st
+        :
+        return  tn.strftime('%Y_%m_%d_%H_%M_%S')
 
     @staticmethod
-    def time2seconds(t: datetime):
+    def time2seconds(t: datetime.datetime)->int:
         """
         converts a datetime to an integer of seconds since epoch
         """
         try:
             return int(t.timestamp())
         except:
-            # only implemented in python3.3
+            # only implemented in python3.3`
             # this is an old compatibility thing
-            return t.hour * 60 * 60 + t.minute * 60 + t.second
+            return int(t.hour * 60 * 60 + t.minute * 60 + t.second)
 
     @property
-    def timestamped_imagename(self):
+    def timestamped_imagename(self)->str:
         """
         builds a timestamped image basename without extension from a datetime.
         :param time_now:
@@ -292,7 +290,7 @@ class Camera(object):
                                                   timestamp=Camera.timestamp(self.current_capture_time))
 
     @property
-    def time_to_capture(self):
+    def time_to_capture(self)->bool:
         """
         filters out times for capture, returns True by default
         returns False if the conditions where the camera should NOT capture are met.
@@ -320,7 +318,7 @@ class Camera(object):
             return False
         return True
 
-    def get_exif_fields(self):
+    def get_exif_fields(self)->dict:
         """
         get default fields for exif, this should be overriden and super-ed
         :return:
@@ -347,6 +345,7 @@ class Camera(object):
             s = cv2.imwrite(fn, np_image_array)
             if s:
                 successes.append(fn)
+
                 # set exif data
                 import pyexiv2
                 meta = pyexiv2.ImageMetadata(fn)
