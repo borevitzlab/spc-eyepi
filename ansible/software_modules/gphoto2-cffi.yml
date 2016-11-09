@@ -1,0 +1,8 @@
+- name: Clone gphoto2-cffi
+  git:
+    repo: https://github.com/borevitzlab/gphoto2-cffi.git
+    clone: yes
+    update: yes
+    force: yes
+    version: "HEAD"
+    dest: "{{source_dir}}/gphoto-cffi"
