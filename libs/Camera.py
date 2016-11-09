@@ -1650,7 +1650,7 @@ class PiCamera(Camera):
                 self.logger.debug("Took {0:.2f}s to capture".format(time.time() - st))
                 return self._image
         except Exception as e:
-            self.logger.critical("EPIC FAIL, trying other method.")
+            self.logger.critical("EPIC FAIL, trying other method. {}",str(e))
         return None
 
 
@@ -1756,7 +1756,6 @@ class IVPortCamera(PiCamera):
                             ast = time.time()
                             IVPortCamera.switch(idx=c)
                             camera.capture(_image, 'rgb')
-
                             # _image = np.empty((camera.resolution[1], camera.resolution[0], 3), dtype=np.uint8)
 
                             if filename:
