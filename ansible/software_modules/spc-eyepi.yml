@@ -1,12 +1,3 @@
-- name: Set units for spc-eyepi
-  set_fact:
-    systemd_units:
-      - {unit: "reboot_daily.timer",          enabled: yes,  state: restarted  }
-      - {unit: "reboot_daily.service",        enabled: no,   state: stopped    }
-      - {unit: "eyepi-api.service",           enabled: yes,  state: started    }
-      - {unit: "eyepi-webinterface.service",  enabled: yes,  state: started    }
-      - {unit: "eyepi-capture.service",       enabled: yes,  state: restarted  }
-
 - name: Install gphoto2-cffi
   pip:
     name: "git+https://github.com/borevitzlab/gphoto2-cffi#egg=gphoto2-cffi"
@@ -32,6 +23,14 @@
     - "spc-eyepi"
     - "spc-eyepi/configs_byserial"
     - "images"
+
+- set_fact:
+    systemd_units:
+      - {unit: "reboot_daily.timer",          enabled: yes,  state: restarted  }
+      - {unit: "reboot_daily.service",        enabled: no,   state: stopped    }
+      - {unit: "eyepi-api.service",           enabled: yes,  state: started    }
+      - {unit: "eyepi-webinterface.service",  enabled: yes,  state: started    }
+      - {unit: "eyepi-capture.service",       enabled: yes,  state: restarted  }
 
 - name: Copy systemd units
   copy:

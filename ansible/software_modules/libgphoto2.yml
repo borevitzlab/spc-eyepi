@@ -1,8 +1,11 @@
-- name: Update package cache
-  pacman:
+- set_fact:
+    libgphoto2_src: "{{source_dir}}/libgphoto2-{{version or 'latest'}}"
+    libgphoto2_build: "{{build_dir}}/libgphoto2"
+
+- pacman:
     update_cache: yes
 
-- name: Install deps
+- name: Install dependencies for libgphoto2
   pacman:
     name: "{{item}}"
     state: present
@@ -11,27 +14,20 @@
     - libexif
     - libjpeg-turbo
 
-- name: Sets vars for gphoto2 path
-  set_fact:
-    libgphoto2_src: "{{source_dir}}/libgphoto2-{{version or 'latest'}}"
-    libgphoto2_build: "{{build_dir}}/libgphoto2"
-
 - name: Download libgphoto2-{{version or 'latest'}}
   git:
     repo: https://github.com/gphoto/libgphoto2.git
     clone: yes
     update: yes
     force: yes
-    version: "{{version or HEAD}}"
+    version: "{{version or 'HEAD'}}"
     dest: "{{libgphoto2_src}}"
 
-- name: Remove build dir
-  file:
-    state: absent
+- file:
     path: "{{libgphoto2_build}}/"
+    state: absent
 
-- name: Create build dir
-  file:
+- file:
     path: "{{libgphoto2_build}}"
     state: directory
 

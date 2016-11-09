@@ -1,7 +1,6 @@
 - include: libgphoto2.yml
 
-- name: Sets vars for gphoto2 path
-  set_fact:
+- set_fact:
     gphoto2_src: "{{source_dir}}/gphoto2-{{version or 'latest'}}"
     gphoto2_build: "{{build_dir}}/gphoto2"
 
@@ -14,13 +13,11 @@
     version: "{{version or 'HEAD'}}"
     dest: "{{gphoto2_src}}"
 
-- name: Remove build dir
-  file:
+- file:
     state: absent
     path: "{{gphoto2_build}}/"
 
-- name: Create build dir
-  file:
+- file:
     path: "{{gphoto2_build}}"
     state: directory
 

@@ -1,13 +1,12 @@
-- name: check local for api key
-  local_action: stat path=secure/api_key.yml
+- local_action: stat path=secure/api_key.yml
   register: api_keyfile
 
 - include_vars:
     file: secure/api_key.yml
   when: api_keyfile.stat.exists
 
-- uri:
-    name: Gets a token from the server
+- name: Get a token from the server
+  uri:
     url: "https://traitcapture.org/api/code/new/1.jsonp?token={{api_key}}"
     return_content: True
   register: reg_code
@@ -19,8 +18,7 @@
 - debug: msg="API token has probably expired or is wrong. Skipping."
   when: reg_code.content is defined and reg_code.content.json is not defined
 
-- name: Create .ssh dir and set permissions
-  file:
+- file:
     path: /home/.ssh
     owner: root
     state: directory
@@ -32,13 +30,11 @@
     dest: /home/.ssh/id_rsa
   when: reg_code.content is defined and reg_code.content.json is defined
 
-- name: stat id_rsa
-  stat:
+- stat:
     path: /home/.ssh/id_rsa
   register: stat_id_rsa
 
-- name: take ownership of id_rsa
-  file:
+- file:
     path: /home/.ssh/id_rsa
     state: file
     mode: 600

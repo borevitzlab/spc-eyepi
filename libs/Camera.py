@@ -84,7 +84,7 @@ def _nested_lookup(key, document):
 
 class Camera(object):
     accuracy = 3
-    default_width, default_height = 640, 480
+    default_width, default_height = 1024, 768
     file_types = ["CR2", "RAW", "NEF", "JPG", "JPEG", "PPM", "TIF", "TIFF"]
     output_types = ["tif", 'jpg']
 
@@ -477,8 +477,7 @@ class Camera(object):
                                     thickness=2,
                                     lineType=cv2.LINE_AA)
 
-                        s = cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"),
-                                        cv2.cvtColor(self._image, cv2.COLOR_BGR2RGB))
+                        s = cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"), self._image )
                         shutil.copy(os.path.join("/dev/shm", self.identifier + ".jpg"),
                                     os.path.join(self.upload_directory, "last_image.jpg"))
 
