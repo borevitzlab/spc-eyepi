@@ -276,7 +276,7 @@ class Camera(object):
         try:
             return int(t.timestamp())
         except:
-            # only implemented in python3.3`
+            # the 'timestamp()' method is only implemented in python3.3`
             # this is an old compatibility thing
             return int(t.hour * 60 * 60 + t.minute * 60 + t.second)
 
@@ -297,7 +297,6 @@ class Camera(object):
         returns False if the conditions where the camera should NOT capture are met.
         :return:
         """
-
         current_naive_time = self.current_capture_time.time()
 
         if not self.config.getboolean("camera", "enabled"):
@@ -346,17 +345,19 @@ class Camera(object):
             s = cv2.imwrite(fn, np_image_array)
             if s:
                 successes.append(fn)
-
-                # set exif data
-                import pyexiv2
-                meta = pyexiv2.ImageMetadata(fn)
-                meta.read()
-                for k, v in self.exif.items():
-                    try:
-                        meta[k] = v
-                    except:
-                        pass
-                meta.write()
+                try:
+                    # set exif data
+                    import pyexiv2
+                    meta = pyexiv2.ImageMetadata(fn)
+                    meta.read()
+                    for k, v in self.exif.items():
+                        try:
+                            meta[k] = v
+                        except:
+                            pass
+                    meta.write()
+                except:
+                    self.logger.error("Couldnt write the appropriate metadata, {}".format(str(e)))
         return successes
 
     @staticmethod

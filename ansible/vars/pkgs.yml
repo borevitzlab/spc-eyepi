@@ -3,6 +3,7 @@ pacman_pkgs:
   - python-numpy
   - opencv
   - python-cffi
+  - python-pycparser
   - openvpn
   - exiv2
   - create_ap
@@ -12,7 +13,7 @@ python_pkgs:
   - {name: netifaces,           pythons: [3]}
   - {name: ipython,             pythons: [3]}
   - {name: "requests[socks]",   pythons: [3]}
-  - {name: "py3exiv2",   pythons: [3]}
+  - {name: "py3exiv2",          pythons: [3]}
   - {name: pysftp,              pythons: [3]}
   - {name: pillow,              pythons: [3]}
   - {name: paramiko,            pythons: [3]}

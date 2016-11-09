@@ -29,7 +29,7 @@
       tags: pkgs,base
 
     - include: tasks/installpkgs.yml suite="Eyepi" pkgs="{{pacman_pkgs}}"
-      tags: pkgs
+      tags: pkgs,dist
 
     - stat: path=secure/vpn.conf
       register: ovpn_conf

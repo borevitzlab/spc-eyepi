@@ -1,13 +1,11 @@
 packages_base:
   - base-devel
-  - sudo
   - mlocate
   - nano
   - curl
   - fish
   - git
   - gnupg
-  - gzip
   - htop
   - iftop
   - lua-filesystem
