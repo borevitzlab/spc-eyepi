@@ -1,4 +1,5 @@
 packages_base:
+  - base-devel
   - sudo
   - mlocate
   - nano
@@ -23,3 +24,5 @@ packages_base:
   - python
   - python-pip
   - glances
+  - cmake
+  - boost

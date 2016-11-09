@@ -1,20 +1,17 @@
 - name: Set units for spc-eyepi
   set_fact:
     systemd_units:
-      - {unit: "eyepi-capture.service",       enabled: yes,  state: restarted  }
       - {unit: "reboot_daily.timer",          enabled: yes,  state: restarted  }
       - {unit: "reboot_daily.service",        enabled: no,   state: stopped    }
       - {unit: "eyepi-api.service",           enabled: yes,  state: started    }
       - {unit: "eyepi-webinterface.service",  enabled: yes,  state: started    }
+      - {unit: "eyepi-capture.service",       enabled: yes,  state: restarted  }
 
-#- name: Download gphoto2-cffi
-#  git:
-#    repo: https://github.com/borevitzlab/gphoto-cffi.git
-#    clone: yes
-#    update: yes
-#    force: yes
-#    version: "HEAD"
-#    dest: "{{home_dir}}/gphoto2-cffi"
+- name: Install gphoto2-cffi
+  pip:
+    name: "git+https://github.com/borevitzlab/gphoto2-cffi#egg"
+    editable: yes
+    state: latest
 
 - name: Download spc-eyepi
   git:

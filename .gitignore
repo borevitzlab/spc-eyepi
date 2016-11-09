@@ -6,3 +6,4 @@ configs_byserial/*
 spc-eyepi.log*
 /ansible/secure/*
 **/*.retry
+**/*.pyc
