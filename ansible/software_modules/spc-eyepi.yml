@@ -9,7 +9,7 @@
 
 - name: Install gphoto2-cffi
   pip:
-    name: "git+https://github.com/borevitzlab/gphoto2-cffi#egg"
+    name: "git+https://github.com/borevitzlab/gphoto2-cffi#egg=gphoto2cffi"
     editable: yes
     state: latest
 
