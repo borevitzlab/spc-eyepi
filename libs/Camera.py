@@ -1651,8 +1651,6 @@ class PiCamera(Camera):
                 return self._image
         except Exception as e:
             self.logger.critical("EPIC FAIL, trying other method. {}",str(e))
-        return None
-
 
 class IVPortCamera(PiCamera):
     """

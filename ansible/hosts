@@ -1,1 +1,1 @@
-192.168.1.19 ansible_user=alarm ansible_password="alarm" become_user=root ansible_become=yes ansible_become_method=su ansible_become_pass=root ansible_python_interpreter=/usr/bin/python2
+10.8.0.6 ansible_user=alarm ansible_password="alarm" become_user=root ansible_become=yes ansible_become_method=su ansible_become_pass=root ansible_python_interpreter=/usr/bin/python2
