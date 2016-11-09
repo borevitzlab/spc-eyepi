@@ -264,7 +264,8 @@ class Camera(object):
         """
         creates a properly formatted timestamp.
         :param tn: datetime to format to timestream timestamp string
-        :
+        :return:
+        """
         return  tn.strftime('%Y_%m_%d_%H_%M_%S')
 
     @staticmethod
