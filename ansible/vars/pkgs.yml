@@ -9,8 +9,6 @@ pacman_pkgs:
   - openvpn
   - create_ap
 
-# aur_pkgs:
-  # - create_ap
 
 python_pkgs:
   - {name: ExifRead,            pythons: [3]}
@@ -37,6 +35,6 @@ python_pkgs:
   - {name: fuzzywuzzy,          pythons: [3]}
   - {name: python-Levenshtein,  pythons: [3]}
   - {name: RPi.GPIO,            pythons: [3]}
-  - {name: "git+https://github.com/borevitzlab/gphoto2-cffi#egg=Package", pythons: [3]}
+  - {name: "git+https://github.com/borevitzlab/gphoto2-cffi#egg=gphoto2-cffi", pythons: [3]}
 # - {name: imreg-dft,           pythons: [3]}
 # - {name: ImageHash,           pythons: [3]}
