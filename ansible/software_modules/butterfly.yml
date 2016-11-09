@@ -1,0 +1,36 @@
+- name: Install butterfly
+  pip:
+    name: butterfly
+    executable: pip3
+    state: latest
+
+- name: Install libsass for butterfly themes
+  pip:
+    name: libsass
+    executable: pip3
+    state: latest
+
+- name: Get butterfly systemd units
+    url: "https://raw.githubusercontent.com/paradoxxxzero/butterfly/master/{{item}}"
+    dest: /etc/systemd/system
+  with_items:
+    - "butterfly.service"
+    - "butterfly.socket"
+
+- name: Make /etc/butterfly/butterfly.conf
+  blockinfile:
+    create: yes
+    dest: /etc/butterfly/butterfly.conf
+    state: present
+    block: |
+      host="0.0.0.0"
+      port=2000
+      unsecure=True
+      login=False
+
+- name: Start and enable butterfly systemd unit
+  systemd:
+    name: butterfly.socket
+    state: started
+    enabled: yes
+    masked: no
