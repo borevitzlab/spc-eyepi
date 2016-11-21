@@ -257,6 +257,10 @@ class Camera(object):
 
     @property
     def image(self):
+        """
+        gets the current image as aa np.array.
+        :return:
+        """
         return self._image
 
     @staticmethod
@@ -266,7 +270,7 @@ class Camera(object):
         :param tn: datetime to format to timestream timestamp string
         :return:
         """
-        return  tn.strftime('%Y_%m_%d_%H_%M_%S')
+        return tn.strftime('%Y_%m_%d_%H_%M_%S')
 
     @staticmethod
     def time2seconds(t: datetime.datetime)->int:
@@ -356,8 +360,8 @@ class Camera(object):
                         except:
                             pass
                     meta.write()
-                except:
-                    self.logger.error("Couldnt write the appropriate metadata, {}".format(str(e)))
+                except Exception as e:
+                    self.logger.error("Couldnt write the appropriate metadata: {}".format(str(e)))
         return successes
 
     @staticmethod
@@ -403,17 +407,31 @@ class Camera(object):
         import random
         s = random.uniform(0, 100)
         if s < 10:
+            # return nothing
             return None
         elif 10 <= s <= 20:
+            # return empty list
             return []
         elif 20 <= s <= 30:
+            # return an invalid list of no files
             return ["Ooh ooh, ahh ahhh!"]
         elif 30 <= s <= 40:
+            # raise an uncaught exception
             raise Exception("BANANAS")
+        elif 40 <= s <= 50:
+            # return some random bytes
+            return bytes(b'4')
+        elif 50 <= s <= 60:
+            # return a string
+            return "Feed me!"
         else:
             return self._capture(filename=filename)
 
     def stop(self):
+        """
+        stops the thread, if the object is a instance of thread
+        :return:
+        """
         self.stopper.set()
 
     def focus(self):
@@ -425,7 +443,9 @@ class Camera(object):
 
     def communicate_with_updater(self):
         """
-        communication member. This is meant to send some metadata to the updater thread.
+        inter-thread communication method.
+        appends a dictionary with some metadata about the current state to a deque that is used to communicate with the
+        server
         :return:
         """
         try:
@@ -434,17 +454,22 @@ class Camera(object):
                 identifier=self.identifier,
                 failed=self.failed,
                 last_capture=int(self.current_capture_time.strftime("%s")))
+            # append our data dict to the communication_queue deque.
             self.communication_queue.append(data)
             self.failed = list()
         except Exception as e:
-            self.logger.error("thread communication error: {}".format(str(e)))
+            self.logger.error("Inter-thread communication error: {}".format(str(e)))
 
     def run(self):
+        """
+        main method. continuously captures and stores images.
+        :return:
+        """
         while True and not self.stopper.is_set():
             self.current_capture_time = datetime.datetime.now()
             # checking if enabled and other stuff
             if self.__class__.thread is not None:
-                self.logger.critical("Camera live view thread is not closed, so camera lock cannot be acquired.")
+                self.logger.critical("Camera live view thread is not closed, camera lock cannot be acquired.")
                 continue
 
             if self.time_to_capture:
@@ -452,7 +477,7 @@ class Camera(object):
                     start_capture_time = time.time()
                     raw_image = self.timestamped_imagename
 
-                    self.logger.info("Capturing Image for {}".format(self.identifier))
+                    self.logger.info("Capturing for {}".format(self.identifier))
 
                     files = self.capture(filename=os.path.join(self.spool_directory, raw_image))
                     # capture. if capture didnt happen dont continue with the rest.
@@ -494,209 +519,30 @@ class Camera(object):
                             files.append(fn)
 
                     for fn in files:
+                        # move files to the upload directory
                         try:
                             if self.config.getboolean("ftp", "timestamped"):
                                 shutil.move(fn, self.upload_directory)
-                                self.logger.info("Captured and stored - {}".format(os.path.basename(fn)))
+                                self.logger.info("Captured & stored for upload - {}".format(os.path.basename(fn)))
                         except Exception as e:
                             self.logger.error("Couldn't move for timestamped: {}".format(str(e)))
 
+                        # remove the spooled files that remain
                         try:
                             if os.path.isfile(fn):
+                                self.logger.info("File remaining in spool directory, removing: {}".format(fn))
                                 os.remove(fn)
                         except Exception as e:
-                            self.logger.error("Couldn't remove spooled: {}".format(str(e)))
+                            self.logger.error("Couldn't remove spooled when it still exists: {}".format(str(e)))
+                    # log total capture time
                     self.logger.info("Total capture time: {0:.2f}s".format(time.time() - start_capture_time))
+                    # communicate our success with the updater
                     self.communicate_with_updater()
+                    # sleep for a little bit so we dont try and capture again so soon.
+                    time.sleep(Camera.accuracy * 2)
                 except Exception as e:
                     self.logger.critical("Image Capture error - {}".format(str(e)))
             time.sleep(0.1)
-
-
-    @property
-    def image_quality(self):
-        """
-        gets the image quality
-        :return:
-        """
-        return self._image_quality
-
-    @image_quality.setter
-    def image_quality(self, value):
-        """
-        sets the image quality
-        :param value: percentage value of image quality
-        :return:
-        """
-        self._image_quality = value
-
-
-    @property
-    def image_size(self):
-        """
-        gets the image resolution
-        :return: image size
-        """
-        return self._image_size
-
-    @image_size.setter
-    def image_size(self, value):
-        """
-        sets the image resolution
-        :param image_size: iterable of len 2 (width, height)
-        :return:
-        """
-        assert type(value) in (list, tuple), "image size is not a list or tuple!"
-        assert len(value) == 2, "image size doesnt have 2 elements width,height are required"
-        value = list(value)
-        # assert value in self._image_size_list, "image size not in available image sizes"
-        self._image_size = value
-
-    @property
-    def zoom_position(self):
-        """
-        retrieves the current zoom position from the camera
-        :return:
-        """
-        return self._zoom_position
-
-    @zoom_position.setter
-    def zoom_position(self, absolute_value):
-        """
-        sets the camera zoom position to an absolute value
-        changes the hfov and vfov in some implementations
-        :param absolute_value: absolute value to set zoom to
-        :return:
-        """
-        assert (self._zoom_range is not None and absolute_value is not None)
-        assert type(absolute_value) in (float, int)
-        absolute_value = min(self._zoom_range[1], max(self._zoom_range[0], absolute_value))
-        self._zoom_position = absolute_value
-        # self._hfov = np.interp(self._zoom_position, self.zoom_list, self.hfov_list)
-        # self._vfov = np.interp(self._zoom_position, self.zoom_list, self.vfov_list)
-
-    @property
-    def zoom_range(self):
-        """
-        retrieves the available zoom range from the camera
-        :return:
-        """
-        return self._zoom_range
-
-    @zoom_range.setter
-    def zoom_range(self, value):
-        assert type(value) in (list, tuple), "must be either list or tuple"
-        assert len(value) == 2, "must be 2 values"
-        self._zoom_range = list(value)
-
-    @property
-    def zoom_list(self):
-        return self._zoom_list
-
-    @zoom_list.setter
-    def zoom_list(self, value):
-        assert type(value) in (list, tuple), "Must be a list or tuple"
-        assert len(value) > 1, "Must have more than one element"
-        self._zoom_list = list(value)
-        # it = iter(self._hfov_list)
-        # self._hfov_list = [next(it, self._hfov_list[-1]) for _ in self._zoom_list]
-        # it = iter(self._vfov_list)
-        # self._vfov_list = [next(it, self._vfov_list[-1]) for _ in self._zoom_list]
-        # self.zoom_position = self._zoom_position
-
-    @property
-    def focus_mode(self):
-        """
-        retrieves the current focus mode from the camera
-        :return:
-        """
-        return self._focus_mode
-
-    @focus_mode.setter
-    def focus_mode(self, mode):
-        self._focus_mode = mode
-
-    @property
-    def focus_position(self):
-        """
-        retrieves the current focus position from the camera
-        :return: focus position or None
-        """
-        return None
-
-    @focus_position.setter
-    def focus_position(self, absolute_position):
-        """
-        sets the camera focus position to an absolute value
-        :param absolute_position: focus position to set the camera to
-        :return:
-        """
-        return self._focus_position
-
-    @property
-    def focus_range(self):
-        return self._focus_range
-
-    @property
-    def hfov_list(self):
-        return self._hfov_list
-
-    @hfov_list.setter
-    def hfov_list(self, value):
-        assert type(value) in (list, tuple), "must be either list or tuple"
-        assert len(value) == len(self._zoom_list), "must be the same length as zoom list"
-        self._hfov_list = list(value)
-
-    @property
-    def vfov_list(self):
-        return self._vfov_list
-
-    @vfov_list.setter
-    def vfov_list(self, value):
-        assert type(value) in (list, tuple), "must be either list or tuple"
-        assert len(value) == len(self._zoom_list), "must be the same length as zoom list"
-        self._vfov_list = list(value)
-
-    @property
-    def hfov(self):
-        self._hfov = np.interp(self._zoom_position, self.zoom_list, self.hfov_list)
-        return self._hfov
-
-    @property
-    def vfov(self):
-        self._vfov = np.interp(self._zoom_position, self.zoom_list, self.vfov_list)
-        return self._vfov
-
-    @hfov.setter
-    def hfov(self, value):
-        self._hfov = value
-
-    @vfov.setter
-    def vfov(self, value):
-        self._vfov = value
-
-    def fov_override(self, fov):
-        """
-        overrides fov calculation from zoom position and lists to allow manual setting
-        :param fov:
-        :return:
-        """
-        self._zoom_position = 0
-        self._zoom_list = [1,2]
-        self._vfov_list = [fov[1], fov[1]]
-        self._hfov_list = [fov[0], fov[0]]
-        self.hfov = fov[0]
-        self.vfov = fov[1]
-
-    @property
-    def status(self):
-        """
-        helper function to get a string of the current status.
-        :return: informative string of zoom_pos zoom_range focus_pos focus_range
-        """
-        fmt_string = "zoom_pos:\t{}\nzoom_range:\t{}"
-        fmt_string = "".join((fmt_string, "\nfocus_pos:\t{}\nfocus_range:\t{}"))
-        return fmt_string.format(self.zoom_position, self.zoom_range, self.focus_position, self.focus_range)
 
 
 class IPCamera(Camera):
@@ -1249,52 +1095,16 @@ class GPCamera(Camera):
     identifier and usb_address are NOT OPTIONAL
     """
 
-    def __init__(self, identifier: str=None, usb_address: tuple=None, lock=None, **kwargs):
+    def __init__(self, identifier: str=None, lock=None, **kwargs):
         """
         this needs to be fixed for multiple cameras.
         :param identifier: serialnumber of camera or None for next camera.
-        :param usb_address: desired camera usb address. second to serialnumber, useful if recreating camera
         :param kwargs:
         """
-        self._serialnumber = None
         self.lock = lock
-        camera = None
-        with self.lock:
-            if identifier:
-                self.identifier = identifier
-                for cam in gp.list_cameras():
-                    sn = cam.status.serialnumber
-                    if sn in identifier:
-                        camera = cam
-                        break
-                else:
-                    raise IOError("Camera not available or connected")
-            elif usb_address and not identifier:
-                try:
-                    camera = gp.Camera(bus=usb_address[0], device=usb_address[1])
-                    sn = str(camera.status.serialnumber)
-                    self.identifier = SysUtil.default_identifier(prefix=sn)
-                except Exception as e:
-                    raise IOError("Camera not found or not supported")
-            else:
-                for cam in gp.list_cameras():
-                    try:
-                        serialnumber = cam.status.serialnumber
-                        sn = str(cam.status.serialnumber)
-                        self.identifier = SysUtil.default_identifier(prefix=sn)
-                        camera = cam
-                        break
-                    except:
-                        pass
-                else:
-                    raise IOError("No cameras available")
-
-            identifier = self.identifier
-            self.usb_address = camera._usb_address
-            self._serialnumber = camera.status.serialnumber
-
+        self._serialnumber = None
+        self.usb_address = [None, None]
         super(GPCamera, self).__init__(identifier, **kwargs)
-
         self.exposure_length = self.config.get('camera', "exposure")
 
     def re_init(self):
@@ -1303,6 +1113,30 @@ class GPCamera(Camera):
         :return:
         """
         super(GPCamera, self).re_init()
+        with self.lock:
+            serialnumber = None
+            camera = None
+            if self.identifier is not None:
+                for cam in gp.list_cameras():
+                    serialnumber = cam.status.serialnumber
+                    if serialnumber in self.identifier:
+                        camera = cam
+                        break
+                else:
+                    raise IOError("Camera not available or connected")
+            else:
+                for cam in gp.list_cameras():
+                    try:
+                        serialnumber = str(cam.status.serialnumber)
+                        self.identifier = SysUtil.default_identifier(prefix=serialnumber)
+                        camera = cam
+                        break
+                    except:
+                        pass
+                else:
+                    raise IOError("No cameras available")
+            self.usb_address = camera._usb_address
+            self._serialnumber = serialnumber
         self.logger.info("Camera detected at usb port {}:{}".format(*self.usb_address))
         self.exposure_length = self.config.getint("camera", "exposure")
 
@@ -1347,22 +1181,28 @@ class GPCamera(Camera):
             else:
                 raise FileNotFoundError("Camera cannot be found")
 
-    def _old_capture(self, filename=None):
+    def _capture(self, filename=None):
         import subprocess
-        fn = os.path.join(self.spool_directory, "{}-temp.%C".format(self.camera_name))
+        import glob
+
+        # the %C filename parameter given to gphoto2 will automatically expand the number of image types that the
+        # camera is set to capture to.
+
+        # this one shouldnt really be used.
+        fn = "{}-temp.%C".format(self.camera_name)
         if filename:
+            # if target file path exists
             fn = os.path.join(self.spool_directory, "{}.%C".format(filename))
 
-        # TODO: THis DOESNT WORK YET!
-        # see port string....
-        cmd = ["gphoto2",
-               "--port=usb:{}:{}".format(),
-               "--set-config=capturetarget=0",
-               "--force-overwrite",
-               "--capture-image-and-download",
-               '--filename={}'.format(fn)
-               ]
-        self.logger.info("Capture start: {}".format(fn))
+        cmd = [
+            "gphoto2",
+            "--port=usb:{bus:03d},{dev:03d}".format(bus=self.usb_address[0], dev=self.usb_address[1]),
+            "--set-config=capturetarget=0",  # capture to sdram
+            "--force-overwrite",  # if the target image exists. If this isnt present gphoto2 will lock up asking
+            "--capture-image-and-download",  # must capture & download in the same call to use sdram target.
+            '--filename={}'.format(fn)
+        ]
+        self.logger.debug("Capture start: {}".format(fn))
         for tries in range(6):
             self.logger.debug("CMD: {}".format(" ".join(cmd)))
             try:
@@ -1371,13 +1211,32 @@ class GPCamera(Camera):
                 if "error" in output.lower():
                     raise subprocess.CalledProcessError("non-zero exit status", cmd=cmd, output=output)
                 else:
-                    self.logger.info("capture success: {}".format(fn))
+                    # log success of capture
+                    self.logger.info("GPCamera capture success: {}".format(fn))
                     for line in output.splitlines():
                         self.logger.debug("GPHOTO2: {}".format(line))
+                    # glob up captured images
+                    filenames = glob.glob(fn.replace("%C", "*"))
+                    # if there are no captured images, log the error
+                    if not len(filenames):
+                        self.logger.error("capture resulted in no files.")
+                    else:
+                        # try and load an image for the last_image.jpg resized doodadery
+                        try:
+                            first = filenames[0] if filenames else None
+                            self._image = cv2.cvtColor(cv2.imread(first, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
+                        except Exception as e:
+                            self.logger.error("Failed to set current image: {}".format(str(e)))
 
-                    time.sleep(1 + (self.accuracy * 2))
-
-                    return True
+                        if filename:
+                            # return the filenames of the spooled images if files were requestsed.
+                            return filenames
+                        else:
+                            # otherwise remove the temporary files that we created in order to fill self._image
+                            for fp in filenames:
+                                os.remove(fp)
+                            # and return self._image
+                            return self._image
 
             except subprocess.CalledProcessError as e:
                 self.logger.error("failed {} times".format(tries))
@@ -1386,9 +1245,11 @@ class GPCamera(Camera):
                         self.logger.error(line.strip())
         else:
             self.logger.critical("Really bad stuff happened. too many tries capturing.")
-            return False
+            if filename:
+                return []
+        return None
 
-    def _capture(self, filename=None):
+    def _cffi_capture(self, filename=None):
         st = time.time()
         camera = None
         for x in range(10):
