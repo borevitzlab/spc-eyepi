@@ -1131,20 +1131,23 @@ class GPCamera(Camera):
         This is incomplete.
         :return:
         """
-        camera = self._get_camera()
         exif = super(GPCamera, self).get_exif_fields()
-        exif['Exif.Image.Make'] = getattr(camera.status, 'manufacturer', 'Make')
-        exif['Exif.Image.Model'] = getattr(camera.status, 'cameramodel', 'Model')
-        exif['Exif.Image.BodySerialNumber'] = self.eos_serial_number
-        exif['Exif.Image.CameraSerialNumber'] = self.serial_number
         try:
-            exif['Exif.Photo.ISOSpeed'] = self['iso'].value
-        except:
-            pass
-        try:
-            exif['Exif.Photo.Aperture'] = self['aperture'].value
-        except:
-            pass
+            camera = self._get_camera()
+            exif['Exif.Image.Make'] = getattr(camera.status, 'manufacturer', 'Make')
+            exif['Exif.Image.Model'] = getattr(camera.status, 'cameramodel', 'Model')
+            exif['Exif.Image.BodySerialNumber'] = self.eos_serial_number
+            exif['Exif.Image.CameraSerialNumber'] = self.serial_number
+            try:
+                exif['Exif.Photo.ISOSpeed'] = self['iso'].value
+            except:
+                pass
+            try:
+                exif['Exif.Photo.Aperture'] = self['aperture'].value
+            except:
+                pass
+        except Exception as e:
+            self.logger.error("Couldnt get full exif data. {}".format(str(e)))
         return exif
 
     def _get_camera(self):
@@ -1283,6 +1286,10 @@ class GPCamera(Camera):
 
     @property
     def serial_number(self)->str:
+        """
+        returns the current serialnumber for the camera.
+        :return:
+        """
         return self._serialnumber
 
     def focus(self):
