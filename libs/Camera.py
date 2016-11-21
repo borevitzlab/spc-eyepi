@@ -1,59 +1,44 @@
 import datetime
-import yaml
 import logging.config
 import os
 import shutil
 import time
 import re
 import numpy as np
-import gphoto2cffi as gp
 from urllib import request as urllib_request
 from xml.etree import ElementTree
 from collections import deque
 from io import BytesIO
-
-USBDEVFS_RESET = 21780
-
-try:
-    import cv2
-except ImportError:
-    print("Couldnt import cv2... no webcam capture")
-
 import threading
 from threading import Thread, Event
-
 from libs.SysUtil import SysUtil
-from gphoto2cffi.errors import GPhoto2Error
-
-try:
-    import picamera.array
-except:
-    pass
+import cv2
 
 logging.config.fileConfig("logging.ini")
 logging.getLogger("paramiko").setLevel(logging.WARNING)
 
+try:
+    # improt yaml module and assert that it has a load function
+    import yaml
+    assert yaml.load
+except Exception as e:
+    logging.error("Couldnt import suitable yaml module, no IP camera support: {}".format(str(e)))
 
-def import_or_install(package, import_name=None, namespace_name=None):
-    try:
-        import importlib
-        try:
-            importlib.import_module(import_name or package)
-        except ImportError:
-            import pip
-            print("Couldn't import package. installing package " + package)
-            pip.main(['install', package])
-        finally:
-            globals()[namespace_name or import_name or package] = importlib.import_module(import_name or package)
-    except Exception as e:
-        print(
-            "couldnt install or import {} from {} for some reason: {}".format(namespace_name or import_name or package,
-                                                                              import_name or package, str(e)))
+try:
+    import gphoto2cffi as gp
+except Exception as e:
+    logging.error("Couldnt import gphoto2-cffi module, no DSLR support: {}".format(str(e)))
 
 
-import_or_install("RPi.GPIO", namespace_name="GPIO")
-import_or_install("Pillow", import_name="PIL.Image", namespace_name="Image")
-import_or_install("picamera")
+try:
+    import picamera
+    import picamera.array
+except Exception as e:
+    logging.error("Couldnt import picamera module, no picamera camera support: {}".format(str(e)))
+    pass
+
+
+USBDEVFS_RESET = 21780
 
 
 def _nested_lookup(key, document):
@@ -1608,7 +1593,7 @@ class IVPortCamera(PiCamera):
         :return:
         """
         time.sleep(1)
-
+        import RPi.GPIO as GPIO
         cls.current_camera_index += 1
         if idx is not None:
             cls.current_camera_index = idx
