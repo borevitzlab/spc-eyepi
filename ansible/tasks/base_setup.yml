@@ -33,8 +33,14 @@
   with_items:
     - en_AU.UTF-8
 
-- name: set timezone to Australia/Canberra
+- name: Timezone Australia/Canberra
   timezone: name=Australia/Canberra
+
+- name: Install Sudo
+  pacman:
+    update_cache: yes
+    name: sudo
+    state: present
 
 - name: Passwordless Sudo
   lineinfile:

@@ -84,7 +84,7 @@ def _nested_lookup(key, document):
 
 class Camera(object):
     accuracy = 3
-    default_width, default_height = 1024, 768
+    default_width, default_height = 1080, 720
     file_types = ["CR2", "RAW", "NEF", "JPG", "JPEG", "PPM", "TIF", "TIFF"]
     output_types = ["tif", 'jpg']
 
