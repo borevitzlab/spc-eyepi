@@ -1,1 +1,11 @@
-10.8.0.6 ansible_user=alarm ansible_password="alarm" become_user=root ansible_become=yes ansible_become_method=su ansible_become_pass=root ansible_python_interpreter=/usr/bin/python2
+[rpis]
+192.168.1.84
+
+[rpis:vars]
+ansible_user=alarm
+ansible_password=alarm
+become_user=root
+ansible_become=yes
+ansible_become_method=su
+ansible_become_pass=root
+ansible_python_interpreter=/usr/bin/python2

@@ -28,5 +28,5 @@ api_key:
 
 - Build with latest Archlinux Arm (see [this](https://archlinuxarm.org/platforms/armv8/broadcom/raspberry-pi-3#installation) installation guide
 - log into the raspberry pi and install python2: `pacman -Syy python2`
-- get ip address of your raspberry pi and create an entry in the `hosts` file.
+- add the ip address to the list in the hosts file under `[rpis]`
 - Run `ansible-playbook -i hosts eyepi.yml`

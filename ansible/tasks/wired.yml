@@ -1,0 +1,27 @@
+- local_action: stat path=secure/wired_networks.yml
+  register: wireless_keyfile
+
+- include_vars:
+    file: secure/wireless_networks.yml
+  when: wireless_keyfile.stat.exists
+
+
+- name: "create wifi profiles"
+  template:
+    src: templates/wpa2_passphrase_dhcp.txt
+    dest: /boot/config.txt
+    path: "/etc/netctl/wireless-{{item.ssid}}"
+    state: file
+    mode: 755
+  - with_items:
+    - "{{wireless_keys}}"
+
+- name: Start/restart/enable netctl-auto
+  systemd:
+    name: "{{item.unit}}"
+    daemon_reload: yes
+    state: "{{item.state}}"
+    enabled: "{{True if item.enabled else False}}"
+    masked: no
+  with_items:
+    - "{{systemd_units}}"

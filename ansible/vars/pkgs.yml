@@ -7,13 +7,15 @@ pacman_pkgs:
   - openvpn
   - exiv2
   - create_ap
+  - wpa_supplicant
+  - wpa_actiond
 
 python_pkgs:
   - {name: ExifRead,            pythons: [3]}
   - {name: netifaces,           pythons: [3]}
   - {name: ipython,             pythons: [3]}
   - {name: "requests[socks]",   pythons: [3]}
-  - {name: "py3exiv2",          pythons: [3]}
+  - {name: py3exiv2,            pythons: [3]}
   - {name: pysftp,              pythons: [3]}
   - {name: pillow,              pythons: [3]}
   - {name: paramiko,            pythons: [3]}

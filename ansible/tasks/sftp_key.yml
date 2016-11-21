@@ -1,3 +1,25 @@
+- name: Add sftp.traitcapture.org to global known hosts
+  lineinfile:
+    create: yes
+    state: present
+    line: "sftp.traitcapture.org ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBDA0sQQQX5oUhD8IJ5p1hgnHqGJSTW8faO68xYrVJwa0u9nXTYJzccK3YoyOBjfflp7dldL6cRO8DWhTfN8TyM8="
+    regexp: "^.*sftp.traitcapture.org.*"
+    dest: /etc/ssh/ssh_known_hosts
+
+- file:
+    path: /etc/ssh/ssh_known_hosts
+    state: file
+    mode: 755
+    owner: root
+
+- name: Add sftp.traitcapture.org to known hosts for root (just to be safe)
+  lineinfile:
+    create: yes
+    state: present
+    line: "sftp.traitcapture.org ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBDA0sQQQX5oUhD8IJ5p1hgnHqGJSTW8faO68xYrVJwa0u9nXTYJzccK3YoyOBjfflp7dldL6cRO8DWhTfN8TyM8="
+    regexp: "^.*sftp.traitcapture.org.*"
+    dest: /home/.ssh/known_hosts
+
 - local_action: stat path=secure/api_key.yml
   register: api_keyfile
 
@@ -13,10 +35,10 @@
   when: api_key is defined
 
 - debug: msg="API token worked, using temporary registration token {{(reg_code.content|from_json)['code']}}"
-  when: reg_code.content is defined and reg_code.content.json is defined
+  when: reg_code.content is defined and reg_code.content|from_json is defined
 
-- debug: msg="API token has probably expired or is wrong. Skipping."
-  when: reg_code.content is defined and reg_code.content.json is not defined
+- debug: msg="API token has probably expired or is wrong. Skipping.{{reg_code.content|from_json}}"
+  when: reg_code.content is defined and reg_code.content|from_json is not defined
 
 - file:
     path: /home/.ssh
@@ -24,11 +46,12 @@
     state: directory
     mode: 700
 
-- name: Gets a new ssh key from the server.
+- name: Get a new ssh key from the server.
   get_url:
     url: "https://traitcapture.org/api/camera/id_rsa/{{(reg_code.content|from_json)['code']}}/{{ansible_machine_id}}/{{inventory_hostname}}"
+    force: yes
     dest: /home/.ssh/id_rsa
-  when: reg_code.content is defined and reg_code.content.json is defined
+  when: reg_code.content is defined and reg_code.content|from_json is defined
 
 - stat:
     path: /home/.ssh/id_rsa
@@ -40,11 +63,3 @@
     mode: 600
     owner: root
   when: stat_id_rsa.stat.exists
-
-- name: Add sftp.traitcapture.org to known hosts
-  lineinfile:
-    create: yes
-    state: present
-    line: "sftp.traitcapture.org ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBDA0sQQQX5oUhD8IJ5p1hgnHqGJSTW8faO68xYrVJwa0u9nXTYJzccK3YoyOBjfflp7dldL6cRO8DWhTfN8TyM8="
-    regexp: "^.*sftp.traitcapture.org.*"
-    dest: /home/.ssh/known_hosts

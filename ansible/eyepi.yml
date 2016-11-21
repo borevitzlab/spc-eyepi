@@ -40,6 +40,9 @@
     - include: tasks/tor.yml
       tags: network
 
+    - include: tasks/wireless.yml interface="wlan0"
+      tags: network,wireless
+
     - include: tasks/sftp_key.yml
       tags: network,sftp
 

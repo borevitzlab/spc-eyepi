@@ -1,5 +1,5 @@
 hostmapping:
-  0000000087ac6d8b: "GC37"
+  0000000087ac6d8b: "BVZ-HousePicam"
   be57fcd526e2487ca0cbae68b3a3c0d4: "GC37"
   69259413d17b4c49bc25aaef446bb3a1: "GC36"
   ce59f2a1bbd94c70b132a64c77f4ff0f: "GC35"
@@ -7,5 +7,4 @@ hostmapping:
   7458b616159b4a53b8285729879b56b1: "GC04"
   05eb901cc8bb4b1a8164ae91e2ee1bfa: "GC03"
   5d499d9bc2c24712997eebfd6ab22f73: "Arboretum-Forest"
-  5f544d00a2d24db59a76836fe6d1b269: "BVZ-HousePicam"
   de816832189948e9a40942e648986c1d: "TEST"
