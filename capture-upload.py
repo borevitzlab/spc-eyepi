@@ -125,7 +125,6 @@ def detect_gphoto(updater):
             try:
                 identifier = SysUtil.default_identifier(prefix=serialnumber)
                 camera = ThreadedGPCamera(identifier=identifier,
-                                          usb_address=usb_add,
                                           lock=lock,
                                           queue=updater.communication_queue)
                 updater.add_to_temp_identifiers(camera.identifier)
