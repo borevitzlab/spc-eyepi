@@ -477,7 +477,7 @@ class Camera(object):
                                     thickness=2,
                                     lineType=cv2.LINE_AA)
 
-                        s = cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"), self._image )
+                        cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"), self._image)
                         shutil.copy(os.path.join("/dev/shm", self.identifier + ".jpg"),
                                     os.path.join(self.upload_directory, "last_image.jpg"))
 
@@ -959,8 +959,7 @@ class IPCamera(Camera):
                 # fast method
                 a = self._read_stream_raw(cmd)
                 b = np.fromstring(a, np.uint8)
-                barry = cv2.imdecode(b, cv2.IMREAD_COLOR)
-                self._image = barry
+                self._image = cv2.imdecode(b, cv2.IMREAD_COLOR)
                 if filename:
                     self._write_np_array(self._image, filename)
                     self.logger.debug("Took {0:.2f}s to capture".format(time.time() - st))
@@ -1348,6 +1347,47 @@ class GPCamera(Camera):
             else:
                 raise FileNotFoundError("Camera cannot be found")
 
+    def _old_capture(self, filename=None):
+        import subprocess
+        fn = os.path.join(self.spool_directory, "{}-temp.%C".format(self.camera_name))
+        if filename:
+            fn = os.path.join(self.spool_directory, "{}.%C".format(filename))
+
+        # TODO: THis DOESNT WORK YET!
+        # see port string....
+        cmd = ["gphoto2",
+               "--port=usb:{}:{}".format(),
+               "--set-config=capturetarget=0",
+               "--force-overwrite",
+               "--capture-image-and-download",
+               '--filename={}'.format(fn)
+               ]
+        self.logger.info("Capture start: {}".format(fn))
+        for tries in range(6):
+            self.logger.debug("CMD: {}".format(" ".join(cmd)))
+            try:
+                output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, universal_newlines=True)
+
+                if "error" in output.lower():
+                    raise subprocess.CalledProcessError("non-zero exit status", cmd=cmd, output=output)
+                else:
+                    self.logger.info("capture success: {}".format(fn))
+                    for line in output.splitlines():
+                        self.logger.debug("GPHOTO2: {}".format(line))
+
+                    time.sleep(1 + (self.accuracy * 2))
+
+                    return True
+
+            except subprocess.CalledProcessError as e:
+                self.logger.error("failed {} times".format(tries))
+                for line in e.output.splitlines():
+                    if not line.strip() == "" and "***" not in line:
+                        self.logger.error(line.strip())
+        else:
+            self.logger.critical("Really bad stuff happened. too many tries capturing.")
+            return False
+
     def _capture(self, filename=None):
         st = time.time()
         camera = None
@@ -1642,6 +1682,7 @@ class PiCamera(Camera):
                     self._image = np.empty((camera.resolution[1], camera.resolution[0], 3), dtype=np.uint8)
                     camera.capture(output, 'rgb')
                     self._image = output.array
+                    self._image = cv2.cvtColor(self._image, cv2.COLOR_BGR2RGB)
             if filename:
                 filenames = self._write_np_array(self._image, filename)
                 self.logger.debug("Took {0:.2f}s to capture".format(time.time() - st))
@@ -1766,6 +1807,7 @@ class IVPortCamera(PiCamera):
                             # setup the images
                             offset = c*w
                             self._image[0:h, offset: offset+w] = _image.array
+                            self._image = cv2.cvtColor(self._image, cv2.COLOR_BGR2RGB)
                         except Exception as e:
                             self.logger.critical("Couldnt capture (IVPORT) with camera {} {}".format(str(c), str(e)))
                         _image.truncate(0)

@@ -93,7 +93,6 @@ class Uploader(Thread):
             self.upload_enabled = True
         self.last_upload_list = []
 
-
     def upload(self, file_names):
         """
         uploads files via sftp. deletes the files as they are uploaded.
