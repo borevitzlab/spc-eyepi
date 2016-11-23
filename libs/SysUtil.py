@@ -309,6 +309,18 @@ class SysUtil(object):
         return cls._ip_address[0]
 
     @classmethod
+    def get_log_files(cls):
+        return list(glob("/home/spc-eyepi/spc-eyepi.log.*"))
+
+    @classmethod
+    def get_isonow(cls):
+        """
+        gets the current time as an iso8601 string
+        :return:
+        """
+        return datetime.datetime.now().isoformat()
+
+    @classmethod
     def get_external_ip(cls):
         """
         returns the external IP address of the raspberry pi through api.ipify.org
