@@ -309,8 +309,30 @@ class SysUtil(object):
         return cls._ip_address[0]
 
     @classmethod
-    def get_log_files(cls):
+    def get_log_files(cls) -> list:
+        """
+        returns the spc-eyepi log files that have been rotated.
+        :return:
+        """
         return list(glob("/home/spc-eyepi/spc-eyepi.log.*"))
+
+    @classmethod
+    def clear_files(cls, filenames: list):
+        """
+        removes all files in the list provided, skipping and logging on an error removing
+        todo: Do different things based on whether is a directory.
+        :param filenames:
+        :return:
+        """
+        for f in filenames:
+            try:
+                os.remove(f)
+            except FileNotFoundError as e:
+                cls.logger.debug(str(e))
+            except IsADirectoryError as e:
+                cls.logger.error(str(e))
+            except Exception as e:
+                cls.logger.error(str(e))
 
     @classmethod
     def get_isonow(cls):

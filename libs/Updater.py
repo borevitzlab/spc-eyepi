@@ -28,14 +28,20 @@ class Updater(Thread):
 
     def upload_logs(self):
         """
-        this will soon use
+        uploads rotated logs to the server.
         :return:
         """
         isonow = SysUtil.get_isonow()
-        validation_msg = self.sshkey.sign_message(isonow)
-        files = {l: open(l, 'rb') for l in SysUtil.get_log_files()}
-        requests.post("https://{}/raspberrypi{}/logs")
-        pass
+        validation_msg = isonow+","+self.sshkey.sign_message(isonow)
+        logs_fp = SysUtil.get_log_files()
+        files = {l: open(l, 'rb') for l in logs_fp}
+        a = requests.post("https://{}/raspberrypi{}/logs",
+                          data={"sig_msg": isonow, "signature": validation_msg},
+                          files=files)
+
+        # clear log files if 200 returned
+        if a.status_code == 200:
+            SysUtil.clear_files(logs_fp)
 
     def add_to_identifiers(self, identifier: str):
         """
