@@ -456,6 +456,27 @@ class SysUtil(object):
         return config
 
     @classmethod
+    def get_light_configs(cls):
+        """
+        gets a list of the light config files (.ini)
+        :return:
+        """
+        def slc_csv_exists(fp):
+            return os.path.exists(os.path.splitext(fp)[0]+".csv") or os.path.exists(os.path.splitext(fp)[0]+".slc")
+
+        def get_id(fp):
+            n, ext = os.path.splitext(os.path.basename(fp))
+            return n
+
+        try:
+            files = [x for x in glob("light_configs_byip/*.ini") if slc_csv_exists(x)]
+            f_and_id = {get_id(x): x for x in files}
+            return f_and_id
+        except Exception as e:
+            cls.logger.error("Couldnt enumerate lights, no light functionality. {}".format(str(e)))
+            return dict()
+
+    @classmethod
     def write_light_config(cls, config: configparser.ConfigParser, identifier: str):
         """
         writes a configuration file to an correct config file path.
@@ -463,30 +484,44 @@ class SysUtil(object):
         :param identifier:
         :return: configparser object
         """
-        path = SysUtil.identifier_to_ini(identifier)
+        path = SysUtil.light_identifier_to_ini(identifier)
         with open(path, 'w+') as configfile:
             config.write(configfile)
         return config
 
     @classmethod
-    def load_or_fix_solarcalc(cls, fp: str)->list:
+    def get_light_datafile(cls, identifier: str)->str:
+        """
+        gets a light datafile
+        :param identifier:
+        :return:
+        """
+        csv = "lights_byip/{}.csv".format(identifier)
+        slc = "lights_byip/{}.slc".format(identifier)
+        if os.path.exists(slc) and os.path.isfile(slc):
+            return slc
+        elif os.path.exists(csv) and os.path.isfile(csv):
+            return csv
+        else:
+            return ""
+
+    @classmethod
+    def load_or_fix_solarcalc(cls, identifier: str)->list:
         """
         function to either load an existing fixed up solarcalc file or to coerce one into the fixed format.
-        :param fp: file path of the solarcalc file
+        :param identifier: identifier of the light for which the solarcalc file exists.
         :return: light timing data as a list of lists.
         """
         lx = []
-        fp =os.path.join(os.getcwd(),fp)
+        fp = cls.get_light_datafile(identifier)
         path, ext = os.path.splitext(fp)
         header10 = ['datetime', 'temp', 'relativehumidity', 'LED1', 'LED2', 'LED3', 'LED4', 'LED5', 'LED6', 'LED7',
                     'LED8', 'LED9', 'LED10', 'total_solar_watt', 'simulated_datetime']
         header7 = ['datetime', 'temp', 'relativehumidity', 'LED1', 'LED2', 'LED3', 'LED4', 'LED5', 'LED6', 'LED7',
                    'total_solar_watt', 'simulated_datetime']
         if not os.path.isfile(fp):
-            print(fp)
             SysUtil.logger.error("no SolarCalc file.")
             raise FileNotFoundError()
-        print("lasjdfhlkjashdflkjahsdlfkjh")
         if ext == ".slc":
             with open(fp) as f:
                 lx = [x.strip().split(",") for x in f.readlines()]
@@ -527,7 +562,6 @@ class SysUtil(object):
             lx[idx+1][-1] = datetime.datetime.strptime(x[-1], "%Y-%m-%dT%H:%M:%S")
         return lx[1:]
 
-
     @classmethod
     def light_identifier_to_ini(cls, identifier: str)->str:
         """
@@ -535,11 +569,11 @@ class SysUtil(object):
         :param identifier:
         :return:
         """
-        for fn in glob("lights_byipaddress/*.ini"):
+        for fn in glob("lights_byip/*.ini"):
             if identifier == cls.get_identifier_from_filename(fn):
                 return fn
         else:
-            return os.path.join("lights_byipaddress/", identifier) + ".ini"
+            return os.path.join("lights_byip/", identifier) + ".ini"
 
     @classmethod
     def identifier_to_yml(cls, identifier: str)->str:

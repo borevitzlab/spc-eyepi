@@ -8,24 +8,26 @@ import requests
 from collections import deque
 from threading import Thread, Event
 from libs.SysUtil import SysUtil
-import csv
-
 
 logging.config.fileConfig("logging.ini")
 
 
-def clamp(v: float, minimum: float, maximum:float) -> float:
+def clamp(v: float, minimum: float, maximum: float) -> float:
     """
-    clamps a number to min/max
+    clamps a number to the minimum and maximum.
     :param v:
+    :param minimum:
+    :param maximum:
     :return:
     """
-    return min(max(v,minimum),maximum)
+    return min(max(v, minimum), maximum)
+
 
 class Controller(object):
     """
     controller abstract that takes a dictionary config section and sets self attributes to it.
     """
+
     def __init__(self, config_section: dict):
         self.min = 0
         self.max = 1000
@@ -33,8 +35,8 @@ class Controller(object):
         self.get_wavelength_command = \
             self.set_wavelength_command = \
             self.set_all_command = \
-            self.set_all_wavelength_command =""
-        for k,v in config_section.items():
+            self.set_all_wavelength_command = ""
+        for k, v in config_section.items():
             setattr(self, k, v)
 
     def _run_command(self, cmd):
@@ -45,7 +47,7 @@ class Controller(object):
         """
         pass
 
-    def set_all(self, power: int=None, percent: int=None):
+    def set_all(self, power: int = None, percent: int = None):
         """
         sets all wavelengths to either an absolute value or a percentage of the total
         :param power:
@@ -56,7 +58,7 @@ class Controller(object):
             self.logger.error("set_all call without set_all_command")
             return None
         if percent:
-            power = int(self.max*(percent/100)+self.min)
+            power = int(self.max * (percent / 100) + self.min)
         cmd = None
         if "{power}" in self.set_all_command:
             cmd = self.set_all_command.format(power=power)
@@ -67,7 +69,7 @@ class Controller(object):
             return None
         return self._run_command(cmd)
 
-    def set_wavelength(self, wl: str, power: int=None, percent: int=None):
+    def set_wavelength(self, wl: str, power: int = None, percent: int = None):
         """
         sets a specific wavelength to a value
         either a power or a percent must be specified
@@ -83,7 +85,7 @@ class Controller(object):
             power = int(self.max * (percent / 100) + self.min)
         cmd = None
         if "{power}" in self.set_wavelength_command:
-            cmd = self.set_wavelength_command.format(wavelength=wl,power=power)
+            cmd = self.set_wavelength_command.format(wavelength=wl, power=power)
         elif "{percent}" in self.set_wavelength_command:
             cmd = self.set_wavelength_command.format(wavelength=wl, percent=percent)
         else:
@@ -134,12 +136,13 @@ class TelNetController(Controller):
     """
     controller for a telnet device
     """
+
     def __init__(self, config_section):
         self.telnet_host = \
             self.telnet_port = ""
         super(TelNetController, self).__init__(config_section)
 
-    def _run_command(self, cmd: str)->bool:
+    def _run_command(self, cmd: str) -> bool:
         """
         sends a telnet command to the host
         :param cmd:
@@ -156,7 +159,7 @@ class TelNetController(Controller):
         telnet.write(asciicmd)
         # loopwait for 10 seconds with 0.01 second timeout until we have an actual response from the server
         cmd_response = b''
-        for x in range(0, int(10.0/0.01)):
+        for x in range(0, int(10.0 / 0.01)):
             cmd_response = telnet.read_until(b'>', timeout=0.01)
             if cmd_response:
                 break
@@ -184,13 +187,13 @@ class HTTPController(Controller):
         self.url_host = self.control_uri = ""
         super(HTTPController, self).__init__(config_section)
         if not self.url_host.startswith("http://"):
-            self.url_host = "http://"+self.url_host
+            self.url_host = "http://" + self.url_host
         if not self.control_uri.startswith("/"):
-            self.control_uri = "/"+self.control_uri
+            self.control_uri = "/" + self.control_uri
 
     def _run_command(self, cmd):
-        payload = json.loads("{"+cmd+"}")
-        response = requests.post(self.url_host+self.control_uri, data=payload)
+        payload = json.loads("{" + cmd + "}")
+        response = requests.post(self.url_host + self.control_uri, data=payload)
         if response.status_code == 200:
             return True
         else:
@@ -219,7 +222,7 @@ class HTTPController(Controller):
             'A13': 0,
             'Submit': 'Set schedule'
         }
-        response = requests.post(self.url_host+"/cgi-bin/sched.cgi", data=payload)
+        response = requests.post(self.url_host + "/cgi-bin/sched.cgi", data=payload)
         if response.status_code == 200:
             return True
         else:
@@ -232,7 +235,7 @@ class Light(object):
     """
     accuracy = 3
 
-    def __init__(self, identifier: str=None, queue: deque=None, **kwargs):
+    def __init__(self, identifier: str = None, queue: deque = None, **kwargs):
         # identifier is NOT OPTIONAL!
         # init with name or not, just extending some of the functionality of Thread
 
@@ -245,7 +248,6 @@ class Light(object):
             self.controller = \
             self.wavelengths = \
             self.csv = \
-            self.csv_fp = \
             self.out_of_range = \
             self.current_timepoint = None
         self.datetimefmt = None
@@ -277,11 +279,9 @@ class Light(object):
 
         wavelengths = self.config.get("light", "wavelengths", fallback="400nm,420nm,450nm,530nm,630nm,660nm,735nm")
         self.wavelengths = [s.strip() for s in wavelengths.split(",")]
-
-        self.csv_fp = self.config.get("light", 'file_path',
-                                      fallback="{identifier}.csv".format(identifier=self.identifier))
-        self.csv = SysUtil.load_or_fix_solarcalc(self.csv_fp)
-        self.logger.info("Loaded {}".format(self.csv_fp))
+        data_fp = SysUtil.get_light_datafile(self.identifier)
+        self.csv = SysUtil.load_or_fix_solarcalc(data_fp)
+        self.logger.info("Loaded {}".format(data_fp))
 
         self._current_wavelength_intentisies = {wl: 0 for wl in self.wavelengths}
         self._current_csv_index = 0
@@ -389,9 +389,9 @@ class Light(object):
 
     def test(self):
         self.current_timepoint = self.csv[-1][0] - datetime.timedelta(hours=12)
-        date_end = self.csv[-1][0]+datetime.timedelta(days=4)
+        date_end = self.csv[-1][0] + datetime.timedelta(days=4)
         self.logger.info("Running from {} to {}".format(self.current_timepoint.strftime("%Y-%m-%d %H:%M"),
-                                             date_end.strftime("%Y-%m-%d %H:%M")))
+                                                        date_end.strftime("%Y-%m-%d %H:%M")))
         while self.current_timepoint < date_end:
             self.current_timepoint = self.current_timepoint + datetime.timedelta(minutes=5)
             wl = self._current_wavelength_intentisies
@@ -399,10 +399,11 @@ class Light(object):
             if wl != self._current_wavelength_intentisies:
                 s = "  ".join(
                     wl + ":" + i.zfill(3) for wl, i in sorted(self._current_wavelength_intentisies.items(),
-                                                                    key=operator.itemgetter(0)))
+                                                              key=operator.itemgetter(0)))
                 # if self.out_of_range:
                 #     self.logger.warning("Running outside of Solarcalc file time range. Repeating the last 24 hours")
-                self.logger.info("#{0:05d} @ {1} - {2}".format(self._current_csv_index, self.current_timepoint.strftime("%Y-%m-%d %H:%M"), s))
+                self.logger.info("#{0:05d} @ {1} - {2}".format(self._current_csv_index,
+                                                               self.current_timepoint.strftime("%Y-%m-%d %H:%M"), s))
                 self.send_state()
 
     def send_state(self):
@@ -419,7 +420,7 @@ class Light(object):
         """
         try:
             data = dict(
-                name="Light-"+self.identifier,
+                name="Light-" + self.identifier,
                 identifier=self.identifier,
                 failed=self.failed,
                 last_timepoint=int(self.current_timepoint.strftime("%s")))
@@ -434,16 +435,20 @@ class Light(object):
             wl = self._current_wavelength_intentisies
             self.calculate_current_state()
             if wl != self._current_wavelength_intentisies:
-                s = " ".join(wl+":"+inte for wl, inte in self._current_wavelength_intentisies.items())
+                s = " ".join(wl + ":" + inte for wl, inte in self._current_wavelength_intentisies.items())
                 if self.out_of_range:
                     self.logger.warning("Running outside of Solarcalc file time range. Repeating the last 24 hours")
-                self.logger.info("#{0:05d} @ {1} - {2}".format(self._current_csv_index, self.current_timepoint.strftime("%Y-%m-%d %H:%M"), s))
+                self.logger.info("#{0:05d} @ {1} - {2}".format(self._current_csv_index,
+                                                               self.current_timepoint.strftime("%Y-%m-%d %H:%M"), s))
 
                 self.send_state()
             time.sleep(1)
 
 
 class ThreadedLights(Thread):
+    """
+    threaded implementation.
+    """
     def __init__(self, *args, **kwargs):
         if hasattr(self, "identifier"):
             Thread.__init__(self, name=self.identifier)

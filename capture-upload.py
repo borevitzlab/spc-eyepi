@@ -11,6 +11,7 @@ import queue
 from libs.Camera import *
 from libs.Updater import Updater
 from libs.Uploader import Uploader
+from libs.Light import ThreadedLights
 from threading import Lock
 
 __author__ = "Gareth Dunstone"
@@ -106,7 +107,6 @@ def detect_webcam(updater):
         logger.error("couldnt detect the usb cameras {}".format(str(e)))
     return tuple()
 
-
 def detect_gphoto(updater):
     """
     detects gphoto cameras and creates thread workers for them.
@@ -136,6 +136,24 @@ def detect_gphoto(updater):
         return start_workers(workers)
     except Exception as e:
         logger.error("Detecting gphoto cameras failed {}".format(str(e)))
+
+
+def detect_lights(updater):
+    """
+    detects lights that have a config file.
+    :param updater:
+    :return:
+    """
+    try:
+        workers = list()
+        for identifier, cfg_p in SysUtil.get_light_configs().items():
+            try:
+                workers.append(ThreadedLights(identifier, queue=updater.communication_queue))
+            except Exception as e:
+                logger.error("Couldnt detect light at {} : ".format(identifier, str(e)))
+        return start_workers(workers)
+    except Exception as e:
+        logger.error("Couldnt detect light configs: {}".format(str(e)))
 
 
 def start_workers(worker_objects):
@@ -169,6 +187,7 @@ def enumerate_usb_devices():
     """
     return set(pyudev.Context().list_devices(subsystem="usb"))
 
+
 if __name__ == "__main__":
     logger = logging.getLogger("Worker_dispatch")
     logger.info("Program startup...")
@@ -178,6 +197,7 @@ if __name__ == "__main__":
     gphoto_workers = list()
     raspberry = list()
     webcams = list()
+    lights = list()
     updater = None
     try:
         # start the updater. this is the first thing that should happen.
@@ -186,7 +206,7 @@ if __name__ == "__main__":
         start_workers((updater,))
         raspberry = detect_picam(updater) or detect_ivport(updater)
         webcams = detect_webcam(updater)
-
+        lights = detect_lights(updater)
         # try 10 times to detect gphoto cameras. Maybe they arent awake yet.
         for x in range(10):
             gphoto_workers = detect_gphoto(updater)
@@ -215,6 +235,7 @@ if __name__ == "__main__":
                 kill_workers(gphoto_workers)
                 kill_workers(webcams)
                 kill_workers(raspberry)
+                kill_workers(lights)
                 kill_workers([updater])
                 raise e
             except Exception as e:
@@ -225,6 +246,7 @@ if __name__ == "__main__":
         kill_workers(gphoto_workers)
         kill_workers(raspberry)
         kill_workers(webcams)
+        kill_workers(lights)
         kill_workers([updater])
         sys.exit()
     except Exception as e:
