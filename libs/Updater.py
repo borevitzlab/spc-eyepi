@@ -1,12 +1,9 @@
 import json
 import logging
 import logging.config
-import ssl
 import time
-
 from collections import deque
 from threading import Thread, Event
-from urllib import request, parse
 import requests
 from schedule import Scheduler
 from .CryptUtil import SSHManager
@@ -14,6 +11,7 @@ from .SysUtil import SysUtil
 
 logging.config.fileConfig("logging.ini")
 remote_server = "traitcapture.org"
+
 
 class Updater(Thread):
     def __init__(self):
@@ -28,12 +26,15 @@ class Updater(Thread):
         self.identifiers = set()
         self.temp_identifiers = set()
 
-
     def upload_logs(self):
         """
         this will soon use
         :return:
         """
+        isonow = SysUtil.get_isonow()
+        validation_msg = self.sshkey.sign_message(isonow)
+        files = {l: open(l, 'rb') for l in SysUtil.get_log_files()}
+        requests.post("https://{}/raspberrypi{}/logs")
         pass
 
     def add_to_identifiers(self, identifier: str):
@@ -42,20 +43,19 @@ class Updater(Thread):
         :param identifier: identifier to add
         :return:
         """
-        self.logger.debug("Adding {} to list of identifiers.".format(identifier))
+        self.logger.debug("Adding {} to list of permanent identifiers.".format(identifier))
         self.identifiers.add(identifier)
 
     def add_to_temp_identifiers(self, temp_identifier: str):
         """
-        adds an identifier to the set of temporary identifiers.
+        adds an identifier to the set of temporary identifiers. that may disappear
         :param temp_identifier: identifier to add
         :return:
         """
-        self.logger.debug("Adding {} to list of temporary identifiers.".format(temp_identifier))
+        self.logger.debug("Adding {} to list of transient identifiers.".format(temp_identifier))
         self.temp_identifiers.add(temp_identifier)
 
     def go(self):
-        self.logger.debug("Announcing to server.")
         try:
             data = self.gather_data()
             data["signature"] = self.sshkey.sign_message(json.dumps(data, sort_keys=True))
@@ -71,11 +71,13 @@ class Updater(Thread):
                             del data[str(key)]
                     if len(data) > 0:
                         self.set_config_data(data)
+                else:
+                    self.logger.error("Unable to authenticate with the server.")
             except Exception as e:
-                self.logger.error("Error getting data from config/status server {}".format(str(e)))
+                self.logger.error("Error getting data from config/status server: {}".format(str(e)))
 
         except Exception as e:
-            print("Error collecting the data {}".format(str(e)))
+            self.logger.error("Error collecting data to post to server: {}".format(str(e)))
 
     def set_config_data(self, data: dict):
         for identifier, update_data in data.items():
@@ -112,6 +114,7 @@ class Updater(Thread):
             if not c:
                 cameras[item['identifier']] = item
                 continue
+
             if item.get("last_capture", 0) > c.get("last_capture", 0):
                 cameras[item['identifier']].update(item)
 
