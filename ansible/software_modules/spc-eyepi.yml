@@ -3,6 +3,7 @@
     name: "git+https://github.com/borevitzlab/gphoto2-cffi#egg=gphoto2-cffi"
     editable: no
     state: latest
+  no_log: yes
 
 - name: Download spc-eyepi
   git:
@@ -22,6 +23,7 @@
   with_items:
     - "spc-eyepi"
     - "spc-eyepi/configs_byserial"
+    - "spc-eyepi/lights_byip"
     - "images"
 
 - set_fact:
@@ -31,6 +33,7 @@
       - {unit: "eyepi-api.service",           enabled: yes,  state: started    }
       - {unit: "eyepi-webinterface.service",  enabled: yes,  state: started    }
       - {unit: "eyepi-capture.service",       enabled: yes,  state: restarted  }
+  no_log: yes
 
 - name: Copy systemd units
   copy:

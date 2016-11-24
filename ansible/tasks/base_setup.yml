@@ -1,23 +1,27 @@
+- include_vars: vars/hostmap.yml
+
 - name: Get cpu serialnumber
   shell: grep -Eor "Serial.*([[:xdigit:]])" /proc/cpuinfo | cut -d " " -f2
   register: check_serial
   check_mode: no
   ignore_errors: yes
+  no_log: yes
   changed_when: True
 
-- name: Sets using machine id
+- name: Use machine id
   set_fact:
     hostname: "{{hostnames[ansible_machine_id]|default(inventory_hostname)}}"
     hostname_short: "{{hostnames[ansible_machine_id]|default(inventory_hostname_short)}}"
     when: "{{hostnames[ansible_machine_id]|default(False)}}"
 
-- name: Sets using cpuid
+- name: Use cpuid
   set_fact:
     hostname: "{{hostnames[check_serial.stdout]|default(hostname or inventory_hostname)}}"
     hostname_short: "{{hostnames[check_serial.stdout]|default(hostname or inventory_hostname_short)}}"
     when: "{{hostnames[check_serial.stdout]|default(False)}}"
 
 - debug: msg="{{ansible_machine_id}}:{{check_serial.stdout}} using name {{hostname}}"
+  no_log: yes
 
 - name: Set hostname
   hostname: name="{{hostname}}"

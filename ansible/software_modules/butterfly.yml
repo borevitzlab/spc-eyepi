@@ -3,14 +3,17 @@
     name: butterfly
     executable: pip3
     state: latest
+  no_log: yes
 
 - name: Install libsass for butterfly themes
   pip:
     name: libsass
     executable: pip3
     state: latest
+  no_log: yes
 
 - name: Get butterfly systemd units
+  get_url:
     url: "https://raw.githubusercontent.com/paradoxxxzero/butterfly/master/{{item}}"
     dest: /etc/systemd/system
   with_items:

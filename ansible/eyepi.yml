@@ -13,7 +13,7 @@
     - vpn_conf: secure/vpn.conf
 
   tasks:
-    - include: tasks/base_setup.yml hostnames="{{hostmapping}}"
+    - include: tasks/base_setup.yml
       tags: base,setup
 
     - include: tasks/rpi_config.yml
@@ -46,6 +46,9 @@
     - include: tasks/sftp_key.yml
       tags: network,sftp
 
+    - include: software_modules/butterfly.yml
+      tags: network,shell
+
     - include: software_modules/gphoto2.yml version=HEAD
       tags: modules,gphoto2
 
@@ -54,5 +57,3 @@
 
     - include: software_modules/spc-eyepi.yml
       tags: modules,spc_eyepi
-
-

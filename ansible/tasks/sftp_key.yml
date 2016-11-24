@@ -37,7 +37,8 @@
 - debug: msg="API token worked, using temporary registration token {{(reg_code.content|from_json)['code']}}"
   when: reg_code.content is defined and reg_code.content|from_json is defined
 
-- debug: msg="API token has probably expired or is wrong. Skipping.{{reg_code.content|from_json}}"
+- name: "API token acquire failure."
+  debug: msg="API token has probably expired or is wrong. Skipping.{{reg_code.content|from_json}}"
   when: reg_code.content is defined and reg_code.content|from_json is not defined
 
 - file:

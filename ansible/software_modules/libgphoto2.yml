@@ -1,9 +1,11 @@
 - set_fact:
     libgphoto2_src: "{{source_dir}}/libgphoto2-{{version or 'latest'}}"
     libgphoto2_build: "{{build_dir}}/libgphoto2"
+  no_log: yes
 
 - pacman:
     update_cache: yes
+  no_log: yes
 
 - name: Install dependencies for libgphoto2
   pacman:
@@ -26,10 +28,12 @@
 - file:
     path: "{{libgphoto2_build}}/"
     state: absent
+  no_log: yes
 
 - file:
     path: "{{libgphoto2_build}}"
     state: directory
+  no_log: yes
 
 - name: Copy gphoto2 to build dir
   command: "rsync -a {{libgphoto2_src}}/ {{libgphoto2_build}}"
@@ -43,3 +47,4 @@
     make install
   args:
     creates: "/usr/lib/libgphoto2.so"
+  no_log: yes

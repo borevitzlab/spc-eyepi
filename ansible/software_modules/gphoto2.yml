@@ -3,6 +3,7 @@
 - set_fact:
     gphoto2_src: "{{source_dir}}/gphoto2-{{version or 'latest'}}"
     gphoto2_build: "{{build_dir}}/gphoto2"
+  no_log: yes
 
 - name: Download gphoto2
   git:
@@ -16,10 +17,12 @@
 - file:
     state: absent
     path: "{{gphoto2_build}}/"
+  no_log: yes
 
 - file:
     path: "{{gphoto2_build}}"
     state: directory
+  no_log: yes
 
 - name: Copy gphoto2 to build dir
   command: "rsync -a {{gphoto2_src}}/ {{gphoto2_build}}"
@@ -33,3 +36,4 @@
     make install
   args:
     creates: "/usr/local/bin/gphoto2"
+  no_log: yes
