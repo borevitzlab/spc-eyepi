@@ -1,9 +1,10 @@
-
 - local_action: stat path=secure/wireless_networks.yml
+  no_log: yes
   register: wireless_keyfile
 
 - include_vars:
     file: secure/wireless_networks.yml
+  no_log: yes
   when: wireless_keyfile.stat.exists
 
 - name: Install wpa_actiond
@@ -12,7 +13,7 @@
     state: present
   when: wireless_keys is defined
 
-- name: "create wifi profiles"
+- name: "Create wifi profiles"
   template:
     src: templates/wpa2_passphrase_dhcp
     dest: "/etc/netctl/wireless-{{ item.ssid }}"
@@ -21,15 +22,28 @@
     - "{{wireless_keys}}"
   when: wireless_keys is defined
 
-- name: Start/restart/enable netctl-auto
+- name: "Check if {{ interface }} exists"
+  stat:
+    path: "/sys/class/net/{{ interface }}"
+  no_log: yes
+  register: interface_device
+
+- name: "Start/restart/enable netctl-auto if {{ interface }} exists"
   systemd:
     name: "netctl-auto@{{ interface }}"
     daemon_reload: yes
     state: restarted
     enabled: yes
     masked: no
-  when: wireless_keys is defined
+  when:
+    - interface_device.stat.exists
 
-- name: Enable all netctl-auto profiles
+- name: "Enable all wirless profiles because {{ interface }} exists"
   command: netctl-auto enable-all
-  when: wireless_keys is defined
+  no_log: yes
+  when: interface_device.stat.exists
+
+- name: "Disable all wirless profiles because {{ interface }} doesnt exist"
+  command: netctl-auto disable-all
+  no_log: yes
+  when: not interface_device.stat.exists

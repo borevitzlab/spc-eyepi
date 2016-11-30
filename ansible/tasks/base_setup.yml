@@ -21,7 +21,6 @@
     when: "{{hostnames[check_serial.stdout]|default(False)}}"
 
 - debug: msg="{{ansible_machine_id}}:{{check_serial.stdout}} using name {{hostname}}"
-  no_log: yes
 
 - name: Set hostname
   hostname: name="{{hostname}}"
@@ -37,6 +36,10 @@
   with_items:
     - en_AU.UTF-8
 
+- name: Set locale
+  command: localectl set-locale LANG=en_AU.UTF-8
+  no_log: yes
+
 - name: Timezone Australia/Canberra
   timezone: name=Australia/Canberra
 
@@ -45,6 +48,7 @@
     update_cache: yes
     name: sudo
     state: present
+  no_log: yes
 
 - name: Passwordless Sudo
   lineinfile:
