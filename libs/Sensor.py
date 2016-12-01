@@ -181,6 +181,14 @@ class Sensor(object):
         except Exception as e:
             self.logger.error("Error appending measurement to the all time data: {}".format(str(e)))
 
+    def isoformat(self, dt: datetime.datetime)->str:
+        """
+        formats to a sorta correct iso format (no long)
+        :param dt: datetime object to format
+        :return:
+        """
+        return dt.strftime("%Y-%m-%dT%H:%M:%S")
+
     def run(self):
         """
         run method.
@@ -195,7 +203,7 @@ class Sensor(object):
                     self.logger.info("Capturing data for {}".format(self.identifier))
                     measurement = self.get_measurement()
                     self.logger.info("Got Measurement {}".format(str(measurement)))
-                    self.measurements.append([self.timestamp(self.current_capture_time), *measurement])
+                    self.measurements.append([self.isoformat(self.current_capture_time), *measurement])
                     self.append_to_alltime(measurement)
                     self.write_daily_rolling()
                     self.communicate_with_updater()
