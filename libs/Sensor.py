@@ -175,7 +175,7 @@ class Sensor(object):
                 with open(tsvf, 'w') as tsvfile:
                     tsvfile.write("\t".join(("datetime", *self.data_headers))+"\n")
             # append the measurements to the files.
-            with open(csvf, 'a') as csvfile, open(tsvf, 'a') as tsvfile:
+            with open(csvf, 'a+') as csvfile, open(tsvf, 'a+') as tsvfile:
                 csvfile.write(",".join(measurement)+"\n")
                 tsvfile.write("\t".join(measurement)+"\n")
         except Exception as e:
