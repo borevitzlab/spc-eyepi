@@ -219,7 +219,7 @@ class DHTMonitor(Sensor):
 
     data_headers = ('humidity', "temperature")
 
-    def __init__(self, identifier: str = None, pin: int = 14, sensor_type="AM2302", **kwargs):
+    def __init__(self, identifier: str = None, pin: int = 14, sensor_type="AM2302",queue: deque=None, **kwargs):
         self.pin = pin
         sensor_args = {
             11: Adafruit_DHT.DHT11,
@@ -233,7 +233,7 @@ class DHTMonitor(Sensor):
             "AM2302": Adafruit_DHT.AM2302,
         }
         self.sensor_type = sensor_args.get(sensor_type, Adafruit_DHT.AM2302)
-        super(DHTMonitor, self).__init__(identifier, **kwargs)
+        super(DHTMonitor, self).__init__(identifier, queue=queue, **kwargs)
 
     def get_measurement(self) -> tuple:
         """
