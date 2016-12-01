@@ -272,6 +272,7 @@ class GenericUploader(Uploader):
         self.total_data_uploaded_tb = 0
         self.total_data_uploaded_b = 0
         self.hostname = hostname
+        self.upload_enabled = True
         self.username = "INTENTIONALLY BLANK"
         self.password = "INTENTIONALLY BLANK"
         self.target_directory = "/"
