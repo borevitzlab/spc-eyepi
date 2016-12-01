@@ -315,8 +315,8 @@ class ThreadedDHT(ThreadedSensor, DHTMonitor):
     """
 
     def __init__(self, *args, **kwargs):
-        SenseHat.__init__(self, *args, **kwargs)
-        super(ThreadedSenseHat, self).__init__(*args, **kwargs)
+        DHTMonitor.__init__(self, *args, **kwargs)
+        super(ThreadedDHT, self).__init__(*args, **kwargs)
 
     def run(self):
-        super(SenseHat, self).run()
+        super(DHTMonitor, self).run()
