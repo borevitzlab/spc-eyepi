@@ -244,8 +244,10 @@ class DHTMonitor(Sensor):
         gets data from the DHT22
         :return:
         """
+        def round_to_1dp(n):
+            return round(n,1)
         try:
-            return Adafruit_DHT.read_retry(self.sensor_type, self.pin)
+            return tuple(map(round_to_1dp, Adafruit_DHT.read_retry(self.sensor_type, self.pin)))
         except Exception as e:
             self.logger.error("Couldnt get data, {}".format(str(e)))
             return tuple(None for _ in range(len(self.data_headers)))
