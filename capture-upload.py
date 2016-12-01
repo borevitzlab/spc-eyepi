@@ -129,7 +129,8 @@ def detect_sensors(updater):
                     workers.append(shat)
                     workers.append(ul)
                 else:
-                    shat = ThreadedDHT(identifier=SysUtil.get_hostname() + "-" + i, queue=updater.communication_queue)
+                    shat = ThreadedDHT(identifier=SysUtil.get_hostname() + "-" + i,
+                                       queue=updater.communication_queue)
                     ul = GenericUploader(shat.identifier, shat.data_directory, "sftp.traitcapture.org")
                     workers.append(shat)
                     workers.append(ul)

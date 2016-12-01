@@ -217,7 +217,7 @@ class DHTMonitor(Sensor):
 
     data_headers = ('humidity', "temperature")
 
-    def __init__(self, identifier: str = None, pin: int = 14, sensor_type: int = "AM2302", **kwargs):
+    def __init__(self, identifier: str = None, pin: int = 14, sensor_type="AM2302", **kwargs):
         self.pin = pin
         sensor_args = {
             11: Adafruit_DHT.DHT11,
@@ -308,6 +308,7 @@ class ThreadedSenseHat(ThreadedSensor, SenseHatMonitor):
 
     def run(self):
         super(SenseHatMonitor, self).run()
+
 
 class ThreadedDHT(ThreadedSensor, DHTMonitor):
     """
