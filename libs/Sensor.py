@@ -176,8 +176,8 @@ class Sensor(object):
                     tsvfile.write("\t".join(("datetime", *self.data_headers))+"\n")
             # append the measurements to the files.
             with open(csvf, 'a') as csvfile, open(tsvf, 'a') as tsvfile:
-                csvfile.write(",".join(*measurement)+"\n")
-                tsvfile.write("\t".join(*measurement)+"\n")
+                csvfile.write(",".join(measurement)+"\n")
+                tsvfile.write("\t".join(measurement)+"\n")
         except Exception as e:
             self.logger.error("Error appending measurement to the all time data: {}".format(str(e)))
 
