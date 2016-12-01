@@ -37,14 +37,16 @@ class Sensor(object):
                  **kwargs):
         # identifier is NOT OPTIONAL!
         # data headers need to be set
-        self.communication_queue = queue or deque(tuple(), 256)
+        if queue is None:
+            queue = deque(tuple(), 256)
+        self.communication_queue = queue
         self.logger = logging.getLogger(identifier)
         self.stopper = Event()
         self.identifier = identifier
         # interval in seconds
         self.interval = interval
         # chunking interval in number of datapoints
-        dlen = 86400 / interval
+        dlen = int(86400 / interval)
 
         # setup a deque of measurements
         self.measurements = deque(maxlen=dlen)
@@ -260,6 +262,11 @@ class SenseHatMonitor(Sensor):
         super(SenseHatMonitor, self).__init__(identifier, **kwargs)
 
     def show_data(self, measurement):
+        """
+        displays the data on the osd.
+        :param measurement:
+        :return:
+        """
         try:
             message_str = "T:{0:.2f} H:{1:.2f} P:{2:.2f}"
             self.sensehat.show_message(message_str.format(*measurement))
