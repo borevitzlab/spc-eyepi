@@ -117,7 +117,7 @@ class Sensor(object):
         try:
             data = dict(
                 name=self.identifier,
-                last_measure=self.current_capture_time,
+                last_measure=int(self.current_capture_time.strftime("%s")),
                 identifier=self.identifier,
                 failed=self.failed
             )
