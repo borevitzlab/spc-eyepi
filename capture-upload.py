@@ -113,33 +113,34 @@ def detect_sensors(updater):
     :param updater: updater object.
     :return:
     """
-    sensors = list()
+    workers = list()
     try:
         sensors_list = tuple()
         with open("sensor_list") as f:
             sensors_list = f.readlines()
 
-        for s in sensors:
+        for s in sensors_list:
             try:
                 i = s.lower().strip()
                 if i == "sensehat":
                     shat = ThreadedSenseHat(identifier=SysUtil.get_hostname() + "-sensehat",
                                             queue=updater.communication_queue)
                     ul = GenericUploader(shat.identifier, shat.data_directory, "sftp.traitcapture.org")
-                    sensors.append(shat)
-                    sensors.append(ul)
+                    workers.append(shat)
+                    workers.append(ul)
                 else:
                     shat = ThreadedDHT(identifier=SysUtil.get_hostname() + "-" + i, queue=updater.communication_queue)
                     ul = GenericUploader(shat.identifier, shat.data_directory, "sftp.traitcapture.org")
-                    sensors.append(shat)
-                    sensors.append(ul)
+                    workers.append(shat)
+                    workers.append(ul)
             except Exception as exc:
                 logger.error("Couldnt detect a sensor: {}".format(str(exc)))
+
     except FileNotFoundError:
         return tuple()
     except Exception as e:
         logger.error("Couldnt detect sensors for some reason: {}".format(str(e)))
-    return sensors
+    return start_workers(workers)
 
 
 def detect_gphoto(updater):
