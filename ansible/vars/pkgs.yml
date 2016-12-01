@@ -36,5 +36,6 @@ python_pkgs:
   - {name: fuzzywuzzy,          pythons: [3]}
   - {name: python-Levenshtein,  pythons: [3]}
   - {name: RPi.GPIO,            pythons: [3]}
+  - {name: "sense-hat",         pythons: [3]}
 # - {name: imreg-dft,           pythons: [3]}
 # - {name: ImageHash,           pythons: [3]}

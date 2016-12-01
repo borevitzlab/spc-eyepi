@@ -4,15 +4,16 @@ import logging
 import os
 import time
 from glob import glob
-from socket import socket, SOCK_DGRAM, AF_INET, gaierror
+from collections import deque
 from threading import Thread, Event
-import paramiko
 import pysftp
 from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
 
 logging.config.fileConfig("logging.ini")
 logging.getLogger("paramiko").setLevel(logging.WARNING)
+
+
 #
 # def pysftp_connection_init_patch(self, host, username=None, private_key=None, port=22):
 #     self._sftp_live = False
@@ -32,11 +33,14 @@ class Uploader(Thread):
     """
     # upload interval
     upload_interval = 120
+    remove_source_files = True
 
-    def __init__(self, identifier, queue=None, config_filename=None):
+    def __init__(self, identifier: str, queue: deque = None, config_filename: str = None):
         # same thread name hackery that the Camera threads use
-        Thread.__init__(self, name=identifier+"-Uploader")
+        Thread.__init__(self, name=identifier + "-Uploader")
         self.stopper = Event()
+        if queue is None:
+            queue = deque(tuple(), 256)
         self.communication_queue = queue
         self.identifier = identifier
         self.logger = logging.getLogger(self.getName())
@@ -59,8 +63,7 @@ class Uploader(Thread):
             self.target_directory = \
             self.camera_name = \
             self.upload_directory = \
-            self.upload_enabled = \
-            self.replace = None
+            self.upload_enabled = None
 
         self.re_init()
         SysUtil().add_watch(self.config_filename, self.re_init)
@@ -79,7 +82,6 @@ class Uploader(Thread):
             self.target_directory = self.config["ftp"]["directory"]
             self.camera_name = self.config["camera"]["name"]
             self.upload_directory = self.config["localfiles"]["upload_dir"]
-            self.replace = self.config.getboolean("ftp", "replace")
             self.upload_enabled = self.config.getboolean("ftp", "enabled")
         elif os.path.splitext(self.config_filename)[-1] == ".yml":
             self.config = SysUtil.open_yaml(self.config_filename)
@@ -89,7 +91,6 @@ class Uploader(Thread):
             self.upload_directory = self.config['upload_dir']
             self.target_directory = self.config['server_dir']
             self.camera_name = self.config['name']
-            self.replace = False
             self.upload_enabled = True
         self.last_upload_list = []
 
@@ -114,7 +115,7 @@ class Uploader(Thread):
 
             with pysftp.Connection(**params) as link:
                 self.mkdir_recursive(link, os.path.join(self.target_directory, self.camera_name))
-                self.logger.debug("Uploading")
+                self.logger.debug("Uploading...")
                 # dump ze files.
                 for f in file_names:
                     # use sftpuloadtracker to handle the progress
@@ -125,8 +126,12 @@ class Uploader(Thread):
                         link.rename(os.path.basename(f) + ".tmp", os.path.basename(f))
                         link.chmod(os.path.basename(f), mode=755)
                         self.total_data_uploaded_b += os.path.getsize(f)
-                        os.remove(f)
-                        self.logger.debug("Successfully uploaded %s through sftp and removed from local filesystem" % f)
+                        if self.remove_source_files:
+                            os.remove(f)
+                            self.logger.debug("Successfully uploaded {} through sftp and removed from local filesystem".format(f))
+                        else:
+                            self.logger.debug("Successfully uploaded {} through sftp".format(f))
+
                         self.last_upload_time = datetime.datetime.now()
                     except Exception as e:
                         self.logger.error("sftp:{}".format(str(e)))
@@ -203,10 +208,13 @@ class Uploader(Thread):
             )
             self.communication_queue.append(data)
         except Exception as e:
-            self.logger.error("thread communication error: {}".format(str(e)))
+            self.logger.error("inter thread communication error: {}".format(str(e)))
 
     def run(self):
-        """ Main upload loop
+        """
+        run method.
+        main loop for Uploaders.
+        :return:
         """
         while True and not self.stopper.is_set():
             try:
@@ -219,17 +227,58 @@ class Uploader(Thread):
                     try:
                         l_im = os.path.join(self.upload_directory, "last_image.jpg")
                         if l_im in upload_list:
-                                upload_list.insert(0, upload_list.pop(upload_list.index(l_im)))
+                            upload_list.insert(0, upload_list.pop(upload_list.index(l_im)))
                     except Exception as e:
-                        self.logger.info("Something went wrong sorting the last image to the front: {}".format(str(e)))
+                        self.logger.info("Something went wrong sorting the last image to the front of the list: {}".format(str(e)))
                     self.upload(upload_list)
                     self.communicate_with_updater()
                     self.logger.info(
                         "Average upload time: {0:.2f}s".format((time.time() - start_upload_time) / len(upload_list)))
                     self.logger.info("Total upload time: {0:.2f}s".format(time.time() - start_upload_time))
             except Exception as e:
-                self.logger.error("ERROR: UPLOAD {}".format(str(e)))
+                self.logger.error("Unhandled exception in uploader run method: {}".format(str(e)))
             time.sleep(Uploader.upload_interval)
 
     def stop(self):
+        """
+        stopper method
+        :return:
+        """
         self.stopper.set()
+
+
+class GenericUploader(Uploader):
+    """
+    generic uploader for uploading logs sensor data, etc.
+    """
+    remove_source_files = False
+
+    def __init__(self, identifier: str, source_dir: str, hostname: str, queue: deque = None):
+        # same thread name hackery that the Camera threads use
+        Thread.__init__(self, name=identifier + "-Uploader")
+        self.stopper = Event()
+        if queue is None:
+            queue = deque(tuple(), 256)
+        self.communication_queue = queue
+        self.identifier = identifier
+        self.camera_name = identifier
+        self.upload_directory = source_dir
+        self.logger = logging.getLogger(self.getName())
+        self.startup_time = datetime.datetime.now()
+        self.ssh_manager = SSHManager()
+        self.machine_id = SysUtil.get_machineid()
+        self.last_upload_time = datetime.datetime.fromtimestamp(0)
+        self.last_upload_list = []
+        self.total_data_uploaded_tb = 0
+        self.total_data_uploaded_b = 0
+        self.hostname = hostname
+        self.username = "INTENTIONALLY BLANK"
+        self.password = "INTENTIONALLY BLANK"
+        self.target_directory = "/"
+
+    def re_init(self):
+        """
+        there is no config to be reloaded here...
+        :return:
+        """
+        self.last_upload_list = []

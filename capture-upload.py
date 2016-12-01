@@ -2,16 +2,14 @@
 
 import logging.config
 import os
-import re
 import subprocess
 import sys
-import time
 import pyudev
-import queue
 from libs.Camera import *
 from libs.Updater import Updater
-from libs.Uploader import Uploader
+from libs.Uploader import Uploader, GenericUploader
 from libs.Light import ThreadedLights
+from libs.Sensor import ThreadedSenseHat, ThreadedDHT
 from threading import Lock
 
 __author__ = "Gareth Dunstone"
@@ -23,11 +21,11 @@ __maintainer__ = "Gareth Dunstone"
 __email__ = "gareth.dunstone@anu.edu.au"
 __status__ = "Feature rollout"
 
-
 logging.config.fileConfig("logging.ini")
 logging.getLogger("paramiko").setLevel(logging.WARNING)
 
-def detect_picam(updater):
+
+def detect_picam(updater) -> tuple:
     """
     detects whether the pi has a picam installed and enabled.
     on all SPC-OS devices this will return true if the picam is installed
@@ -60,7 +58,7 @@ def detect_picam(updater):
     return tuple()
 
 
-def detect_ivport(updater):
+def detect_ivport(updater) -> tuple:
     """
     meant to detect ivport, uninplemented as of 14/06/2016
     :param updater:
@@ -69,7 +67,7 @@ def detect_ivport(updater):
     return tuple()
 
 
-def detect_webcam(updater):
+def detect_webcam(updater) -> tuple:
     """
     meant to detect webcams, NOW IMPLEMENTED!!!! YAY!
     :param updater: updater to send information to.
@@ -94,8 +92,8 @@ def detect_webcam(updater):
             try:
                 # logger.warning("adding {} on {}".format(identifier, sys_number))
                 camera = ThreadedUSBCamera(identifier=identifier,
-                                  sys_number=sys_number,
-                                  queue=updater.communication_queue)
+                                           sys_number=sys_number,
+                                           queue=updater.communication_queue)
                 updater.add_to_temp_identifiers(camera.identifier)
                 workers.append(camera)
                 workers.append(Uploader(identifier, queue=updater.communication_queue))
@@ -107,10 +105,47 @@ def detect_webcam(updater):
         logger.error("couldnt detect the usb cameras {}".format(str(e)))
     return tuple()
 
+
+def detect_sensors(updater):
+    """
+    detects sensors from sensor_list file. This is stupid, hacky and awful.
+    TODO: make this better
+    :param updater: updater object.
+    :return:
+    """
+    sensors = list()
+    try:
+        sensors_list = tuple()
+        with open("sensor_list") as f:
+            sensors_list = f.readlines()
+
+        for s in sensors:
+            try:
+                i = s.lower().strip()
+                if i == "sensehat":
+                    shat = ThreadedSenseHat(identifier=SysUtil.get_hostname() + "-sensehat",
+                                            queue=updater.communication_queue)
+                    ul = GenericUploader(shat.identifier, shat.data_directory, "sftp.traitcapture.org")
+                    sensors.append(shat)
+                    sensors.append(ul)
+                else:
+                    shat = ThreadedDHT(identifier=SysUtil.get_hostname() + "-" + i, queue=updater.communication_queue)
+                    ul = GenericUploader(shat.identifier, shat.data_directory, "sftp.traitcapture.org")
+                    sensors.append(shat)
+                    sensors.append(ul)
+            except Exception as exc:
+                logger.error("Couldnt detect a sensor: {}".format(str(exc)))
+    except FileNotFoundError:
+        return tuple()
+    except Exception as e:
+        logger.error("Couldnt detect sensors for some reason: {}".format(str(e)))
+    return sensors
+
+
 def detect_gphoto(updater):
     """
     detects gphoto cameras and creates thread workers for them.
-    :param q: thread safe updater queue object.
+    :param updater: updater object.
     :return:
     """
     try:
@@ -198,6 +233,7 @@ if __name__ == "__main__":
     raspberry = list()
     webcams = list()
     lights = list()
+    sensors = list()
     updater = None
     try:
         # start the updater. this is the first thing that should happen.
@@ -207,6 +243,7 @@ if __name__ == "__main__":
         raspberry = detect_picam(updater) or detect_ivport(updater)
         webcams = detect_webcam(updater)
         lights = detect_lights(updater)
+        sensors = detect_sensors(updater)
         # try 10 times to detect gphoto cameras. Maybe they arent awake yet.
         for x in range(10):
             gphoto_workers = detect_gphoto(updater)
