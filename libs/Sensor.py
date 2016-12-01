@@ -181,14 +181,6 @@ class Sensor(object):
         except Exception as e:
             self.logger.error("Error appending measurement to the all time data: {}".format(str(e)))
 
-    def isoformat(self, dt: datetime.datetime)->str:
-        """
-        formats to a sorta correct iso format (no long)
-        :param dt: datetime object to format
-        :return:
-        """
-        return dt.strftime("%Y-%m-%dT%H:%M:%S")
-
     def run(self):
         """
         run method.
@@ -196,14 +188,14 @@ class Sensor(object):
         :return:
         """
         while True and not self.stopper.is_set():
-            self.current_capture_time = datetime.datetime.now()
+            self.current_capture_time = datetime.datetime.utcnow()
             # checking if enabled and other stuff
             if self.time_to_measure:
                 try:
                     self.logger.info("Capturing data for {}".format(self.identifier))
                     measurement = self.get_measurement()
                     self.logger.info("Got Measurement {}".format(str(measurement)))
-                    self.measurements.append([self.isoformat(self.current_capture_time), *measurement])
+                    self.measurements.append([self.current_capture_time.isoformat(), *measurement])
                     self.append_to_alltime(self.measurements[-1])
                     self.write_daily_rolling()
                     self.communicate_with_updater()
