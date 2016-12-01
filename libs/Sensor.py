@@ -139,17 +139,21 @@ class Sensor(object):
             with open(csvf, 'w', newline='') as csvfile, open(tsvf, 'w', newline='') as tsvfile, open(jsonf, 'w',
                                                                                                       newline='') as jsonfile:
                 writer = csv.writer(csvfile, dialect=csv.excel)
-                writer.writerow(self.data_headers)
+                writer.writerow(("datetime", *self.data_headers))
                 writer.writerows(self.measurements)
                 writer = csv.writer(tsvfile, dialect=csv.excel_tab)
-                writer.writerow(self.data_headers)
+                writer.writerow(("datetime", *self.data_headers))
                 writer.writerows(self.measurements)
                 d = dict()
                 for k in self.data_headers:
                     d[k] = list()
+                d['datetime'] = []
                 for measurement in self.measurements:
-                    for idx, m in enumerate(measurement[:len(self.data_headers)]):
-                        d[self.data_headers[idx]].append(m)
+                    for idx, m in enumerate(measurement[:len(d.keys())]):
+                        header = "datetime"
+                        if idx != 0:
+                            header = self.data_headers[idx-1]
+                        d[header].append(m)
                 jsonfile.write(json.dumps(d))
         except Exception as e:
             self.logger.error("Error writing daily rolling data {}".format(str(e)))
