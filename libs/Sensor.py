@@ -150,7 +150,7 @@ class Sensor(object):
                 for measurement in self.measurements:
                     for idx, m in enumerate(measurement[:len(self.data_headers)]):
                         d[self.data_headers[idx]].append(m)
-                jsonfile.write(d)
+                jsonfile.write(json.dumps(d))
         except Exception as e:
             self.logger.error("Error writing daily rolling data {}".format(str(e)))
 
@@ -219,7 +219,7 @@ class DHTMonitor(Sensor):
 
     data_headers = ('humidity', "temperature")
 
-    def __init__(self, identifier: str = None, pin: int = 14, sensor_type="AM2302",queue: deque=None, **kwargs):
+    def __init__(self, identifier: str = None, pin: int = 14, sensor_type="AM2302", **kwargs):
         self.pin = pin
         sensor_args = {
             11: Adafruit_DHT.DHT11,
@@ -233,7 +233,7 @@ class DHTMonitor(Sensor):
             "AM2302": Adafruit_DHT.AM2302,
         }
         self.sensor_type = sensor_args.get(sensor_type, Adafruit_DHT.AM2302)
-        super(DHTMonitor, self).__init__(identifier, queue=queue, **kwargs)
+        super(DHTMonitor, self).__init__(identifier, **kwargs)
 
     def get_measurement(self) -> tuple:
         """
@@ -297,7 +297,7 @@ class ThreadedSensor(Thread):
             Thread.__init__(self)
 
         print("Threaded startup")
-        super(ThreadedSensor, self).__init__(*args, **kwargs)
+        # super(ThreadedSensor, self).__init__(*args, **kwargs)
         self.daemon = True
 
     def run(self):

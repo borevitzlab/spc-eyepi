@@ -20,6 +20,7 @@ logging.getLogger("paramiko").setLevel(logging.WARNING)
 try:
     # improt yaml module and assert that it has a load function
     import yaml
+
     assert yaml.load
 except Exception as e:
     logging.error("Couldnt import suitable yaml module, no IP camera support: {}".format(str(e)))
@@ -29,14 +30,12 @@ try:
 except Exception as e:
     logging.error("Couldnt import gphoto2-cffi module, no DSLR support: {}".format(str(e)))
 
-
 try:
     import picamera
     import picamera.array
 except Exception as e:
     logging.error("Couldnt import picamera module, no picamera camera support: {}".format(str(e)))
     pass
-
 
 USBDEVFS_RESET = 21780
 
@@ -72,7 +71,6 @@ class Camera(object):
     default_width, default_height = 1080, 720
     file_types = ["CR2", "RAW", "NEF", "JPG", "JPEG", "PPM", "TIF", "TIFF"]
     output_types = ["tif", 'jpg']
-
 
     frame = None
     thread = None
@@ -128,7 +126,7 @@ class Camera(object):
                     break
         cls.thread = None
 
-    def __init__(self, identifier: str=None, queue: deque=None, noconf: bool=False, **kwargs):
+    def __init__(self, identifier: str = None, queue: deque = None, noconf: bool = False, **kwargs):
         """
         Initialiser for cameras...
         :param identifier: unique identified for this camera, MANDATORY
@@ -232,7 +230,7 @@ class Camera(object):
         self.current_capture_time = datetime.datetime.now()
 
     @property
-    def exif(self)->dict:
+    def exif(self) -> dict:
         """
         returns the current exif data.
         :return:
@@ -249,7 +247,7 @@ class Camera(object):
         return self._image
 
     @staticmethod
-    def timestamp(tn: datetime.datetime)->str:
+    def timestamp(tn: datetime.datetime) -> str:
         """
         creates a properly formatted timestamp.
         :param tn: datetime to format to timestream timestamp string
@@ -258,7 +256,7 @@ class Camera(object):
         return tn.strftime('%Y_%m_%d_%H_%M_%S')
 
     @staticmethod
-    def time2seconds(t: datetime.datetime)->int:
+    def time2seconds(t: datetime.datetime) -> int:
         """
         converts a datetime to an integer of seconds since epoch
         """
@@ -270,7 +268,7 @@ class Camera(object):
             return int(t.hour * 60 * 60 + t.minute * 60 + t.second)
 
     @property
-    def timestamped_imagename(self)->str:
+    def timestamped_imagename(self) -> str:
         """
         builds a timestamped image basename without extension from a datetime.
         :param time_now:
@@ -280,7 +278,7 @@ class Camera(object):
                                                   timestamp=Camera.timestamp(self.current_capture_time))
 
     @property
-    def time_to_capture(self)->bool:
+    def time_to_capture(self) -> bool:
         """
         filters out times for capture, returns True by default
         returns False if the conditions where the camera should NOT capture are met.
@@ -307,7 +305,7 @@ class Camera(object):
             return False
         return True
 
-    def get_exif_fields(self)->dict:
+    def get_exif_fields(self) -> dict:
         """
         get default fields for exif, this should be overriden and super-ed
         :return:
@@ -318,7 +316,7 @@ class Camera(object):
         exif['Exif.Image.CameraSerialNumber'] = self.identifier
         return exif
 
-    def _write_np_array(self, np_image_array: np.array, fn: str)->list:
+    def _write_np_array(self, np_image_array: np.array, fn: str) -> list:
         """
         takes a RGB numpy image array like the ones from cv2 and writes it to disk as a tif and jpg
         converts from rgb to bgr for cv2 so that the images save correctly
@@ -350,7 +348,7 @@ class Camera(object):
         return successes
 
     @staticmethod
-    def _write_raw_bytes(image_bytesio: BytesIO, fn: str)->list:
+    def _write_raw_bytes(image_bytesio: BytesIO, fn: str) -> list:
         """
         Writes a BytesIO object to disk.
         :param image_bytesio: bytesio of an image.
@@ -480,7 +478,7 @@ class Camera(object):
 
                         cv2.putText(self._image,
                                     self.timestamped_imagename,
-                                    org=(20, self._image.shape[0]-20),
+                                    org=(20, self._image.shape[0] - 20),
                                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                                     fontScale=1,
                                     color=(0, 0, 255),
@@ -1080,7 +1078,7 @@ class GPCamera(Camera):
     identifier and usb_address are NOT OPTIONAL
     """
 
-    def __init__(self, identifier: str=None, lock=None, **kwargs):
+    def __init__(self, identifier: str = None, lock=None, **kwargs):
         """
         this needs to be fixed for multiple cameras.
         :param identifier: serialnumber of camera or None for next camera.
@@ -1249,7 +1247,8 @@ class GPCamera(Camera):
                     with image:
                         try:
                             size += image.size
-                            fn = (filename or os.path.splitext(image.filename)[0]) + os.path.splitext(image.filename)[-1]
+                            fn = (filename or os.path.splitext(image.filename)[0]) + os.path.splitext(image.filename)[
+                                -1]
                             if idx == 0:
                                 self._image = cv2.imdecode(np.fromstring(image.read(), np.uint8), cv2.IMREAD_COLOR)
                             image.save(fn)
@@ -1285,7 +1284,7 @@ class GPCamera(Camera):
         return next(iter(self._config(item)), None)
 
     @property
-    def serial_number(self)->str:
+    def serial_number(self) -> str:
         """
         returns the current serialnumber for the camera.
         :return:
@@ -1307,7 +1306,7 @@ class GPCamera(Camera):
             print(str(e))
 
     @property
-    def eos_serial_number(self)->str or None:
+    def eos_serial_number(self) -> str or None:
         """
         returns the eosserialnumber of supported cameras, otherwise the normal serialnumber
         :return:
@@ -1317,7 +1316,7 @@ class GPCamera(Camera):
         camera.release()
         return sn
 
-    def _config(self, field: str)->list:
+    def _config(self, field: str) -> list:
         """
         searches for a field from the camera config.
         :param field: string to search
@@ -1334,6 +1333,7 @@ class USBCamera(Camera):
     """
     USB Camera Class
     """
+
     @classmethod
     def _stream_thread(cls):
         """
@@ -1465,6 +1465,7 @@ class PiCamera(Camera):
     """
     Picamera extension to the Camera abstract class.
     """
+
     @classmethod
     def _stream_thread(cls):
         """
@@ -1522,9 +1523,9 @@ class PiCamera(Camera):
                 camera.iso = self.config.getint("camera", "iso")
 
         except Exception as e:
-           self.logger.error("error setting picamera settings: {}".format(str(e)))
+            self.logger.error("error setting picamera settings: {}".format(str(e)))
 
-    def _capture(self, filename: str=None):
+    def _capture(self, filename: str = None):
         st = time.time()
         try:
             with picamera.PiCamera() as camera:
@@ -1545,6 +1546,7 @@ class PiCamera(Camera):
                 return self._image
         except Exception as e:
             self.logger.critical("EPIC FAIL, trying other method. {}".format(str(e)))
+
 
 class IVPortCamera(PiCamera):
     """
@@ -1568,7 +1570,7 @@ class IVPortCamera(PiCamera):
                    [False, True, False],
                    [True, True, False]]
 
-    def __init__(self, identifier: str=None, queue: deque=None, camera_number: int=None, **kwargs):
+    def __init__(self, identifier: str = None, queue: deque = None, camera_number: int = None, **kwargs):
         """
         special __init__ for the IVport to set the gpio enumeration
         This controls which gpio are on or off to select the camera
@@ -1592,7 +1594,7 @@ class IVPortCamera(PiCamera):
         IVPortCamera.switch(idx=self.__class__.current_camera_index)
 
     @classmethod
-    def switch(cls, idx: int=None):
+    def switch(cls, idx: int = None):
         """
         switches the IVPort to a new camera
         with no index, switches to the next camera, looping around from the beginning
@@ -1624,7 +1626,7 @@ class IVPortCamera(PiCamera):
         GPIO.output(IVPortCamera.enable_pins[1], pin_values[2])
         print(pin_values)
 
-    def _capture(self, filename: str=None)->list:
+    def _capture(self, filename: str = None) -> list:
         """
         capture method for IVPort
         iterates over the number of vameras
@@ -1642,7 +1644,7 @@ class IVPortCamera(PiCamera):
                     time.sleep(2)  # Camera warm-up time
                     self.set_camera_settings(camera)
                     w, h = camera.resolution
-                    self._image = np.empty((h, w*len(IVPortCamera.TRUTH_TABLE), 3), dtype=np.uint8)
+                    self._image = np.empty((h, w * len(IVPortCamera.TRUTH_TABLE), 3), dtype=np.uint8)
                     for c in range(0, len(IVPortCamera.TRUTH_TABLE)):
                         try:
                             ast = time.time()
@@ -1658,8 +1660,8 @@ class IVPortCamera(PiCamera):
                                     "Took {0:.2f}s to capture image #{1}".format(time.time() - ast, str(c)))
 
                             # setup the images
-                            offset = c*w
-                            self._image[0:h, offset: offset+w] = _image.array
+                            offset = c * w
+                            self._image[0:h, offset: offset + w] = _image.array
                             self._image = cv2.cvtColor(self._image, cv2.COLOR_BGR2RGB)
                         except Exception as e:
                             self.logger.critical("Couldnt capture (IVPORT) with camera {} {}".format(str(c), str(e)))
@@ -1710,6 +1712,7 @@ class ThreadedIPCamera(ThreadedCamera, IPCamera):
     def run(self):
         super(IPCamera, self).run()
 
+
 class ThreadedUSBCamera(ThreadedCamera, USBCamera):
     def __init__(self, *args, **kwargs):
         USBCamera.__init__(self, *args, **kwargs)
@@ -1718,14 +1721,15 @@ class ThreadedUSBCamera(ThreadedCamera, USBCamera):
     def run(self):
         super(USBCamera, self).run()
 
+
 class ThreadedPiCamera(ThreadedCamera, PiCamera):
     def __init__(self, *args, **kwargs):
         PiCamera.__init__(self, *args, **kwargs)
         super(ThreadedPiCamera, self).__init__(*args, **kwargs)
 
-
     def run(self):
         super(PiCamera, self).run()
+
 
 class ThreadedIVPortCamera(ThreadedCamera, IVPortCamera):
     def __init__(self, *args, **kwargs):
