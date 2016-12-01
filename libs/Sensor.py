@@ -204,7 +204,7 @@ class Sensor(object):
                     measurement = self.get_measurement()
                     self.logger.info("Got Measurement {}".format(str(measurement)))
                     self.measurements.append([self.isoformat(self.current_capture_time), *measurement])
-                    self.append_to_alltime(measurement)
+                    self.append_to_alltime(self.measurements[-1])
                     self.write_daily_rolling()
                     self.communicate_with_updater()
                 except Exception as e:
