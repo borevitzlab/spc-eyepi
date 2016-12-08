@@ -94,11 +94,12 @@ def get_version():
     """
     return subprocess.check_output(["/usr/bin/git describe --always"], shell=True).decode()
 
-
-app.jinja_env.globals.update(get_time=get_time)
-app.jinja_env.globals.update(get_hostname=get_hostname)
-app.jinja_env.globals.update(version=get_version())
-
+try:
+    app.jinja_env.globals.update(get_time=get_time)
+    app.jinja_env.globals.update(get_hostname=get_hostname)
+    app.jinja_env.globals.update(version=get_version())
+except:
+    pass
 
 def geteosserialnumber(port):
     """

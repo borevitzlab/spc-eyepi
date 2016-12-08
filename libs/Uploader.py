@@ -9,10 +9,11 @@ from threading import Thread, Event
 import pysftp
 from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
-
-logging.config.fileConfig("logging.ini")
-logging.getLogger("paramiko").setLevel(logging.WARNING)
-
+try:
+    logging.config.fileConfig("logging.ini")
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
+except:
+    pass
 
 #
 # def pysftp_connection_init_patch(self, host, username=None, private_key=None, port=22):

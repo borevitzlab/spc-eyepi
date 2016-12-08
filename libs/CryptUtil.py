@@ -15,8 +15,14 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from .SysUtil import SysUtil
 
-keyserver = "traitcapture.org"
 
+try:
+    logging.config.fileConfig("logging.ini")
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
+except:
+    pass
+
+keyserver = "traitcapture.org"
 
 def serialize_signature(signature) -> str:
     """

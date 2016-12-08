@@ -11,8 +11,10 @@ import fcntl
 import datetime
 
 USBDEVFS_RESET = 21780
-
-logging.config.fileConfig("logging.ini")
+try:
+    logging.config.fileConfig("logging.ini")
+except:
+    pass
 
 def sizeof_fmt(num, suffix='B'):
     for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:

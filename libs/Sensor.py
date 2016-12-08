@@ -8,8 +8,11 @@ from threading import Thread, Event
 from libs.SysUtil import SysUtil
 import csv, json
 
-logging.config.fileConfig("logging.ini")
-logging.getLogger("paramiko").setLevel(logging.WARNING)
+try:
+    logging.config.fileConfig("logging.ini")
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
+except:
+    pass
 
 try:
     from sense_hat import SenseHat

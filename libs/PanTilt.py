@@ -6,9 +6,11 @@ from threading import Thread
 from urllib import request as urllib_request
 from xml.etree import ElementTree
 
-logging.config.fileConfig("logging.ini")
-logging.getLogger("paramiko").setLevel(logging.WARNING)
-
+try:
+    logging.config.fileConfig("logging.ini")
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
+except:
+    pass
 
 class PanTilt(object):
     """

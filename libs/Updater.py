@@ -9,7 +9,12 @@ from schedule import Scheduler
 from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
 
-logging.config.fileConfig("logging.ini")
+try:
+    logging.config.fileConfig("logging.ini")
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
+except:
+    pass
+
 remote_server = "traitcapture.org"
 
 

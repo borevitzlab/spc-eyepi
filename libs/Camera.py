@@ -14,9 +14,11 @@ from threading import Thread, Event
 from libs.SysUtil import SysUtil
 import cv2
 
-logging.config.fileConfig("logging.ini")
-logging.getLogger("paramiko").setLevel(logging.WARNING)
-
+try:
+    logging.config.fileConfig("logging.ini")
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
+except:
+    pass
 try:
     # improt yaml module and assert that it has a load function
     import yaml
@@ -40,7 +42,7 @@ except Exception as e:
 USBDEVFS_RESET = 21780
 
 
-def _nested_lookup(key, document):
+def nested_lookup(key, document):
     """
     nested document lookup,
     works on dicts and lists
@@ -50,7 +52,7 @@ def _nested_lookup(key, document):
     """
     if isinstance(document, list):
         for d in document:
-            for result in _nested_lookup(key, d):
+            for result in nested_lookup(key, d):
                 yield result
 
     if isinstance(document, dict):
@@ -58,52 +60,63 @@ def _nested_lookup(key, document):
             if k == key:
                 yield v
             elif isinstance(v, dict):
-                for result in _nested_lookup(key, v):
+                for result in nested_lookup(key, v):
                     yield result
             elif isinstance(v, list):
                 for d in v:
-                    for result in _nested_lookup(key, d):
+                    for result in nested_lookup(key, d):
                         yield result
 
 
 class Camera(object):
+    """
+    Base Camera class.
+
+    :cvar int accuracy: 3: The number of seconds caputre should be accurate to.
+    :cvar int default_width: 1080: Default output width of resized images
+    :cvar int default_height: 720: Default output height of resuzed images
+    :cvar list file_types: ["CR2", "RAW", "NEF", "JPG", "JPEG", "PPM", "TIF", "TIFF"]: supported output image types
+    :cvar list output_types: ["tif", "jpg"]: the output image types, ignored by GPCamera
+    """
+
     accuracy = 3
     default_width, default_height = 1080, 720
     file_types = ["CR2", "RAW", "NEF", "JPG", "JPEG", "PPM", "TIF", "TIFF"]
     output_types = ["tif", 'jpg']
 
-    frame = None
-    thread = None
-    last_access = None
+    _frame = None
+    _thread = None
+    _last_access = None
 
     def init_stream(self):
         """
-        Initialises a video stream thread.
+        Initialises a video stream cls thread.
         :return:
         """
-        if self.__class__.thread is None:
+        if self.__class__._thread is None:
             # start background frame thread
-            self.__class__.thread = threading.Thread(target=self._stream_thread)
-            self.__class__.thread.start()
+            self.__class__._thread = threading.Thread(target=self._stream_thread)
+            self.__class__._thread.start()
             # wait until frames start to be available
-            while self.__class__.frame is None:
+            while self.__class__._frame is None:
                 time.sleep(0.01)
 
     def get_frame(self):
         """
         returns a frame from the stream thread.
+
         :return:
         """
-        self.__class__.last_access = time.time()
+        self.__class__._last_access = time.time()
         self.init_stream()
-        return self.__class__.frame
+        return self.__class__._frame
 
     @classmethod
     def _stream_thread(cls):
         """
         boilerplate stream thread.
         override this with the correct method of opening anc closing the camera
-        make sure to set cls.frame
+        make sure to set cls._frame
         :return:
         """
         print("Unimplemented classmethod call: _stream_thread")
@@ -119,16 +132,17 @@ class Camera(object):
         with get_camera() as camera:
             # let camera warm up
             while True:
-                cls.frame = camera.get_frame().read()
+                cls._frame = camera.get_frame().read()
                 # if there hasn't been any clients asking for frames in
                 # the last 10 seconds stop the thread
-                if time.time() - cls.last_access > 10:
+                if time.time() - cls._last_access > 10:
                     break
-        cls.thread = None
+        cls._thread = None
 
     def __init__(self, identifier: str = None, queue: deque = None, noconf: bool = False, **kwargs):
         """
         Initialiser for cameras...
+
         :param identifier: unique identified for this camera, MANDATORY
         :param queue: deque to push info into
         :param noconf: dont create a config, or watch anything. Used for temporarily streaming from a camera
@@ -181,6 +195,7 @@ class Camera(object):
         """
         re-initialisation.
         this causes all the confiuration values to be reacquired, and a config to be recreated as valid if it is broken.
+
         :return:
         """
         self.logger.info("Re-init...")
@@ -233,6 +248,7 @@ class Camera(object):
     def exif(self) -> dict:
         """
         returns the current exif data.
+
         :return:
         """
         self._exif["Exif.Photo.DateTimeOriginal"] = datetime.datetime.now()
@@ -242,6 +258,7 @@ class Camera(object):
     def image(self):
         """
         gets the current image as aa np.array.
+
         :return:
         """
         return self._image
@@ -250,6 +267,7 @@ class Camera(object):
     def timestamp(tn: datetime.datetime) -> str:
         """
         creates a properly formatted timestamp.
+
         :param tn: datetime to format to timestream timestamp string
         :return:
         """
@@ -259,6 +277,8 @@ class Camera(object):
     def time2seconds(t: datetime.datetime) -> int:
         """
         converts a datetime to an integer of seconds since epoch
+
+        :return int: integer of seconds since 1970-01-01
         """
         try:
             return int(t.timestamp())
@@ -270,8 +290,8 @@ class Camera(object):
     @property
     def timestamped_imagename(self) -> str:
         """
-        builds a timestamped image basename without extension from a datetime.
-        :param time_now:
+        builds a timestamped image basename without extension from self.current_capture_time
+
         :return: string image basename
         """
         return '{camera_name}_{timestamp}'.format(camera_name=self.camera_name,
@@ -282,7 +302,8 @@ class Camera(object):
         """
         filters out times for capture, returns True by default
         returns False if the conditions where the camera should NOT capture are met.
-        :return:
+
+        :return bool: whether or not it is time to capture
         """
         current_naive_time = self.current_capture_time.time()
 
@@ -308,7 +329,7 @@ class Camera(object):
     def get_exif_fields(self) -> dict:
         """
         get default fields for exif, this should be overriden and super-ed
-        :return:
+        :return dict: exif fields
         """
         exif = dict()
         exif['Exif.Image.Make'] = "Make"
@@ -320,9 +341,11 @@ class Camera(object):
         """
         takes a RGB numpy image array like the ones from cv2 and writes it to disk as a tif and jpg
         converts from rgb to bgr for cv2 so that the images save correctly
+        also tries to add exif data to the images
+
         :param np_image_array: 3 dimensional image array, x,y,rgb
         :param fn: filename
-        :return:
+        :return list: files successfully written.
         """
         # output types must be valid!
         fnp = os.path.splitext(fn)[0]
@@ -351,9 +374,10 @@ class Camera(object):
     def _write_raw_bytes(image_bytesio: BytesIO, fn: str) -> list:
         """
         Writes a BytesIO object to disk.
+
         :param image_bytesio: bytesio of an image.
         :param fn:
-        :return:
+        :return str: file name
         """
         with open(fn, 'wb') as f:
             f.write(image_bytesio.read())
@@ -363,6 +387,7 @@ class Camera(object):
     def _capture(self, filename=None):
         """
         internal camera capture method. override this method when creating a new type of camera.
+
         :param filename: image filename without extension
         :return: numpy image array if filename not specified, otherwise list of files.
         """
@@ -370,8 +395,10 @@ class Camera(object):
 
     def capture(self, filename=None):
         """
-        public capture method. in testing override this to be capture_monkey:
+        public capture method. for testing override this to be capture_monkey:
         Camera.capture = Camera.capture_monkey
+        For extending the Camera class override the Camera._capture method, not this one.
+
         :param filename:
         :return:
         """
@@ -383,6 +410,7 @@ class Camera(object):
         Will sometimes return None, an empty list or an invalid filename.
         Sometimes will raise a generic Exception.
         The rest of the time it will capture a valid image.
+
         :param filename:
         :return:
         """
@@ -412,7 +440,8 @@ class Camera(object):
 
     def stop(self):
         """
-        stops the thread, if the object is a instance of thread
+        stops the capture thread, if the self is an instance of thread
+
         :return:
         """
         self.stopper.set()
@@ -420,6 +449,7 @@ class Camera(object):
     def focus(self):
         """
         override this method for manual autofocus trigger
+
         :return:
         """
         pass
@@ -429,6 +459,7 @@ class Camera(object):
         inter-thread communication method.
         appends a dictionary with some metadata about the current state to a deque that is used to communicate with the
         server
+
         :return:
         """
         try:
@@ -445,13 +476,14 @@ class Camera(object):
 
     def run(self):
         """
-        main method. continuously captures and stores images.
+        Main method. continuously captures and stores images.
+
         :return:
         """
         while True and not self.stopper.is_set():
             self.current_capture_time = datetime.datetime.now()
             # checking if enabled and other stuff
-            if self.__class__.thread is not None:
+            if self.__class__._thread is not None:
                 self.logger.critical("Camera live view thread is not closed, camera lock cannot be acquired.")
                 continue
 
@@ -530,12 +562,11 @@ class Camera(object):
 
 class IPCamera(Camera):
     """
-    IPCamera
-    needs work to support both ymlconfig and normal configs.
+    IPCamera, unfinished and untested.
+    TODO: needs work to support both ymlconfig and normal configs
     """
 
     def __init__(self, identifier=None, ip=None, ymlconfig=None, queue=None, **kwargs):
-
         if not ymlconfig:
             config = dict()
 
@@ -546,7 +577,7 @@ class IPCamera(Camera):
 
         config = config.copy()
         self.communication_queue = queue or deque(tuple(), 256)
-        self.logger = logging.getLogger(self.getName())
+        self.logger = logging.getLogger(identifier)
         self.stopper = Event()
         self.identifier = identifier
 
@@ -639,10 +670,12 @@ class IPCamera(Camera):
 
     def _read_stream(self, command_string, *args, **kwargs):
         """
-        opens a url with the current HTTP_login string
-        :type command_string: str
-        :param command_string: url to go to with parameters
-        :return: string of data returned from the camera
+        Opens a url with the current HTTP_login string
+        TODO: switch to `requests`
+
+        :type str command_string: str
+        :param str command_string: url to go to with parameters
+        :return str: data returned from the camera
         """
         url = self._url.format(*args, command=command_string, **kwargs)
         if "&" in url and "?" not in url:
@@ -657,10 +690,11 @@ class IPCamera(Camera):
 
     def _read_stream_raw(self, command_string, *args, **kwargs):
         """
-        opens a url with the current HTTP_login string
-        :type command_string: str
-        :param command_string: url to go to with parameters
-        :return: string of data returned from the camera
+        Opens a url with the current HTTP_login string
+
+        :type str command_string: str
+        :param str command_string: url to go to with parameters
+        :return: str string of data returned from the camera
         """
         url = self._url.format(*args, command=command_string, **kwargs)
         if "&" in url and "?" not in url:
@@ -674,9 +708,10 @@ class IPCamera(Camera):
 
     def _get_cmd(self, cmd):
         """
-        gets a url command from the dict of available commands.
-        :param cmd:
-        :return:
+        Gets a url command from the dict of available commands.
+
+        :param str cmd:
+        :return str: command format string
         """
         cmd_str = self.commands.get(cmd, None)
         if not cmd_str and cmd_str not in self._notified_unavailable:
@@ -695,9 +730,10 @@ class IPCamera(Camera):
         text.
         returns a dict if more than 1 arg.
         returns single value if 1 arg, or None if single arg not found in xml.
+
         :param message_xml:
         :param args: list of keys to find values for.
-        :return:
+        :return: value requested, or None if it does not exist
         """
         # assert (len(args) > 0, "No keys to search")
         root_element = ElementTree.fromstring(message_xml)
@@ -731,6 +767,7 @@ class IPCamera(Camera):
     def get_value_from_stream(raw_text, *args):
         """
         parses a string returned from the camera by urlopen into a list
+
         :type raw_text: str to be parsed
         :param text: text to parse
         :param args: string keys to select
@@ -1326,7 +1363,7 @@ class GPCamera(Camera):
         camera = self._get_camera()
         config = camera._get_config()
         camera.release()
-        return list(_nested_lookup(field, config))
+        return list(nested_lookup(field, config))
 
 
 class USBCamera(Camera):
@@ -1356,15 +1393,15 @@ class USBCamera(Camera):
         while True:
             ret, frame = cam.read()
             frame = cv2.imencode(".jpg", frame)
-            cls.frame = frame[1].tostring()
+            cls._frame = frame[1].tostring()
             # store frame
 
             # if there hasn't been any clients asking for frames in
             # the last 10 seconds stop the thread
-            if time.time() - cls.last_access > 10:
+            if time.time() - cls._last_access > 10:
                 print("ThreadShutdown")
                 break
-        cls.thread = None
+        cls._thread = None
 
     def __init__(self, identifier, sys_number, **kwargs):
         """
@@ -1490,7 +1527,7 @@ class PiCamera(Camera):
                                                      use_video_port=True):
                     # store frame
                     stream.seek(0)
-                    cls.frame = stream.read()
+                    cls._frame = stream.read()
 
                     # reset stream for next frame
                     stream.seek(0)
@@ -1499,12 +1536,12 @@ class PiCamera(Camera):
                     # if there hasn't been any clients asking for frames in
                     # the last 10 seconds stop the thread
                     time.sleep(0.01)
-                    if time.time() - cls.last_access > 1:
+                    if time.time() - cls._last_access > 1:
                         break
         except Exception as e:
             print("Couldnt acquire camera")
         print("Closing Thread")
-        cls.thread = None
+        cls._thread = None
 
     def set_camera_settings(self, camera):
         """

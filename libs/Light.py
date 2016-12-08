@@ -9,8 +9,11 @@ from collections import deque
 from threading import Thread, Event
 from libs.SysUtil import SysUtil
 
-logging.config.fileConfig("logging.ini")
-
+try:
+    logging.config.fileConfig("logging.ini")
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
+except:
+    pass
 
 def clamp(v: float, minimum: float, maximum: float) -> float:
     """
