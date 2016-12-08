@@ -1,0 +1,199 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SPC-EyePi &#8212; SpectroPhenoClimatron EyePI 3.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '3.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="spc-eyepi">
+<h1>SPC-EyePi<a class="headerlink" href="#spc-eyepi" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="credits-license">
+<h2>Credits/License<a class="headerlink" href="#credits-license" title="Permalink to this headline">¶</a></h2>
+<p>The goal of this project is to create a robust open source code base for controlling DSLR and the on-board Raspberry Pi camera from a Raspberry Pi or similar Linux boards.</p>
+<p>This project is open source but please <a class="reference external" href="https://github.com/borevitzlab">contact us</a> before using the code so we can know who is using it and please make sure to link back here in any code you use. This project is in active development but we are happy to work with other groups to develop new features so drop us a line if you are interested.</p>
+<p>This code was developed for the TraitCapture project at ANU.</p>
+<p>Please cite: <em>Brown, Tim B., et al.</em> <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S1369526614000181">TraitCapture : genomic and environment modelling of plant phenomic data. Current opinion in plant biology 18 (2014): 73-79</a>. when using the code.</p>
+</div>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>Currently supported and maintained:</dt>
+<dd><ul class="first last simple">
+<li>Control of multiple DSLR cameras.</li>
+<li>Upload of JPG, RAW or JPG+RAW images.</li>
+<li>Captured photos are cached locally and  uploaded to a central server of your choice via sftp or ftp.</li>
+<li>Cameras settings can be controlled from a web page.</li>
+<li>Wifi and ethernet. Creates an ad-hoc wifi network no know network is found for easier config of new systems and in new wifi environments.</li>
+<li>Camera uploads it&#8217;s IP address along with image for easy finding of the camera on your network</li>
+<li>Camera can auto-upload both timestamped and fixed filenames (for use as a webcam or with auto archiving systems requiring a fixed image name).</li>
+<li>Extensively tested with Canons (600D, 700D, 70D). Works with Nikon D7100 but not extensively tested.</li>
+<li>Ansible provisioning system for raspberry Pis running Arch Linux.</li>
+</ul>
+</dd>
+<dt>Planned or in development:</dt>
+<dd><ul class="first last simple">
+<li>Time-series scheduler  to auto-set camera exposure and shutter speed settings (useful for shooting 24-hrs a day in fixed but variable lighting situations like plant growth chambers)</li>
+<li>RAM spooling with sd card fallback to increase SD card life.</li>
+<li>Auto Bulb-ramping... we are aspiring to be able to shoot 24-7 DSLR timelapses through sunrise and sunset.</li>
+<li>DB-based camera management system.</li>
+<li>Weatherproof and solar powered camera housing  for full remote timelapse solution</li>
+</ul>
+</dd>
+</dl>
+<p>Automatically detects connected usb DSLRs and the Raspberry Pi camera (just duplicate <em>example.ini</em> to <em>picam.ini</em> and <em>eyepi.ini</em> and change the configuration values). DSLR&#8217;s are given a unique ID based on hardware serial.</p>
+<p>Camera name can be easily changed to a user friendly value.</p>
+</div>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt><em>os:</em></dt>
+<dd><ul class="first last simple">
+<li>python3</li>
+<li>python-cffi</li>
+<li>exiv2</li>
+<li>opencv 3.1 <a class="reference external" href="https://www.archlinux.org/packages/extra/x86_64/opencv/">[Arch-Extra]</a></li>
+<li>tor (optional)</li>
+</ul>
+</dd>
+<dt><em>python</em></dt>
+<dd><ul class="first last simple">
+<li><a class="reference external" href="http://flask.pocoo.org/">flask</a></li>
+<li>flask-bcrypt <a class="reference external" href="https://pypi.python.org/pypi/Flask-Bcrypt">[pip]</a></li>
+<li>flask-login <a class="reference external" href="https://pypi.python.org/pypi/Flask-Login">[pip]</a></li>
+<li>WTForms <a class="reference external" href="https://pypi.python.org/pypi/WTForms">[pip]</a></li>
+<li>browsepy <a class="reference external" href="https://pypi.python.org/pypi/browsepy/0.4.0">[pip]</a></li>
+<li>pyudev <a class="reference external" href="https://pypi.python.org/pypi/pyudev">[pip]</a></li>
+<li>gphoto2-cffi <a class="reference external" href="https://github.com/borevitzlab/gphoto2-cffi">[git]</a></li>
+<li>numpy</li>
+<li>pillow <a class="reference external" href="https://pypi.python.org/pypi/Pillow/3.1.1">[pip]</a></li>
+<li>picamera (optional) <a class="reference external" href="https://pypi.python.org/pypi/picamera/1.12">[pip]</a></li>
+<li>py3exiv2 (optional) <a class="reference external" href="https://pypi.python.org/pypi/py3exiv2/0.2.1">[pip]</a></li>
+<li>cryptography <a class="reference external" href="https://pypi.python.org/pypi/cryptography">[pip]</a></li>
+<li>pysftp <a class="reference external" href="https://pypi.python.org/pypi/pysftp">[pip]</a></li>
+<li>requests[socks] <a class="reference external" href="https://pypi.python.org/pypi/requests/2.11.1">[pip]</a></li>
+<li>create_ap <a class="reference external" href="https://aur.archlinux.org/packages/create_ap">[aur]</a></li>
+<li>schedule <a class="reference external" href="https://pypi.python.org/pypi/schedule">[pip]</a></li>
+<li>pyyaml <a class="reference external" href="https://pypi.python.org/pypi/PyYAML/3.12">[pip]</a></li>
+<li>RPi.GPIO (optional) <a class="reference external" href="https://pypi.python.org/pypi/RPi.GPIO/0.6.3">[pip]</a></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="extra-details">
+<h2>Extra Details<a class="headerlink" href="#extra-details" title="Permalink to this headline">¶</a></h2>
+<p>If you are capturing using a Raspberry Pi camera you need to install <strong>py3exiv2</strong> if you want your images to have exif data.</p>
+<p>There is code to support the IVMech IVPort, however its a little tricky to get working as there is no method to detect the device yet, and of course you need to install <strong>RPi.GPIO</strong>.</p>
+<p>To get into the web interface using the wifi the default ip address is 192.168.12.1 and you will need to use the user admin:spceyepidefaultaccess (it must be running first).</p>
+<p>SPC-EyePi also updates from the master branch of this repository.</p>
+</div>
+<div class="section" id="documentation-links">
+<h2>Documentation Links<a class="headerlink" href="#documentation-links" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="ansible.html"><span class="doc">Ansible Deployment</span></a></li>
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">SPC-EyePi</a><ul>
+<li><a class="reference internal" href="#credits-license">Credits/License</a></li>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#extra-details">Extra Details</a></li>
+<li><a class="reference internal" href="#documentation-links">Documentation Links</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
