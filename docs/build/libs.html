@@ -1,0 +1,1812 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>libs Package group &#8212; SpectroPhenoClimatron EyePI 3.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '3.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="libs-package-group">
+<h1>libs Package group<a class="headerlink" href="#libs-package-group" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-libs.Camera">
+<span id="libs-camera-module"></span><h2>libs.Camera module<a class="headerlink" href="#module-libs.Camera" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="libs.Camera.Camera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">Camera</code><span class="sig-paren">(</span><em>identifier: str = None</em>, <em>queue: collections.deque = None</em>, <em>noconf: bool = False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Base Camera class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference internal" href="#libs.Camera.Camera.accuracy" title="libs.Camera.Camera.accuracy"><strong>accuracy</strong></a> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; 3: The number of seconds caputre should be accurate to.</li>
+<li><a class="reference internal" href="#libs.Camera.Camera.default_width" title="libs.Camera.Camera.default_width"><strong>default_width</strong></a> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; 1080: Default output width of resized images</li>
+<li><a class="reference internal" href="#libs.Camera.Camera.default_height" title="libs.Camera.Camera.default_height"><strong>default_height</strong></a> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; 720: Default output height of resuzed images</li>
+<li><a class="reference internal" href="#libs.Camera.Camera.file_types" title="libs.Camera.Camera.file_types"><strong>file_types</strong></a> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; [&#8220;CR2&#8221;, &#8220;RAW&#8221;, &#8220;NEF&#8221;, &#8220;JPG&#8221;, &#8220;JPEG&#8221;, &#8220;PPM&#8221;, &#8220;TIF&#8221;, &#8220;TIFF&#8221;]: supported output image types</li>
+<li><a class="reference internal" href="#libs.Camera.Camera.output_types" title="libs.Camera.Camera.output_types"><strong>output_types</strong></a> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; [&#8220;tif&#8221;, &#8220;jpg&#8221;]: the output image types, ignored by GPCamera</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="libs.Camera.Camera.accuracy">
+<code class="descname">accuracy</code><em class="property"> = 3</em><a class="headerlink" href="#libs.Camera.Camera.accuracy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.capture">
+<code class="descname">capture</code><span class="sig-paren">(</span><em>filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.capture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.capture" title="Permalink to this definition">¶</a></dt>
+<dd><p>public capture method. for testing override this to be capture_monkey:
+Camera.capture = Camera.capture_monkey
+For extending the Camera class override the Camera._capture method, not this one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.capture_monkey">
+<code class="descname">capture_monkey</code><span class="sig-paren">(</span><em>filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.capture_monkey"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.capture_monkey" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulates things going horribly wrong with the capture.
+Will sometimes return None, an empty list or an invalid filename.
+Sometimes will raise a generic Exception.
+The rest of the time it will capture a valid image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.communicate_with_updater">
+<code class="descname">communicate_with_updater</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.communicate_with_updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.communicate_with_updater" title="Permalink to this definition">¶</a></dt>
+<dd><p>inter-thread communication method.
+appends a dictionary with some metadata about the current state to a deque that is used to communicate with the
+server</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.default_height">
+<code class="descname">default_height</code><em class="property"> = 720</em><a class="headerlink" href="#libs.Camera.Camera.default_height" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.default_width">
+<code class="descname">default_width</code><em class="property"> = 1080</em><a class="headerlink" href="#libs.Camera.Camera.default_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.exif">
+<code class="descname">exif</code><a class="headerlink" href="#libs.Camera.Camera.exif" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the current exif data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.file_types">
+<code class="descname">file_types</code><em class="property"> = ['CR2', 'RAW', 'NEF', 'JPG', 'JPEG', 'PPM', 'TIF', 'TIFF']</em><a class="headerlink" href="#libs.Camera.Camera.file_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.focus">
+<code class="descname">focus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.focus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.focus" title="Permalink to this definition">¶</a></dt>
+<dd><p>override this method for manual autofocus trigger</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.get_exif_fields">
+<code class="descname">get_exif_fields</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; dict<a class="reference internal" href="_modules/libs/Camera.html#Camera.get_exif_fields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.get_exif_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>get default fields for exif, this should be overriden and super-ed
+:return dict: exif fields</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.get_frame">
+<code class="descname">get_frame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.get_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.get_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a frame from the stream thread.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.image">
+<code class="descname">image</code><a class="headerlink" href="#libs.Camera.Camera.image" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the current image as aa np.array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.init_stream">
+<code class="descname">init_stream</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.init_stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.init_stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialises a video stream cls thread.
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.output_types">
+<code class="descname">output_types</code><em class="property"> = ['tif', 'jpg']</em><a class="headerlink" href="#libs.Camera.Camera.output_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.re_init">
+<code class="descname">re_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.re_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.re_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>re-initialisation.
+this causes all the confiuration values to be reacquired, and a config to be recreated as valid if it is broken.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main method. continuously captures and stores images.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>stops the capture thread, if the self is an instance of thread</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.Camera.Camera.time2seconds">
+<em class="property">static </em><code class="descname">time2seconds</code><span class="sig-paren">(</span><em>t: datetime.datetime</em><span class="sig-paren">)</span> &rarr; int<a class="reference internal" href="_modules/libs/Camera.html#Camera.time2seconds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.time2seconds" title="Permalink to this definition">¶</a></dt>
+<dd><p>converts a datetime to an integer of seconds since epoch</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return int:</th><td class="field-body">integer of seconds since 1970-01-01</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.time_to_capture">
+<code class="descname">time_to_capture</code><a class="headerlink" href="#libs.Camera.Camera.time_to_capture" title="Permalink to this definition">¶</a></dt>
+<dd><p>filters out times for capture, returns True by default
+returns False if the conditions where the camera should NOT capture are met.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return bool:</th><td class="field-body">whether or not it is time to capture</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.Camera.Camera.timestamp">
+<em class="property">static </em><code class="descname">timestamp</code><span class="sig-paren">(</span><em>tn: datetime.datetime</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/Camera.html#Camera.timestamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.timestamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates a properly formatted timestamp.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>tn</strong> &#8211; datetime to format to timestream timestamp string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.timestamped_imagename">
+<code class="descname">timestamped_imagename</code><a class="headerlink" href="#libs.Camera.Camera.timestamped_imagename" title="Permalink to this definition">¶</a></dt>
+<dd><p>builds a timestamped image basename without extension from self.current_capture_time</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">string image basename</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.GPCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">GPCamera</code><span class="sig-paren">(</span><em>identifier: str = None</em>, <em>lock=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#GPCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.GPCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.Camera" title="libs.Camera.Camera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.Camera</span></code></a></p>
+<p>Camera class
+other cameras inherit from this class.
+identifier and usb_address are NOT OPTIONAL</p>
+<dl class="attribute">
+<dt id="libs.Camera.GPCamera.eos_serial_number">
+<code class="descname">eos_serial_number</code><a class="headerlink" href="#libs.Camera.GPCamera.eos_serial_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the eosserialnumber of supported cameras, otherwise the normal serialnumber
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.GPCamera.focus">
+<code class="descname">focus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#GPCamera.focus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.GPCamera.focus" title="Permalink to this definition">¶</a></dt>
+<dd><p>this is meant to trigger the autofocus. currently not in use because it causes some distortion in the images.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.GPCamera.get_exif_fields">
+<code class="descname">get_exif_fields</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#GPCamera.get_exif_fields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.GPCamera.get_exif_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is meant to get the exif fields for the image if we want to manually save them.
+This is incomplete.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.GPCamera.re_init">
+<code class="descname">re_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#GPCamera.re_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.GPCamera.re_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>re initialises the camera.
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.GPCamera.serial_number">
+<code class="descname">serial_number</code><a class="headerlink" href="#libs.Camera.GPCamera.serial_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the current serialnumber for the camera.
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.IPCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">IPCamera</code><span class="sig-paren">(</span><em>identifier=None</em>, <em>ip=None</em>, <em>ymlconfig=None</em>, <em>queue=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.Camera" title="libs.Camera.Camera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.Camera</span></code></a></p>
+<p>IPCamera, unfinished and untested.
+TODO: needs work to support both ymlconfig and normal configs</p>
+<dl class="method">
+<dt id="libs.Camera.IPCamera.focus">
+<code class="descname">focus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera.focus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.focus" title="Permalink to this definition">¶</a></dt>
+<dd><p>forces a refocus of the the camera
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.focus_mode">
+<code class="descname">focus_mode</code><a class="headerlink" href="#libs.Camera.IPCamera.focus_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>retrieves the current focus mode from the camera
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.focus_position">
+<code class="descname">focus_position</code><a class="headerlink" href="#libs.Camera.IPCamera.focus_position" title="Permalink to this definition">¶</a></dt>
+<dd><p>retrieves the current focus position from the camera
+:return: focus position or None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.focus_range">
+<code class="descname">focus_range</code><a class="headerlink" href="#libs.Camera.IPCamera.focus_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>retrieves a list of the focus type and range from the camera
+i.e. [&#8220;Motorized&#8221;, 1029.0, 221.0]
+:return: [str:focus type, float:focus max, float:focus min]</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.Camera.IPCamera.get_value_from_stream">
+<em class="property">static </em><code class="descname">get_value_from_stream</code><span class="sig-paren">(</span><em>raw_text</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera.get_value_from_stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.get_value_from_stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>parses a string returned from the camera by urlopen into a list</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>text</strong> &#8211; text to parse</li>
+<li><strong>args</strong> &#8211; string keys to select</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list of values or None if input text has no &#8216;=&#8217; chars or dict of key values if args</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.IPCamera.get_value_from_xml">
+<code class="descname">get_value_from_xml</code><span class="sig-paren">(</span><em>message_xml</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera.get_value_from_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.get_value_from_xml" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets float, int or string values from a xml string where the key is the tag of the first element with value as
+text.
+returns a dict if more than 1 arg.
+returns single value if 1 arg, or None if single arg not found in xml.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>message_xml</strong> &#8211; </li>
+<li><strong>args</strong> &#8211; list of keys to find values for.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">value requested, or None if it does not exist</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.hfov">
+<code class="descname">hfov</code><a class="headerlink" href="#libs.Camera.IPCamera.hfov" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.hfov_list">
+<code class="descname">hfov_list</code><a class="headerlink" href="#libs.Camera.IPCamera.hfov_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.image_quality">
+<code class="descname">image_quality</code><a class="headerlink" href="#libs.Camera.IPCamera.image_quality" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the image quality
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.image_size">
+<code class="descname">image_size</code><a class="headerlink" href="#libs.Camera.IPCamera.image_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the image resolution
+:return: image size</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.status">
+<code class="descname">status</code><a class="headerlink" href="#libs.Camera.IPCamera.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>helper function to get a string of the current status.
+:return: informative string of zoom_pos zoom_range focus_pos focus_range</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.vfov">
+<code class="descname">vfov</code><a class="headerlink" href="#libs.Camera.IPCamera.vfov" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.vfov_list">
+<code class="descname">vfov_list</code><a class="headerlink" href="#libs.Camera.IPCamera.vfov_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.zoom_list">
+<code class="descname">zoom_list</code><a class="headerlink" href="#libs.Camera.IPCamera.zoom_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.zoom_position">
+<code class="descname">zoom_position</code><a class="headerlink" href="#libs.Camera.IPCamera.zoom_position" title="Permalink to this definition">¶</a></dt>
+<dd><p>retrieves the current zoom position from the camera
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.zoom_range">
+<code class="descname">zoom_range</code><a class="headerlink" href="#libs.Camera.IPCamera.zoom_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>retrieves the available zoom range from the camera
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.IVPortCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">IVPortCamera</code><span class="sig-paren">(</span><em>identifier: str = None</em>, <em>queue: collections.deque = None</em>, <em>camera_number: int = None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IVPortCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IVPortCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.PiCamera" title="libs.Camera.PiCamera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.PiCamera</span></code></a></p>
+<p>IVPort class for multiple capture.
+the 4 tags on the IVport are setout below.</p>
+<dl class="attribute">
+<dt id="libs.Camera.IVPortCamera.TRUTH_TABLE">
+<code class="descname">TRUTH_TABLE</code><em class="property"> = [[False, False, True], [True, False, True], [False, True, False], [True, True, False]]</em><a class="headerlink" href="#libs.Camera.IVPortCamera.TRUTH_TABLE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IVPortCamera.current_camera_index">
+<code class="descname">current_camera_index</code><em class="property"> = 0</em><a class="headerlink" href="#libs.Camera.IVPortCamera.current_camera_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IVPortCamera.enable_pins">
+<code class="descname">enable_pins</code><em class="property"> = [15, 16]</em><a class="headerlink" href="#libs.Camera.IVPortCamera.enable_pins" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IVPortCamera.enable_pinsA">
+<code class="descname">enable_pinsA</code><em class="property"> = [11, 12]</em><a class="headerlink" href="#libs.Camera.IVPortCamera.enable_pinsA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IVPortCamera.enable_pinsB">
+<code class="descname">enable_pinsB</code><em class="property"> = [15, 16]</em><a class="headerlink" href="#libs.Camera.IVPortCamera.enable_pinsB" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IVPortCamera.enable_pinsC">
+<code class="descname">enable_pinsC</code><em class="property"> = [21, 22]</em><a class="headerlink" href="#libs.Camera.IVPortCamera.enable_pinsC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IVPortCamera.enable_pinsD">
+<code class="descname">enable_pinsD</code><em class="property"> = [23, 24]</em><a class="headerlink" href="#libs.Camera.IVPortCamera.enable_pinsD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IVPortCamera.select">
+<code class="descname">select</code><em class="property"> = 7</em><a class="headerlink" href="#libs.Camera.IVPortCamera.select" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.IVPortCamera.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IVPortCamera.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IVPortCamera.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets up gpio for IVPort
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.Camera.IVPortCamera.switch">
+<em class="property">classmethod </em><code class="descname">switch</code><span class="sig-paren">(</span><em>idx: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IVPortCamera.switch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IVPortCamera.switch" title="Permalink to this definition">¶</a></dt>
+<dd><p>switches the IVPort to a new camera
+with no index, switches to the next camera, looping around from the beginning
+:param idx: index to switch the camera to (optional)
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.PiCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">PiCamera</code><span class="sig-paren">(</span><em>identifier: str = None</em>, <em>queue: collections.deque = None</em>, <em>noconf: bool = False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#PiCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.PiCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.Camera" title="libs.Camera.Camera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.Camera</span></code></a></p>
+<p>Picamera extension to the Camera abstract class.</p>
+<dl class="method">
+<dt id="libs.Camera.PiCamera.set_camera_settings">
+<code class="descname">set_camera_settings</code><span class="sig-paren">(</span><em>camera</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#PiCamera.set_camera_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.PiCamera.set_camera_settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets the settings for the camera
+:param camera: picamera instance
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.ThreadedCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">ThreadedCamera</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#ThreadedCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.ThreadedCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.ThreadedGPCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">ThreadedGPCamera</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#ThreadedGPCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.ThreadedGPCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.ThreadedCamera" title="libs.Camera.ThreadedCamera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.ThreadedCamera</span></code></a>, <a class="reference internal" href="#libs.Camera.GPCamera" title="libs.Camera.GPCamera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.GPCamera</span></code></a></p>
+<dl class="method">
+<dt id="libs.Camera.ThreadedGPCamera.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#ThreadedGPCamera.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.ThreadedGPCamera.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.ThreadedIPCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">ThreadedIPCamera</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#ThreadedIPCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.ThreadedIPCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.ThreadedCamera" title="libs.Camera.ThreadedCamera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.ThreadedCamera</span></code></a>, <a class="reference internal" href="#libs.Camera.IPCamera" title="libs.Camera.IPCamera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.IPCamera</span></code></a></p>
+<dl class="method">
+<dt id="libs.Camera.ThreadedIPCamera.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#ThreadedIPCamera.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.ThreadedIPCamera.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.ThreadedIVPortCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">ThreadedIVPortCamera</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#ThreadedIVPortCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.ThreadedIVPortCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.ThreadedCamera" title="libs.Camera.ThreadedCamera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.ThreadedCamera</span></code></a>, <a class="reference internal" href="#libs.Camera.IVPortCamera" title="libs.Camera.IVPortCamera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.IVPortCamera</span></code></a></p>
+<dl class="method">
+<dt id="libs.Camera.ThreadedIVPortCamera.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#ThreadedIVPortCamera.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.ThreadedIVPortCamera.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.ThreadedPiCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">ThreadedPiCamera</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#ThreadedPiCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.ThreadedPiCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.ThreadedCamera" title="libs.Camera.ThreadedCamera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.ThreadedCamera</span></code></a>, <a class="reference internal" href="#libs.Camera.PiCamera" title="libs.Camera.PiCamera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.PiCamera</span></code></a></p>
+<dl class="method">
+<dt id="libs.Camera.ThreadedPiCamera.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#ThreadedPiCamera.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.ThreadedPiCamera.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.ThreadedUSBCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">ThreadedUSBCamera</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#ThreadedUSBCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.ThreadedUSBCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.ThreadedCamera" title="libs.Camera.ThreadedCamera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.ThreadedCamera</span></code></a>, <a class="reference internal" href="#libs.Camera.USBCamera" title="libs.Camera.USBCamera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.USBCamera</span></code></a></p>
+<dl class="method">
+<dt id="libs.Camera.ThreadedUSBCamera.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#ThreadedUSBCamera.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.ThreadedUSBCamera.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.USBCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">USBCamera</code><span class="sig-paren">(</span><em>identifier</em>, <em>sys_number</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#USBCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.USBCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.Camera" title="libs.Camera.Camera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.Camera</span></code></a></p>
+<p>USB Camera Class</p>
+<dl class="method">
+<dt id="libs.Camera.USBCamera.re_init">
+<code class="descname">re_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#USBCamera.re_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.USBCamera.re_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>re-initialisation of webcamera
+todo: fix release of camera otherwise it could be locked forever.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.USBCamera.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#USBCamera.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.USBCamera.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>releases the video device and stops the camera thread
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="libs.Camera.nested_lookup">
+<code class="descclassname">libs.Camera.</code><code class="descname">nested_lookup</code><span class="sig-paren">(</span><em>key</em>, <em>document</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#nested_lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.nested_lookup" title="Permalink to this definition">¶</a></dt>
+<dd><p>nested document lookup,
+works on dicts and lists
+:param key: string of key to lookup
+:param document: dict or list to lookup
+:return: yields item</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-libs.CryptUtil">
+<span id="libs-cryptutil-module"></span><h2>libs.CryptUtil module<a class="headerlink" href="#module-libs.CryptUtil" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="libs.CryptUtil.SSHManager">
+<em class="property">class </em><code class="descclassname">libs.CryptUtil.</code><code class="descname">SSHManager</code><span class="sig-paren">(</span><em>path='/home/.ssh'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="libs.CryptUtil.SSHManager.get_new_key_from_server">
+<code class="descname">get_new_key_from_server</code><span class="sig-paren">(</span><em>token</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager.get_new_key_from_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager.get_new_key_from_server" title="Permalink to this definition">¶</a></dt>
+<dd><p>acquires an ssh key from the server with a token.
+:param token: a string token to send to the server.
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.CryptUtil.SSHManager.paramiko_key">
+<code class="descname">paramiko_key</code><a class="headerlink" href="#libs.CryptUtil.SSHManager.paramiko_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.CryptUtil.SSHManager.public_ssh_key_string">
+<code class="descname">public_ssh_key_string</code><a class="headerlink" href="#libs.CryptUtil.SSHManager.public_ssh_key_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the public ssh key string.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.CryptUtil.SSHManager.sign_message">
+<code class="descname">sign_message</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager.sign_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager.sign_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>signs a text message.
+:param message: utf-8 encoded string
+:return str: signature for message.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.CryptUtil.SSHManager.ssh_key">
+<code class="descname">ssh_key</code><a class="headerlink" href="#libs.CryptUtil.SSHManager.ssh_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.CryptUtil.SSHManager.write_key_to_path">
+<code class="descname">write_key_to_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager.write_key_to_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager.write_key_to_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>writes public and private keys to their respective paths
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="libs.CryptUtil.serialize_signature">
+<code class="descclassname">libs.CryptUtil.</code><code class="descname">serialize_signature</code><span class="sig-paren">(</span><em>signature</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/CryptUtil.html#serialize_signature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.serialize_signature" title="Permalink to this definition">¶</a></dt>
+<dd><p>formats the signature for the server, with the correct boundaries
+:param signature: raw bytes signature.
+:return: str formatted signature for sending to the server.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="libs.CryptUtil.ssh_public_key">
+<code class="descclassname">libs.CryptUtil.</code><code class="descname">ssh_public_key</code><span class="sig-paren">(</span><em>keypair: cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKeyWithSerialization</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/CryptUtil.html#ssh_public_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.ssh_public_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>converts an rsa keypair to openssh format public key
+:param keypair:
+:return: string of public key</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-libs.Light">
+<span id="libs-light-module"></span><h2>libs.Light module<a class="headerlink" href="#module-libs.Light" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="libs.Light.Controller">
+<em class="property">class </em><code class="descclassname">libs.Light.</code><code class="descname">Controller</code><span class="sig-paren">(</span><em>config_section: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Controller"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Controller" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>controller abstract that takes a dictionary config section and sets self attributes to it.</p>
+<dl class="method">
+<dt id="libs.Light.Controller.get_wavelength">
+<code class="descname">get_wavelength</code><span class="sig-paren">(</span><em>wavelength: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Controller.get_wavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Controller.get_wavelength" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the power of a specific wavelength
+:param wavelength: wavelength string to get the power of (eg 400nm)
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Light.Controller.set_all">
+<code class="descname">set_all</code><span class="sig-paren">(</span><em>power: int = None</em>, <em>percent: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Controller.set_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Controller.set_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets all wavelengths to either an absolute value or a percentage of the total
+:param power:
+:param percent:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Light.Controller.set_all_wavelengths">
+<code class="descname">set_all_wavelengths</code><span class="sig-paren">(</span><em>values: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Controller.set_all_wavelengths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Controller.set_all_wavelengths" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets all wavelengths to specific values.
+only absolute values may be specified
+values should be specified as a dict of wavelength: value
+:param values: dict of wavelengths and their respective values
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Light.Controller.set_wavelength">
+<code class="descname">set_wavelength</code><span class="sig-paren">(</span><em>wl: str</em>, <em>power: int = None</em>, <em>percent: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Controller.set_wavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Controller.set_wavelength" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets a specific wavelength to a value
+either a power or a percent must be specified
+:param wl: string of wavelength name (eg 400nm)
+:param power: absolute power value
+:param percent: percent value, calculated from min/max.
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Light.HTTPController">
+<em class="property">class </em><code class="descclassname">libs.Light.</code><code class="descname">HTTPController</code><span class="sig-paren">(</span><em>config_section</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#HTTPController"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.HTTPController" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Light.Controller" title="libs.Light.Controller"><code class="xref py py-class docutils literal"><span class="pre">libs.Light.Controller</span></code></a></p>
+<dl class="method">
+<dt id="libs.Light.HTTPController.kill_schedule">
+<code class="descname">kill_schedule</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#HTTPController.kill_schedule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.HTTPController.kill_schedule" title="Permalink to this definition">¶</a></dt>
+<dd><p>turns off all the heliospectras internal scheduling sysm
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Light.Light">
+<em class="property">class </em><code class="descclassname">libs.Light.</code><code class="descname">Light</code><span class="sig-paren">(</span><em>identifier: str = None</em>, <em>queue: collections.deque = None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Light"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Light" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Schedule runner for a light.</p>
+<dl class="attribute">
+<dt id="libs.Light.Light.accuracy">
+<code class="descname">accuracy</code><em class="property"> = 3</em><a class="headerlink" href="#libs.Light.Light.accuracy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Light.Light.calculate_current_state">
+<code class="descname">calculate_current_state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Light.calculate_current_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Light.calculate_current_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the current state the lights should be in.
+doesnt send the state.
+sets the internal state of the Light object
+:param nowdt:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Light.Light.communicate_with_updater">
+<code class="descname">communicate_with_updater</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Light.communicate_with_updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Light.communicate_with_updater" title="Permalink to this definition">¶</a></dt>
+<dd><p>communication member. This is meant to send some metadata to the updater thread.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Light.Light.re_init">
+<code class="descname">re_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Light.re_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Light.re_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>re-initialisation.
+this causes all the confiuration values to be reacquired, and a config to be recreated as valid if it is broken.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Light.Light.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Light.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Light.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Light.Light.send_state">
+<code class="descname">send_state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Light.send_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Light.send_state" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Light.Light.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Light.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Light.stop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Light.Light.test">
+<code class="descname">test</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Light.test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Light.test" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Light.TelNetController">
+<em class="property">class </em><code class="descclassname">libs.Light.</code><code class="descname">TelNetController</code><span class="sig-paren">(</span><em>config_section</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#TelNetController"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.TelNetController" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Light.Controller" title="libs.Light.Controller"><code class="xref py py-class docutils literal"><span class="pre">libs.Light.Controller</span></code></a></p>
+<p>controller for a telnet device</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Light.ThreadedLights">
+<em class="property">class </em><code class="descclassname">libs.Light.</code><code class="descname">ThreadedLights</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#ThreadedLights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.ThreadedLights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+<p>threaded implementation.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="libs.Light.clamp">
+<code class="descclassname">libs.Light.</code><code class="descname">clamp</code><span class="sig-paren">(</span><em>v: float</em>, <em>minimum: float</em>, <em>maximum: float</em><span class="sig-paren">)</span> &rarr; float<a class="reference internal" href="_modules/libs/Light.html#clamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.clamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>clamps a number to the minimum and maximum.
+:param v:
+:param minimum:
+:param maximum:
+:return:</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-libs.PanTilt">
+<span id="libs-pantilt-module"></span><h2>libs.PanTilt module<a class="headerlink" href="#module-libs.PanTilt" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="libs.PanTilt.PanTilt">
+<em class="property">class </em><code class="descclassname">libs.PanTilt.</code><code class="descname">PanTilt</code><span class="sig-paren">(</span><em>ip=None</em>, <em>user=None</em>, <em>password=None</em>, <em>config=None</em>, <em>queue=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Control J-Systems PTZ</p>
+<p>For new system or new firmware, the system needs calibration as follows:
+- Open URL of the PTZ on a web browser
+- Click on &#8220;Calibration&#8221; tab, enter username and password if necessary
+- On Calibration window, click on &#8220;Open-loop&#8221; and then &#8220;Set Mode&#8221;
+- Use joystick controller to rotate the pan axis to minimum position
+- Click on &#8216;Pan Axis Min&#8217; line, enter &#8216;2.0&#8217;, and click &#8220;Set Calibration&#8221;
+- Use joystick controller to rotate the pan axis to maximum position
+- Click on &#8216;Pan Axis Max&#8217; line, enter &#8216;358.0&#8217;, and click &#8220;Set Calibration&#8221;
+- Use joystick controller to rotate the tilt axis to minimum position
+- Click on &#8216;Tilt Axis Min&#8217; line, enter &#8216;-90.0&#8217;, and click &#8220;Set Calibration&#8221;
+- Use joystick controller to rotate the tilt axis to maximum position
+- Click on &#8216;Tilt Axis Max&#8217; line, enter &#8216;30.0&#8217;, and click &#8220;Set Calibration&#8221;
+- Click on &#8220;Closed-loop&#8221; and then &#8220;Set Mode&#8221;
+- Close Calibration window</p>
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.PCCWLS">
+<code class="descname">PCCWLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.PCCWLS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.PCWLS">
+<code class="descname">PCWLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.PCWLS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.TDnLS">
+<code class="descname">TDnLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.TDnLS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.TUpLS">
+<code class="descname">TUpLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.TUpLS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.auto_patrol">
+<code class="descname">auto_patrol</code><a class="headerlink" href="#libs.PanTilt.PanTilt.auto_patrol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.battery_voltage">
+<code class="descname">battery_voltage</code><a class="headerlink" href="#libs.PanTilt.PanTilt.battery_voltage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.PanTilt.PanTilt.communicate_with_updater">
+<code class="descname">communicate_with_updater</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.communicate_with_updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.communicate_with_updater" title="Permalink to this definition">¶</a></dt>
+<dd><p>communication member. This is meant to send some metadata to the updater thread.
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.control_mode">
+<code class="descname">control_mode</code><a class="headerlink" href="#libs.PanTilt.PanTilt.control_mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.dwell">
+<code class="descname">dwell</code><a class="headerlink" href="#libs.PanTilt.PanTilt.dwell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.PanTilt.PanTilt.get_value_from_xml">
+<em class="property">static </em><code class="descname">get_value_from_xml</code><span class="sig-paren">(</span><em>message_xml</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.get_value_from_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.get_value_from_xml" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets float, int or string values from a xml string where the key is the tag of the first element with value as
+text.
+returns a dict if more than 1 arg.
+returns single value if 1 arg, or None if single arg not found in xml.
+:param message_xml:
+:param args: list of keys to find values for.
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.heater">
+<code class="descname">heater</code><a class="headerlink" href="#libs.PanTilt.PanTilt.heater" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.PanTilt.PanTilt.hold_pan_tilt">
+<code class="descname">hold_pan_tilt</code><span class="sig-paren">(</span><em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.hold_pan_tilt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.hold_pan_tilt" title="Permalink to this definition">¶</a></dt>
+<dd><p>unknown, presumably holds the pan-tilt in one place.
+doesnt work...
+:param state: ? beats me.
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.list_index">
+<code class="descname">list_index</code><a class="headerlink" href="#libs.PanTilt.PanTilt.list_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.list_state">
+<code class="descname">list_state</code><a class="headerlink" href="#libs.PanTilt.PanTilt.list_state" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.pan">
+<code class="descname">pan</code><a class="headerlink" href="#libs.PanTilt.PanTilt.pan" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.pan_range">
+<code class="descname">pan_range</code><a class="headerlink" href="#libs.PanTilt.PanTilt.pan_range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.PanTilt.PanTilt.pan_step">
+<code class="descname">pan_step</code><span class="sig-paren">(</span><em>direction</em>, <em>n_steps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.pan_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.pan_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>pans by step, steps must be less than or equal to 127
+:type n_steps: int
+:type direction: str
+:param direction:
+:param n_steps: integer &lt;= 127. number of steps
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.position">
+<code class="descname">position</code><a class="headerlink" href="#libs.PanTilt.PanTilt.position" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the current pan/tilt position.
+:return: tuple (pan, tilt)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.scale">
+<code class="descname">scale</code><a class="headerlink" href="#libs.PanTilt.PanTilt.scale" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.temp_f">
+<code class="descname">temp_f</code><a class="headerlink" href="#libs.PanTilt.PanTilt.temp_f" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.tilt">
+<code class="descname">tilt</code><a class="headerlink" href="#libs.PanTilt.PanTilt.tilt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.tilt_range">
+<code class="descname">tilt_range</code><a class="headerlink" href="#libs.PanTilt.PanTilt.tilt_range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.PanTilt.PanTilt.tilt_step">
+<code class="descname">tilt_step</code><span class="sig-paren">(</span><em>direction</em>, <em>n_steps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.tilt_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.tilt_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>tilts by step, steps must be less than or equal to 127
+:type n_steps: int
+:type direction: str
+:param direction:
+:param n_steps: integer &lt;= 127. number of steps
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.PanTilt.ThreadedPTZ">
+<em class="property">class </em><code class="descclassname">libs.PanTilt.</code><code class="descname">ThreadedPTZ</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#ThreadedPTZ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.ThreadedPTZ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.PanTilt.ThreadedPanTilt">
+<em class="property">class </em><code class="descclassname">libs.PanTilt.</code><code class="descname">ThreadedPanTilt</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#ThreadedPanTilt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.ThreadedPanTilt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.PanTilt.ThreadedPTZ" title="libs.PanTilt.ThreadedPTZ"><code class="xref py py-class docutils literal"><span class="pre">libs.PanTilt.ThreadedPTZ</span></code></a>, <a class="reference internal" href="#libs.PanTilt.PanTilt" title="libs.PanTilt.PanTilt"><code class="xref py py-class docutils literal"><span class="pre">libs.PanTilt.PanTilt</span></code></a></p>
+<dl class="method">
+<dt id="libs.PanTilt.ThreadedPanTilt.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#ThreadedPanTilt.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.ThreadedPanTilt.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-libs.Sensor">
+<span id="libs-sensor-module"></span><h2>libs.Sensor module<a class="headerlink" href="#module-libs.Sensor" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="libs.Sensor.DHTMonitor">
+<em class="property">class </em><code class="descclassname">libs.Sensor.</code><code class="descname">DHTMonitor</code><span class="sig-paren">(</span><em>identifier: str = None</em>, <em>pin: int = 14</em>, <em>sensor_type='AM2302'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#DHTMonitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.DHTMonitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Sensor.Sensor" title="libs.Sensor.Sensor"><code class="xref py py-class docutils literal"><span class="pre">libs.Sensor.Sensor</span></code></a></p>
+<p>Data logger class for DHT11, DHT22 &amp; AM2302 GPIO temperature &amp; humidity sensors from Adafruit.</p>
+<p>supply the identifier and the gpio pi that the sensor is connected to, along with the type of sensor.
+defaults to pin 14, DHT22</p>
+<dl class="attribute">
+<dt id="libs.Sensor.DHTMonitor.data_headers">
+<code class="descname">data_headers</code><em class="property"> = ('humidity', 'temperature')</em><a class="headerlink" href="#libs.Sensor.DHTMonitor.data_headers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.DHTMonitor.get_measurement">
+<code class="descname">get_measurement</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; tuple<a class="reference internal" href="_modules/libs/Sensor.html#DHTMonitor.get_measurement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.DHTMonitor.get_measurement" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets data from the DHT22
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Sensor.SenseHatMonitor">
+<em class="property">class </em><code class="descclassname">libs.Sensor.</code><code class="descname">SenseHatMonitor</code><span class="sig-paren">(</span><em>identifier: str = None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#SenseHatMonitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.SenseHatMonitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Sensor.Sensor" title="libs.Sensor.Sensor"><code class="xref py py-class docutils literal"><span class="pre">libs.Sensor.Sensor</span></code></a></p>
+<p>Data logger class for Astro Pi Sensehat
+No need to supply anything except the identifier as the SenseHad uses some kind of black sorcery to work it out.</p>
+<dl class="attribute">
+<dt id="libs.Sensor.SenseHatMonitor.data_headers">
+<code class="descname">data_headers</code><em class="property"> = ('temperature', 'humidity', 'pressure')</em><a class="headerlink" href="#libs.Sensor.SenseHatMonitor.data_headers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.SenseHatMonitor.get_measurement">
+<code class="descname">get_measurement</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; tuple<a class="reference internal" href="_modules/libs/Sensor.html#SenseHatMonitor.get_measurement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.SenseHatMonitor.get_measurement" title="Permalink to this definition">¶</a></dt>
+<dd><p>get measurements for sensehat
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.SenseHatMonitor.show_data">
+<code class="descname">show_data</code><span class="sig-paren">(</span><em>measurement</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#SenseHatMonitor.show_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.SenseHatMonitor.show_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>displays the data on the osd.
+:param measurement:
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Sensor.Sensor">
+<em class="property">class </em><code class="descclassname">libs.Sensor.</code><code class="descname">Sensor</code><span class="sig-paren">(</span><em>identifier: str = None</em>, <em>queue: collections.deque = None</em>, <em>write_out: bool = True</em>, <em>interval: int = 60</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#Sensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Sensor base.
+To use this class you need to override &#8216;get_measurement()&#8217; so that it returns a tuple of the measurements that match
+the headers defined in the data_headers classvar.
+by default it will write 5 files, rolling 24 hour files (csv, tsv &amp; json) and all time files that are appended to
+(csv &amp; tsv only)</p>
+<dl class="attribute">
+<dt id="libs.Sensor.Sensor.accuracy">
+<code class="descname">accuracy</code><em class="property"> = 1</em><a class="headerlink" href="#libs.Sensor.Sensor.accuracy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.Sensor.append_to_alltime">
+<code class="descname">append_to_alltime</code><span class="sig-paren">(</span><em>measurement: tuple</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#Sensor.append_to_alltime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.append_to_alltime" title="Permalink to this definition">¶</a></dt>
+<dd><p>appends the measurement to the csv and tsv files.
+:param measurement:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.Sensor.communicate_with_updater">
+<code class="descname">communicate_with_updater</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#Sensor.communicate_with_updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.communicate_with_updater" title="Permalink to this definition">¶</a></dt>
+<dd><p>communication member. This is meant to send some metadata to the updater thread.
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Sensor.Sensor.data_headers">
+<code class="descname">data_headers</code><em class="property"> = ()</em><a class="headerlink" href="#libs.Sensor.Sensor.data_headers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.Sensor.get_measurement">
+<code class="descname">get_measurement</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#Sensor.get_measurement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.get_measurement" title="Permalink to this definition">¶</a></dt>
+<dd><p>override this method with the method of collecting measurements from the sensor
+should return a list or tuple
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.Sensor.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#Sensor.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>run method.
+used for threaded sensors
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.Sensor.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#Sensor.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>stops the thread.
+:return:</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.Sensor.Sensor.time2seconds">
+<em class="property">static </em><code class="descname">time2seconds</code><span class="sig-paren">(</span><em>t: &lt;module 'datetime' from '/usr/lib/python3.5/datetime.py'&gt;</em><span class="sig-paren">)</span> &rarr; int<a class="reference internal" href="_modules/libs/Sensor.html#Sensor.time2seconds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.time2seconds" title="Permalink to this definition">¶</a></dt>
+<dd><p>converts a datetime to an integer of seconds since epoch</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Sensor.Sensor.time_to_measure">
+<code class="descname">time_to_measure</code><a class="headerlink" href="#libs.Sensor.Sensor.time_to_measure" title="Permalink to this definition">¶</a></dt>
+<dd><p>filters out times for mesauring, returns True by default
+returns False if the conditions where the sensor should NOT capture are met.
+:return:</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.Sensor.Sensor.timestamp">
+<em class="property">static </em><code class="descname">timestamp</code><span class="sig-paren">(</span><em>tn: datetime.datetime</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/Sensor.html#Sensor.timestamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.timestamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates a properly formatted timestamp.
+:param tn: datetime to format to timestream timestamp string
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Sensor.Sensor.timestamped_filename">
+<code class="descname">timestamped_filename</code><a class="headerlink" href="#libs.Sensor.Sensor.timestamped_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>builds a timestamped image basename without extension from a datetime.
+:param time_now:
+:return: string image basename</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.Sensor.write_daily_rolling">
+<code class="descname">write_daily_rolling</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#Sensor.write_daily_rolling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.write_daily_rolling" title="Permalink to this definition">¶</a></dt>
+<dd><p>writes full rolling daily daita files.
+:param rows:
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Sensor.ThreadedDHT">
+<em class="property">class </em><code class="descclassname">libs.Sensor.</code><code class="descname">ThreadedDHT</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#ThreadedDHT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.ThreadedDHT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Sensor.ThreadedSensor" title="libs.Sensor.ThreadedSensor"><code class="xref py py-class docutils literal"><span class="pre">libs.Sensor.ThreadedSensor</span></code></a>, <a class="reference internal" href="#libs.Sensor.DHTMonitor" title="libs.Sensor.DHTMonitor"><code class="xref py py-class docutils literal"><span class="pre">libs.Sensor.DHTMonitor</span></code></a></p>
+<p>threaded implementation for the Adafruit DHT/AM GPIO sensor module</p>
+<dl class="method">
+<dt id="libs.Sensor.ThreadedDHT.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#ThreadedDHT.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.ThreadedDHT.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Sensor.ThreadedSenseHat">
+<em class="property">class </em><code class="descclassname">libs.Sensor.</code><code class="descname">ThreadedSenseHat</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#ThreadedSenseHat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.ThreadedSenseHat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Sensor.ThreadedSensor" title="libs.Sensor.ThreadedSensor"><code class="xref py py-class docutils literal"><span class="pre">libs.Sensor.ThreadedSensor</span></code></a>, <a class="reference internal" href="#libs.Sensor.SenseHatMonitor" title="libs.Sensor.SenseHatMonitor"><code class="xref py py-class docutils literal"><span class="pre">libs.Sensor.SenseHatMonitor</span></code></a></p>
+<p>threaded implementation for the AstroPI SenseHat</p>
+<dl class="method">
+<dt id="libs.Sensor.ThreadedSenseHat.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#ThreadedSenseHat.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.ThreadedSenseHat.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Sensor.ThreadedSensor">
+<em class="property">class </em><code class="descclassname">libs.Sensor.</code><code class="descname">ThreadedSensor</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#ThreadedSensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.ThreadedSensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+<p>threaded implementation of the sensor cclass.</p>
+<dl class="method">
+<dt id="libs.Sensor.ThreadedSensor.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#ThreadedSensor.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.ThreadedSensor.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-libs.SysUtil">
+<span id="libs-sysutil-module"></span><h2>libs.SysUtil module<a class="headerlink" href="#module-libs.SysUtil" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="libs.SysUtil.SysUtil">
+<em class="property">class </em><code class="descclassname">libs.SysUtil.</code><code class="descname">SysUtil</code><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>System utility class.
+Helper class to cache various things like the hostname, machine-id, amount of space in the filesystem.</p>
+<dl class="attribute">
+<dt id="libs.SysUtil.SysUtil.a_statvfs">
+<code class="descname">a_statvfs</code><em class="property"> = os.statvfs_result(f_bsize=4096, f_frsize=4096, f_blocks=28682898, f_bfree=10063516, f_bavail=8600732, f_files=7299072, f_ffree=6509123, f_favail=6509123, f_flag=1024, f_namemax=255)</em><a class="headerlink" href="#libs.SysUtil.SysUtil.a_statvfs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.add_watch">
+<em class="property">classmethod </em><code class="descname">add_watch</code><span class="sig-paren">(</span><em>path: str</em>, <em>callback</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.add_watch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.add_watch" title="Permalink to this definition">¶</a></dt>
+<dd><p>adds a watch that calls the callback on file change
+:param path: path of the file to watch
+:param callback: function signature to call when the file is changed
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.clear_files">
+<em class="property">classmethod </em><code class="descname">clear_files</code><span class="sig-paren">(</span><em>filenames: list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.clear_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.clear_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>removes all files in the list provided, skipping and logging on an error removing
+todo: Do different things based on whether is a directory.
+:param filenames:
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.configs_from_identifiers">
+<em class="property">classmethod </em><code class="descname">configs_from_identifiers</code><span class="sig-paren">(</span><em>identifiers: set</em><span class="sig-paren">)</span> &rarr; dict<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.configs_from_identifiers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.configs_from_identifiers" title="Permalink to this definition">¶</a></dt>
+<dd><p>given a set of identifiers, returns a dictionary of the data contained in those config files with the key
+for each config file data being the identifier
+:param identifiers:
+:return: dictionary of configuration datas</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.SysUtil.SysUtil.default_identifier">
+<em class="property">static </em><code class="descname">default_identifier</code><span class="sig-paren">(</span><em>prefix=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.default_identifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.default_identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns an identifier, If no prefix available, generates something.
+:param prefix:
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.ensure_config">
+<em class="property">classmethod </em><code class="descname">ensure_config</code><span class="sig-paren">(</span><em>identifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.ensure_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.ensure_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>ensures a configuration file exists for this identifier.
+if a config file doesnt exist then it will create a default one.
+:param identifier:
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.ensure_light_config">
+<em class="property">classmethod </em><code class="descname">ensure_light_config</code><span class="sig-paren">(</span><em>identifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.ensure_light_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.ensure_light_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>ensures a configuration file exists for this identifier.
+if a config file doesnt exist then it will create a default one.
+:param identifier:
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_external_ip">
+<em class="property">classmethod </em><code class="descname">get_external_ip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_external_ip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_external_ip" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the external IP address of the raspberry pi through api.ipify.org
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_fs_space">
+<em class="property">classmethod </em><code class="descname">get_fs_space</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; tuple<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_fs_space"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_fs_space" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns free/total
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_fs_space_mb">
+<em class="property">classmethod </em><code class="descname">get_fs_space_mb</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; tuple<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_fs_space_mb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_fs_space_mb" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the filesystems free space in mebibytes
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_hostname">
+<em class="property">classmethod </em><code class="descname">get_hostname</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_hostname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_hostname" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the current hostname.
+if there is no /etc/hostname file, sets the hostname randomly.
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_identifier_from_filename">
+<em class="property">classmethod </em><code class="descname">get_identifier_from_filename</code><span class="sig-paren">(</span><em>file_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_identifier_from_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_identifier_from_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns either the identifier (from the file name) or the name filled with the machine id
+:param file_name: filename
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_identifier_from_name">
+<em class="property">classmethod </em><code class="descname">get_identifier_from_name</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_identifier_from_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_identifier_from_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns either the identifier (from name) or the name filled with the machine id
+clamps to 32 characters.
+:param name: name to fill
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_internal_ip">
+<em class="property">classmethod </em><code class="descname">get_internal_ip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_internal_ip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_internal_ip" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the internal ip by attempting to connect to googles DNS
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_isonow">
+<em class="property">classmethod </em><code class="descname">get_isonow</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_isonow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_isonow" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the current time as an iso8601 string
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_light_configs">
+<em class="property">classmethod </em><code class="descname">get_light_configs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_light_configs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_light_configs" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets a list of the light config files (.ini)
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_light_datafile">
+<em class="property">classmethod </em><code class="descname">get_light_datafile</code><span class="sig-paren">(</span><em>identifier: str</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_light_datafile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_light_datafile" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets a light datafile
+:param identifier:
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_log_files">
+<em class="property">classmethod </em><code class="descname">get_log_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; list<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_log_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_log_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the spc-eyepi log files that have been rotated.
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_machineid">
+<em class="property">classmethod </em><code class="descname">get_machineid</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_machineid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_machineid" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the machine id, or initialises the machine id if it doesnt exist.
+:return: str</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_tor_host">
+<em class="property">classmethod </em><code class="descname">get_tor_host</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; tuple<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_tor_host"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_tor_host" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets a tuple of the current tor host.
+:return: tuple of hostname(onion address), client key, client name</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_version">
+<em class="property">classmethod </em><code class="descname">get_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the version of the git repo as a string.
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.identifier_to_ini">
+<em class="property">classmethod </em><code class="descname">identifier_to_ini</code><span class="sig-paren">(</span><em>identifier: str</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.identifier_to_ini"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.identifier_to_ini" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets a valid .ini path for an identifier.
+:param identifier:
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.identifier_to_yml">
+<em class="property">classmethod </em><code class="descname">identifier_to_yml</code><span class="sig-paren">(</span><em>identifier: str</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.identifier_to_yml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.identifier_to_yml" title="Permalink to this definition">¶</a></dt>
+<dd><p>the same as identifier_to_ini but for yml files
+:param identifier:
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.light_identifier_to_ini">
+<em class="property">classmethod </em><code class="descname">light_identifier_to_ini</code><span class="sig-paren">(</span><em>identifier: str</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.light_identifier_to_ini"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.light_identifier_to_ini" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets a valid .ini path for an identifier.
+:param identifier:
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.load_or_fix_solarcalc">
+<em class="property">classmethod </em><code class="descname">load_or_fix_solarcalc</code><span class="sig-paren">(</span><em>identifier: str</em><span class="sig-paren">)</span> &rarr; list<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.load_or_fix_solarcalc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.load_or_fix_solarcalc" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to either load an existing fixed up solarcalc file or to coerce one into the fixed format.
+:param identifier: identifier of the light for which the solarcalc file exists.
+:return: light timing data as a list of lists.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.SysUtil.SysUtil.logger">
+<code class="descname">logger</code><em class="property"> = &lt;logging.Logger object&gt;</em><a class="headerlink" href="#libs.SysUtil.SysUtil.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.open_yaml">
+<em class="property">classmethod </em><code class="descname">open_yaml</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.open_yaml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.open_yaml" title="Permalink to this definition">¶</a></dt>
+<dd><p>opens a yaml file using yaml.load
+:param filename:
+:return:</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.SysUtil.SysUtil.reset_usb_device">
+<em class="property">static </em><code class="descname">reset_usb_device</code><span class="sig-paren">(</span><em>bus: int</em>, <em>dev: int</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.reset_usb_device"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.reset_usb_device" title="Permalink to this definition">¶</a></dt>
+<dd><p>resets a usb device.
+:param bus:
+:param dev:
+:return:</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.set_hostname">
+<em class="property">classmethod </em><code class="descname">set_hostname</code><span class="sig-paren">(</span><em>hostname: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.set_hostname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.set_hostname" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets the machines hosname
+:param hostname:
+:return:</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.SysUtil.SysUtil.sizeof_fmt">
+<em class="property">static </em><code class="descname">sizeof_fmt</code><span class="sig-paren">(</span><em>num</em>, <em>suffix='B'</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.sizeof_fmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.sizeof_fmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>formats a number of bytes in to a human readable string.
+returns in SI units
+eg sizeof_fmt(1234) returns &#8216;1.2KiB&#8217;
+:param num: number of bytes to format
+:param suffix:
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.SysUtil.SysUtil.stop">
+<code class="descname">stop</code><em class="property"> = False</em><a class="headerlink" href="#libs.SysUtil.SysUtil.stop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.SysUtil.SysUtil.thread">
+<code class="descname">thread</code><em class="property"> = None</em><a class="headerlink" href="#libs.SysUtil.SysUtil.thread" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.update_from_git">
+<em class="property">classmethod </em><code class="descname">update_from_git</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.update_from_git"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.update_from_git" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.write_config">
+<em class="property">classmethod </em><code class="descname">write_config</code><span class="sig-paren">(</span><em>config: configparser.ConfigParser</em>, <em>identifier: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.write_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.write_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>writes a configuration file to an correct config file path.
+:param config: configuration file (configparser object)
+:param identifier:
+:return: configparser object</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.write_light_config">
+<em class="property">classmethod </em><code class="descname">write_light_config</code><span class="sig-paren">(</span><em>config: configparser.ConfigParser</em>, <em>identifier: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.write_light_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.write_light_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>writes a configuration file to an correct config file path.
+:param config: configuration file (configparser object)
+:param identifier:
+:return: configparser object</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.SysUtil.Test">
+<em class="property">class </em><code class="descclassname">libs.SysUtil.</code><code class="descname">Test</code><a class="reference internal" href="_modules/libs/SysUtil.html#Test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.Test" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dl class="class">
+<dt id="libs.SysUtil.Test.testCLS">
+<em class="property">class </em><code class="descname">testCLS</code><a class="reference internal" href="_modules/libs/SysUtil.html#Test.testCLS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.Test.testCLS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="libs.SysUtil.Test.testCLS.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#Test.testCLS.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.Test.testCLS.setup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.SysUtil.Test.test_caching">
+<code class="descclassname">Test.</code><code class="descname">test_caching</code><span class="sig-paren">(</span><em>function</em>, <em>private</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#Test.test_caching"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.Test.test_caching" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.SysUtil.Test.test_system_id">
+<code class="descclassname">Test.</code><code class="descname">test_system_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#Test.test_system_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.Test.test_system_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.SysUtil.Test.test_watcher">
+<code class="descclassname">Test.</code><code class="descname">test_watcher</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#Test.test_watcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.Test.test_watcher" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="libs.SysUtil.sizeof_fmt">
+<code class="descclassname">libs.SysUtil.</code><code class="descname">sizeof_fmt</code><span class="sig-paren">(</span><em>num</em>, <em>suffix='B'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#sizeof_fmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.sizeof_fmt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-libs.Updater">
+<span id="libs-updater-module"></span><h2>libs.Updater module<a class="headerlink" href="#module-libs.Updater" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="libs.Updater.Updater">
+<em class="property">class </em><code class="descclassname">libs.Updater.</code><code class="descname">Updater</code><a class="reference internal" href="_modules/libs/Updater.html#Updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+<dl class="method">
+<dt id="libs.Updater.Updater.add_to_identifiers">
+<code class="descname">add_to_identifiers</code><span class="sig-paren">(</span><em>identifier: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.add_to_identifiers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.add_to_identifiers" title="Permalink to this definition">¶</a></dt>
+<dd><p>adds an identifier to the set of identifiers.
+:param identifier: identifier to add
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.add_to_temp_identifiers">
+<code class="descname">add_to_temp_identifiers</code><span class="sig-paren">(</span><em>temp_identifier: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.add_to_temp_identifiers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.add_to_temp_identifiers" title="Permalink to this definition">¶</a></dt>
+<dd><p>adds an identifier to the set of temporary identifiers. that may disappear
+:param temp_identifier: identifier to add
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.gather_data">
+<code class="descname">gather_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.gather_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.gather_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.go">
+<code class="descname">go</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.go"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.go" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.process_deque">
+<code class="descname">process_deque</code><span class="sig-paren">(</span><em>cameras=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.process_deque"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.process_deque" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.set_config_data">
+<code class="descname">set_config_data</code><span class="sig-paren">(</span><em>data: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.set_config_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.set_config_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.set_yaml_data">
+<code class="descname">set_yaml_data</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.set_yaml_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.set_yaml_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.stop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.upload_logs">
+<code class="descname">upload_logs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.upload_logs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.upload_logs" title="Permalink to this definition">¶</a></dt>
+<dd><p>uploads rotated logs to the server.
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-libs.Uploader">
+<span id="libs-uploader-module"></span><h2>libs.Uploader module<a class="headerlink" href="#module-libs.Uploader" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="libs.Uploader.GenericUploader">
+<em class="property">class </em><code class="descclassname">libs.Uploader.</code><code class="descname">GenericUploader</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>source_dir: str</em>, <em>hostname: str</em>, <em>queue: collections.deque = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#GenericUploader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.GenericUploader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Uploader.Uploader" title="libs.Uploader.Uploader"><code class="xref py py-class docutils literal"><span class="pre">libs.Uploader.Uploader</span></code></a></p>
+<p>generic uploader for uploading logs sensor data, etc.</p>
+<dl class="method">
+<dt id="libs.Uploader.GenericUploader.re_init">
+<code class="descname">re_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#GenericUploader.re_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.GenericUploader.re_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>there is no config to be reloaded here...
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Uploader.GenericUploader.remove_source_files">
+<code class="descname">remove_source_files</code><em class="property"> = False</em><a class="headerlink" href="#libs.Uploader.GenericUploader.remove_source_files" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Uploader.Uploader">
+<em class="property">class </em><code class="descclassname">libs.Uploader.</code><code class="descname">Uploader</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>queue: collections.deque = None</em>, <em>config_filename: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+<p>Uploader class,
+used to upload,</p>
+<dl class="method">
+<dt id="libs.Uploader.Uploader.communicate_with_updater">
+<code class="descname">communicate_with_updater</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.communicate_with_updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.communicate_with_updater" title="Permalink to this definition">¶</a></dt>
+<dd><p>communication member. This is meant to send some metadata to the updater thread.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Uploader.Uploader.mkdir_recursive">
+<code class="descname">mkdir_recursive</code><span class="sig-paren">(</span><em>link</em>, <em>remote_directory</em>, <em>mkdir=None</em>, <em>chdir=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.mkdir_recursive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.mkdir_recursive" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates directories recursively on the remote server</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>link</strong> &#8211; ftp/sftp connection object</li>
+<li><strong>remote_directory</strong> &#8211; </li>
+<li><strong>chdir</strong> &#8211; </li>
+<li><strong>mkdir</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Uploader.Uploader.re_init">
+<code class="descname">re_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.re_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.re_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>setup to be run each time the config is reloaded
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Uploader.Uploader.remove_source_files">
+<code class="descname">remove_source_files</code><em class="property"> = True</em><a class="headerlink" href="#libs.Uploader.Uploader.remove_source_files" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Uploader.Uploader.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>run method.
+main loop for Uploaders.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Uploader.Uploader.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>stopper method
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Uploader.Uploader.upload">
+<code class="descname">upload</code><span class="sig-paren">(</span><em>file_names</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.upload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.upload" title="Permalink to this definition">¶</a></dt>
+<dd><p>uploads files via sftp. deletes the files as they are uploaded.
+:param file_names: filenames to upload
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Uploader.Uploader.upload_interval">
+<code class="descname">upload_interval</code><em class="property"> = 120</em><a class="headerlink" href="#libs.Uploader.Uploader.upload_interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-libs">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-libs" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">libs Package group</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-libs.Camera">libs.Camera module</a></li>
+<li><a class="reference internal" href="#module-libs.CryptUtil">libs.CryptUtil module</a></li>
+<li><a class="reference internal" href="#module-libs.Light">libs.Light module</a></li>
+<li><a class="reference internal" href="#module-libs.PanTilt">libs.PanTilt module</a></li>
+<li><a class="reference internal" href="#module-libs.Sensor">libs.Sensor module</a></li>
+<li><a class="reference internal" href="#module-libs.SysUtil">libs.SysUtil module</a></li>
+<li><a class="reference internal" href="#module-libs.Updater">libs.Updater module</a></li>
+<li><a class="reference internal" href="#module-libs.Uploader">libs.Uploader module</a></li>
+<li><a class="reference internal" href="#module-libs">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/libs.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/libs.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
