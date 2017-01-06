@@ -1,3 +1,5 @@
+:orphan:
+
 Ansible Deployment
 ==================
 
@@ -14,17 +16,23 @@ Requirements
 .. highlight:: console
 
 You need `ansible <https://www.ansible.com/>`_ version 2.3 installed locally
-::
+
+.. code-block:: bash
+
     # pip install git+https://github.com/ansible/ansible
 
 You must also have the sshpass program (according to ansible), this is ussed only for first setup of ssh keyfile access.
 
 if you are using ArchLinux
-::
+
+.. code-block:: bash
+
     # pacman -S sshpass
 
 or if you are using Ubuntu/Debian
-::
+
+.. code-block:: bash
+
     # apt-get install sshpass
 
 
@@ -80,9 +88,11 @@ Log into the raspberry pi using ssh with the username:password *alarm:alarm* and
 
 
 The RPi doesn't have **sudo** installed yet, so you must use **su**. The root password is *root*:
-::
+
+.. code-block:: bash
+
     [alarm@alarm ~]$ su
-    [alarm@alarm ~]# pacman -Syy python2
+    [root@alarm ~]$ pacman -Syy python2
 
 
 Add the ip address of the RPi to the list in the *ansible/hosts* file so that it looks like this:
@@ -107,11 +117,15 @@ Add the ip address of the RPi to the list in the *ansible/hosts* file so that it
 If you would like to assign the RPi a persistent hostname (that isnt its ip address) you must have something to identify it by.
 
 CPU serial number:
-::
+
+.. code-block:: bash
+
     [alarm@alarm ~]$ grep -Eor "Serial.*([[:xdigit:]])" /proc/cpuinfo | cut -d " " -f2
 
 Machine id:
-::
+
+.. code-block:: bash
+
     [alarm@alarm ~]$ cat /etc/machine-id
 
 You can use either of those to create a new entry in the *ansible/vars/hostmap.yml* using this syntax:
@@ -124,7 +138,9 @@ You can use either of those to create a new entry in the *ansible/vars/hostmap.y
         your_machine_id: "your_desired_hostname"
 
 Run the play
-::
+
+.. code-block:: bash
+
     $ ansible-playbook -i hosts eyepi.yml
 
 You can use the same command to update the software on the RPi.

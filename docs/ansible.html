@@ -52,16 +52,16 @@
 <div class="section" id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <p>You need <a class="reference external" href="https://www.ansible.com/">ansible</a> version 2.3 installed locally</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">#</span> pip install git+https://github.com/ansible/ansible
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="c1"># pip install git+https://github.com/ansible/ansible</span>
 </pre></div>
 </div>
 <p>You must also have the sshpass program (according to ansible), this is ussed only for first setup of ssh keyfile access.</p>
 <p>if you are using ArchLinux</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">#</span> pacman -S sshpass
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="c1"># pacman -S sshpass</span>
 </pre></div>
 </div>
 <p>or if you are using Ubuntu/Debian</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">#</span> apt-get install sshpass
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="c1"># apt-get install sshpass</span>
 </pre></div>
 </div>
 </div>
@@ -104,8 +104,8 @@ You need to add your ssh key to the list of keys for the user &#8220;alarm&#8221
 <p>Create an SD card with the latest Archlinux Arm (see the <a class="reference external" href="https://archlinuxarm.org/platforms/armv8/broadcom/raspberry-pi-3#installation">installation guide</a>)</p>
 <p>Log into the raspberry pi using ssh with the username:password <em>alarm:alarm</em> and install python2.</p>
 <p>The RPi doesn&#8217;t have <strong>sudo</strong> installed yet, so you must use <strong>su</strong>. The root password is <em>root</em>:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">[alarm@alarm ~]$</span> su
-<span class="gp">[alarm@alarm ~]#</span> pacman -Syy python2
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="o">[</span>alarm@alarm ~<span class="o">]</span>$ su
+<span class="o">[</span>root@alarm ~<span class="o">]</span>$ pacman -Syy python2
 </pre></div>
 </div>
 <p>Add the ip address of the RPi to the list in the <em>ansible/hosts</em> file so that it looks like this:</p>
@@ -127,11 +127,11 @@ You need to add your ssh key to the list of keys for the user &#8220;alarm&#8221
 </div>
 <p>If you would like to assign the RPi a persistent hostname (that isnt its ip address) you must have something to identify it by.</p>
 <p>CPU serial number:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">[alarm@alarm ~]$</span> grep -Eor <span class="s2">&quot;Serial.*([[:xdigit:]])&quot;</span> /proc/cpuinfo <span class="p">|</span> cut -d <span class="s2">&quot; &quot;</span> -f2
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="o">[</span>alarm@alarm ~<span class="o">]</span>$ grep -Eor <span class="s2">&quot;Serial.*([[:xdigit:]])&quot;</span> /proc/cpuinfo <span class="p">|</span> cut -d <span class="s2">&quot; &quot;</span> -f2
 </pre></div>
 </div>
 <p>Machine id:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">[alarm@alarm ~]$</span> cat /etc/machine-id
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="o">[</span>alarm@alarm ~<span class="o">]</span>$ cat /etc/machine-id
 </pre></div>
 </div>
 <p>You can use either of those to create a new entry in the <em>ansible/vars/hostmap.yml</em> using this syntax:</p>
@@ -143,7 +143,7 @@ You need to add your ssh key to the list of keys for the user &#8220;alarm&#8221
 </div>
 </div>
 <p>Run the play</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> ansible-playbook -i hosts eyepi.yml
+<div class="highlight-bash"><div class="highlight"><pre><span></span>$ ansible-playbook -i hosts eyepi.yml
 </pre></div>
 </div>
 <p>You can use the same command to update the software on the RPi.</p>

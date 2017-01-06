@@ -4,7 +4,7 @@ Description=SPC-Eyepi capture systemd service
 [Service]
 Type=simple
 WorkingDirectory=/home/spc-eyepi/
-ExecStart=/usr/bin/python3 /home/spc-eyepi/capture-upload.py
+ExecStart=/usr/bin/python3 /home/spc-eyepi/detectandstart.py
 Restart=always
 
 [Install]

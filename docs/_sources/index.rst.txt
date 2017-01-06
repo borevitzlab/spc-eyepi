@@ -51,7 +51,7 @@ Requirements
 ------------
 
 *os:*
- * python3
+ * python3.5
  * python-cffi
  * exiv2
  * opencv 3.1 `[Arch-Extra] <https://www.archlinux.org/packages/extra/x86_64/opencv/>`_

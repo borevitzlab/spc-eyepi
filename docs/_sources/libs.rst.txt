@@ -1,3 +1,5 @@
+:orphan:
+
 libs Package group
 ==================
 
@@ -11,6 +13,7 @@ libs.Camera module
     :members:
     :undoc-members:
     :show-inheritance:
+
 
 libs.CryptUtil module
 ---------------------
@@ -64,15 +67,6 @@ libs.Uploader module
 --------------------
 
 .. automodule:: libs.Uploader
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: libs
     :members:
     :undoc-members:
     :show-inheritance:

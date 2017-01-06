@@ -40,8 +40,10 @@ def detect_picam(updater: Updater) -> tuple:
     todo: clean this up so that it doesnt require subprocess.
 
     :creates: :mod:`libs.Camera.PiCamera`, :mod:`libs.Uploader.Uploader`
-    :param updater: :mod:`libs.Updater`, that has a `communication_queue` member that implements an `append` method
+    :param updater: instance that has a `communication_queue` member that implements an `append` method
+    :type updater: Updater
     :return: tuple of raspberry pi camera thread and uploader.
+    :rtype: tuple(PiCamera, Uploader)
     """
     logger.info("Detecting picamera")
     if not (os.path.exists("/opt/vc/bin/vcgencmd")):
@@ -69,8 +71,10 @@ def detect_gphoto(updater: Updater):
     Detects DSLRs using `borevitzlab/gphoto2-cffi <https://github.com/borevitzlab/gphoto2-cffi>`_.
 
     :creates: :mod:`libs.Camera.GPCamera`, :mod:`libs.Uploader.Uploader`
-    :param updater: :mod:`libs.Updater`, that has a `communication_queue` member that implements an `append` method
+    :param updater: instance that has a `communication_queue` member that implements an `append` method
+    :type updater: Updater
     :return: tuple of camera thread objects and associated uploader thread objects.
+    :rtype: tuple(GPCamera, Uploader)
     """
     try:
         logger.info("Detecting DSLRs")
@@ -105,8 +109,10 @@ def detect_webcam(updater: Updater) -> tuple:
     i.e. if the camera shows up as a /dev/videoX device, it sould be detected here.
 
     :creates: :mod:`libs.Camera.USBCamera`, :mod:`libs.Uploader.Uploader`
-    :param updater: :mod:`libs.Updater`, that has a `communication_queue` member that implements an `append` method
+    :param updater: instance that has a `communication_queue` member that implements an `append` method
+    :type updater: Updater
     :return: tuple of camera thread objects and associated uploader thread objects.
+    :rtype: tuple(USBCamera, Uploader)
     """
     try:
         logger.info("Detecting USB web cameras.")
@@ -144,11 +150,14 @@ def detect_webcam(updater: Updater) -> tuple:
 def detect_sensors(updater: Updater) -> tuple:
     """
     Detects sensors from sensor_list file. This is stupid, hacky and awful.
-    TODO: make this better
+
+    TODO: make this better and not permanently linked to sftp.traitcapture.org
 
     :creates: :mod:`libs.Sensor.Sensor`, :mod:`libs.Uploader.Uploader`
-    :param updater: :mod:`libs.Updater`, that has a `communication_queue` member that implements an `append` method
-    :return:
+    :param updater: instance that has a `communication_queue` member that implements an `append` method
+    :type updater: Updater
+    :return: tuple of started sensor objects and uploaders for their data
+    :rtype: tuple(Sensor, Uploader)
     """
     workers = list()
     try:
@@ -178,13 +187,16 @@ def detect_sensors(updater: Updater) -> tuple:
         logger.error("Couldnt detect sensors for some reason: {}".format(str(e)))
     return tuple()
 
+
 def detect_lights(updater: Updater) -> tuple:
     """
     Detects lights from the config files that exist.
 
     :creates: :mod:`libs.Light.Light`
-    :param updater: :mod:`libs.Updater`, that has a `communication_queue` member that implements an `append` method
+    :param updater: instance that has a `communication_queue` member that implements an `append` method
+    :type updater: Updater
     :return: tuple of light thread objects.
+    :rtype: tuple(Light)
     """
     try:
         workers = list()
@@ -203,6 +215,7 @@ def enumerate_usb_devices() -> set:
     Gets a set of the current usb devices from pyudev
 
     :return: set of pyudev usb device objects
+    :rtype: set(pyudev.Device)
     """
     return set(pyudev.Context().list_devices(subsystem="usb"))
 
@@ -213,6 +226,7 @@ def start_workers(worker_objects: tuple) -> tuple:
 
     :param worker_objects: tuple of worker objects (threads)
     :return: tuple of started worker objects
+    :rtype: tuple(threading.Thread)
     """
     logger.debug("Starting {} worker threads".format(str(len(worker_objects))))
     for thread in worker_objects:
@@ -228,6 +242,7 @@ def kill_workers(worker_objects: tuple):
     calls the stop method of the workers (they should all implement this as they are threads).
 
     :param worker_objects:
+    :type worker_objects: tuple(threading.Thread)
     """
     logger.debug("Killing {} worker threads".format(str(len(worker_objects))))
     for thread in worker_objects:
@@ -241,7 +256,8 @@ def detect_ivport(updater: Updater) -> tuple:
     todo: implement
 
     :creates: :mod:`libs.Camera.IVPortCamera`, :mod:`libs.Uploader.Uploader`
-    :param updater: :mod:`libs.Updater`, that has a `communication_queue` member that implements an `append` method
+    :param updater: instance that has a `communication_queue` member that implements an `append` method
+    :type updater: Updater
     :return: tuple of camera thread objects and associated uploader thread objects.
     """
     return tuple()
