@@ -1,0 +1,463 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>detectandstart &#8212; SPC-EyePi 3.2 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SPC-EyePi</a></h1>
+
+
+
+<p class="blurb">Capture/Control software for DSLRs, USB cameras, and the Raspberry Pi camera.</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=borevitzlab&repo=spc-eyepi&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ansible.html">Ansible Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Module Index</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for detectandstart</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+
+<span class="kn">import</span> <span class="nn">logging.config</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">pyudev</span>
+<span class="kn">from</span> <span class="nn">libs.Camera</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">libs.Updater</span> <span class="k">import</span> <span class="n">Updater</span>
+<span class="kn">from</span> <span class="nn">libs.Uploader</span> <span class="k">import</span> <span class="n">Uploader</span><span class="p">,</span> <span class="n">GenericUploader</span>
+<span class="kn">from</span> <span class="nn">libs.Light</span> <span class="k">import</span> <span class="n">ThreadedLights</span>
+<span class="kn">from</span> <span class="nn">libs.Sensor</span> <span class="k">import</span> <span class="n">ThreadedSenseHat</span><span class="p">,</span> <span class="n">ThreadedDHT</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="k">import</span> <span class="n">Lock</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Gareth Dunstone&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2016, Borevitz Lab&quot;</span>
+<span class="n">__credits__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Gareth Dunstone&quot;</span><span class="p">,</span> <span class="s2">&quot;Tim Brown&quot;</span><span class="p">,</span> <span class="s2">&quot;Justin Borevitz&quot;</span><span class="p">,</span> <span class="s2">&quot;Kevin Murray&quot;</span><span class="p">,</span> <span class="s2">&quot;Jack Adamson&quot;</span><span class="p">]</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s2">&quot;GPL&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;3.2.8&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Gareth Dunstone&quot;</span>
+<span class="n">__email__</span> <span class="o">=</span> <span class="s2">&quot;gareth.dunstone@anu.edu.au&quot;</span>
+<span class="n">__status__</span> <span class="o">=</span> <span class="s2">&quot;Feature rollout&quot;</span>
+
+<span class="c1"># attempt to setup logging.</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">fileConfig</span><span class="p">(</span><span class="s2">&quot;logging.ini&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;paramiko&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="detect_picam"><a class="viewcode-back" href="../detectandstart.html#detectandstart.detect_picam">[docs]</a><span class="k">def</span> <span class="nf">detect_picam</span><span class="p">(</span><span class="n">updater</span><span class="p">:</span> <span class="n">Updater</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Detects the existence of a picam</span>
+<span class="sd">    on all SPC-OS devices this will return true if the picam is installed</span>
+<span class="sd">    on other rpis it may return false if the raspberrypi-firmware-tools is not installed or the boot.cfg flag</span>
+<span class="sd">    for the camera is not set.</span>
+
+<span class="sd">    todo: this shoud return an empty tuple if an ivport is detected.</span>
+<span class="sd">    todo: clean this up so that it doesnt require subprocess.</span>
+
+<span class="sd">    :creates: :mod:`libs.Camera.PiCamera`, :mod:`libs.Uploader.Uploader`</span>
+<span class="sd">    :param updater: instance that has a `communication_queue` member that implements an `append` method</span>
+<span class="sd">    :type updater: Updater</span>
+<span class="sd">    :return: tuple of raspberry pi camera thread and uploader.</span>
+<span class="sd">    :rtype: tuple(PiCamera, Uploader)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Detecting picamera&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;/opt/vc/bin/vcgencmd&quot;</span><span class="p">)):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;vcgencmd not found, cannot detect picamera.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cmdret</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="s2">&quot;/opt/vc/bin/vcgencmd get_camera&quot;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;detected=1&quot;</span> <span class="ow">in</span> <span class="n">cmdret</span><span class="p">:</span>
+            <span class="n">camera</span> <span class="o">=</span> <span class="n">ThreadedPiCamera</span><span class="p">(</span><span class="n">SysUtil</span><span class="o">.</span><span class="n">default_identifier</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;picam&quot;</span><span class="p">),</span> <span class="n">queue</span><span class="o">=</span><span class="n">updater</span><span class="o">.</span><span class="n">communication_queue</span><span class="p">)</span>
+            <span class="n">updater</span><span class="o">.</span><span class="n">add_to_identifiers</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+            <span class="n">workers</span> <span class="o">=</span> <span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="n">Uploader</span><span class="p">(</span><span class="n">SysUtil</span><span class="o">.</span><span class="n">default_identifier</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;picam&quot;</span><span class="p">),</span> <span class="n">queue</span><span class="o">=</span><span class="n">updater</span><span class="o">.</span><span class="n">communication_queue</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">start_workers</span><span class="p">(</span><span class="n">workers</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t detect picamera. Error calling vcgencmd. </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+        <span class="k">pass</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;General Exception in picamera detection. </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="detect_gphoto"><a class="viewcode-back" href="../detectandstart.html#detectandstart.detect_gphoto">[docs]</a><span class="k">def</span> <span class="nf">detect_gphoto</span><span class="p">(</span><span class="n">updater</span><span class="p">:</span> <span class="n">Updater</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Detects DSLRs using `borevitzlab/gphoto2-cffi &lt;https://github.com/borevitzlab/gphoto2-cffi&gt;`_.</span>
+
+<span class="sd">    :creates: :mod:`libs.Camera.GPCamera`, :mod:`libs.Uploader.Uploader`</span>
+<span class="sd">    :param updater: instance that has a `communication_queue` member that implements an `append` method</span>
+<span class="sd">    :type updater: Updater</span>
+<span class="sd">    :return: tuple of camera thread objects and associated uploader thread objects.</span>
+<span class="sd">    :rtype: tuple(GPCamera, Uploader)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Detecting DSLRs&quot;</span><span class="p">)</span>
+        <span class="n">lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
+            <span class="n">cameras</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">list_cameras</span><span class="p">()</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="p">[(</span><span class="n">c</span><span class="o">.</span><span class="n">_usb_address</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">serialnumber</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cameras</span><span class="p">]</span>
+        <span class="n">workers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;List of cameras is </span><span class="si">{}</span><span class="s2"> long&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">info</span><span class="p">))))</span>
+        <span class="k">for</span> <span class="n">usb_add</span><span class="p">,</span> <span class="n">serialnumber</span> <span class="ow">in</span> <span class="n">info</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">identifier</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">default_identifier</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">serialnumber</span><span class="p">)</span>
+                <span class="n">camera</span> <span class="o">=</span> <span class="n">ThreadedGPCamera</span><span class="p">(</span><span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">,</span>
+                                          <span class="n">lock</span><span class="o">=</span><span class="n">lock</span><span class="p">,</span>
+                                          <span class="n">queue</span><span class="o">=</span><span class="n">updater</span><span class="o">.</span><span class="n">communication_queue</span><span class="p">)</span>
+                <span class="n">updater</span><span class="o">.</span><span class="n">add_to_temp_identifiers</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+                <span class="n">uploader</span> <span class="o">=</span> <span class="n">Uploader</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="n">updater</span><span class="o">.</span><span class="n">communication_queue</span><span class="p">)</span>
+                <span class="n">workers</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">camera</span><span class="p">,</span> <span class="n">uploader</span><span class="p">])</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Sucessfully detected </span><span class="si">{}</span><span class="s2"> @ </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">serialnumber</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">si</span><span class="p">)</span> <span class="k">for</span> <span class="n">si</span> <span class="ow">in</span> <span class="n">usb_add</span><span class="p">)))</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ef</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldnt detect camera </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ef</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">start_workers</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">workers</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Detecting gphoto cameras failed </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="detect_webcam"><a class="viewcode-back" href="../detectandstart.html#detectandstart.detect_webcam">[docs]</a><span class="k">def</span> <span class="nf">detect_webcam</span><span class="p">(</span><span class="n">updater</span><span class="p">:</span> <span class="n">Updater</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Detects usb web camers using the video4linux pyudev subsystem.</span>
+
+<span class="sd">    i.e. if the camera shows up as a /dev/videoX device, it sould be detected here.</span>
+
+<span class="sd">    :creates: :mod:`libs.Camera.USBCamera`, :mod:`libs.Uploader.Uploader`</span>
+<span class="sd">    :param updater: instance that has a `communication_queue` member that implements an `append` method</span>
+<span class="sd">    :type updater: Updater</span>
+<span class="sd">    :return: tuple of camera thread objects and associated uploader thread objects.</span>
+<span class="sd">    :rtype: tuple(USBCamera, Uploader)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Detecting USB web cameras.&quot;</span><span class="p">)</span>
+        <span class="n">workers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="n">pyudev</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span><span class="o">.</span><span class="n">list_devices</span><span class="p">(</span><span class="n">subsystem</span><span class="o">=</span><span class="s2">&quot;video4linux&quot;</span><span class="p">):</span>
+            <span class="n">serial</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ID_SERIAL_SHORT&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">serial</span><span class="p">:</span>
+                <span class="n">serial</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ID_SERIAL&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">serial</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">6</span><span class="p">:</span>
+                    <span class="n">serial</span> <span class="o">=</span> <span class="n">serial</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Detected USB camera. Using default machine id serial </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">serial</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Detected USB camera </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">serial</span><span class="p">)))</span>
+
+            <span class="n">identifier</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">default_identifier</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;USB-</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">serial</span><span class="p">))</span>
+            <span class="n">sys_number</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">sys_number</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># logger.warning(&quot;adding {} on {}&quot;.format(identifier, sys_number))</span>
+                <span class="n">camera</span> <span class="o">=</span> <span class="n">ThreadedUSBCamera</span><span class="p">(</span><span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">,</span>
+                                           <span class="n">sys_number</span><span class="o">=</span><span class="n">sys_number</span><span class="p">,</span>
+                                           <span class="n">queue</span><span class="o">=</span><span class="n">updater</span><span class="o">.</span><span class="n">communication_queue</span><span class="p">)</span>
+                <span class="n">updater</span><span class="o">.</span><span class="n">add_to_temp_identifiers</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+                <span class="n">workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">camera</span><span class="p">)</span>
+                <span class="n">workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Uploader</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="n">updater</span><span class="o">.</span><span class="n">communication_queue</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unable to start usb webcamera </span><span class="si">{}</span><span class="s2"> on </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">sys_number</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">start_workers</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">workers</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;couldnt detect the usb cameras </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="detect_sensors"><a class="viewcode-back" href="../detectandstart.html#detectandstart.detect_sensors">[docs]</a><span class="k">def</span> <span class="nf">detect_sensors</span><span class="p">(</span><span class="n">updater</span><span class="p">:</span> <span class="n">Updater</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Detects sensors from sensor_list file. This is stupid, hacky and awful.</span>
+
+<span class="sd">    TODO: make this better and not permanently linked to sftp.traitcapture.org</span>
+
+<span class="sd">    :creates: :mod:`libs.Sensor.Sensor`, :mod:`libs.Uploader.Uploader`</span>
+<span class="sd">    :param updater: instance that has a `communication_queue` member that implements an `append` method</span>
+<span class="sd">    :type updater: Updater</span>
+<span class="sd">    :return: tuple of started sensor objects and uploaders for their data</span>
+<span class="sd">    :rtype: tuple(Sensor, Uploader)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">workers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sensors_list</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;sensor_list&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">sensors_list</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sensors_list</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="s2">&quot;sensehat&quot;</span><span class="p">:</span>
+                    <span class="n">shat</span> <span class="o">=</span> <span class="n">ThreadedSenseHat</span><span class="p">(</span><span class="n">identifier</span><span class="o">=</span><span class="n">SysUtil</span><span class="o">.</span><span class="n">get_hostname</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;-sensehat&quot;</span><span class="p">,</span>
+                                            <span class="n">queue</span><span class="o">=</span><span class="n">updater</span><span class="o">.</span><span class="n">communication_queue</span><span class="p">)</span>
+                    <span class="n">ul</span> <span class="o">=</span> <span class="n">GenericUploader</span><span class="p">(</span><span class="n">shat</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">shat</span><span class="o">.</span><span class="n">data_directory</span><span class="p">,</span> <span class="s2">&quot;sftp.traitcapture.org&quot;</span><span class="p">)</span>
+                    <span class="n">workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shat</span><span class="p">)</span>
+                    <span class="n">workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ul</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">shat</span> <span class="o">=</span> <span class="n">ThreadedDHT</span><span class="p">(</span><span class="n">identifier</span><span class="o">=</span><span class="n">SysUtil</span><span class="o">.</span><span class="n">get_hostname</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span>
+                                       <span class="n">queue</span><span class="o">=</span><span class="n">updater</span><span class="o">.</span><span class="n">communication_queue</span><span class="p">)</span>
+                    <span class="n">ul</span> <span class="o">=</span> <span class="n">GenericUploader</span><span class="p">(</span><span class="n">shat</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">shat</span><span class="o">.</span><span class="n">data_directory</span><span class="p">,</span> <span class="s2">&quot;sftp.traitcapture.org&quot;</span><span class="p">)</span>
+                    <span class="n">workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shat</span><span class="p">)</span>
+                    <span class="n">workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ul</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldnt detect a sensor: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">start_workers</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">workers</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldnt detect sensors for some reason: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="detect_lights"><a class="viewcode-back" href="../detectandstart.html#detectandstart.detect_lights">[docs]</a><span class="k">def</span> <span class="nf">detect_lights</span><span class="p">(</span><span class="n">updater</span><span class="p">:</span> <span class="n">Updater</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Detects lights from the config files that exist.</span>
+
+<span class="sd">    :creates: :mod:`libs.Light.Light`</span>
+<span class="sd">    :param updater: instance that has a `communication_queue` member that implements an `append` method</span>
+<span class="sd">    :type updater: Updater</span>
+<span class="sd">    :return: tuple of light thread objects.</span>
+<span class="sd">    :rtype: tuple(Light)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">workers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">cfg_p</span> <span class="ow">in</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">get_light_configs</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ThreadedLights</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="n">updater</span><span class="o">.</span><span class="n">communication_queue</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldnt detect light at </span><span class="si">{}</span><span class="s2"> : &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">start_workers</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">workers</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldnt detect light configs: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="enumerate_usb_devices"><a class="viewcode-back" href="../detectandstart.html#detectandstart.enumerate_usb_devices">[docs]</a><span class="k">def</span> <span class="nf">enumerate_usb_devices</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a set of the current usb devices from pyudev</span>
+
+<span class="sd">    :return: set of pyudev usb device objects</span>
+<span class="sd">    :rtype: set(pyudev.Device)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">pyudev</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span><span class="o">.</span><span class="n">list_devices</span><span class="p">(</span><span class="n">subsystem</span><span class="o">=</span><span class="s2">&quot;usb&quot;</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="start_workers"><a class="viewcode-back" href="../detectandstart.html#detectandstart.start_workers">[docs]</a><span class="k">def</span> <span class="nf">start_workers</span><span class="p">(</span><span class="n">worker_objects</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Starts threaded workers</span>
+
+<span class="sd">    :param worker_objects: tuple of worker objects (threads)</span>
+<span class="sd">    :return: tuple of started worker objects</span>
+<span class="sd">    :rtype: tuple(threading.Thread)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Starting </span><span class="si">{}</span><span class="s2"> worker threads&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">worker_objects</span><span class="p">))))</span>
+    <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="n">worker_objects</span><span class="p">:</span>
+        <span class="n">thread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">worker_objects</span></div>
+
+
+<div class="viewcode-block" id="kill_workers"><a class="viewcode-back" href="../detectandstart.html#detectandstart.kill_workers">[docs]</a><span class="k">def</span> <span class="nf">kill_workers</span><span class="p">(</span><span class="n">worker_objects</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    stops all workers</span>
+
+<span class="sd">    calls the stop method of the workers (they should all implement this as they are threads).</span>
+
+<span class="sd">    :param worker_objects:</span>
+<span class="sd">    :type worker_objects: tuple(threading.Thread)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Killing </span><span class="si">{}</span><span class="s2"> worker threads&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">worker_objects</span><span class="p">))))</span>
+    <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="n">worker_objects</span><span class="p">:</span>
+        <span class="n">thread</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="detect_ivport"><a class="viewcode-back" href="../detectandstart.html#detectandstart.detect_ivport">[docs]</a><span class="k">def</span> <span class="nf">detect_ivport</span><span class="p">(</span><span class="n">updater</span><span class="p">:</span> <span class="n">Updater</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Detect IVport, uninplemented as of 14/06/2016</span>
+
+<span class="sd">    todo: implement</span>
+
+<span class="sd">    :creates: :mod:`libs.Camera.IVPortCamera`, :mod:`libs.Uploader.Uploader`</span>
+<span class="sd">    :param updater: instance that has a `communication_queue` member that implements an `append` method</span>
+<span class="sd">    :type updater: Updater</span>
+<span class="sd">    :return: tuple of camera thread objects and associated uploader thread objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;Worker_dispatch&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Program startup...&quot;</span><span class="p">)</span>
+    <span class="c1"># The main loop for capture</span>
+
+    <span class="c1"># these should be all detected at some point.</span>
+    <span class="n">gphoto_workers</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+    <span class="n">raspberry</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+    <span class="n">webcams</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+    <span class="n">lights</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+    <span class="n">sensors</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+    <span class="n">updater</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># start the updater. this is the first thing that should happen.</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Starting up the updater&quot;</span><span class="p">)</span>
+        <span class="n">updater</span> <span class="o">=</span> <span class="n">Updater</span><span class="p">()</span>
+        <span class="n">start_workers</span><span class="p">((</span><span class="n">updater</span><span class="p">,))</span>
+        <span class="n">raspberry</span> <span class="o">=</span> <span class="n">detect_picam</span><span class="p">(</span><span class="n">updater</span><span class="p">)</span> <span class="ow">or</span> <span class="n">detect_ivport</span><span class="p">(</span><span class="n">updater</span><span class="p">)</span>
+        <span class="n">webcams</span> <span class="o">=</span> <span class="n">detect_webcam</span><span class="p">(</span><span class="n">updater</span><span class="p">)</span>
+        <span class="n">lights</span> <span class="o">=</span> <span class="n">detect_lights</span><span class="p">(</span><span class="n">updater</span><span class="p">)</span>
+        <span class="n">sensors</span> <span class="o">=</span> <span class="n">detect_sensors</span><span class="p">(</span><span class="n">updater</span><span class="p">)</span>
+        <span class="c1"># try 10 times to detect gphoto cameras. Maybe they arent awake yet.</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+            <span class="n">gphoto_workers</span> <span class="o">=</span> <span class="n">detect_gphoto</span><span class="p">(</span><span class="n">updater</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">gphoto_workers</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;no gphoto cameras detected. Something might be wrong.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># enumerate the usb devices to compare them later on.</span>
+        <span class="n">usb_devices</span> <span class="o">=</span> <span class="n">enumerate_usb_devices</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">usb_devices</span> <span class="o">!=</span> <span class="n">enumerate_usb_devices</span><span class="p">():</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;USB device list change. Killing camera threads&quot;</span><span class="p">)</span>
+                    <span class="n">kill_workers</span><span class="p">(</span><span class="n">gphoto_workers</span><span class="p">)</span>
+                    <span class="n">updater</span><span class="o">.</span><span class="n">temp_identifiers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                    <span class="n">gphoto_workers</span> <span class="o">=</span> <span class="n">detect_gphoto</span><span class="p">(</span><span class="n">updater</span><span class="p">)</span>
+                    <span class="c1"># should redetect webcams.</span>
+
+                    <span class="n">webcams</span> <span class="o">=</span> <span class="n">detect_webcam</span><span class="p">(</span><span class="n">updater</span><span class="p">)</span>
+                    <span class="n">usb_devices</span> <span class="o">=</span> <span class="n">enumerate_usb_devices</span><span class="p">()</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">KeyboardInterrupt</span><span class="p">,</span> <span class="ne">SystemExit</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">kill_workers</span><span class="p">(</span><span class="n">gphoto_workers</span><span class="p">)</span>
+                <span class="n">kill_workers</span><span class="p">(</span><span class="n">webcams</span><span class="p">)</span>
+                <span class="n">kill_workers</span><span class="p">(</span><span class="n">raspberry</span><span class="p">)</span>
+                <span class="n">kill_workers</span><span class="p">(</span><span class="n">lights</span><span class="p">)</span>
+                <span class="n">kill_workers</span><span class="p">([</span><span class="n">updater</span><span class="p">])</span>
+                <span class="k">raise</span> <span class="n">e</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s2">&quot;EMERGENCY! Other exception encountered. </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyboardInterrupt</span><span class="p">,</span> <span class="ne">SystemExit</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;exiting...&quot;</span><span class="p">)</span>
+        <span class="n">kill_workers</span><span class="p">(</span><span class="n">gphoto_workers</span><span class="p">)</span>
+        <span class="n">kill_workers</span><span class="p">(</span><span class="n">raspberry</span><span class="p">)</span>
+        <span class="n">kill_workers</span><span class="p">(</span><span class="n">webcams</span><span class="p">)</span>
+        <span class="n">kill_workers</span><span class="p">(</span><span class="n">lights</span><span class="p">)</span>
+        <span class="n">kill_workers</span><span class="p">([</span><span class="n">updater</span><span class="p">])</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s2">&quot;EMERGENCY! An exception occurred during worker dispatch: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">IVPORt __main__ for when the IVport is in use, as we cant detect its presence yet.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1"># if __name__ == &quot;__main__&quot;:</span>
+<span class="c1">#     logger = logging.getLogger(&quot;Worker_dispatch&quot;)</span>
+<span class="c1">#     logger.info(&quot;Program startup&quot;)</span>
+<span class="c1">#     # The main loop for capture</span>
+<span class="c1">#     ivport = list()</span>
+<span class="c1">#     updater = None</span>
+<span class="c1">#     try:</span>
+<span class="c1">#         # start the updater. this is the first thing that should happen.</span>
+<span class="c1">#         updater = Updater()</span>
+<span class="c1">#         updater.start()</span>
+<span class="c1">#</span>
+<span class="c1">#         ivport = (ThreadedIVPortCamera(SysUtil.default_identifier(prefix=&quot;IVPort&quot;), updater),</span>
+<span class="c1">#                   Uploader(SysUtil.default_identifier(prefix=&quot;IVPort&quot;), queue=updater))</span>
+<span class="c1">#         start_workers(ivport)</span>
+<span class="c1">#</span>
+<span class="c1">#     except (KeyboardInterrupt, SystemExit):</span>
+<span class="c1">#         print(&quot;exiting...&quot;)</span>
+<span class="c1">#         kill_workers(ivport)</span>
+<span class="c1">#         kill_workers([updater])</span>
+<span class="c1">#         sys.exit()</span>
+<span class="c1">#     except Exception as e:</span>
+<span class="c1">#         logger.fatal(&quot;EMERGENCY! An exception occurred during worker dispatch: {}&quot;.format(str(e)))</span>
+<span class="c1">#</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
