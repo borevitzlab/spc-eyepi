@@ -1,13 +1,8 @@
-:orphan:
+SubModules
+==========
 
-libs Package group
-==================
-
-Submodules
-----------
-
-libs.Camera module
-------------------
+libs.Camera
+-----------
 
 .. automodule:: libs.Camera
     :members:
@@ -15,56 +10,56 @@ libs.Camera module
     :show-inheritance:
 
 
-libs.CryptUtil module
----------------------
+libs.CryptUtil
+--------------
 
 .. automodule:: libs.CryptUtil
     :members:
     :undoc-members:
     :show-inheritance:
 
-libs.Light module
------------------
+libs.Light
+----------
 
 .. automodule:: libs.Light
     :members:
     :undoc-members:
     :show-inheritance:
 
-libs.PanTilt module
--------------------
+libs.PanTilt
+------------
 
 .. automodule:: libs.PanTilt
     :members:
     :undoc-members:
     :show-inheritance:
 
-libs.Sensor module
-------------------
+libs.Sensor
+-----------
 
 .. automodule:: libs.Sensor
     :members:
     :undoc-members:
     :show-inheritance:
 
-libs.SysUtil module
--------------------
+libs.SysUtil
+------------
 
 .. automodule:: libs.SysUtil
     :members:
     :undoc-members:
     :show-inheritance:
 
-libs.Updater module
--------------------
+libs.Updater
+------------
 
 .. automodule:: libs.Updater
     :members:
     :undoc-members:
     :show-inheritance:
 
-libs.Uploader module
---------------------
+libs.Uploader
+-------------
 
 .. automodule:: libs.Uploader
     :members:

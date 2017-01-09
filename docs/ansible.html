@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Ansible Deployment &#8212; SpectroPhenoClimatron EyePI 3.2 documentation</title>
+    <title>Ansible Deployment &#8212; SPC-EyePi 3.2 documentation</title>
     
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -27,6 +27,8 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Module Index" href="py-modindex.html" />
+    <link rel="prev" title="SPC-EyePi" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -35,23 +37,68 @@
 
   </head>
   <body role="document">
-  
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SPC-EyePi</a></h1>
 
-    <div class="document">
+
+
+<p class="blurb">Capture/Control software for DSLRs, USB cameras, and the Raspberry Pi camera.</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=borevitzlab&repo=spc-eyepi&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Ansible Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Module Index</a></li>
+</ul>
+
+
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Ansible Deployment</a><ul>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#setup">Setup</a></li>
+<li><a class="reference internal" href="#traitcapture-org-integration">Traitcapture.org integration</a></li>
+<li><a class="reference internal" href="#openvpn">OpenVPN</a></li>
+<li><a class="reference internal" href="#setting-up-the-raspberry-pi">Setting up the Raspberry Pi</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body" role="main">
             
   <div class="section" id="ansible-deployment">
-<h1>Ansible Deployment<a class="headerlink" href="#ansible-deployment" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-</div>
-<ul class="simple">
-<li><a class="reference internal" href="index.html"><span class="doc">SPC-EyePi</span></a></li>
-</ul>
+<h1>Ansible Deployment<a class="headerlink" href="#ansible-deployment" title="Permalink to this headline">§</a></h1>
 <div class="section" id="requirements">
-<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
-<p>You need <a class="reference external" href="https://www.ansible.com/">ansible</a> version 2.3 installed locally</p>
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">§</a></h2>
+<p>You need <a class="reference external" href="https://www.ansible.com/">Ansible</a> version 2.3 installed locally</p>
 <div class="highlight-bash"><div class="highlight"><pre><span></span><span class="c1"># pip install git+https://github.com/ansible/ansible</span>
 </pre></div>
 </div>
@@ -66,13 +113,13 @@
 </div>
 </div>
 <div class="section" id="setup">
-<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">§</a></h2>
 <p>Add add your ssh public key to the <em>ansible/keys</em> folder (you can also delete ours from there, unless you <strong>really</strong> trust us).</p>
 <p>If you want a local user account make sure there is an entry in <em>ansible/vars/userlist.yml</em> and with a reference to your ssh key.
 You need to add your ssh key to the list of keys for the user &#8220;alarm&#8221;, as this is the user that ansible needs to install things.</p>
 <p>The contents of users file should look something like this:</p>
-<div class="literal-block-wrapper container" id="userlist">
-<div class="code-block-caption"><span class="caption-text"><em>ansible/vars/userlist.yml</em></span><a class="headerlink" href="#userlist" title="Permalink to this code">¶</a></div>
+<div class="literal-block-wrapper docutils container" id="userlist">
+<div class="code-block-caption"><span class="caption-text"><em>ansible/vars/userlist.yml</em></span><a class="headerlink" href="#userlist" title="Permalink to this code">§</a></div>
 <div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">users</span><span class="p p-Indicator">:</span>
   <span class="p p-Indicator">-</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">alarm</span><span class="p p-Indicator">,</span>  <span class="nv">shell</span><span class="p p-Indicator">:</span> <span class="nv">/bin/bash</span><span class="p p-Indicator">,</span> <span class="nv">groups</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">wheel</span><span class="p p-Indicator">,</span> <span class="nv">adm</span><span class="p p-Indicator">,</span> <span class="nv">users</span><span class="p p-Indicator">],</span>
       <span class="nv">clear_password</span><span class="p p-Indicator">:</span> <span class="nv">yes</span><span class="p p-Indicator">,</span>
@@ -85,10 +132,10 @@ You need to add your ssh key to the list of keys for the user &#8220;alarm&#8221
 <p>After the first login this playbook locks down authentication (including disabling password logins) and doesn&#8217;t check to see whether an ssh key has been added, so you could lock yourself out.</p>
 </div>
 <div class="section" id="traitcapture-org-integration">
-<h2>Traitcapture.org integration<a class="headerlink" href="#traitcapture-org-integration" title="Permalink to this headline">¶</a></h2>
+<h2>Traitcapture.org integration<a class="headerlink" href="#traitcapture-org-integration" title="Permalink to this headline">§</a></h2>
 <p>If you have an api key for traitcapture.org, put it in <em>ansible/secure/api_key.yml</em> in this format (dont forget the quotation marks!):</p>
-<div class="literal-block-wrapper container" id="api-key">
-<div class="code-block-caption"><span class="caption-text"><em>ansible/secure/api_key.yml</em></span><a class="headerlink" href="#api-key" title="Permalink to this code">¶</a></div>
+<div class="literal-block-wrapper docutils container" id="api-key">
+<div class="code-block-caption"><span class="caption-text"><em>ansible/secure/api_key.yml</em></span><a class="headerlink" href="#api-key" title="Permalink to this code">§</a></div>
 <div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">api_key</span><span class="p p-Indicator">:</span>
     <span class="s">&quot;your_api_key&quot;</span>
 </pre></div>
@@ -96,11 +143,11 @@ You need to add your ssh key to the list of keys for the user &#8220;alarm&#8221
 </div>
 </div>
 <div class="section" id="openvpn">
-<h2>OpenVPN<a class="headerlink" href="#openvpn" title="Permalink to this headline">¶</a></h2>
+<h2>OpenVPN<a class="headerlink" href="#openvpn" title="Permalink to this headline">§</a></h2>
 <p>If you want the RPi to be connected to an openvpn server, add your openvpn profile in to the <em>secure</em> directory (<em>ansible/secure/my_vpn_conf.conf</em>) and set the <em>vpn_conf</em> variable in <em>eyepi.yml</em> and it will copy and activate/enable that profile.</p>
 </div>
 <div class="section" id="setting-up-the-raspberry-pi">
-<h2>Setting up the Raspberry Pi<a class="headerlink" href="#setting-up-the-raspberry-pi" title="Permalink to this headline">¶</a></h2>
+<h2>Setting up the Raspberry Pi<a class="headerlink" href="#setting-up-the-raspberry-pi" title="Permalink to this headline">§</a></h2>
 <p>Create an SD card with the latest Archlinux Arm (see the <a class="reference external" href="https://archlinuxarm.org/platforms/armv8/broadcom/raspberry-pi-3#installation">installation guide</a>)</p>
 <p>Log into the raspberry pi using ssh with the username:password <em>alarm:alarm</em> and install python2.</p>
 <p>The RPi doesn&#8217;t have <strong>sudo</strong> installed yet, so you must use <strong>su</strong>. The root password is <em>root</em>:</p>
@@ -109,8 +156,8 @@ You need to add your ssh key to the list of keys for the user &#8220;alarm&#8221
 </pre></div>
 </div>
 <p>Add the ip address of the RPi to the list in the <em>ansible/hosts</em> file so that it looks like this:</p>
-<div class="literal-block-wrapper container" id="hosts">
-<div class="code-block-caption"><span class="caption-text"><em>ansible/hosts</em></span><a class="headerlink" href="#hosts" title="Permalink to this code">¶</a></div>
+<div class="literal-block-wrapper docutils container" id="hosts">
+<div class="code-block-caption"><span class="caption-text"><em>ansible/hosts</em></span><a class="headerlink" href="#hosts" title="Permalink to this code">§</a></div>
 <div class="highlight-guess"><div class="highlight"><pre><span></span><span class="k">[rpis]</span>
 <span class="err">your_rpi_ip_address</span>
 
@@ -135,8 +182,8 @@ You need to add your ssh key to the list of keys for the user &#8220;alarm&#8221
 </pre></div>
 </div>
 <p>You can use either of those to create a new entry in the <em>ansible/vars/hostmap.yml</em> using this syntax:</p>
-<div class="literal-block-wrapper container" id="hostmap">
-<div class="code-block-caption"><span class="caption-text"><em>ansible/vars/hostmap.yml</em></span><a class="headerlink" href="#hostmap" title="Permalink to this code">¶</a></div>
+<div class="literal-block-wrapper docutils container" id="hostmap">
+<div class="code-block-caption"><span class="caption-text"><em>ansible/vars/hostmap.yml</em></span><a class="headerlink" href="#hostmap" title="Permalink to this code">§</a></div>
 <div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">hostnames</span><span class="p p-Indicator">:</span>
     <span class="l l-Scalar l-Scalar-Plain">your_machine_id</span><span class="p p-Indicator">:</span> <span class="s">&quot;your_desired_hostname&quot;</span>
 </pre></div>
@@ -157,57 +204,15 @@ The full list of tags that can be used are in <em>ansible/eyepi.yml</em>.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Ansible Deployment</a><ul>
-<li><a class="reference internal" href="#requirements">Requirements</a></li>
-<li><a class="reference internal" href="#setup">Setup</a></li>
-<li><a class="reference internal" href="#traitcapture-org-integration">Traitcapture.org integration</a></li>
-<li><a class="reference internal" href="#openvpn">OpenVPN</a></li>
-<li><a class="reference internal" href="#setting-up-the-raspberry-pi">Setting up the Raspberry Pi</a></li>
-</ul>
-</li>
-</ul>
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/ansible.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
+    <div class="clearer"></div>
+  </div>
     <div class="footer">
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
       
-      |
-      <a href="_sources/ansible.rst.txt"
-          rel="nofollow">Page source</a>
     </div>
 
     

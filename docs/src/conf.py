@@ -31,6 +31,9 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+
+
+
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.doctest',
               'sphinx.ext.intersphinx',
@@ -39,10 +42,11 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.mathjax',
               'sphinx.ext.viewcode',
               # 'sphinx_autodoc_typehints',
-              'sphinx.ext.githubpages']
+              'sphinx.ext.githubpages'
+              # 'sphinxcontrib.fulltoc'
+              ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -62,7 +66,7 @@ source_suffix = ['.rst', ".md"]
 master_doc = 'index'
 
 # General information about the project.
-project = 'SpectroPhenoClimatron EyePI'
+project = 'SPC-EyePi'
 copyright = '2016, Gareth Dunstone, Kevin Murray, Tim Brown'
 author = 'Gareth Dunstone, Kevin Murray, Tim Brown'
 
@@ -104,12 +108,33 @@ html_theme = 'alabaster'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_sidebars = {
+    '**': [
+        'about.html',
+        'navigation.html',
+        'localtoc.html',
+        # 'relations.html',
+        'searchbox.html'
+    ]
+}
+html_theme_options = {
+    'description': "Capture/Control software for DSLRs, USB cameras, and the Raspberry Pi camera.",
+    'github_repo': "spc-eyepi",
+    'github_user': "borevitzlab",
+    'github_button': True,
+    'github_type': 'star',
+    'fixed_sidebar': True,
+    'sidebar_includehidden': True
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['../_static']
+templates_path = ['../_templates']
+
+html_show_sourcelink = False
+html_add_permalinks = u"§"
 
 # -- Options for HTMLHelp output ------------------------------------------
 
@@ -168,10 +193,10 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
+    # '': ('', None),
     'python': ('https://docs.python.org/3.5', None),
     'numpy': ('http://numpy.readthedocs.io/en/latest/', None),
     'pyudev': ('https://pyudev.readthedocs.io/en/latest/', None),
-    # '': ('', None),
     'flask': ('http://flask.pocoo.org/docs/0.12/', None),
     'flask_bcrypt': ('https://flask-bcrypt.readthedocs.io/en/latest/', None),
     'picamera': ("http://picamera.readthedocs.io/en/release-1.12/", None)

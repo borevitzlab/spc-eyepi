@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Webinterface &#8212; SpectroPhenoClimatron EyePI 3.2 documentation</title>
+    <title>Webinterface &#8212; SPC-EyePi 3.2 documentation</title>
     
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -35,20 +35,58 @@
 
   </head>
   <body role="document">
-  
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SPC-EyePi</a></h1>
 
-    <div class="document">
+
+
+<p class="blurb">Capture/Control software for DSLRs, USB cameras, and the Raspberry Pi camera.</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=borevitzlab&repo=spc-eyepi&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ansible.html">Ansible Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Module Index</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body" role="main">
             
   <div class="section" id="webinterface">
-<h1>Webinterface<a class="headerlink" href="#webinterface" title="Permalink to this headline">¶</a></h1>
+<h1>Webinterface<a class="headerlink" href="#webinterface" title="Permalink to this headline">§</a></h1>
 <p>Web interface flask app for spc-eyepi, intended to be accessed by an end user.</p>
 <p>Supports password authentication using <a class="reference external" href="https://flask-bcrypt.readthedocs.io/en/latest/">bcrypt</a> password hashing.</p>
 <span class="target" id="module-webinterface"></span><dl class="function">
 <dt id="webinterface.add_user">
-<code class="descclassname">webinterface.</code><code class="descname">add_user</code><span class="sig-paren">(</span><em>username: str</em>, <em>password_to_set: str</em>, <em>adminpass: str = None</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/webinterface.html#add_user"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.add_user" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">add_user</code><span class="sig-paren">(</span><em>username: str</em>, <em>password_to_set: str</em>, <em>adminpass: str = None</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/webinterface.html#add_user"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.add_user" title="Permalink to this definition">§</a></dt>
 <dd><p>Creates a new user in the small db, or changes the password if it exists.</p>
 <p>If the admin password is provided and matches the &#8216;admin&#8217; users password hash in the db, allows adding of new users
 and modification of other users accounts.</p>
@@ -77,13 +115,13 @@ and modification of other users accounts.</p>
 
 <dl class="function">
 <dt id="webinterface.admin">
-<code class="descclassname">webinterface.</code><code class="descname">admin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#admin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.admin" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">admin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#admin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.admin" title="Permalink to this definition">§</a></dt>
 <dd><p>Administration page view</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.after_this_request">
-<code class="descclassname">webinterface.</code><code class="descname">after_this_request</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#after_this_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.after_this_request" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">after_this_request</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#after_this_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.after_this_request" title="Permalink to this definition">§</a></dt>
 <dd><p>Call after request helper.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -101,7 +139,7 @@ and modification of other users accounts.</p>
 
 <dl class="function">
 <dt id="webinterface.authenticate">
-<code class="descclassname">webinterface.</code><code class="descname">authenticate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#authenticate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.authenticate" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">authenticate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#authenticate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.authenticate" title="Permalink to this definition">§</a></dt>
 <dd><p>really this should just return a 404 for it to be really secure.
 But I use the message sometimes.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -118,7 +156,7 @@ But I use the message sometimes.</p>
 
 <dl class="function">
 <dt id="webinterface.available_networks">
-<code class="descclassname">webinterface.</code><code class="descname">available_networks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#available_networks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.available_networks" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">available_networks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#available_networks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.available_networks" title="Permalink to this definition">§</a></dt>
 <dd><p>Gets the available networks doing a scan with ... wlp6s0?</p>
 <p>todo: get fluffybunny to fix this.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -135,7 +173,7 @@ But I use the message sometimes.</p>
 
 <dl class="function">
 <dt id="webinterface.bad_auth">
-<code class="descclassname">webinterface.</code><code class="descname">bad_auth</code><span class="sig-paren">(</span><em>error</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#bad_auth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.bad_auth" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">bad_auth</code><span class="sig-paren">(</span><em>error</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#bad_auth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.bad_auth" title="Permalink to this definition">§</a></dt>
 <dd><p>401 error handler</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -153,14 +191,14 @@ But I use the message sometimes.</p>
 
 <dl class="function">
 <dt id="webinterface.break_the_interface">
-<code class="descclassname">webinterface.</code><code class="descname">break_the_interface</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#break_the_interface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.break_the_interface" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">break_the_interface</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#break_the_interface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.break_the_interface" title="Permalink to this definition">§</a></dt>
 <dd><p>Intentionally load a nonexistent template to start the
 <a class="reference external" href="http://werkzeug.pocoo.org/docs/0.11/debug/">werkezeug interactive debugger</a></p>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.cap_lock_wait">
-<code class="descclassname">webinterface.</code><code class="descname">cap_lock_wait</code><span class="sig-paren">(</span><em>port: str</em>, <em>serialnumber: str</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/webinterface.html#cap_lock_wait"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.cap_lock_wait" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">cap_lock_wait</code><span class="sig-paren">(</span><em>port: str</em>, <em>serialnumber: str</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/webinterface.html#cap_lock_wait"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.cap_lock_wait" title="Permalink to this definition">§</a></dt>
 <dd><p>captures and writes an image to static/temp with the file name of the serial number.</p>
 <p>todo: Does this even work? this is old and prbably broken FIX MEEEEE!</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -185,7 +223,7 @@ But I use the message sometimes.</p>
 
 <dl class="function">
 <dt id="webinterface.capture_preview">
-<code class="descclassname">webinterface.</code><code class="descname">capture_preview</code><span class="sig-paren">(</span><em>serialnumber: str</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/webinterface.html#capture_preview"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.capture_preview" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">capture_preview</code><span class="sig-paren">(</span><em>serialnumber: str</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/webinterface.html#capture_preview"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.capture_preview" title="Permalink to this definition">§</a></dt>
 <dd><p>capture a preview image once.</p>
 <p>todo: see <a class="reference internal" href="#webinterface.cap_lock_wait" title="webinterface.cap_lock_wait"><code class="xref py py-func docutils literal"><span class="pre">cap_lock_wait()</span></code></a></p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -204,7 +242,7 @@ But I use the message sometimes.</p>
 
 <dl class="function">
 <dt id="webinterface.change_hostname">
-<code class="descclassname">webinterface.</code><code class="descname">change_hostname</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#change_hostname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.change_hostname" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">change_hostname</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#change_hostname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.change_hostname" title="Permalink to this definition">§</a></dt>
 <dd><p>Changes the hostname on the machine, including the /etc/hosts file.
 Also goes through all the configuration files looking for the old hostname.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -221,7 +259,7 @@ Also goes through all the configuration files looking for the old hostname.</p>
 
 <dl class="function">
 <dt id="webinterface.check_auth">
-<code class="descclassname">webinterface.</code><code class="descname">check_auth</code><span class="sig-paren">(</span><em>username: str</em>, <em>password: str</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/webinterface.html#check_auth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.check_auth" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">check_auth</code><span class="sig-paren">(</span><em>username: str</em>, <em>password: str</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/webinterface.html#check_auth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.check_auth" title="Permalink to this definition">§</a></dt>
 <dd><p>validataion of auth.
 Username and password are checked against the bcrypt password hash in the database.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -246,7 +284,7 @@ Username and password are checked against the bcrypt password hash in the databa
 
 <dl class="function">
 <dt id="webinterface.commit_ip">
-<code class="descclassname">webinterface.</code><code class="descname">commit_ip</code><span class="sig-paren">(</span><em>ipaddress: str = None</em>, <em>subnet: str = None</em>, <em>gateway: str = None</em>, <em>dev='eth0'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#commit_ip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.commit_ip" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">commit_ip</code><span class="sig-paren">(</span><em>ipaddress: str = None</em>, <em>subnet: str = None</em>, <em>gateway: str = None</em>, <em>dev='eth0'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#commit_ip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.commit_ip" title="Permalink to this definition">§</a></dt>
 <dd><p>commits an ip to the current system</p>
 <p>TODO: more platform independend solution, use the device specified in the arguments.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -267,19 +305,19 @@ Username and password are checked against the bcrypt password hash in the databa
 
 <dl class="function">
 <dt id="webinterface.commit_ip_">
-<code class="descclassname">webinterface.</code><code class="descname">commit_ip_</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#commit_ip_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.commit_ip_" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">commit_ip_</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#commit_ip_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.commit_ip_" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="webinterface.config">
-<code class="descclassname">webinterface.</code><code class="descname">config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.config" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.config" title="Permalink to this definition">§</a></dt>
 <dd><p>Index view.</p>
 <p>Configuration page for Cameras.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.delcfg">
-<code class="descclassname">webinterface.</code><code class="descname">delcfg</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#delcfg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.delcfg" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">delcfg</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#delcfg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.delcfg" title="Permalink to this definition">§</a></dt>
 <dd><p>deletes a configuration file from the config directory.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -295,14 +333,14 @@ Username and password are checked against the bcrypt password hash in the databa
 
 <dl class="function">
 <dt id="webinterface.filemanagement">
-<code class="descclassname">webinterface.</code><code class="descname">filemanagement</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#filemanagement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.filemanagement" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">filemanagement</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#filemanagement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.filemanagement" title="Permalink to this definition">§</a></dt>
 <dd><p>file management view</p>
 <p>Information about the system storage status per block device, allows transfer of files to usb etc.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.fix_confs">
-<code class="descclassname">webinterface.</code><code class="descname">fix_confs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#fix_confs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.fix_confs" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">fix_confs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#fix_confs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.fix_confs" title="Permalink to this definition">§</a></dt>
 <dd><p>Edits all config files, removing any sections that arent in example.ini</p>
 <p>todo: this is unneccesary, and what the hell is going on with the return? ???</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -317,14 +355,14 @@ Username and password are checked against the bcrypt password hash in the databa
 
 <dl class="function">
 <dt id="webinterface.focus">
-<code class="descclassname">webinterface.</code><code class="descname">focus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#focus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.focus" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">focus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#focus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.focus" title="Permalink to this definition">§</a></dt>
 <dd><p>view function to focus the cameras.</p>
 <p>todo: move to <a class="reference internal" href="api.html#module-api" title="api"><code class="xref py py-mod docutils literal"><span class="pre">api</span></code></a></p>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.gen">
-<code class="descclassname">webinterface.</code><code class="descname">gen</code><span class="sig-paren">(</span><em>camera</em><span class="sig-paren">)</span> &rarr; bytes<a class="reference internal" href="_modules/webinterface.html#gen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.gen" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">gen</code><span class="sig-paren">(</span><em>camera</em><span class="sig-paren">)</span> &rarr; bytes<a class="reference internal" href="_modules/webinterface.html#gen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.gen" title="Permalink to this definition">§</a></dt>
 <dd><p>Video streaming generator function.</p>
 <p>Intentionally limited to 10fps to account for bad quality connection and slow hardware.</p>
 <p>this should be used as the argument for a <code class="xref py py-class docutils literal"><span class="pre">Response</span></code> along with the mimetype
@@ -344,7 +382,7 @@ and knows to continue to stream.</p>
 
 <dl class="function">
 <dt id="webinterface.get_hostname">
-<code class="descclassname">webinterface.</code><code class="descname">get_hostname</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/webinterface.html#get_hostname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.get_hostname" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">get_hostname</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/webinterface.html#get_hostname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.get_hostname" title="Permalink to this definition">§</a></dt>
 <dd><p>Hostname of the system as a string.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -360,7 +398,7 @@ and knows to continue to stream.</p>
 
 <dl class="function">
 <dt id="webinterface.get_image">
-<code class="descclassname">webinterface.</code><code class="descname">get_image</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#get_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.get_image" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">get_image</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#get_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.get_image" title="Permalink to this definition">§</a></dt>
 <dd><p>View to serve an image (like from a camera), from the static/temp directory.</p>
 <p>the static/temp dir is normally symlinked to /dev/shm or /tmp, the location where the main capture script drops the
 last image.</p>
@@ -380,22 +418,36 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.get_net_size">
-<code class="descclassname">webinterface.</code><code class="descname">get_net_size</code><span class="sig-paren">(</span><em>netmask</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#get_net_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.get_net_size" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">get_net_size</code><span class="sig-paren">(</span><em>netmask</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#get_net_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.get_net_size" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="webinterface.get_resource">
-<code class="descclassname">webinterface.</code><code class="descname">get_resource</code><span class="sig-paren">(</span><em>selector</em>, <em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#get_resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.get_resource" title="Permalink to this definition">¶</a></dt>
-<dd><p>serves css and js files from the static directory
-:param selector: type of resource (&#8220;js&#8221; or &#8220;css&#8221;)
-:param path: name/path of the file.
-:return: file Response
-:rtype: Response</p>
+<code class="descclassname">webinterface.</code><code class="descname">get_resource</code><span class="sig-paren">(</span><em>selector</em>, <em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#get_resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.get_resource" title="Permalink to this definition">§</a></dt>
+<dd><p>serves css and js files from the static directory</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>selector</strong> &#8211; type of resource (&#8220;js&#8221; or &#8220;css&#8221;)</li>
+<li><strong>path</strong> &#8211; name/path of the file.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">file Response</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Response</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.get_time">
-<code class="descclassname">webinterface.</code><code class="descname">get_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/webinterface.html#get_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.get_time" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">get_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/webinterface.html#get_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.get_time" title="Permalink to this definition">§</a></dt>
 <dd><p>Almost iso8601 formatted time string.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -411,7 +463,7 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.get_version">
-<code class="descclassname">webinterface.</code><code class="descname">get_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/webinterface.html#get_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.get_version" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">get_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/webinterface.html#get_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.get_version" title="Permalink to this definition">§</a></dt>
 <dd><p>Current git version of spc-eyepi.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -427,21 +479,21 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.getfilteredlog">
-<code class="descclassname">webinterface.</code><code class="descname">getfilteredlog</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#getfilteredlog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.getfilteredlog" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">getfilteredlog</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#getfilteredlog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.getfilteredlog" title="Permalink to this definition">§</a></dt>
 <dd><p>API enpoint for getting a filtered log view.</p>
 <p>TODO: move this to <a class="reference internal" href="api.html#module-api" title="api"><code class="xref py py-mod docutils literal"><span class="pre">api</span></code></a></p>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.images">
-<code class="descclassname">webinterface.</code><code class="descname">images</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#images"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.images" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">images</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#images"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.images" title="Permalink to this definition">§</a></dt>
 <dd><p>Image preview view.</p>
 <p>Allows the capture of a new image and replace in the client</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.ivport_feed">
-<code class="descclassname">webinterface.</code><code class="descname">ivport_feed</code><span class="sig-paren">(</span><em>cam_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#ivport_feed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.ivport_feed" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">ivport_feed</code><span class="sig-paren">(</span><em>cam_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#ivport_feed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.ivport_feed" title="Permalink to this definition">§</a></dt>
 <dd><p>Streaming from a specific picamera with the IVPort multiplexer</p>
 <p>Actually calls <a class="reference internal" href="#webinterface.pi_feed" title="webinterface.pi_feed"><code class="xref py py-func docutils literal"><span class="pre">pi_feed()</span></code></a>, because the IVPOrt multiplexer works on the picamera.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -458,7 +510,7 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.ivport_switch">
-<code class="descclassname">webinterface.</code><code class="descname">ivport_switch</code><span class="sig-paren">(</span><em>cam_num</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/webinterface.html#ivport_switch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.ivport_switch" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">ivport_switch</code><span class="sig-paren">(</span><em>cam_num</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/webinterface.html#ivport_switch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.ivport_switch" title="Permalink to this definition">§</a></dt>
 <dd><p>Switch the current ivport picamera thread</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -476,14 +528,14 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.logfile">
-<code class="descclassname">webinterface.</code><code class="descname">logfile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#logfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.logfile" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">logfile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#logfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.logfile" title="Permalink to this definition">§</a></dt>
 <dd><p>log view function</p>
 <p>TODO: do we have like 3 log page view functions? collect them into one.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.make_dynamic">
-<code class="descclassname">webinterface.</code><code class="descname">make_dynamic</code><span class="sig-paren">(</span><em>dev: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#make_dynamic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.make_dynamic" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">make_dynamic</code><span class="sig-paren">(</span><em>dev: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#make_dynamic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.make_dynamic" title="Permalink to this definition">§</a></dt>
 <dd><p>disable static ip addressing using systemctl.</p>
 <p>Dont use this, it is probably broken.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -498,13 +550,13 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.network">
-<code class="descclassname">webinterface.</code><code class="descname">network</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#network"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.network" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">network</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#network"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.network" title="Permalink to this definition">§</a></dt>
 <dd><p>network view</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.newuser">
-<code class="descclassname">webinterface.</code><code class="descname">newuser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#newuser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.newuser" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">newuser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#newuser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.newuser" title="Permalink to this definition">§</a></dt>
 <dd><p>POST endpoint for adding a user.</p>
 <p>Accepts &#8216;username&#8217;, &#8216;pass&#8217;, &#8216;adminpass&#8217; form arguments.</p>
 <p>Password has a minimum of 5 chars.</p>
@@ -523,7 +575,7 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.not_found">
-<code class="descclassname">webinterface.</code><code class="descname">not_found</code><span class="sig-paren">(</span><em>error</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#not_found"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.not_found" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">not_found</code><span class="sig-paren">(</span><em>error</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#not_found"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.not_found" title="Permalink to this definition">§</a></dt>
 <dd><p>404 error handler</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -541,7 +593,7 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.per_request_callbacks">
-<code class="descclassname">webinterface.</code><code class="descname">per_request_callbacks</code><span class="sig-paren">(</span><em>response</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#per_request_callbacks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.per_request_callbacks" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">per_request_callbacks</code><span class="sig-paren">(</span><em>response</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#per_request_callbacks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.per_request_callbacks" title="Permalink to this definition">§</a></dt>
 <dd><p>I have no idea what this does but it looks important</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -558,7 +610,7 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.pi_feed">
-<code class="descclassname">webinterface.</code><code class="descname">pi_feed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#pi_feed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.pi_feed" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">pi_feed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#pi_feed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.pi_feed" title="Permalink to this definition">§</a></dt>
 <dd><p>Video streaming route for the raspberry pi camera.</p>
 <p>Put this in the src attribute of an img tag.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -575,7 +627,7 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.pip_install">
-<code class="descclassname">webinterface.</code><code class="descname">pip_install</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#pip_install"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.pip_install" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">pip_install</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#pip_install"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.pip_install" title="Permalink to this definition">§</a></dt>
 <dd><p>installs a package using pip.</p>
 <p>Doesnt reload/restart anything, so after this is called, python needs to be restarted.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -592,7 +644,7 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.preview">
-<code class="descclassname">webinterface.</code><code class="descname">preview</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#preview"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.preview" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">preview</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#preview"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.preview" title="Permalink to this definition">§</a></dt>
 <dd><p>This gets a preview image from a camera, based on the url parameter &#8220;serialnumber&#8221;</p>
 <p>so the endpoint wouild be /preview_cam?serialnumber=dfjkaghsdfysadftiqw</p>
 <p>todo: see <a class="reference internal" href="#webinterface.cap_lock_wait" title="webinterface.cap_lock_wait"><code class="xref py py-func docutils literal"><span class="pre">cap_lock_wait()</span></code></a></p>
@@ -610,13 +662,13 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.require_login">
-<code class="descclassname">webinterface.</code><code class="descname">require_login</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#require_login"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.require_login" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">require_login</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#require_login"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.require_login" title="Permalink to this definition">§</a></dt>
 <dd><p>Hackery to make browsepy work with login.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.requires_auth">
-<code class="descclassname">webinterface.</code><code class="descname">requires_auth</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#requires_auth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.requires_auth" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">requires_auth</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#requires_auth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.requires_auth" title="Permalink to this definition">§</a></dt>
 <dd><p>Decorator for wrapping a view and requiring auth.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -635,7 +687,7 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.reset_machine_id">
-<code class="descclassname">webinterface.</code><code class="descname">reset_machine_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#reset_machine_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.reset_machine_id" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">reset_machine_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#reset_machine_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.reset_machine_id" title="Permalink to this definition">§</a></dt>
 <dd><p>Resets the machine-id to a random one generated by &#8216;systemd-machine-id-setup&#8217;.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -651,7 +703,7 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.restart">
-<code class="descclassname">webinterface.</code><code class="descname">restart</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#restart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.restart" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">restart</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#restart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.restart" title="Permalink to this definition">§</a></dt>
 <dd><p>Restarts the raspberry pi through <cite>reboot now</cite> system call.</p>
 <p>Probably unsafe but whatever.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -668,7 +720,7 @@ last image.</p>
 
 <dl class="function">
 <dt id="webinterface.run_command">
-<code class="descclassname">webinterface.</code><code class="descname">run_command</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/webinterface.html#run_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.run_command" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">run_command</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/webinterface.html#run_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.run_command" title="Permalink to this definition">§</a></dt>
 <dd><p>runs arbitrary commands from post data.</p>
 <p>form_key: value
 command: space separayed list of arguments</p>
@@ -686,7 +738,7 @@ command: space separayed list of arguments</p>
 
 <dl class="function">
 <dt id="webinterface.sanitizeconfig">
-<code class="descclassname">webinterface.</code><code class="descname">sanitizeconfig</code><span class="sig-paren">(</span><em>towriteconfig</em>, <em>filename: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#sanitizeconfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.sanitizeconfig" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">sanitizeconfig</code><span class="sig-paren">(</span><em>towriteconfig</em>, <em>filename: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#sanitizeconfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.sanitizeconfig" title="Permalink to this definition">§</a></dt>
 <dd><p>This method is meant to be a sanitiser for the configuration file, before it gets written.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -704,7 +756,7 @@ command: space separayed list of arguments</p>
 
 <dl class="function">
 <dt id="webinterface.savetousb">
-<code class="descclassname">webinterface.</code><code class="descname">savetousb</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#savetousb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.savetousb" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">savetousb</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#savetousb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.savetousb" title="Permalink to this definition">§</a></dt>
 <dd><p>moves files in the &#8216;upload_dir&#8217; specified in the config file, to a disk.</p>
 <p>this will only work to move files to /dev/sda1.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -721,7 +773,7 @@ command: space separayed list of arguments</p>
 
 <dl class="function">
 <dt id="webinterface.server_error">
-<code class="descclassname">webinterface.</code><code class="descname">server_error</code><span class="sig-paren">(</span><em>error</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#server_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.server_error" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">server_error</code><span class="sig-paren">(</span><em>error</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#server_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.server_error" title="Permalink to this definition">§</a></dt>
 <dd><p>500 error handler</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -739,7 +791,7 @@ command: space separayed list of arguments</p>
 
 <dl class="function">
 <dt id="webinterface.set_ip">
-<code class="descclassname">webinterface.</code><code class="descname">set_ip</code><span class="sig-paren">(</span><em>ipaddress: str = None</em>, <em>subnet: str = None</em>, <em>gateway: str = None</em>, <em>dev: str = 'eth0'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#set_ip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.set_ip" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">set_ip</code><span class="sig-paren">(</span><em>ipaddress: str = None</em>, <em>subnet: str = None</em>, <em>gateway: str = None</em>, <em>dev: str = 'eth0'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#set_ip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.set_ip" title="Permalink to this definition">§</a></dt>
 <dd><p>sets a static ip address manually to the device specified.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -759,7 +811,7 @@ command: space separayed list of arguments</p>
 
 <dl class="function">
 <dt id="webinterface.set_ips">
-<code class="descclassname">webinterface.</code><code class="descname">set_ips</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#set_ips"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.set_ips" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">set_ips</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#set_ips"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.set_ips" title="Permalink to this definition">§</a></dt>
 <dd><p>POST endpoing for setting a static ip (or enabling dhcp).</p>
 <p>the form accepts &#8220;ip-form-dynamic&#8221; as an on off flag to enable/disable dhcp.</p>
 <p>Otherwise it requires ip-form-ipaddress, ip-form-subnet and ip-form-gateway to set the IP to them.</p>
@@ -777,19 +829,19 @@ command: space separayed list of arguments</p>
 
 <dl class="function">
 <dt id="webinterface.setup_ap">
-<code class="descclassname">webinterface.</code><code class="descname">setup_ap</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#setup_ap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.setup_ap" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">setup_ap</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#setup_ap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.setup_ap" title="Permalink to this definition">§</a></dt>
 <dd><p>Starts the wireless adapter in access point mode using create_ap</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.shutdown_server">
-<code class="descclassname">webinterface.</code><code class="descname">shutdown_server</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#shutdown_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.shutdown_server" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">shutdown_server</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#shutdown_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.shutdown_server" title="Permalink to this definition">§</a></dt>
 <dd><p>Shuts down the webinterface</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.stream">
-<code class="descclassname">webinterface.</code><code class="descname">stream</code><span class="sig-paren">(</span><em>lt</em>, <em>lc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.stream" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">stream</code><span class="sig-paren">(</span><em>lt</em>, <em>lc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.stream" title="Permalink to this definition">§</a></dt>
 <dd><p>log line streaming endpoint</p>
 <p>streams lines that contain lt until a count of lc is reached.</p>
 <p>todo: Continue searching through archived logs.</p>
@@ -813,14 +865,14 @@ command: space separayed list of arguments</p>
 
 <dl class="function">
 <dt id="webinterface.sync_hwclock">
-<code class="descclassname">webinterface.</code><code class="descname">sync_hwclock</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#sync_hwclock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.sync_hwclock" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">sync_hwclock</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#sync_hwclock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.sync_hwclock" title="Permalink to this definition">§</a></dt>
 <dd><p>synchronises the hardware clock with the system clock, and redirects to &#8216;config&#8217; endpoint.</p>
 <p>todo: move to <a class="reference internal" href="api.html#module-api" title="api"><code class="xref py py-mod docutils literal"><span class="pre">api</span></code></a></p>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.trunc_at">
-<code class="descclassname">webinterface.</code><code class="descname">trunc_at</code><span class="sig-paren">(</span><em>s: str</em>, <em>d: str</em>, <em>n: int</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/webinterface.html#trunc_at"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.trunc_at" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">trunc_at</code><span class="sig-paren">(</span><em>s: str</em>, <em>d: str</em>, <em>n: int</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/webinterface.html#trunc_at"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.trunc_at" title="Permalink to this definition">§</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -844,7 +896,7 @@ command: space separayed list of arguments</p>
 
 <dl class="function">
 <dt id="webinterface.update">
-<code class="descclassname">webinterface.</code><code class="descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.update" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.update" title="Permalink to this definition">§</a></dt>
 <dd><p>Pulls the current version of SPC-eyepi from github, and replaces the one running with it.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -860,7 +912,7 @@ command: space separayed list of arguments</p>
 
 <dl class="function">
 <dt id="webinterface.update_camera_config">
-<code class="descclassname">webinterface.</code><code class="descname">update_camera_config</code><span class="sig-paren">(</span><em>serialnumber: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#update_camera_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.update_camera_config" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">update_camera_config</code><span class="sig-paren">(</span><em>serialnumber: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#update_camera_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.update_camera_config" title="Permalink to this definition">§</a></dt>
 <dd><p>Update camera config endpoint.</p>
 <p>Exists to update the cameras configuration.</p>
 <p>Parses many values.</p>
@@ -880,7 +932,7 @@ command: space separayed list of arguments</p>
 
 <dl class="function">
 <dt id="webinterface.update_tag">
-<code class="descclassname">webinterface.</code><code class="descname">update_tag</code><span class="sig-paren">(</span><em>tag: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#update_tag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.update_tag" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">update_tag</code><span class="sig-paren">(</span><em>tag: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#update_tag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.update_tag" title="Permalink to this definition">§</a></dt>
 <dd><p>the same as update, except this can take a git tag to update to.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -898,13 +950,13 @@ command: space separayed list of arguments</p>
 
 <dl class="function">
 <dt id="webinterface.wifi">
-<code class="descclassname">webinterface.</code><code class="descname">wifi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#wifi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.wifi" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">wifi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#wifi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.wifi" title="Permalink to this definition">§</a></dt>
 <dd><p>wifi configuration view.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="webinterface.wificonfig">
-<code class="descclassname">webinterface.</code><code class="descname">wificonfig</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#wificonfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.wificonfig" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">wificonfig</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#wificonfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.wificonfig" title="Permalink to this definition">§</a></dt>
 <dd><p>wifi configuration view.
 Accepts a POST request with &#8216;ssid&#8217; and &#8216;key&#8217; which are used to create a netctl profile.</p>
 <p>TODO: alter this to work with netctl-auto rather than vanilla netctl.</p>
@@ -922,7 +974,7 @@ Accepts a POST request with &#8216;ssid&#8217; and &#8216;key&#8217; which are u
 
 <dl class="function">
 <dt id="webinterface.writecfg">
-<code class="descclassname">webinterface.</code><code class="descname">writecfg</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#writecfg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.writecfg" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">webinterface.</code><code class="descname">writecfg</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#writecfg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.writecfg" title="Permalink to this definition">§</a></dt>
 <dd><p>Writes the data contained within the post form to a configuration file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -942,45 +994,15 @@ Accepts a POST request with &#8216;ssid&#8217; and &#8216;key&#8217; which are u
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/webinterface.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
+    <div class="clearer"></div>
+  </div>
     <div class="footer">
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
       
-      |
-      <a href="_sources/webinterface.rst.txt"
-          rel="nofollow">Page source</a>
     </div>
 
     

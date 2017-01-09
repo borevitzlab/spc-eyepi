@@ -1264,6 +1264,7 @@ def logfile():
 def get_resource(selector, path):
     """
     serves css and js files from the static directory
+
     :param selector: type of resource ("js" or "css")
     :param path: name/path of the file.
     :return: file Response

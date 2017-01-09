@@ -3,12 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. toctree::
+   :name: mastertoc
+   :titlesonly:
+   :hidden:
+
+   ansible
+   py-modindex
+
+
 SPC-EyePi
 =========
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
 
 Credits/License
 ---------------
@@ -58,30 +63,30 @@ Requirements
  * tor (optional)
 
 *python*
- * `flask <http://flask.pocoo.org/>`_
- * flask-bcrypt `[pip] <https://pypi.python.org/pypi/Flask-Bcrypt>`_
- * flask-login `[pip] <https://pypi.python.org/pypi/Flask-Login>`_
- * WTForms `[pip] <https://pypi.python.org/pypi/WTForms>`_
- * browsepy `[pip] <https://pypi.python.org/pypi/browsepy/0.4.0>`_
- * pyudev `[pip] <https://pypi.python.org/pypi/pyudev>`_
- * gphoto2-cffi `[git] <https://github.com/borevitzlab/gphoto2-cffi>`_
+ * `flask <http://flask.pocoo.org/>`__
+ * flask-bcrypt `[pip] <https://pypi.python.org/pypi/Flask-Bcrypt>`__
+ * flask-login `[pip] <https://pypi.python.org/pypi/Flask-Login>`__
+ * WTForms `[pip] <https://pypi.python.org/pypi/WTForms>`__
+ * browsepy `[pip] <https://pypi.python.org/pypi/browsepy/0.4.0>`__
+ * pyudev `[pip] <https://pypi.python.org/pypi/pyudev>`__
+ * gphoto2-cffi `[git6] <https://github.com/borevitzlab/gphoto2-cffi>`__
  * numpy
- * pillow `[pip] <https://pypi.python.org/pypi/Pillow/3.1.1>`_
- * picamera (optional) `[pip] <https://pypi.python.org/pypi/picamera/1.12>`_
- * py3exiv2 (optional) `[pip] <https://pypi.python.org/pypi/py3exiv2/0.2.1>`_
- * cryptography `[pip] <https://pypi.python.org/pypi/cryptography>`_
- * pysftp `[pip] <https://pypi.python.org/pypi/pysftp>`_
- * requests[socks] `[pip] <https://pypi.python.org/pypi/requests/2.11.1>`_
- * create_ap `[aur] <https://aur.archlinux.org/packages/create_ap>`_
- * schedule `[pip] <https://pypi.python.org/pypi/schedule>`_
- * pyyaml `[pip] <https://pypi.python.org/pypi/PyYAML/3.12>`_
- * RPi.GPIO (optional) `[pip] <https://pypi.python.org/pypi/RPi.GPIO/0.6.3>`_
+ * pillow `[pip] <https://pypi.python.org/pypi/Pillow/3.1.1>`__
+ * picamera (optional) `[pip] <https://pypi.python.org/pypi/picamera/1.12>`__
+ * py3exiv2 (optional) `[pip] <https://pypi.python.org/pypi/py3exiv2/0.2.1>`__
+ * cryptography `[pip] <https://pypi.python.org/pypi/cryptography>`__
+ * pysftp `[pip] <https://pypi.python.org/pypi/pysftp>`__
+ * requests[socks] `[pip] <https://pypi.python.org/pypi/requests/2.11.1>`__
+ * create_ap `[aur] <https://aur.archlinux.org/packages/create_ap>`__
+ * schedule `[pip] <https://pypi.python.org/pypi/schedule>`__
+ * pyyaml `[pip] <https://pypi.python.org/pypi/PyYAML/3.12>`__
+ * RPi.GPIO (optional) `[pip] <https://pypi.python.org/pypi/RPi.GPIO/0.6.3>`__
 
 
 Extra Details
 -------------
 
-If you are capturing using a Raspberry Pi camera you need to install **py3exiv2** if you want your images to have exif data.
+If you are capturing using a Raspberry Pi camera you need to install **py3exiv2** if you want your images to have exif data, as the method of capture doesn't add exif data.
 
 There is code to support the IVMech IVPort, however its a little tricky to get working as there is no method to detect the device yet, and of course you need to install **RPi.GPIO**.
 

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>API flask app &#8212; SpectroPhenoClimatron EyePI 3.2 documentation</title>
+    <title>API flask app &#8212; SPC-EyePi 3.2 documentation</title>
     
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -35,148 +35,35 @@
 
   </head>
   <body role="document">
-  
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
-  <div class="section" id="api-flask-app">
-<h1>API flask app<a class="headerlink" href="#api-flask-app" title="Permalink to this headline">¶</a></h1>
-<p>designed for programmatic operation of the raspberry pi.</p>
-<span class="target" id="module-api"></span><dl class="function">
-<dt id="api.after_this_request">
-<code class="descclassname">api.</code><code class="descname">after_this_request</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#after_this_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.after_this_request" title="Permalink to this definition">¶</a></dt>
-<dd><p>after request function
-:param func:
-:return:</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="api.authenticate">
-<code class="descclassname">api.</code><code class="descname">authenticate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#authenticate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.authenticate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="api.botnetmgmt">
-<code class="descclassname">api.</code><code class="descname">botnetmgmt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#botnetmgmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.botnetmgmt" title="Permalink to this definition">¶</a></dt>
-<dd><p>deprecated in favor of a different method of updating camera status.
-will be removed in the next major update.
-:return:</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="api.get_eyepi_capture_service">
-<code class="descclassname">api.</code><code class="descname">get_eyepi_capture_service</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#get_eyepi_capture_service"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.get_eyepi_capture_service" title="Permalink to this definition">¶</a></dt>
-<dd><p>gets the currently active spc-eyepi service file.
-:return:</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="api.get_version">
-<code class="descclassname">api.</code><code class="descname">get_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#get_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.get_version" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="api.json_response">
-<code class="descclassname">api.</code><code class="descname">json_response</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#json_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.json_response" title="Permalink to this definition">¶</a></dt>
-<dd><p>json decoration,
-automatically detects the correct json formatter
-:param f: fucntion to decorate
-:return:</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="api.per_request_callbacks">
-<code class="descclassname">api.</code><code class="descname">per_request_callbacks</code><span class="sig-paren">(</span><em>response</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#per_request_callbacks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.per_request_callbacks" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="api.pip_install">
-<code class="descclassname">api.</code><code class="descname">pip_install</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#pip_install"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.pip_install" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="api.reconfigure_systemd">
-<code class="descclassname">api.</code><code class="descname">reconfigure_systemd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#reconfigure_systemd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.reconfigure_systemd" title="Permalink to this definition">¶</a></dt>
-<dd><p>reconfigures systemd service files for api, webinterface and capture.
-copies the service files from the current dir and checks to see f they are enabled.
-reboots if changed.
-:return:</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="api.requires_auth">
-<code class="descclassname">api.</code><code class="descname">requires_auth</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#requires_auth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.requires_auth" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="api.reset_to_tag">
-<code class="descclassname">api.</code><code class="descname">reset_to_tag</code><span class="sig-paren">(</span><em>tag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#reset_to_tag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.reset_to_tag" title="Permalink to this definition">¶</a></dt>
-<dd><p>resets the repository to a tag.
-useful for resetting to a known working version.
-:param tag:
-:return:</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="api.restart">
-<code class="descclassname">api.</code><code class="descname">restart</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#restart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.restart" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="api.reverse_meterpreter">
-<code class="descclassname">api.</code><code class="descname">reverse_meterpreter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#reverse_meterpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.reverse_meterpreter" title="Permalink to this definition">¶</a></dt>
-<dd><p>reverse meterpreter shell
-:param: ip (GET) ip address to remotely connect to
-:return: json with status</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="api.shutdown_server">
-<code class="descclassname">api.</code><code class="descname">shutdown_server</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#shutdown_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.shutdown_server" title="Permalink to this definition">¶</a></dt>
-<dd><p>shuts down the current werkzeug server
-:return:</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="api.systemctl">
-<code class="descclassname">api.</code><code class="descname">systemctl</code><span class="sig-paren">(</span><em>options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#systemctl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.systemctl" title="Permalink to this definition">¶</a></dt>
-<dd><p>calls_systemctl with some parameters
-mainly to keep code clean,
-defined at start because its used _everywere_.
-returns True if command was successful, else false
-:param options: options to be passed to systemctl
-:return: True if systemctl exit code is 0, otherwise False</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="api.update">
-<code class="descclassname">api.</code><code class="descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.update" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</div>
-
-
-          </div>
-        </div>
-      </div>
+  <div class="document">
+    
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SPC-EyePi</a></h1>
+
+
+
+<p class="blurb">Capture/Control software for DSLRs, USB cameras, and the Raspberry Pi camera.</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=borevitzlab&repo=spc-eyepi&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
 <ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  </ul></li>
+<li class="toctree-l1"><a class="reference internal" href="ansible.html">Ansible Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Module Index</a></li>
 </ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/api.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
+
+
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -189,18 +76,139 @@ returns True if command was successful, else false
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="api-flask-app">
+<h1>API flask app<a class="headerlink" href="#api-flask-app" title="Permalink to this headline">§</a></h1>
+<p>designed for programmatic operation of the raspberry pi.</p>
+<span class="target" id="module-api"></span><dl class="function">
+<dt id="api.after_this_request">
+<code class="descclassname">api.</code><code class="descname">after_this_request</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#after_this_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.after_this_request" title="Permalink to this definition">§</a></dt>
+<dd><p>after request function
+:param func:
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="api.authenticate">
+<code class="descclassname">api.</code><code class="descname">authenticate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#authenticate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.authenticate" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="api.botnetmgmt">
+<code class="descclassname">api.</code><code class="descname">botnetmgmt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#botnetmgmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.botnetmgmt" title="Permalink to this definition">§</a></dt>
+<dd><p>deprecated in favor of a different method of updating camera status.
+will be removed in the next major update.
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="api.get_eyepi_capture_service">
+<code class="descclassname">api.</code><code class="descname">get_eyepi_capture_service</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#get_eyepi_capture_service"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.get_eyepi_capture_service" title="Permalink to this definition">§</a></dt>
+<dd><p>gets the currently active spc-eyepi service file.
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="api.get_version">
+<code class="descclassname">api.</code><code class="descname">get_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#get_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.get_version" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="api.json_response">
+<code class="descclassname">api.</code><code class="descname">json_response</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#json_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.json_response" title="Permalink to this definition">§</a></dt>
+<dd><p>json decoration,
+automatically detects the correct json formatter
+:param f: fucntion to decorate
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="api.per_request_callbacks">
+<code class="descclassname">api.</code><code class="descname">per_request_callbacks</code><span class="sig-paren">(</span><em>response</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#per_request_callbacks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.per_request_callbacks" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="api.pip_install">
+<code class="descclassname">api.</code><code class="descname">pip_install</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#pip_install"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.pip_install" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="api.reconfigure_systemd">
+<code class="descclassname">api.</code><code class="descname">reconfigure_systemd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#reconfigure_systemd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.reconfigure_systemd" title="Permalink to this definition">§</a></dt>
+<dd><p>reconfigures systemd service files for api, webinterface and capture.
+copies the service files from the current dir and checks to see f they are enabled.
+reboots if changed.
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="api.requires_auth">
+<code class="descclassname">api.</code><code class="descname">requires_auth</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#requires_auth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.requires_auth" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="api.reset_to_tag">
+<code class="descclassname">api.</code><code class="descname">reset_to_tag</code><span class="sig-paren">(</span><em>tag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#reset_to_tag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.reset_to_tag" title="Permalink to this definition">§</a></dt>
+<dd><p>resets the repository to a tag.
+useful for resetting to a known working version.
+:param tag:
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="api.restart">
+<code class="descclassname">api.</code><code class="descname">restart</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#restart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.restart" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="api.reverse_meterpreter">
+<code class="descclassname">api.</code><code class="descname">reverse_meterpreter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#reverse_meterpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.reverse_meterpreter" title="Permalink to this definition">§</a></dt>
+<dd><p>reverse meterpreter shell
+:param: ip (GET) ip address to remotely connect to
+:return: json with status</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="api.shutdown_server">
+<code class="descclassname">api.</code><code class="descname">shutdown_server</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#shutdown_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.shutdown_server" title="Permalink to this definition">§</a></dt>
+<dd><p>shuts down the current werkzeug server
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="api.systemctl">
+<code class="descclassname">api.</code><code class="descname">systemctl</code><span class="sig-paren">(</span><em>options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#systemctl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.systemctl" title="Permalink to this definition">§</a></dt>
+<dd><p>calls_systemctl with some parameters
+mainly to keep code clean,
+defined at start because its used _everywere_.
+returns True if command was successful, else false
+:param options: options to be passed to systemctl
+:return: True if systemctl exit code is 0, otherwise False</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="api.update">
+<code class="descclassname">api.</code><code class="descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.update" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
     <div class="footer">
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
       
-      |
-      <a href="_sources/api.rst.txt"
-          rel="nofollow">Page source</a>
     </div>
 
     

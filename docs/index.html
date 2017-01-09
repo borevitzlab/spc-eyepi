@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>SPC-EyePi &#8212; SpectroPhenoClimatron EyePI 3.2 documentation</title>
+    <title>SPC-EyePi &#8212; SPC-EyePi 3.2 documentation</title>
     
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -27,6 +27,7 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Ansible Deployment" href="ansible.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -35,26 +36,76 @@
 
   </head>
   <body role="document">
-  
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">SPC-EyePi</a></h1>
 
-    <div class="document">
+
+
+<p class="blurb">Capture/Control software for DSLRs, USB cameras, and the Raspberry Pi camera.</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=borevitzlab&repo=spc-eyepi&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ansible.html">Ansible Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Module Index</a></li>
+</ul>
+
+
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">SPC-EyePi</a><ul>
+<li><a class="reference internal" href="#credits-license">Credits/License</a></li>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#extra-details">Extra Details</a></li>
+<li><a class="reference internal" href="#documentation-links">Documentation Links</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="spc-eyepi">
-<h1>SPC-EyePi<a class="headerlink" href="#spc-eyepi" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
+  <div class="toctree-wrapper compound" id="mastertoc">
 </div>
+<div class="section" id="spc-eyepi">
+<h1>SPC-EyePi<a class="headerlink" href="#spc-eyepi" title="Permalink to this headline">§</a></h1>
 <div class="section" id="credits-license">
-<h2>Credits/License<a class="headerlink" href="#credits-license" title="Permalink to this headline">¶</a></h2>
+<h2>Credits/License<a class="headerlink" href="#credits-license" title="Permalink to this headline">§</a></h2>
 <p>The goal of this project is to create a robust open source code base for controlling DSLR and the on-board Raspberry Pi camera from a Raspberry Pi or similar Linux boards.</p>
 <p>This project is open source but please <a class="reference external" href="https://github.com/borevitzlab">contact us</a> before using the code so we can know who is using it and please make sure to link back here in any code you use. This project is in active development but we are happy to work with other groups to develop new features so drop us a line if you are interested.</p>
 <p>This code was developed for the TraitCapture project at ANU.</p>
 <p>Please cite: <em>Brown, Tim B., et al.</em> <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S1369526614000181">TraitCapture : genomic and environment modelling of plant phenomic data. Current opinion in plant biology 18 (2014): 73-79</a>. when using the code.</p>
 </div>
 <div class="section" id="features">
-<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">§</a></h2>
 <dl class="docutils">
 <dt>Currently supported and maintained:</dt>
 <dd><ul class="first last simple">
@@ -83,7 +134,7 @@
 <p>Camera name can be easily changed to a user friendly value.</p>
 </div>
 <div class="section" id="requirements">
-<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">§</a></h2>
 <dl class="docutils">
 <dt><em>os:</em></dt>
 <dd><ul class="first last simple">
@@ -102,7 +153,7 @@
 <li>WTForms <a class="reference external" href="https://pypi.python.org/pypi/WTForms">[pip]</a></li>
 <li>browsepy <a class="reference external" href="https://pypi.python.org/pypi/browsepy/0.4.0">[pip]</a></li>
 <li>pyudev <a class="reference external" href="https://pypi.python.org/pypi/pyudev">[pip]</a></li>
-<li>gphoto2-cffi <a class="reference external" href="https://github.com/borevitzlab/gphoto2-cffi">[git]</a></li>
+<li>gphoto2-cffi <a class="reference external" href="https://github.com/borevitzlab/gphoto2-cffi">[git6]</a></li>
 <li>numpy</li>
 <li>pillow <a class="reference external" href="https://pypi.python.org/pypi/Pillow/3.1.1">[pip]</a></li>
 <li>picamera (optional) <a class="reference external" href="https://pypi.python.org/pypi/picamera/1.12">[pip]</a></li>
@@ -119,18 +170,18 @@
 </dl>
 </div>
 <div class="section" id="extra-details">
-<h2>Extra Details<a class="headerlink" href="#extra-details" title="Permalink to this headline">¶</a></h2>
-<p>If you are capturing using a Raspberry Pi camera you need to install <strong>py3exiv2</strong> if you want your images to have exif data.</p>
+<h2>Extra Details<a class="headerlink" href="#extra-details" title="Permalink to this headline">§</a></h2>
+<p>If you are capturing using a Raspberry Pi camera you need to install <strong>py3exiv2</strong> if you want your images to have exif data, as the method of capture doesn&#8217;t add exif data.</p>
 <p>There is code to support the IVMech IVPort, however its a little tricky to get working as there is no method to detect the device yet, and of course you need to install <strong>RPi.GPIO</strong>.</p>
 <p>To get into the web interface using the wifi the default ip address is 192.168.12.1 and you will need to use the user admin:spceyepidefaultaccess (it must be running first).</p>
 <p>SPC-EyePi also updates from the master branch of this repository.</p>
 </div>
 <div class="section" id="documentation-links">
-<h2>Documentation Links<a class="headerlink" href="#documentation-links" title="Permalink to this headline">¶</a></h2>
+<h2>Documentation Links<a class="headerlink" href="#documentation-links" title="Permalink to this headline">§</a></h2>
 <ul class="simple">
 <li><a class="reference internal" href="ansible.html"><span class="doc">Ansible Deployment</span></a></li>
-<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
-<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference external" href="https://pyudev.readthedocs.io/en/latest/genindex.html#" title="(in pyudev v0.21)"><span>Index</span></a></li>
+<li><a class="reference external" href="https://pyudev.readthedocs.io/en/latest/py-modindex.html#" title="(in pyudev v0.21)"><span>Module Index</span></a></li>
 </ul>
 </div>
 </div>
@@ -139,57 +190,15 @@
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="#">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">SPC-EyePi</a><ul>
-<li><a class="reference internal" href="#credits-license">Credits/License</a></li>
-<li><a class="reference internal" href="#features">Features</a></li>
-<li><a class="reference internal" href="#requirements">Requirements</a></li>
-<li><a class="reference internal" href="#extra-details">Extra Details</a></li>
-<li><a class="reference internal" href="#documentation-links">Documentation Links</a></li>
-</ul>
-</li>
-</ul>
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="#">Documentation overview</a><ul>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/index.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
+    <div class="clearer"></div>
+  </div>
     <div class="footer">
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
       
-      |
-      <a href="_sources/index.rst.txt"
-          rel="nofollow">Page source</a>
     </div>
 
     

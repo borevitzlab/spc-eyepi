@@ -1,21 +1,14 @@
-:orphan:
+
 
 Ansible Deployment
 ==================
-
-.. toctree::
-    :maxdepth: 2
-    :caption: Contents:
-
-* :doc:`index`
-
 
 Requirements
 ------------
 
 .. highlight:: console
 
-You need `ansible <https://www.ansible.com/>`_ version 2.3 installed locally
+You need `Ansible <https://www.ansible.com/>`_ version 2.3 installed locally
 
 .. code-block:: bash
 

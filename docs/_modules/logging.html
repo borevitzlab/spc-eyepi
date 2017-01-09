@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>logging &#8212; SpectroPhenoClimatron EyePI 3.2 documentation</title>
+    <title>logging &#8212; SPC-EyePi 3.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -35,15 +35,53 @@
 
   </head>
   <body role="document">
-  
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">SPC-EyePi</a></h1>
 
-    <div class="document">
+
+
+<p class="blurb">Capture/Control software for DSLRs, USB cameras, and the Raspberry Pi camera.</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=borevitzlab&repo=spc-eyepi&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ansible.html">Ansible Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Module Index</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body" role="main">
             
   <h1>Source code for logging</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright 2001-2015 by Vinay Sajip. All Rights Reserved.</span>
+<span></span><span class="c1"># Copyright 2001-2016 by Vinay Sajip. All Rights Reserved.</span>
 <span class="c1">#</span>
 <span class="c1"># Permission to use, copy, modify, and distribute this software and its</span>
 <span class="c1"># documentation for any purpose and without fee is hereby granted,</span>
@@ -63,7 +101,7 @@
 <span class="sd">Logging package for Python. Based on PEP 282 and comments thereto in</span>
 <span class="sd">comp.lang.python.</span>
 
-<span class="sd">Copyright (C) 2001-2015 Vinay Sajip. All Rights Reserved.</span>
+<span class="sd">Copyright (C) 2001-2016 Vinay Sajip. All Rights Reserved.</span>
 
 <span class="sd">To use, simply &#39;import logging&#39; and log away!</span>
 <span class="sd">&quot;&quot;&quot;</span>
@@ -78,8 +116,9 @@
            <span class="s1">&#39;StreamHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;WARN&#39;</span><span class="p">,</span> <span class="s1">&#39;WARNING&#39;</span><span class="p">,</span> <span class="s1">&#39;addLevelName&#39;</span><span class="p">,</span> <span class="s1">&#39;basicConfig&#39;</span><span class="p">,</span>
            <span class="s1">&#39;captureWarnings&#39;</span><span class="p">,</span> <span class="s1">&#39;critical&#39;</span><span class="p">,</span> <span class="s1">&#39;debug&#39;</span><span class="p">,</span> <span class="s1">&#39;disable&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span>
            <span class="s1">&#39;exception&#39;</span><span class="p">,</span> <span class="s1">&#39;fatal&#39;</span><span class="p">,</span> <span class="s1">&#39;getLevelName&#39;</span><span class="p">,</span> <span class="s1">&#39;getLogger&#39;</span><span class="p">,</span> <span class="s1">&#39;getLoggerClass&#39;</span><span class="p">,</span>
-           <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="s1">&#39;makeLogRecord&#39;</span><span class="p">,</span> <span class="s1">&#39;setLoggerClass&#39;</span><span class="p">,</span> <span class="s1">&#39;warn&#39;</span><span class="p">,</span> <span class="s1">&#39;warning&#39;</span><span class="p">,</span>
-           <span class="s1">&#39;getLogRecordFactory&#39;</span><span class="p">,</span> <span class="s1">&#39;setLogRecordFactory&#39;</span><span class="p">,</span> <span class="s1">&#39;lastResort&#39;</span><span class="p">]</span>
+           <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="s1">&#39;makeLogRecord&#39;</span><span class="p">,</span> <span class="s1">&#39;setLoggerClass&#39;</span><span class="p">,</span> <span class="s1">&#39;shutdown&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;warn&#39;</span><span class="p">,</span> <span class="s1">&#39;warning&#39;</span><span class="p">,</span> <span class="s1">&#39;getLogRecordFactory&#39;</span><span class="p">,</span> <span class="s1">&#39;setLogRecordFactory&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;lastResort&#39;</span><span class="p">,</span> <span class="s1">&#39;raiseExceptions&#39;</span><span class="p">]</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">threading</span>
@@ -152,6 +191,7 @@
 <span class="p">}</span>
 <span class="n">_nameToLevel</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;CRITICAL&#39;</span><span class="p">:</span> <span class="n">CRITICAL</span><span class="p">,</span>
+    <span class="s1">&#39;FATAL&#39;</span><span class="p">:</span> <span class="n">FATAL</span><span class="p">,</span>
     <span class="s1">&#39;ERROR&#39;</span><span class="p">:</span> <span class="n">ERROR</span><span class="p">,</span>
     <span class="s1">&#39;WARN&#39;</span><span class="p">:</span> <span class="n">WARNING</span><span class="p">,</span>
     <span class="s1">&#39;WARNING&#39;</span><span class="p">:</span> <span class="n">WARNING</span><span class="p">,</span>
@@ -174,8 +214,9 @@
 
 <span class="sd">    Otherwise, the string &quot;Level %s&quot; % level is returned.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># See Issue #22386 for the reason for this convoluted expression</span>
-    <span class="k">return</span> <span class="n">_levelToName</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">_nameToLevel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;Level </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">level</span><span class="p">)))</span>
+    <span class="c1"># See Issues #22386 and #27937 for why it&#39;s this way</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">_levelToName</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">level</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_nameToLevel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">level</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="s2">&quot;Level </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">level</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">addLevelName</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">levelName</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -979,6 +1020,10 @@
             <span class="k">finally</span><span class="p">:</span>
                 <span class="k">del</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">tb</span>
 
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">getLevelName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+
 <span class="k">class</span> <span class="nc">StreamHandler</span><span class="p">(</span><span class="n">Handler</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A handler class which writes logging records, appropriately formatted,</span>
@@ -1030,6 +1075,14 @@
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">handleError</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">getLevelName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">(</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+
+
 <span class="k">class</span> <span class="nc">FileHandler</span><span class="p">(</span><span class="n">StreamHandler</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A handler class which writes formatted logging records to disk files.</span>
@@ -1038,6 +1091,8 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Open the specified file and use it as the stream for logging.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Issue #27493: add support for Path objects to be passed in</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fspath</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
         <span class="c1">#keep the absolute path, otherwise derived classes which use this</span>
         <span class="c1">#may come a cropper when the current directory changes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">baseFilename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
@@ -1091,6 +1146,11 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_open</span><span class="p">()</span>
         <span class="n">StreamHandler</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">getLevelName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseFilename</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+
 
 <span class="k">class</span> <span class="nc">_StderrHandler</span><span class="p">(</span><span class="n">StreamHandler</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1584,6 +1644,11 @@
             <span class="n">suffix</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">suffix</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">suffix</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">getLevelName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getEffectiveLevel</span><span class="p">())</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+
+
 <span class="k">class</span> <span class="nc">RootLogger</span><span class="p">(</span><span class="n">Logger</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A root logger is not that different to any other logger, except that</span>
@@ -1709,6 +1774,11 @@
 <span class="sd">        See if the underlying logger has any handlers.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">hasHandlers</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">getLevelName</span><span class="p">(</span><span class="n">logger</span><span class="o">.</span><span class="n">getEffectiveLevel</span><span class="p">())</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">logger</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
 
 <span class="n">root</span> <span class="o">=</span> <span class="n">RootLogger</span><span class="p">(</span><span class="n">WARNING</span><span class="p">)</span>
 <span class="n">Logger</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">root</span>
@@ -2005,35 +2075,13 @@
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../index.html">Documentation overview</a><ul>
-  <li><a href="index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
+    <div class="clearer"></div>
+  </div>
     <div class="footer">
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
       
     </div>
