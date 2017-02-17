@@ -14,18 +14,18 @@
 - debug: msg="OpenVPN configuration file doesnt exist... {{vpn_config_file}}"
   when: not ovpn_conf.stat.exists
 
-- name: Ensure /etc/openvpn dir exists
-  file: path=/etc/openvpn state=directory
+- name: Ensure /etc/openvpn/client dir exists
+  file: path=/etc/openvpn/client state=directory
 
 - name: Install openvpn conf
   copy:
     src: "{{vpn_config_file}}"
-    dest: "/etc/openvpn/vpn.conf"
+    dest: "/etc/openvpn/client/vpn.conf"
   when: ovpn_conf.stat.exists
 
 - name: Start openvpn systemd service
   systemd:
-    name: openvpn@vpn
+    name: openvpn-client@vpn
     state: started
     daemon_reload: yes
     enabled: yes

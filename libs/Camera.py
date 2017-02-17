@@ -3,14 +3,15 @@ import logging.config
 import os
 import shutil
 import time
-import re
+import tempfile
 import numpy
-from urllib import request as urllib_request
+import requests
+from requests.auth import HTTPBasicAuth
 from xml.etree import ElementTree
 from collections import deque
 from io import BytesIO
 import threading
-from threading import Thread, Event
+from threading import Thread, Event, Lock
 from libs.SysUtil import SysUtil
 import cv2
 
@@ -164,7 +165,7 @@ class Camera(object):
         self.logger = logging.getLogger(identifier)
         self.stopper = Event()
         self.identifier = identifier
-
+        self.orinal_config = None
         self.failed = list()
         self._exif = dict()
         self._frame = None
@@ -183,24 +184,6 @@ class Camera(object):
                 self.current_capture_time = None
             self.re_init()
 
-        self._image_size_list = [[5472, 3648],
-                                 [1920, 1080],
-                                 [1280, 720],
-                                 [640, 480]]
-        self._image_size = self._image_size_list[0]
-        self._image_quality = 100
-        self._focus_modes = ["AUTO", "MANUAL"]
-
-        self._hfov_list = [71.664, 58.269, 47.670, 40.981, 33.177, 25.246, 18.126, 12.782, 9.217, 7.050, 5.82]
-        self._vfov_list = [39.469, 33.601, 26.508, 22.227, 16.750, 13.002, 10.324, 7.7136, 4.787, 3.729, 2.448]
-        self._hfov = self._vfov = None
-        self._zoom_list = [50, 150, 250, 350, 450, 550, 650, 750, 850, 950, 1000]
-        self._zoom_position = 800
-        self._zoom_range = [30, 1000]
-        self._focus_range = [-float("inf"), float("inf")]
-        self._focus_mode = "MANUAL"
-        self._focus_position = 0
-
     def re_init(self):
         """
         Re-initialisation method for updating configuration values.
@@ -216,7 +199,7 @@ class Camera(object):
 
         self.camera_name = self.config["camera"]["name"]
         self.interval = self.config.getint("timelapse", "interval")
-        self.spool_directory = self.config["localfiles"]["spooling_dir"]
+        self.spool_directory = tempfile.mkdtemp("SPC-EYEPI_")
         self.upload_directory = self.config["localfiles"]["upload_dir"]
         self.begin_capture = datetime.time(0, 0)
         self.end_capture = datetime.time(23, 59)
@@ -240,13 +223,6 @@ class Camera(object):
             self.logger.error("Time conversion error stoptime - {}".format(str(e)))
 
         try:
-            if not os.path.exists(self.spool_directory):
-                self.logger.info("Creating spoool dir {}".format(self.spool_directory))
-                os.makedirs(self.spool_directory)
-            else:
-                shutil.rmtree(self.spool_directory)
-                os.makedirs(self.spool_directory)
-
             if not os.path.exists(self.upload_directory):
                 self.logger.info("Creating upload dir {}".format(self.upload_directory))
                 os.makedirs(self.upload_directory)
@@ -454,7 +430,7 @@ class Camera(object):
                             pass
                     meta.write()
                 except Exception as e:
-                    self.logger.error("Couldnt write the appropriate metadata: {}".format(str(e)))
+                    self.logger.debug("Couldnt write the appropriate metadata: {}".format(str(e)))
         return successes
 
     @staticmethod
@@ -474,8 +450,6 @@ class Camera(object):
     def stop(self):
         """
         Stops the capture thread, if self is an instance of :class:`threading.Thread`.
-
-        :return:
         """
         self.stopper.set()
 
@@ -595,251 +569,290 @@ class IPCamera(Camera):
     TODO: needs work to support both yml config and normal configs
     """
 
-    def __init__(self, identifier=None, ip=None, ymlconfig=None, queue=None, **kwargs):
-        if not ymlconfig:
+    def __init__(self, identifier=None, ip=None, config=None, queue=None, **kwargs):
+        if not config:
             config = dict()
-
-        if type(ymlconfig) is str:
-            t = os.path.splitext(ymlconfig)[-1]
-            with open(ymlconfig) as f:
-                yaml.load(f.read())
-
-        config = config.copy()
+        self.config = config.copy()
         self.communication_queue = queue or deque(tuple(), 256)
+        self.return_parser = config.get("return_parser", "plaintext")
         self.logger = logging.getLogger(identifier)
         self.stopper = Event()
         self.identifier = identifier
 
-        self.camera_name = \
-            self.interval = \
-            self.spool_directory = \
-            self.upload_directory = \
-            self.begin_capture = \
-            self.end_capture = \
-            self.begin_capture = \
-            self.end_capture = \
-            self.current_capture_time = None
+        self.camera_name = config.get("camera_name", identifier)
+        self.interval = int(config.get("interval", 300))
+        self.spool_directory = tempfile.mkdtemp("SPC-EYEPI_")
+
+        self.upload_directory = config.get("upload_dir", os.path.join(os.getcwd(), identifier))
+        self.begin_capture = datetime.time(0, 0)
+        self.end_capture = datetime.time(23, 59)
+
+        start_time_string = str(self.config.get('starttime', "00:00"))
+        start_time_string = start_time_string.replace(":", "")
+        end_time_string = str(self.config.get('stoptime', "23:59"))
+        end_time_string = end_time_string.replace(":", "")
+        try:
+            start_time_string = start_time_string[:4]
+            assert end_time_string.isdigit(), "Non numerical start time, {}".format(str(end_time_string))
+            self.begin_capture = datetime.datetime.strptime(start_time_string, "%H%M").time()
+        except Exception as e:
+            self.logger.error("Time conversion error starttime - {}".format_map(str(e)))
+        try:
+            # cut string to max of 4.
+            end_time_string = end_time_string[:4]
+            assert end_time_string.isdigit(), "Non numerical end time, {}".format(str(end_time_string))
+            self.end_capture = datetime.datetime.strptime(end_time_string, "%H%M").time()
+        except Exception as e:
+            self.logger.error("Time conversion error stoptime - {}".format(str(e)))
 
         self.failed = list()
         self._image = numpy.empty((Camera.default_width, Camera.default_height, 3), numpy.uint8)
-        self.re_init()
+        self.spool_directory = tempfile.mkdtemp(prefix='GIGAVISION')
+
+        try:
+            if not os.path.exists(self.upload_directory):
+                self.logger.info("Creating upload dir {}".format(self.upload_directory))
+                os.makedirs(self.upload_directory)
+        except Exception as e:
+            self.logger.error("Creating directories {}".format(str(e)))
+
+        self._exif = self.get_exif_fields()
+
+        self.current_capture_time = datetime.datetime.now()
 
         self._image = None
 
-        self._notified_unavailable = []
+        self._notified = []
 
-        #
-        # self._HTTP_login = config.pop("HTTP_login","USER={user}&PWD={password}").format(
-        #     user = user or config.pop("username", "admin"),
-        #     password = password or config.pop("password", "admin"))
-        #
-        # self._url = config.pop("format_url","http://{ip}{command}&{HTTP_login}").format(
-        #     ip = ip or config.pop("ip", None),
-        #     HTTP_login = self._HTTP_login)
-
-        format_str = config.pop("format_url", "http://{HTTP_login}@{ip}{command}")
-
+        format_str = config.get("format_url", "http://{HTTP_login}@{ip}{command}")
+        self.auth_object = None
         if format_str.startswith("http://{HTTP_login}@"):
             format_str = format_str.replace("{HTTP_login}@", "")
-            password_mgr = urllib_request.HTTPPasswordMgrWithDefaultRealm()
+            self.auth_object = HTTPBasicAuth(config.get("username", "admin"),
+                                             config.get("password", "admin"))
 
-            password_mgr.add_password(None,
-                                      format_str.replace("{command}", "").format(
-                                          ip=ip or config.get("ip", "192.168.1.7")),
-                                      config.pop("username", "admin"),
-                                      config.pop("password", "admin"))
 
-            auth_handler = urllib_request.HTTPBasicAuthHandler(password_mgr)
-            opener = urllib_request.build_opener(auth_handler)
-            urllib_request.install_opener(opener)
-
-        self._HTTP_login = config.pop("HTTP_login", "{user}:{password}").format(
-            user=config.pop("username", "admin"),
-            password=config.pop("password", "admin"))
+        self._HTTP_login = config.get("HTTP_login", "{user}:{password}").format(
+            user=config.get("username", "admin"),
+            password=config.get("password", "admin"))
 
         self._url = format_str.format(
-            ip=ip or config.pop("ip", "192.168.1.7"),
+            ip=ip or config.get("ip", "192.168.1.7"),
             HTTP_login=self._HTTP_login,
             command="{command}")
 
-        self._image_size_list = config.pop("image_size_list", [[1920, 1080], [1280, 720], [640, 480]])
-        self._image_size = config.pop("image_size", self._image_size_list[0])
-        image_quality = config.pop("image_quality", 100)
+        self._image_size_list = config.get("image_size_list", [[1920, 1080], [1280, 720], [640, 480]])
+        self._image_size = config.get("image_size", self._image_size_list[0])
+        image_quality = config.get("image_quality", 100)
         self._image_quality = image_quality
-        self._focus_modes = config.get("focus_modes", ["AUTO", "MANUAL"])
+        # no autofocus modes by default.
+        self._autofocus_modes = config.get("autofocus_modes", [])
 
-        self._hfov_list = config.pop("horizontal_fov_list",
+        self._hfov_list = config.get("horizontal_fov_list",
                                      [71.664, 58.269, 47.670, 40.981, 33.177, 25.246, 18.126, 12.782, 9.217, 7.050,
                                       5.82])
-        self._vfov_list = config.pop("vertical_fov_list",
+        self._vfov_list = config.get("vertical_fov_list",
                                      [39.469, 33.601, 26.508, 22.227, 16.750, 13.002, 10.324, 7.7136, 4.787, 3.729,
                                       2.448])
         self._hfov = self._vfov = None
-        self._zoom_list = config.pop("zoom_list", [50, 150, 250, 350, 450, 550, 650, 750, 850, 950, 1000])
-        self._zoom_position = config.pop("zoom_pos", 800)
-        self._zoom_range = config.pop("zoom_range", [30, 1000])
-        self._focus_range = config.pop("focus_range", [-float("inf"), float("inf")])
+        self._zoom_list = config.get("zoom_list", [50, 150, 250, 350, 450, 550, 650, 750, 850, 950, 1000])
+
+
+        self._focus_range = config.get("focus_range", [1, 99999])
+
 
         # set commands from the rest of the config.
-        self.commands = dict()
-        self.parse_strings = dict()
-        for k, v in config.items():
-            if str(k).startswith("URL_"):
-                self.commands[k] = v
-            if str(k).startswith("RET_"):
-                self.parse_strings[k] = v
-
-        # set zoom position to fill hfov and vfov
-        self.zoom_position = self._zoom_position
+        self.command_urls = config.get('urls', {})
+        self.return_keys = config.get("keys", {})
 
         self.image_quality = self.image_quality
 
-        super(IPCamera, self).__init__(self, **kwargs)
+        super(IPCamera, self).__init__(identifier, **kwargs)
+
         self.logger.info(self.status)
+
+    def _make_request(self, command_string, *args, **kwargs):
+        """
+        Makes a generic request formatting the command string and applying the authentication.
+
+        :param command_string: command string like read stream raw
+        :type command_string: str
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        url = self._url.format(*args, command=command_string, **kwargs)
+        if "&" in url and "?" not in url:
+            url = url.replace("&", "?", 1)
+        response = None
+        try:
+            response = requests.get(url, auth=self.auth_object)
+        except Exception as e:
+            self.logger.error("Some exception got raised {}".format(str(e)))
+            return
+        if response.status_code not in [200, 204]:
+            self.logger.error("[{}] - {}\n{}".format(str(response.status_code), str(response.reason), str(response.url)))
+            return
+        return response
 
     def _read_stream(self, command_string, *args, **kwargs):
         """
-        Opens a url with the current HTTP_login string
-        TODO: switch to `requests`
-
-        :type str command_string: str
-        :param str command_string: url to go to with parameters
-        :return: data returned from the camera
+        opens a url with the current HTTP_login string
+        :type command_string: str
+        :param command_string: url to go to with parameters
+        :return: string of data returned from the camera
         """
-        url = self._url.format(*args, command=command_string, **kwargs)
-        if "&" in url and "?" not in url:
-            url = url.replace("&", "?", 1)
-        # print(url)
-        try:
-            stream = urllib_request.urlopen(url)
-        except urllib_request.URLError as e:
-            self.logger.error("Error reading stream {}".format(str(e)))
-            return None
-        return stream.read().strip()
+        response = self._make_request(command_string, *args, **kwargs)
+        if response is None:
+            return
+        return response.text
 
     def _read_stream_raw(self, command_string, *args, **kwargs):
         """
-        Opens a url with the current HTTP_login string
+        opens a url with the current HTTP_login string
 
-        :type str command_string: str
-        :param str command_string: url to go to with parameters
-        :return: str string of data returned from the camera
+        :param command_string: url to go to with parameters
+        :type command_string: str
+        :return: string of data returned from the camera
         """
-        url = self._url.format(*args, command=command_string, **kwargs)
-        if "&" in url and "?" not in url:
-            url = url.replace("&", "?", 1)
-        try:
-            stream = urllib_request.urlopen(url)
-        except urllib_request.URLError as e:
-            self.logger.error("Error reading stream raw {}".format(str(e)))
-            return None
-        return stream.read()
+        response = self._make_request(command_string, *args, **kwargs)
+        if response is None:
+            return
+        return response.content
 
     def _get_cmd(self, cmd):
-        """
-        Gets a url command from the dict of available commands.
+        cmd_str = self.command_urls.get(cmd, None)
+        if not cmd_str and cmd_str not in self._notified:
+            print("No command available for \"{}\"".format(cmd))
+            self._notified.append(cmd_str)
+            return None, None
+        keys = self.return_keys.get(cmd, [])
+        if type(keys) not in (list, tuple):
+            keys = [keys]
+        return cmd_str, keys
 
-        :param str cmd:
-        :return: command format string
+    @staticmethod
+    def get_value_from_xml(message_xml, *args):
         """
-        cmd_str = self.commands.get(cmd, None)
-        if not cmd_str and cmd_str not in self._notified_unavailable:
-            self._notified_unavailable.append(cmd_str)
-            self.logger.error("No command available for \"{}\"".format(cmd))
-            return None
-        if type(cmd_str) == str:
-            cmd_str = tuple(cmd_str.split("!"))
-            if len(cmd_str) == 1:
-                cmd_str = cmd_str[0]
-        return cmd_str
-
-    def get_value_from_xml(self, message_xml: str, *args):
-        """
-        Gets float, int or string values from a xml string where the key is the tag of the first element with value as
+        gets float, int or string values from a xml string where the key is the tag of the first element with value as
         text.
 
-        returns a dict if more than 1 arg.
-
-        returns single value if 1 arg, or None if single arg not found in xml.
-
-        :param message_xml:
+        :param message_xml: the xml to searach in.
         :param args: list of keys to find values for.
-        :return: value requested, or None if it does not exist
+        :rtype: dict
+        :return: dict of arg: value pairs requested
         """
-        # assert (len(args) > 0, "No keys to search")
-        root_element = ElementTree.fromstring(message_xml)
-        return_values = {}
+        return_values = dict()
+        if not len(args):
+            return return_values
+        if not len(message_xml):
+            return return_values
+        # apparently, there is an issue parsing when the ptz returns INVALID XML (WTF?)
+        # these seem to be the tags that get mutilated.
+        illegal = [b'\n', b'\t', b'\r',
+                   b"<CPStatusMsg>", b"</CPStatusMsg>", b"<Text>",
+                   b"</Text>", b"<Type>Info</Type>", b"<Type>Info",
+                   b"Info</Type>", b"</Type>", b"<Type>"]
+        for ill in illegal:
+            message_xml = message_xml.replace(ill, b"")
+
+        root_element = ElementTree.Element("invalidation_tag")
+        try:
+            root_element = ElementTree.fromstring(message_xml)
+
+        except Exception as e:
+            print(str(e))
+            print("Couldnt parse XML!!!")
+            print(message_xml)
+
+        return_values = dict
         for key in args:
             target_ele = root_element.find(key)
-            if not target_ele:
+            if target_ele is None:
                 continue
 
             value = target_ele.text.replace(' ', '')
-            if not value:
+            if value is None:
                 continue
 
             types = [float, int, str]
             for t in types:
                 try:
                     return_values[key] = t(value)
+                    break
                 except ValueError:
                     pass
             else:
-                self.logger.error(
-                    "Couldn't cast an xml element text attribute to str. What are you feeding the xml parser?")
-        # return single arg
-        if len(args) == 1 and len(return_values) == 1:
-            return next(iter(return_values.values()))
-        elif len(args) == 1:
-            return None
+                print("Couldnt cast an xml element text attribute to str. What are you feeding the xml parser?")
+
         return return_values
 
     @staticmethod
-    def get_value_from_stream(raw_text, *args):
+    def get_value_from_plaintext(message, *args):
         """
-        Parses a string returned from the camera by urlopen into a list
+        gets float, int or string values from a xml string where the key is the tag of the first element with value as
+        text.
 
-        :type raw_text: str to be parsed
-        :param raw_text: text to parse
-        :param args: string keys to select
-        :return: list of values or None if input text has no '=' chars or dict of key values if args
-        :rtype: list
+        :param message:
+        :param args: list of keys to find values for.
+        :rtype: dict
+        :return: dict of arg: value pairs requested
         """
-        if raw_text is None:
-            raw_text = ""
-        multitexts = raw_text.splitlines()
-        multitexts = [x.decode().split("=") for x in multitexts]
-        multitexts = dict([(x[0], x[-1]) for x in multitexts])
+        return_values = dict()
+        if not len(args):
+            return return_values
+        if not len(message):
+            return return_values
+        for line in message.split("\n"):
+            line = line.replace("= ", "=").replace(" =", "=").strip()
+            name, value = line.partition("=")[::2]
+            name, value = name.strip(), value.strip()
+            types = [float, int, str]
+            if name in args:
+                for t in types:
+                    try:
+                        v = t(value)
+                        if str(v).lower() in ['yes', 'no', 'true', 'false', 'on', 'off']:
+                            v = str(v).lower() in ['yes', 'true', 'on']
+                        return_values[name] = v
+                        break
+                    except ValueError:
+                        pass
+                else:
+                    print("Couldnt cast an plaintext element text attribute to str. What are you feeding the parser?")
+        return return_values
 
-        if len(args):
-            return dict((k, multitexts[k]) for k in args if k in multitexts.keys())
+    def get_value_from_stream(self, stream, *keys):
+        """
+        Gets a value from some text data (xml or plaintext = separated values)
+        returns a dict of "key":value pairs.
 
-        values = []
-
-        def ap(v):
-            try:
-                a = float(v)
-                values.append(a)
-            except:
-                values.append(a)
-
-        for k, value in multitexts.items():
-            value = re.sub("'", "", value)
-            if ',' in value:
-                va = value.split()
-                for v in va:
-                    ap(v)
-            else:
-                ap(value)
-
-        return values
+        :param stream: text data to search for values
+        :type stream: str
+        :param keys:
+        :type keys: list
+        :return: dict of values
+        :rtype: dict
+        """
+        if self.return_parser == 'plaintext':
+            return self.get_value_from_plaintext(stream, *keys)
+        elif self.return_parser == 'xml':
+            return self.get_value_from_xml(stream, *keys)
+        else:
+            return dict()
 
     def capture_image(self, filename=None) -> numpy.array:
         """
-        Overridden method to get and image from the camera base on the cmd for "URL_get_image".
+        Captures an image with the IP camera, uses requests.get to acqire the image.
+
+        :param filename: filename without extension to capture to.
+        :return: list of filenames (of captured images) if filename was specified, otherwise a numpy array of the image.
+        :rtype: numpy.array or list
         """
         st = time.time()
-        cmd = self._get_cmd("URL_get_image")
+        cmd, keys = self._get_cmd("get_image")
+        if "{width}" in cmd and "{height}" in cmd:
+            cmd = cmd.format(width=self._image_size[0], height=self.image_size[1])
         if not cmd:
             self.logger.error("No capture command, this is wrong...")
             return self._image
@@ -852,9 +865,9 @@ class IPCamera(Camera):
                 b = numpy.fromstring(a, numpy.uint8)
                 self._image = cv2.imdecode(b, cv2.IMREAD_COLOR)
                 if filename:
-                    self.encode_write_np_array(self._image, filename)
+                    rfiles = self.encode_write_np_array(self._image, filename)
                     self.logger.debug("Took {0:.2f}s to capture".format(time.time() - st))
-                    return filename
+                    return rfiles
                 else:
                     self.logger.debug("Took {0:.2f}s to capture".format(time.time() - st))
                     break
@@ -864,6 +877,10 @@ class IPCamera(Camera):
         else:
             self.logger.error("All capture attempts (10) for network camera failed.")
         return self._image
+
+    # def set_fov_from_zoom(self):
+    #     self._hfov = numpy.interp(self._zoom_position, self.zoom_list, self.hfov_list)
+    #     self._vfov = numpy.interp(self._zoom_position, self.zoom_list, self.vfov_list)
 
     @property
     def image_quality(self) -> float:
@@ -879,12 +896,12 @@ class IPCamera(Camera):
     @image_quality.setter
     def image_quality(self, value: float):
         assert (1 <= value <= 100)
-        cmd = self._get_cmd("URL_get_image_quality")
+        cmd, keys = self._get_cmd("get_image_quality")
         if cmd:
             self._read_stream(cmd.format(value))
 
     @property
-    def image_size(self) -> tuple:
+    def image_size(self) -> list:
         """
         Image resolution in pixels, tuple of (width, height)
 
@@ -892,22 +909,17 @@ class IPCamera(Camera):
         :setter: to camera.
         :rtype: tuple
         """
-        cmd = self._get_cmd("URL_get_image_size")
+        cmd, keys = self._get_cmd("get_image_size")
         if cmd:
-            key = None
-            if type(cmd) is tuple:
-                cmd, key = cmd
             stream = self._read_stream(cmd)
-            output = self.get_value_from_stream(stream, key)
-            if type(output) is dict:
-                output = output.get(key, None)
-            else:
-                return self._image_size
-            if output:
-                if type(output) is list:
-                    self._image_size = output
-                else:
-                    self._image_size = self._image_size_list[int(output) % len(self._image_size_list)]
+            output = self.get_value_from_stream(stream, keys)
+            width,height = self._image_size
+            for k,v in output.items():
+                if "width" in k:
+                    width = v
+                if "height" in k:
+                    height = v
+            self._image_size = [width, height]
         return self._image_size
 
     @image_size.setter
@@ -916,104 +928,16 @@ class IPCamera(Camera):
         assert len(value) == 2, "image size doesnt have 2 elements width,height are required"
         value = list(value)
         assert value in self._image_size_list, "image size not in available image sizes"
-        cmd = self._get_cmd("URL_set_image_size")
+        cmd, keys = self._get_cmd("set_image_size")
         if cmd:
             self._read_stream(cmd.format(width=value[0], height=value[1]))
             self._image_size = value
 
     @property
-    def zoom_position(self):
-        """
-        Zoom Position.
-
-        :getter: from camera.
-        :setter: to camera.
-        :rtype: tuple
-        """
-        cmd = self._get_cmd("URL_get_zoom")
-        if cmd:
-            try:
-                stream_output = self._read_stream(cmd)
-                value = self.get_value_from_stream(stream_output)
-                if value:
-                    self._zoom_position = value
-            except:
-                pass
-
-        self._hfov = numpy.interp(self._zoom_position, self.zoom_list, self.hfov_list)
-        self._vfov = numpy.interp(self._zoom_position, self.zoom_list, self.vfov_list)
-        return self._zoom_position
-
-    @zoom_position.setter
-    def zoom_position(self, absolute_value):
-        cmd = self._get_cmd("URL_set_zoom")
-        if cmd:
-            assert (self._zoom_range is not None and absolute_value is not None)
-            assert type(absolute_value) in (float, int)
-            absolute_value = min(self._zoom_range[1], max(self._zoom_range[0], absolute_value))
-            try:
-                stream_output = self._read_stream(cmd.format(zoom=absolute_value))
-                value = self.get_value_from_stream(stream_output)
-                if value:
-                    self._zoom_position = value
-            except:
-                pass
-        else:
-            self._zoom_position = absolute_value
-        self._hfov = numpy.interp(self._zoom_position, self.zoom_list, self.hfov_list)
-        self._vfov = numpy.interp(self._zoom_position, self.zoom_list, self.vfov_list)
-
-    @property
-    def zoom_range(self):
-        """
-        Range of zoom for the camera.
-
-        :getter: from camera.
-        :setter: cached.
-        :rtype: tuple
-        """
-        cmd = self._get_cmd("URL_get_zoom_range")
-        if not cmd:
-            return self._zoom_range
-        stream_output = self._read_stream(cmd)
-        v = self.get_value_from_stream(stream_output)
-        if v:
-            self._zoom_range = v
-        return self._zoom_range
-
-    @zoom_range.setter
-    def zoom_range(self, value):
-        assert type(value) in (list, tuple), "must be either list or tuple"
-        assert len(value) == 2, "must be 2 values"
-        self._zoom_range = list(value)
-
-    @property
-    def zoom_list(self) -> list:
-        """
-        List of zoom value intervals.
-
-        Setting this also affects the state of other related variables.
-
-        :getter: cached.
-        :setter: recalculates, recalculates fov lists, resets zoom_position.
-        :rtype: list
-        """
-        return self._zoom_list
-
-    @zoom_list.setter
-    def zoom_list(self, value):
-        assert type(value) in (list, tuple), "Must be a list or tuple"
-        assert len(value) > 1, "Must have more than one element"
-        self._zoom_list = list(value)
-        it = iter(self._hfov_list)
-        self._hfov_list = [next(it, self._hfov_list[-1]) for _ in self._zoom_list]
-        it = iter(self._vfov_list)
-        self._vfov_list = [next(it, self._vfov_list[-1]) for _ in self._zoom_list]
-        self.zoom_position = self._zoom_position
-
-    @property
     def focus_mode(self) -> str:
         """
+        TODO: this is broken, returns the dict of key: value not value
+
         Focus Mode
 
         When setting, the mode provided must be in 'focus_modes'
@@ -1022,20 +946,20 @@ class IPCamera(Camera):
         :setter: to camera.
         :rtype: list
         """
-        cmd = self._get_cmd("URL_get_focus_mode")
+        cmd, keys = self._get_cmd("get_focus_mode")
         if not cmd:
-            return None
+            return
         stream_output = self._read_stream(cmd)
-        return self.get_value_from_stream(stream_output)
+        return self.get_value_from_stream(stream_output, keys)['mode']
 
     @focus_mode.setter
     def focus_mode(self, mode: str):
-        assert (self._focus_modes is not None)
-        if mode.upper() not in self._focus_modes:
+        assert (self._autofocus_modes is not None)
+        if mode.upper() not in self._autofocus_modes:
             print("Focus mode not in list of supported focus modes. YMMV.")
-        cmd = self._get_cmd("URL_set_focus_mode")
+        cmd, keys = self._get_cmd("set_focus_mode")
         if cmd:
-            self._read_stream(cmd.format(mode=mode.upper()))
+            self._read_stream(cmd.format(mode=mode))
 
     @property
     def focus_position(self):
@@ -1046,21 +970,37 @@ class IPCamera(Camera):
         :setter: to camera.
         :rtype: float
         """
-        cmd = self._get_cmd("URL_get_focus")
+        cmd, keys = self._get_cmd("get_focus")
         if not cmd:
             return None
         stream_output = self._read_stream(cmd)
-        result = self.get_value_from_stream(stream_output)
-        return next(iter(result), float("inf"))
+        result = self.get_value_from_stream(stream_output, keys)
+        return next(iter(result), float(99999))
 
     @focus_position.setter
     def focus_position(self, absolute_position):
-        cmd = self._get_cmd("URL_set_focus")
-        if cmd:
+        self.logger.debug("Setting focus position to {}".format(absolute_position))
+        cmd, key = self._get_cmd("set_focus")
+        if not cmd:
             assert (self._focus_range is not None and absolute_position is not None)
             absolute_position = min(self._focus_range[1], max(self._focus_range[0], absolute_position))
             assert (self._focus_range[0] <= absolute_position <= self._focus_range[1])
-            self._read_stream(format.format(focus=absolute_position))
+            self._read_stream(cmd.format(focus=absolute_position))
+
+    def focus(self):
+        """
+        focuses the camera by cycling it through its autofocus modes.
+        """
+        self.logger.debug("Focusing...")
+        cmd, key = self._get_cmd("set_autofocus_mode")
+        if not cmd or len(self._autofocus_modes) < 1:
+            return
+        for mode in self._autofocus_modes:
+            self.focus_mode = mode
+            time.sleep(2)
+        self._read_stream(cmd.format(mode=self._autofocus_modes[0]))
+        time.sleep(2)
+        self.logger.debug("Focus complete.")
 
     @property
     def focus_range(self):
@@ -1070,11 +1010,11 @@ class IPCamera(Camera):
         :return: focus type, focus max, focus min
         :rtype: list [str, float, float]
         """
-        cmd = self._get_cmd("URL_get_focus_range")
+        cmd, keys = self._get_cmd("get_focus_range")
         if not cmd:
             return None
         stream_output = self._read_stream(cmd)
-        values = self.get_value_from_stream(stream_output)
+        values = self.get_value_from_stream(stream_output, keys)
         return values[2:0:-1]
 
     @property
@@ -1091,7 +1031,7 @@ class IPCamera(Camera):
     @hfov_list.setter
     def hfov_list(self, value):
         assert type(value) in (list, tuple), "must be either list or tuple"
-        assert len(value) == len(self._zoom_list), "must be the same length as zoom list"
+        # assert len(value) == len(self._zoom_list), "must be the same length as zoom list"
         self._hfov_list = list(value)
 
     @property
@@ -1108,7 +1048,7 @@ class IPCamera(Camera):
     @vfov_list.setter
     def vfov_list(self, value):
         assert type(value) in (list, tuple), "must be either list or tuple"
-        assert len(value) == len(self._zoom_list), "must be the same length as zoom list"
+        # assert len(value) == len(self._zoom_list), "must be the same length as zoom list"
         self._vfov_list = list(value)
 
     @property
@@ -1120,7 +1060,7 @@ class IPCamera(Camera):
         :setter: cache.
         :rrtype: list(float)
         """
-        self._hfov = numpy.interp(self._zoom_position, self.zoom_list, self.hfov_list)
+        # self._hfov = numpy.interp(self._zoom_position, self.zoom_list, self.hfov_list)
         return self._hfov
 
     @hfov.setter
@@ -1136,7 +1076,7 @@ class IPCamera(Camera):
         :setter: cache.
         :rrtype: list(float)
         """
-        self._vfov = numpy.interp(self._zoom_position, self.zoom_list, self.vfov_list)
+        # self._vfov = numpy.interp(self._zoom_position, self.zoom_list, self.vfov_list)
         return self._vfov
 
     @vfov.setter
@@ -1151,21 +1091,21 @@ class IPCamera(Camera):
         :return: informative string of zoom_pos zoom_range focus_pos focus_range
         :rtype: str
         """
-        fmt_string = "zoom_pos:\t{}\nzoom_range:\t{}"
-        fmt_string = "".join((fmt_string, "\nfocus_pos:\t{}\nfocus_range:\t{}"))
-        return fmt_string.format(self.zoom_position, self.zoom_range, self.focus_position, self.focus_range)
+        # fmt_string = "zoom_pos:\t{}\nzoom_range:\t{}"
+        fmt_string = "".join(("\nfocus_pos:\t{}\nfocus_range:\t{}"))
+        return fmt_string.format(self.focus_position, self.focus_range)
 
-    def focus(self):
-        """
-        forces a refocus of the the camera
-
-        :return: response from the camera.
-        """
-        cmd = self._get_cmd("URL_set_focus_mode")
-        if not cmd:
-            return None
-        stream_output = self._read_stream(cmd.format(mode="REFOCUS"))
-        return self.get_value_from_stream(stream_output)
+    # def focus(self):
+    #     """
+    #     forces a refocus of the the camera
+    #
+    #     :return: response from the camera.
+    #     """
+    #     cmd,keys = self._get_cmd("set_focus_mode")
+    #     if not cmd:
+    #         return None
+    #     stream_output = self._read_stream(cmd.format(mode="REFOCUS"))
+    #     return self.get_value_from_stream(stream_output, keys)
 
 
 class GPCamera(Camera):
@@ -1175,12 +1115,7 @@ class GPCamera(Camera):
     identifier and usb_address are NOT OPTIONAL
     """
 
-    def __init__(self, identifier: str = None, lock=None, **kwargs):
-        """
-        this needs to be fixed for multiple cameras.
-        :param identifier: serialnumber of camera or None for next camera.
-        :param kwargs:
-        """
+    def __init__(self, identifier: str = None, lock=Lock(), **kwargs):
         self.lock = lock
         self._serialnumber = None
         self.usb_address = [None, None]
@@ -1190,9 +1125,9 @@ class GPCamera(Camera):
     def re_init(self):
         """
         re initialises the camera.
-        :return:
         """
         super(GPCamera, self).re_init()
+
         with self.lock:
             serialnumber = None
             camera = None
@@ -1224,7 +1159,9 @@ class GPCamera(Camera):
         """
         This is meant to get the exif fields for the image if we want to manually save them.
         This is incomplete.
-        :return:
+
+        :return: dictionary of exif fields.
+        :rtype: dict
         """
         exif = super(GPCamera, self).get_exif_fields()
         try:
@@ -1265,6 +1202,18 @@ class GPCamera(Camera):
                 raise FileNotFoundError("Camera cannot be found")
 
     def capture_image(self, filename=None):
+        """
+        Gapture method for DSLRs.
+        Some contention exists around this method, as its definitely not the easiest thing to have operate robustly.
+        :func:`GPCamera._cffi_capture` is how it _should_ be done, however that method is unreliable and causes many
+        crashes when in real world timelapse situations.
+        This method calls gphoto2 directly, which makes us dependent on gphoto2 (not just libgphoto2 and gphoto2-cffi),
+        and there is probably some issue with calling gphoto2 at the same time like 5 times, maybe dont push it.
+
+        :param filename: filename without extension to capture to.
+        :return: list of filenames (of captured images) if filename was specified, otherwise a numpy array of the image.
+        :rtype: numpy.array or list
+        """
         import subprocess
         import glob
 
@@ -1333,6 +1282,14 @@ class GPCamera(Camera):
         return None
 
     def _cffi_capture(self, filename=None):
+        """
+        old cffi capture. very unreliable.
+        Causes a memory leak somewhere that I cant find.
+
+        :param filename: filename without extension to capture to.
+        :return: list of filenames (of captured images) if filename was specified, otherwise a numpy array of the image.
+        :rtype: numpy.array or list
+        """
         st = time.time()
         camera = None
         for x in range(10):
@@ -1384,15 +1341,12 @@ class GPCamera(Camera):
     def serial_number(self) -> str:
         """
         returns the current serialnumber for the camera.
-        :return:
         """
         return self._serialnumber
 
     def focus(self):
         """
         this is meant to trigger the autofocus. currently not in use because it causes some distortion in the images.
-
-        :return:
         """
         camera = self._get_camera()
         try:
@@ -1407,8 +1361,6 @@ class GPCamera(Camera):
     def eos_serial_number(self) -> str or None:
         """
         returns the eosserialnumber of supported cameras, otherwise the normal serialnumber
-
-        :return:
         """
         camera = self._get_camera()
         sn = vars(camera.status).get("eosserialnumber", self.serial_number)
@@ -1439,8 +1391,6 @@ class USBCamera(Camera):
         """
         usb camera stream thread.
         TODO: Needs to be aware of multiple cameras.
-
-        :return:
         """
         print("ThreadStartup ...")
         cam = cv2.VideoCapture()
@@ -1469,9 +1419,10 @@ class USBCamera(Camera):
 
     def __init__(self, identifier, sys_number, **kwargs):
         """
-        webcamera init. must have a sys_number (the 0 from /dev/video0) to capture from
-        :param identifier:
-        :param sys_number:
+        USB camera init. must have a sys_number (the 0 from /dev/video0) to capture from
+
+        :param identifier: identifier for the webcamera
+        :param sys_number: system device number of device to use
         :param kwargs:
         """
         # only webcams have a v4l sys_number.
@@ -1487,8 +1438,7 @@ class USBCamera(Camera):
     def re_init(self):
         """
         re-initialisation of webcamera
-        todo: fix release of camera otherwise it could be locked forever.
-        :return:
+        todo: fix release of camera otherwise it gets locked forever.
         """
         super(USBCamera, self).re_init()
         self._assert_capture_device()
@@ -1506,7 +1456,6 @@ class USBCamera(Camera):
     def stop(self):
         """
         releases the video device and stops the camera thread
-        :return:
         """
         try:
             self.video_capture.release()
@@ -1517,8 +1466,8 @@ class USBCamera(Camera):
     def _assert_capture_device(self):
         """
         ensures the capture device is open and valid.
+
         :param self:
-        :return:
         """
         try:
             if not self.video_capture:
@@ -1532,8 +1481,12 @@ class USBCamera(Camera):
 
     def capture_image(self, filename=None):
         """
-        :param filename: filename to output
-        :return:
+        captures an image from the usb webcam.
+        Writes some limited exif data to the image if it can.
+
+        :param filename: filename to output without excension
+        :return: list of image filenames if filename was specified, otherwise a numpy array.
+        :rtype: numpy.array or list
         """
 
         st = time.time()
@@ -1644,7 +1597,7 @@ class PiCamera(Camera):
 
         :param filename: image filename without extension
         :return: :func:`numpy.array` if filename not specified, otherwise list of files.
-        :rtype: numpy.array
+        :rtype: numpy.array or list
         """
         st = time.time()
         try:
@@ -1678,27 +1631,40 @@ class IVPortCamera(PiCamera):
     # these are for the video streaming
     select = 7
 
-    enable_pinsA = [11, 12]
-    enable_pinsB = [15, 16]
-    enable_pinsC = [21, 22]
-    enable_pinsD = [23, 24]
+    enable_pins = {
+        "A": [11, 12],
+        "B": [15, 16],
+        "C": [21, 22],
+        "D": [23, 24]
+    }
 
-    enable_pins = enable_pinsB
+    TRUTH_TABLE = [
+        [False, False, True],
+        [True,  False, True],
+        [False, True,  False],
+        [True,  True,  False]
+    ]
+    gpio_groups = ("B",)
 
-    TRUTH_TABLE = [[False, False, True],
-                   [True, False, True],
-                   [False, True, False],
-                   [True, True, False]]
 
-    def __init__(self, identifier: str = None, queue: deque = None, camera_number: int = None, **kwargs):
+    def __init__(self,
+                 identifier: str = None,
+                 queue: deque = None,
+                 gpio_group: tuple=("B",),
+                 camera_number: int = None, **kwargs):
         """
         special __init__ for the IVport to set the gpio enumeration
-        This controls which gpio are on or off to select the camera
+        This controls which gpio are on or off to select the camera and whcih camera group has been soldered on the
+        ivport. Multiple camera groups can be specified, and they will be enumerated in alphabetical order.
 
-        :param identifier:
-        :param queue:
+        :param identifier: string identifier for the camera
+        :type identifier: str
+        :param queue: communication queue for the camera to communicate with the updater
+        :type queue: deque
         :param kwargs:
         """
+        self.__class__.gpio_groups = sorted(gpio_group)
+
         if camera_number is None:
             super(IVPortCamera, self).__init__(identifier=identifier, queue=queue, **kwargs)
         else:
@@ -1708,8 +1674,6 @@ class IVPortCamera(PiCamera):
     def setup(self):
         """
         sets up gpio for IVPort
-
-        :return:
         """
         super(IVPortCamera, self).setup()
         # switch to the current camera index.
@@ -1722,31 +1686,39 @@ class IVPortCamera(PiCamera):
         with no index, switches to the next camera, looping around from the beginning
 
         :param idx: index to switch the camera to (optional)
-        :return:
+        :type idx: int
         """
         time.sleep(1)
-        import RPi.GPIO as GPIO
+        # import RPi.GPIO as GPIO
         cls.current_camera_index += 1
         if idx is not None:
             cls.current_camera_index = idx
 
-        cls.current_camera_index %= len(IVPortCamera.TRUTH_TABLE)
-        print("Switching to camera {}".format(idx))
-        GPIO.setwarnings(False)
-        GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(IVPortCamera.select, GPIO.OUT)
-        GPIO.setup(IVPortCamera.enable_pins[0], GPIO.OUT)
-        GPIO.setup(IVPortCamera.enable_pins[1], GPIO.OUT)
+        cls.current_camera_index %= (len(IVPortCamera.TRUTH_TABLE)*len(cls.gpio_groups))
+        # GPIO.setwarnings(False)
+        # GPIO.setmode(GPIO.BOARD)
+        # GPIO.setup(IVPortCamera.select, GPIO.OUT)
+
+        # current groups determined by the camera index / number of cameras per board (truth table len)
+        current_group = cls.gpio_groups[int(cls.current_camera_index/len(IVPortCamera.TRUTH_TABLE))]
+        current_pins = cls.enable_pins[current_group]
+        print("Switching to camera {}: {}".format(current_group, cls.current_camera_index))
+
+        # GPIO.setup(current_pins[0], GPIO.OUT)
+        # GPIO.setup(current_pins[1], GPIO.OUT)
+
+        # per camera index, current camera index mod the number of cameras per board
+        truth_table_idx = cls.current_camera_index % len(IVPortCamera.TRUTH_TABLE)
 
         pin_values = [
-            IVPortCamera.TRUTH_TABLE[cls.current_camera_index][0],
-            IVPortCamera.TRUTH_TABLE[cls.current_camera_index][1],
-            IVPortCamera.TRUTH_TABLE[cls.current_camera_index][2]
+            IVPortCamera.TRUTH_TABLE[truth_table_idx][0],
+            IVPortCamera.TRUTH_TABLE[truth_table_idx][1],
+            IVPortCamera.TRUTH_TABLE[truth_table_idx][2]
         ]
 
-        GPIO.output(IVPortCamera.select, pin_values[0])
-        GPIO.output(IVPortCamera.enable_pins[0], pin_values[1])
-        GPIO.output(IVPortCamera.enable_pins[1], pin_values[2])
+        # GPIO.output(IVPortCamera.select, pin_values[0])
+        # GPIO.output(IVPortCamera.enable_pins[0], pin_values[1])
+        # GPIO.output(IVPortCamera.enable_pins[1], pin_values[2])
         print(pin_values)
 
     def capture_image(self, filename: str = None) -> list:
@@ -1755,7 +1727,7 @@ class IVPortCamera(PiCamera):
         iterates over the number of vameras
 
         :return: :func:`numpy.array` if filename not specified, otherwise list of files.
-        :rtype: numpy.array
+        :rtype: numpy.array or list
         """
         filenames = []
         st = time.time()

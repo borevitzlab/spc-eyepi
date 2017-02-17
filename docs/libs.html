@@ -354,14 +354,6 @@ when the config file has been modified.</p>
 <dt id="libs.Camera.Camera.stop">
 <code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.stop" title="Permalink to this definition">§</a></dt>
 <dd><p>Stops the capture thread, if self is an instance of <a class="reference external" href="https://docs.python.org/3.5/library/threading.html#threading.Thread" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="classmethod">
@@ -441,7 +433,7 @@ Override this with the correct method of opening the camera, grabbing image data
 
 <dl class="class">
 <dt id="libs.Camera.GPCamera">
-<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">GPCamera</code><span class="sig-paren">(</span><em>identifier: str = None</em>, <em>lock=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#GPCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.GPCamera" title="Permalink to this definition">§</a></dt>
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">GPCamera</code><span class="sig-paren">(</span><em>identifier: str = None</em>, <em>lock=&lt;unlocked _thread.lock object&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#GPCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.GPCamera" title="Permalink to this definition">§</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#libs.Camera.Camera" title="libs.Camera.Camera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.Camera</span></code></a></p>
 <p>Camera class
 other cameras inherit from this class.
@@ -449,90 +441,104 @@ identifier and usb_address are NOT OPTIONAL</p>
 <dl class="method">
 <dt id="libs.Camera.GPCamera.capture_image">
 <code class="descname">capture_image</code><span class="sig-paren">(</span><em>filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#GPCamera.capture_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.GPCamera.capture_image" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
+<dd><p>Gapture method for DSLRs.
+Some contention exists around this method, as its definitely not the easiest thing to have operate robustly.
+<code class="xref py py-func docutils literal"><span class="pre">GPCamera._cffi_capture()</span></code> is how it _should_ be done, however that method is unreliable and causes many
+crashes when in real world timelapse situations.
+This method calls gphoto2 directly, which makes us dependent on gphoto2 (not just libgphoto2 and gphoto2-cffi),
+and there is probably some issue with calling gphoto2 at the same time like 5 times, maybe dont push it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; filename without extension to capture to.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of filenames (of captured images) if filename was specified, otherwise a numpy array of the image.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.8)">numpy.array</a> or <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="libs.Camera.GPCamera.eos_serial_number">
 <code class="descname">eos_serial_number</code><a class="headerlink" href="#libs.Camera.GPCamera.eos_serial_number" title="Permalink to this definition">§</a></dt>
 <dd><p>returns the eosserialnumber of supported cameras, otherwise the normal serialnumber</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="libs.Camera.GPCamera.focus">
 <code class="descname">focus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#GPCamera.focus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.GPCamera.focus" title="Permalink to this definition">§</a></dt>
 <dd><p>this is meant to trigger the autofocus. currently not in use because it causes some distortion in the images.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="libs.Camera.GPCamera.get_exif_fields">
 <code class="descname">get_exif_fields</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#GPCamera.get_exif_fields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.GPCamera.get_exif_fields" title="Permalink to this definition">§</a></dt>
 <dd><p>This is meant to get the exif fields for the image if we want to manually save them.
-This is incomplete.
-:return:</p>
+This is incomplete.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dictionary of exif fields.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="libs.Camera.GPCamera.re_init">
 <code class="descname">re_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#GPCamera.re_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.GPCamera.re_init" title="Permalink to this definition">§</a></dt>
-<dd><p>re initialises the camera.
-:return:</p>
+<dd><p>re initialises the camera.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="libs.Camera.GPCamera.serial_number">
 <code class="descname">serial_number</code><a class="headerlink" href="#libs.Camera.GPCamera.serial_number" title="Permalink to this definition">§</a></dt>
-<dd><p>returns the current serialnumber for the camera.
-:return:</p>
+<dd><p>returns the current serialnumber for the camera.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="libs.Camera.IPCamera">
-<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">IPCamera</code><span class="sig-paren">(</span><em>identifier=None</em>, <em>ip=None</em>, <em>ymlconfig=None</em>, <em>queue=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera" title="Permalink to this definition">§</a></dt>
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">IPCamera</code><span class="sig-paren">(</span><em>identifier=None</em>, <em>ip=None</em>, <em>config=None</em>, <em>queue=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera" title="Permalink to this definition">§</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#libs.Camera.Camera" title="libs.Camera.Camera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.Camera</span></code></a></p>
 <p>IPCamera, unfinished and untested.</p>
 <p>TODO: needs work to support both yml config and normal configs</p>
 <dl class="method">
 <dt id="libs.Camera.IPCamera.capture_image">
 <code class="descname">capture_image</code><span class="sig-paren">(</span><em>filename=None</em><span class="sig-paren">)</span> &rarr; &lt;built-in function array&gt;<a class="reference internal" href="_modules/libs/Camera.html#IPCamera.capture_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.capture_image" title="Permalink to this definition">§</a></dt>
-<dd><p>Overridden method to get and image from the camera base on the cmd for &#8220;URL_get_image&#8221;.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="libs.Camera.IPCamera.focus">
-<code class="descname">focus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera.focus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.focus" title="Permalink to this definition">§</a></dt>
-<dd><p>forces a refocus of the the camera</p>
+<dd><p>Captures an image with the IP camera, uses requests.get to acqire the image.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">response from the camera.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; filename without extension to capture to.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of filenames (of captured images) if filename was specified, otherwise a numpy array of the image.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.8)">numpy.array</a> or <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="libs.Camera.IPCamera.focus">
+<code class="descname">focus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera.focus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.focus" title="Permalink to this definition">§</a></dt>
+<dd><p>focuses the camera by cycling it through its autofocus modes.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="libs.Camera.IPCamera.focus_mode">
 <code class="descname">focus_mode</code><a class="headerlink" href="#libs.Camera.IPCamera.focus_mode" title="Permalink to this definition">§</a></dt>
-<dd><p>Focus Mode</p>
+<dd><p>TODO: this is broken, returns the dict of key: value not value</p>
+<p>Focus Mode</p>
 <p>When setting, the mode provided must be in &#8216;focus_modes&#8217;</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -583,23 +589,24 @@ This is incomplete.
 </dd></dl>
 
 <dl class="staticmethod">
-<dt id="libs.Camera.IPCamera.get_value_from_stream">
-<em class="property">static </em><code class="descname">get_value_from_stream</code><span class="sig-paren">(</span><em>raw_text</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera.get_value_from_stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.get_value_from_stream" title="Permalink to this definition">§</a></dt>
-<dd><p>Parses a string returned from the camera by urlopen into a list</p>
+<dt id="libs.Camera.IPCamera.get_value_from_plaintext">
+<em class="property">static </em><code class="descname">get_value_from_plaintext</code><span class="sig-paren">(</span><em>message</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera.get_value_from_plaintext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.get_value_from_plaintext" title="Permalink to this definition">§</a></dt>
+<dd><p>gets float, int or string values from a xml string where the key is the tag of the first element with value as
+text.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>raw_text</strong> (<em>str to be parsed</em>) &#8211; text to parse</li>
-<li><strong>args</strong> &#8211; string keys to select</li>
+<li><strong>message</strong> &#8211; </li>
+<li><strong>args</strong> &#8211; list of keys to find values for.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of values or None if input text has no &#8216;=&#8217; chars or dict of key values if args</p>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict of arg: value pairs requested</p>
 </td>
 </tr>
 </tbody>
@@ -607,23 +614,49 @@ This is incomplete.
 </dd></dl>
 
 <dl class="method">
-<dt id="libs.Camera.IPCamera.get_value_from_xml">
-<code class="descname">get_value_from_xml</code><span class="sig-paren">(</span><em>message_xml: str</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera.get_value_from_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.get_value_from_xml" title="Permalink to this definition">§</a></dt>
-<dd><p>Gets float, int or string values from a xml string where the key is the tag of the first element with value as
-text.</p>
-<p>returns a dict if more than 1 arg.</p>
-<p>returns single value if 1 arg, or None if single arg not found in xml.</p>
+<dt id="libs.Camera.IPCamera.get_value_from_stream">
+<code class="descname">get_value_from_stream</code><span class="sig-paren">(</span><em>stream</em>, <em>*keys</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera.get_value_from_stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.get_value_from_stream" title="Permalink to this definition">§</a></dt>
+<dd><p>Gets a value from some text data (xml or plaintext = separated values)
+returns a dict of &#8220;key&#8221;:value pairs.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>message_xml</strong> &#8211; </li>
+<li><strong>stream</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) &#8211; text data to search for values</li>
+<li><strong>keys</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)"><em>list</em></a>) &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict of values</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.Camera.IPCamera.get_value_from_xml">
+<em class="property">static </em><code class="descname">get_value_from_xml</code><span class="sig-paren">(</span><em>message_xml</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera.get_value_from_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.get_value_from_xml" title="Permalink to this definition">§</a></dt>
+<dd><p>gets float, int or string values from a xml string where the key is the tag of the first element with value as
+text.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>message_xml</strong> &#8211; the xml to searach in.</li>
 <li><strong>args</strong> &#8211; list of keys to find values for.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">value requested, or None if it does not exist</p>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict of arg: value pairs requested</p>
 </td>
 </tr>
 </tbody>
@@ -754,66 +787,11 @@ text.</p>
 </table>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="libs.Camera.IPCamera.zoom_list">
-<code class="descname">zoom_list</code><a class="headerlink" href="#libs.Camera.IPCamera.zoom_list" title="Permalink to this definition">§</a></dt>
-<dd><p>List of zoom value intervals.</p>
-<p>Setting this also affects the state of other related variables.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">cached.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">recalculates, recalculates fov lists, resets zoom_position.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="libs.Camera.IPCamera.zoom_position">
-<code class="descname">zoom_position</code><a class="headerlink" href="#libs.Camera.IPCamera.zoom_position" title="Permalink to this definition">§</a></dt>
-<dd><p>Zoom Position.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">from camera.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">to camera.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="libs.Camera.IPCamera.zoom_range">
-<code class="descname">zoom_range</code><a class="headerlink" href="#libs.Camera.IPCamera.zoom_range" title="Permalink to this definition">§</a></dt>
-<dd><p>Range of zoom for the camera.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">from camera.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">cached.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="class">
 <dt id="libs.Camera.IVPortCamera">
-<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">IVPortCamera</code><span class="sig-paren">(</span><em>identifier: str = None</em>, <em>queue: collections.deque = None</em>, <em>camera_number: int = None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IVPortCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IVPortCamera" title="Permalink to this definition">§</a></dt>
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">IVPortCamera</code><span class="sig-paren">(</span><em>identifier: str = None</em>, <em>queue: collections.deque = None</em>, <em>gpio_group: tuple = ('B'</em>, <em>)</em>, <em>camera_number: int = None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IVPortCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IVPortCamera" title="Permalink to this definition">§</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#libs.Camera.PiCamera" title="libs.Camera.PiCamera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.PiCamera</span></code></a></p>
 <p>IVPort class for multiple capture.
 the 4 tags on the IVport are setout below.</p>
@@ -833,7 +811,7 @@ iterates over the number of vameras</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.8)"><code class="xref py py-func docutils literal"><span class="pre">numpy.array()</span></code></a> if filename not specified, otherwise list of files.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.8)">numpy.array</a></td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.8)">numpy.array</a> or <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></td>
 </tr>
 </tbody>
 </table>
@@ -846,27 +824,12 @@ iterates over the number of vameras</p>
 
 <dl class="attribute">
 <dt id="libs.Camera.IVPortCamera.enable_pins">
-<code class="descname">enable_pins</code><em class="property"> = [15, 16]</em><a class="headerlink" href="#libs.Camera.IVPortCamera.enable_pins" title="Permalink to this definition">§</a></dt>
+<code class="descname">enable_pins</code><em class="property"> = {'A': [11, 12], 'B': [15, 16], 'C': [21, 22], 'D': [23, 24]}</em><a class="headerlink" href="#libs.Camera.IVPortCamera.enable_pins" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="libs.Camera.IVPortCamera.enable_pinsA">
-<code class="descname">enable_pinsA</code><em class="property"> = [11, 12]</em><a class="headerlink" href="#libs.Camera.IVPortCamera.enable_pinsA" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.Camera.IVPortCamera.enable_pinsB">
-<code class="descname">enable_pinsB</code><em class="property"> = [15, 16]</em><a class="headerlink" href="#libs.Camera.IVPortCamera.enable_pinsB" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.Camera.IVPortCamera.enable_pinsC">
-<code class="descname">enable_pinsC</code><em class="property"> = [21, 22]</em><a class="headerlink" href="#libs.Camera.IVPortCamera.enable_pinsC" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.Camera.IVPortCamera.enable_pinsD">
-<code class="descname">enable_pinsD</code><em class="property"> = [23, 24]</em><a class="headerlink" href="#libs.Camera.IVPortCamera.enable_pinsD" title="Permalink to this definition">§</a></dt>
+<dt id="libs.Camera.IVPortCamera.gpio_groups">
+<code class="descname">gpio_groups</code><em class="property"> = ('B',)</em><a class="headerlink" href="#libs.Camera.IVPortCamera.gpio_groups" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -878,14 +841,6 @@ iterates over the number of vameras</p>
 <dt id="libs.Camera.IVPortCamera.setup">
 <code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IVPortCamera.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IVPortCamera.setup" title="Permalink to this definition">§</a></dt>
 <dd><p>sets up gpio for IVPort</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="classmethod">
@@ -897,9 +852,7 @@ with no index, switches to the next camera, looping around from the beginning</p
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>idx</strong> &#8211; index to switch the camera to (optional)</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>idx</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)"><em>int</em></a>) &#8211; index to switch the camera to (optional)</td>
 </tr>
 </tbody>
 </table>
@@ -927,7 +880,7 @@ automatically.</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.8)"><code class="xref py py-func docutils literal"><span class="pre">numpy.array()</span></code></a> if filename not specified, otherwise list of files.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.8)">numpy.array</a></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.8)">numpy.array</a> or <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></td>
 </tr>
 </tbody>
 </table>
@@ -1029,13 +982,17 @@ if the config provides camera/shutter_speed to set the shutterspeed to that.</p>
 <dl class="method">
 <dt id="libs.Camera.USBCamera.capture_image">
 <code class="descname">capture_image</code><span class="sig-paren">(</span><em>filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#USBCamera.capture_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.USBCamera.capture_image" title="Permalink to this definition">§</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<dd><p>captures an image from the usb webcam.
+Writes some limited exif data to the image if it can.</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; filename to output</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; filename to output without excension</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of image filenames if filename was specified, otherwise a numpy array.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.8)">numpy.array</a> or <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></td>
 </tr>
 </tbody>
 </table>
@@ -1045,15 +1002,13 @@ if the config provides camera/shutter_speed to set the shutterspeed to that.</p>
 <dt id="libs.Camera.USBCamera.re_init">
 <code class="descname">re_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#USBCamera.re_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.USBCamera.re_init" title="Permalink to this definition">§</a></dt>
 <dd><p>re-initialisation of webcamera
-todo: fix release of camera otherwise it could be locked forever.
-:return:</p>
+todo: fix release of camera otherwise it gets locked forever.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="libs.Camera.USBCamera.stop">
 <code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#USBCamera.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.USBCamera.stop" title="Permalink to this definition">§</a></dt>
-<dd><p>releases the video device and stops the camera thread
-:return:</p>
+<dd><p>releases the video device and stops the camera thread</p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -1061,14 +1016,6 @@ todo: fix release of camera otherwise it could be locked forever.
 <em class="property">classmethod </em><code class="descname">stream_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#USBCamera.stream_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.USBCamera.stream_thread" title="Permalink to this definition">§</a></dt>
 <dd><p>usb camera stream thread.
 TODO: Needs to be aware of multiple cameras.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 </dd></dl>
@@ -1669,7 +1616,7 @@ returns False if the conditions where the sensor should NOT capture are met.
 Helper class to cache various things like the hostname, machine-id, amount of space in the filesystem.</p>
 <dl class="attribute">
 <dt id="libs.SysUtil.SysUtil.a_statvfs">
-<code class="descname">a_statvfs</code><em class="property"> = os.statvfs_result(f_bsize=4096, f_frsize=4096, f_blocks=28682898, f_bfree=9482653, f_bavail=8019869, f_files=7299072, f_ffree=6495945, f_favail=6495945, f_flag=1024, f_namemax=255)</em><a class="headerlink" href="#libs.SysUtil.SysUtil.a_statvfs" title="Permalink to this definition">§</a></dt>
+<code class="descname">a_statvfs</code><em class="property"> = os.statvfs_result(f_bsize=4096, f_frsize=4096, f_blocks=28682898, f_bfree=8436151, f_bavail=6973367, f_files=7299072, f_ffree=6482460, f_favail=6482460, f_flag=1024, f_namemax=255)</em><a class="headerlink" href="#libs.SysUtil.SysUtil.a_statvfs" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="classmethod">

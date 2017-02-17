@@ -98,7 +98,7 @@
 <span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">jsonify</span>
 
 
-<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 <span class="n">app</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>
 
 <span class="n">bcrypt</span> <span class="o">=</span> <span class="n">Bcrypt</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
@@ -128,7 +128,7 @@
             <span class="k">return</span> <span class="n">authenticate</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">dbm</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;db&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">passdb</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">bcrypt</span><span class="o">.</span><span class="n">check_password_hash</span><span class="p">(</span><span class="n">passdb</span><span class="p">[</span><span class="n">b</span><span class="s1">&#39;admin&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span> <span class="n">auth</span><span class="o">.</span><span class="n">password</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">bcrypt</span><span class="o">.</span><span class="n">check_password_hash</span><span class="p">(</span><span class="n">passdb</span><span class="p">[</span><span class="sa">b</span><span class="s1">&#39;admin&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span> <span class="n">auth</span><span class="o">.</span><span class="n">password</span><span class="p">):</span>
                     <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
@@ -412,7 +412,7 @@
     <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s2">&quot;/usr/bin/git describe --always&quot;</span><span class="p">],</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span></div>
 
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="c1"># generate a new machine id if one does not already exist</span>
         <span class="n">new_torrc</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;Log notice syslog</span>

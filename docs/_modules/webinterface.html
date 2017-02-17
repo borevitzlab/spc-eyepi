@@ -122,7 +122,7 @@
     <span class="n">directory_remove</span><span class="o">=</span><span class="s2">&quot;/home/images&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="n">__name__</span><span class="p">,</span> <span class="n">static_url_path</span><span class="o">=</span><span class="s1">&#39;/static&#39;</span><span class="p">)</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">static_url_path</span><span class="o">=</span><span class="s1">&#39;/static&#39;</span><span class="p">)</span>
 <span class="n">app</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="n">bcrypt</span> <span class="o">=</span> <span class="n">Bcrypt</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
 
@@ -311,7 +311,7 @@
     <span class="n">db</span> <span class="o">=</span> <span class="n">dbm</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;db&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">)</span>
     <span class="c1"># later only allow users control over their own password and admin to add later.</span>
     <span class="c1"># allow global admin password to change everything.</span>
-    <span class="k">if</span> <span class="n">b</span><span class="s1">&#39;admin&#39;</span> <span class="ow">in</span> <span class="n">db</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">bcrypt</span><span class="o">.</span><span class="n">check_password_hash</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="n">b</span><span class="s1">&#39;admin&#39;</span><span class="p">],</span> <span class="n">adminpass</span><span class="p">):</span>
+    <span class="k">if</span> <span class="sa">b</span><span class="s1">&#39;admin&#39;</span> <span class="ow">in</span> <span class="n">db</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">bcrypt</span><span class="o">.</span><span class="n">check_password_hash</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="sa">b</span><span class="s1">&#39;admin&#39;</span><span class="p">],</span> <span class="n">adminpass</span><span class="p">):</span>
         <span class="n">db</span><span class="p">[</span><span class="n">username</span><span class="p">]</span> <span class="o">=</span> <span class="n">password_hash</span>
         <span class="n">db</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="k">return</span> <span class="kc">True</span>
@@ -1282,8 +1282,8 @@
     <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
         <span class="n">frame</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span>
-        <span class="k">yield</span> <span class="p">(</span><span class="n">b</span><span class="s1">&#39;--frame</span><span class="se">\r\n</span><span class="s1">&#39;</span>
-               <span class="n">b</span><span class="s1">&#39;Content-Type: image/jpeg</span><span class="se">\r\n\r\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">frame</span> <span class="o">+</span> <span class="n">b</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+        <span class="k">yield</span> <span class="p">(</span><span class="sa">b</span><span class="s1">&#39;--frame</span><span class="se">\r\n</span><span class="s1">&#39;</span>
+               <span class="sa">b</span><span class="s1">&#39;Content-Type: image/jpeg</span><span class="se">\r\n\r\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">frame</span> <span class="o">+</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
 
 
 <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/pi_feed&#39;</span><span class="p">)</span>
@@ -1376,7 +1376,7 @@
     <span class="s2">&quot;/filesystem&quot;</span><span class="p">:</span> <span class="n">browsepy</span><span class="o">.</span><span class="n">app</span>
 <span class="p">})</span>
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">run_simple</span><span class="p">(</span><span class="s2">&quot;0.0.0.0&quot;</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="n">application</span><span class="p">,</span> <span class="n">use_debugger</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_reloader</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">threaded</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 

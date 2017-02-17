@@ -253,7 +253,7 @@
 <span class="c1"># (There&#39;s no particular reason for picking addLevelName.)</span>
 <span class="c1">#</span>
 
-<span class="n">_srcfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normcase</span><span class="p">(</span><span class="n">addLevelName</span><span class="o">.</span><span class="n">__code__</span><span class="o">.</span><span class="n">co_filename</span><span class="p">)</span>
+<span class="n">_srcfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normcase</span><span class="p">(</span><span class="n">addLevelName</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_filename</span><span class="p">)</span>
 
 <span class="c1"># _srcfile is only used in conjunction with sys._getframe().</span>
 <span class="c1"># To provide compatibility with older versions of Python, set _srcfile</span>
@@ -402,7 +402,7 @@
         <span class="k">return</span> <span class="s1">&#39;&lt;LogRecord: </span><span class="si">%s</span><span class="s1">, </span><span class="si">%s</span><span class="s1">, </span><span class="si">%s</span><span class="s1">, </span><span class="si">%s</span><span class="s1">, &quot;</span><span class="si">%s</span><span class="s1">&quot;&gt;&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">levelno</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pathname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="n">__repr__</span> <span class="o">=</span> <span class="n">__str__</span>
+    <span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span>
 
     <span class="k">def</span> <span class="nf">getMessage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -446,7 +446,7 @@
 <span class="sd">    instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">rv</span> <span class="o">=</span> <span class="n">_logRecordFactory</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">(),</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="n">rv</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">rv</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">rv</span>
 
 <span class="c1">#---------------------------------------------------------------------------</span>
@@ -466,7 +466,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fmt</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">asctime_search</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span>
 
     <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fmt</span> <span class="o">%</span> <span class="n">record</span><span class="o">.</span><span class="n">__dict__</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fmt</span> <span class="o">%</span> <span class="n">record</span><span class="o">.</span><span class="vm">__dict__</span>
 
 <span class="k">class</span> <span class="nc">StrFormatStyle</span><span class="p">(</span><span class="n">PercentStyle</span><span class="p">):</span>
     <span class="n">default_format</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{message}</span><span class="s1">&#39;</span>
@@ -474,7 +474,7 @@
     <span class="n">asctime_search</span> <span class="o">=</span> <span class="s1">&#39;{asctime&#39;</span>
 
     <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">record</span><span class="o">.</span><span class="n">__dict__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">record</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">StringTemplateStyle</span><span class="p">(</span><span class="n">PercentStyle</span><span class="p">):</span>
@@ -491,7 +491,7 @@
         <span class="k">return</span> <span class="n">fmt</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;$asctime&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">fmt</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">asctime_format</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span>
 
     <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tpl</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="o">**</span><span class="n">record</span><span class="o">.</span><span class="n">__dict__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tpl</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="o">**</span><span class="n">record</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
 
 <span class="n">BASIC_FORMAT</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="si">%(name)s</span><span class="s2">:</span><span class="si">%(message)s</span><span class="s2">&quot;</span>
 
@@ -849,7 +849,7 @@
 <span class="sd">        Initializes the instance - basically setting the formatter to None</span>
 <span class="sd">        and the filter list to empty.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">Filterer</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">Filterer</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">_checkLevel</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">formatter</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1022,7 +1022,7 @@
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">level</span> <span class="o">=</span> <span class="n">getLevelName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">StreamHandler</span><span class="p">(</span><span class="n">Handler</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1039,7 +1039,7 @@
 
 <span class="sd">        If stream is not specified, sys.stderr is used.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">Handler</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">Handler</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">stream</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">stream</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> <span class="n">stream</span>
@@ -1080,7 +1080,7 @@
         <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span>
-        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">(</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">(</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">FileHandler</span><span class="p">(</span><span class="n">StreamHandler</span><span class="p">):</span>
@@ -1102,10 +1102,10 @@
         <span class="k">if</span> <span class="n">delay</span><span class="p">:</span>
             <span class="c1">#We don&#39;t open the stream, but we still need to call the</span>
             <span class="c1">#Handler constructor to set level, formatter, lock etc.</span>
-            <span class="n">Handler</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">Handler</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">StreamHandler</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_open</span><span class="p">())</span>
+            <span class="n">StreamHandler</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_open</span><span class="p">())</span>
 
     <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1149,7 +1149,7 @@
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">level</span> <span class="o">=</span> <span class="n">getLevelName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseFilename</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseFilename</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">_StderrHandler</span><span class="p">(</span><span class="n">StreamHandler</span><span class="p">):</span>
@@ -1162,7 +1162,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the handler.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">Handler</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+        <span class="n">Handler</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stream</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1208,7 +1208,7 @@
     <span class="k">if</span> <span class="n">klass</span> <span class="o">!=</span> <span class="n">Logger</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">klass</span><span class="p">,</span> <span class="n">Logger</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;logger not derived from logging.Logger: &quot;</span>
-                            <span class="o">+</span> <span class="n">klass</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+                            <span class="o">+</span> <span class="n">klass</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
     <span class="k">global</span> <span class="n">_loggerClass</span>
     <span class="n">_loggerClass</span> <span class="o">=</span> <span class="n">klass</span>
 
@@ -1275,7 +1275,7 @@
         <span class="k">if</span> <span class="n">klass</span> <span class="o">!=</span> <span class="n">Logger</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">klass</span><span class="p">,</span> <span class="n">Logger</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;logger not derived from logging.Logger: &quot;</span>
-                                <span class="o">+</span> <span class="n">klass</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+                                <span class="o">+</span> <span class="n">klass</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loggerClass</span> <span class="o">=</span> <span class="n">klass</span>
 
     <span class="k">def</span> <span class="nf">setLogRecordFactory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factory</span><span class="p">):</span>
@@ -1345,7 +1345,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the logger with a name and an optional level.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">Filterer</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">Filterer</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">_checkLevel</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1489,9 +1489,9 @@
                              <span class="n">sinfo</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">extra</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">extra</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="s2">&quot;asctime&quot;</span><span class="p">])</span> <span class="ow">or</span> <span class="p">(</span><span class="n">key</span> <span class="ow">in</span> <span class="n">rv</span><span class="o">.</span><span class="n">__dict__</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="s2">&quot;asctime&quot;</span><span class="p">])</span> <span class="ow">or</span> <span class="p">(</span><span class="n">key</span> <span class="ow">in</span> <span class="n">rv</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Attempt to overwrite </span><span class="si">%r</span><span class="s2"> in LogRecord&quot;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
-                <span class="n">rv</span><span class="o">.</span><span class="n">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">extra</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="n">rv</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">extra</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">rv</span>
 
     <span class="k">def</span> <span class="nf">_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stack_info</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -1646,7 +1646,7 @@
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">level</span> <span class="o">=</span> <span class="n">getLevelName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getEffectiveLevel</span><span class="p">())</span>
-        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">RootLogger</span><span class="p">(</span><span class="n">Logger</span><span class="p">):</span>
@@ -1659,7 +1659,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the logger with the name &quot;root&quot;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">Logger</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;root&quot;</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+        <span class="n">Logger</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;root&quot;</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
 
 <span class="n">_loggerClass</span> <span class="o">=</span> <span class="n">Logger</span>
 
@@ -1778,7 +1778,7 @@
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span>
         <span class="n">level</span> <span class="o">=</span> <span class="n">getLevelName</span><span class="p">(</span><span class="n">logger</span><span class="o">.</span><span class="n">getEffectiveLevel</span><span class="p">())</span>
-        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">logger</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">logger</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
 
 <span class="n">root</span> <span class="o">=</span> <span class="n">RootLogger</span><span class="p">(</span><span class="n">WARNING</span><span class="p">)</span>
 <span class="n">Logger</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">root</span>
