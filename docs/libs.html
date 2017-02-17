@@ -70,7 +70,7 @@
 <li><a class="reference internal" href="#module-libs.Camera">libs.Camera</a></li>
 <li><a class="reference internal" href="#module-libs.CryptUtil">libs.CryptUtil</a></li>
 <li><a class="reference internal" href="#module-libs.Light">libs.Light</a></li>
-<li><a class="reference internal" href="#module-libs.PanTilt">libs.PanTilt</a></li>
+<li><a class="reference internal" href="#libs-pantilt">libs.PanTilt</a></li>
 <li><a class="reference internal" href="#module-libs.Sensor">libs.Sensor</a></li>
 <li><a class="reference internal" href="#module-libs.SysUtil">libs.SysUtil</a></li>
 <li><a class="reference internal" href="#module-libs.Updater">libs.Updater</a></li>
@@ -1238,188 +1238,8 @@ this causes all the confiuration values to be reacquired, and a config to be rec
 </dd></dl>
 
 </div>
-<div class="section" id="module-libs.PanTilt">
-<span id="libs-pantilt"></span><h2>libs.PanTilt<a class="headerlink" href="#module-libs.PanTilt" title="Permalink to this headline">§</a></h2>
-<dl class="class">
-<dt id="libs.PanTilt.PanTilt">
-<em class="property">class </em><code class="descclassname">libs.PanTilt.</code><code class="descname">PanTilt</code><span class="sig-paren">(</span><em>ip=None</em>, <em>user=None</em>, <em>password=None</em>, <em>config=None</em>, <em>queue=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
-<p>Control J-Systems PTZ</p>
-<p>For new system or new firmware, the system needs calibration as follows:
-- Open URL of the PTZ on a web browser
-- Click on &#8220;Calibration&#8221; tab, enter username and password if necessary
-- On Calibration window, click on &#8220;Open-loop&#8221; and then &#8220;Set Mode&#8221;
-- Use joystick controller to rotate the pan axis to minimum position
-- Click on &#8216;Pan Axis Min&#8217; line, enter &#8216;2.0&#8217;, and click &#8220;Set Calibration&#8221;
-- Use joystick controller to rotate the pan axis to maximum position
-- Click on &#8216;Pan Axis Max&#8217; line, enter &#8216;358.0&#8217;, and click &#8220;Set Calibration&#8221;
-- Use joystick controller to rotate the tilt axis to minimum position
-- Click on &#8216;Tilt Axis Min&#8217; line, enter &#8216;-90.0&#8217;, and click &#8220;Set Calibration&#8221;
-- Use joystick controller to rotate the tilt axis to maximum position
-- Click on &#8216;Tilt Axis Max&#8217; line, enter &#8216;30.0&#8217;, and click &#8220;Set Calibration&#8221;
-- Click on &#8220;Closed-loop&#8221; and then &#8220;Set Mode&#8221;
-- Close Calibration window</p>
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.PCCWLS">
-<code class="descname">PCCWLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.PCCWLS" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.PCWLS">
-<code class="descname">PCWLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.PCWLS" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.TDnLS">
-<code class="descname">TDnLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.TDnLS" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.TUpLS">
-<code class="descname">TUpLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.TUpLS" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.auto_patrol">
-<code class="descname">auto_patrol</code><a class="headerlink" href="#libs.PanTilt.PanTilt.auto_patrol" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.battery_voltage">
-<code class="descname">battery_voltage</code><a class="headerlink" href="#libs.PanTilt.PanTilt.battery_voltage" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="libs.PanTilt.PanTilt.communicate_with_updater">
-<code class="descname">communicate_with_updater</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.communicate_with_updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.communicate_with_updater" title="Permalink to this definition">§</a></dt>
-<dd><p>communication member. This is meant to send some metadata to the updater thread.
-:return:</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.control_mode">
-<code class="descname">control_mode</code><a class="headerlink" href="#libs.PanTilt.PanTilt.control_mode" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.dwell">
-<code class="descname">dwell</code><a class="headerlink" href="#libs.PanTilt.PanTilt.dwell" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="staticmethod">
-<dt id="libs.PanTilt.PanTilt.get_value_from_xml">
-<em class="property">static </em><code class="descname">get_value_from_xml</code><span class="sig-paren">(</span><em>message_xml</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.get_value_from_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.get_value_from_xml" title="Permalink to this definition">§</a></dt>
-<dd><p>gets float, int or string values from a xml string where the key is the tag of the first element with value as
-text.
-returns a dict if more than 1 arg.
-returns single value if 1 arg, or None if single arg not found in xml.
-:param message_xml:
-:param args: list of keys to find values for.
-:return:</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.heater">
-<code class="descname">heater</code><a class="headerlink" href="#libs.PanTilt.PanTilt.heater" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="libs.PanTilt.PanTilt.hold_pan_tilt">
-<code class="descname">hold_pan_tilt</code><span class="sig-paren">(</span><em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.hold_pan_tilt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.hold_pan_tilt" title="Permalink to this definition">§</a></dt>
-<dd><p>unknown, presumably holds the pan-tilt in one place.
-doesnt work...
-:param state: ? beats me.
-:return:</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.list_index">
-<code class="descname">list_index</code><a class="headerlink" href="#libs.PanTilt.PanTilt.list_index" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.list_state">
-<code class="descname">list_state</code><a class="headerlink" href="#libs.PanTilt.PanTilt.list_state" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.pan">
-<code class="descname">pan</code><a class="headerlink" href="#libs.PanTilt.PanTilt.pan" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.pan_range">
-<code class="descname">pan_range</code><a class="headerlink" href="#libs.PanTilt.PanTilt.pan_range" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="libs.PanTilt.PanTilt.pan_step">
-<code class="descname">pan_step</code><span class="sig-paren">(</span><em>direction</em>, <em>n_steps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.pan_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.pan_step" title="Permalink to this definition">§</a></dt>
-<dd><p>pans by step, steps must be less than or equal to 127
-:type n_steps: int
-:type direction: str
-:param direction:
-:param n_steps: integer &lt;= 127. number of steps
-:return:</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.position">
-<code class="descname">position</code><a class="headerlink" href="#libs.PanTilt.PanTilt.position" title="Permalink to this definition">§</a></dt>
-<dd><p>gets the current pan/tilt position.
-:return: tuple (pan, tilt)</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.scale">
-<code class="descname">scale</code><a class="headerlink" href="#libs.PanTilt.PanTilt.scale" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.temp_f">
-<code class="descname">temp_f</code><a class="headerlink" href="#libs.PanTilt.PanTilt.temp_f" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.tilt">
-<code class="descname">tilt</code><a class="headerlink" href="#libs.PanTilt.PanTilt.tilt" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="libs.PanTilt.PanTilt.tilt_range">
-<code class="descname">tilt_range</code><a class="headerlink" href="#libs.PanTilt.PanTilt.tilt_range" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="libs.PanTilt.PanTilt.tilt_step">
-<code class="descname">tilt_step</code><span class="sig-paren">(</span><em>direction</em>, <em>n_steps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.tilt_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.tilt_step" title="Permalink to this definition">§</a></dt>
-<dd><p>tilts by step, steps must be less than or equal to 127
-:type n_steps: int
-:type direction: str
-:param direction:
-:param n_steps: integer &lt;= 127. number of steps
-:return:</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="libs.PanTilt.ThreadedPTZ">
-<em class="property">class </em><code class="descclassname">libs.PanTilt.</code><code class="descname">ThreadedPTZ</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#ThreadedPTZ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.ThreadedPTZ" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/threading.html#threading.Thread" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="libs.PanTilt.ThreadedPanTilt">
-<em class="property">class </em><code class="descclassname">libs.PanTilt.</code><code class="descname">ThreadedPanTilt</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#ThreadedPanTilt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.ThreadedPanTilt" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#libs.PanTilt.ThreadedPTZ" title="libs.PanTilt.ThreadedPTZ"><code class="xref py py-class docutils literal"><span class="pre">libs.PanTilt.ThreadedPTZ</span></code></a>, <a class="reference internal" href="#libs.PanTilt.PanTilt" title="libs.PanTilt.PanTilt"><code class="xref py py-class docutils literal"><span class="pre">libs.PanTilt.PanTilt</span></code></a></p>
-<dl class="method">
-<dt id="libs.PanTilt.ThreadedPanTilt.run">
-<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#ThreadedPanTilt.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.ThreadedPanTilt.run" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
+<div class="section" id="libs-pantilt">
+<h2>libs.PanTilt<a class="headerlink" href="#libs-pantilt" title="Permalink to this headline">§</a></h2>
 </div>
 <div class="section" id="module-libs.Sensor">
 <span id="libs-sensor"></span><h2>libs.Sensor<a class="headerlink" href="#module-libs.Sensor" title="Permalink to this headline">§</a></h2>
@@ -1616,7 +1436,7 @@ returns False if the conditions where the sensor should NOT capture are met.
 Helper class to cache various things like the hostname, machine-id, amount of space in the filesystem.</p>
 <dl class="attribute">
 <dt id="libs.SysUtil.SysUtil.a_statvfs">
-<code class="descname">a_statvfs</code><em class="property"> = os.statvfs_result(f_bsize=4096, f_frsize=4096, f_blocks=28682898, f_bfree=8436151, f_bavail=6973367, f_files=7299072, f_ffree=6482460, f_favail=6482460, f_flag=1024, f_namemax=255)</em><a class="headerlink" href="#libs.SysUtil.SysUtil.a_statvfs" title="Permalink to this definition">§</a></dt>
+<code class="descname">a_statvfs</code><em class="property"> = os.statvfs_result(f_bsize=4096, f_frsize=4096, f_blocks=28682898, f_bfree=8435497, f_bavail=6972713, f_files=7299072, f_ffree=6482460, f_favail=6482460, f_flag=1024, f_namemax=255)</em><a class="headerlink" href="#libs.SysUtil.SysUtil.a_statvfs" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="classmethod">
