@@ -109,9 +109,11 @@ class SysUtil(object):
     def reset_usb_device(bus: int, dev: int) -> bool:
         """
         resets a usb device.
-        :param bus:
-        :param dev:
-        :return:
+
+        :param bus: bus number
+        :type bus: int
+        :param dev: device number of the device on the bus above
+        :type dev: int
         """
         try:
             fn = "/dev/bus/usb/{bus:03d}/{dev:03d}".format(bus=bus, dev=dev)
@@ -125,8 +127,10 @@ class SysUtil(object):
     def default_identifier(prefix=None):
         """
         returns an identifier, If no prefix available, generates something.
+
         :param prefix:
-        :return:
+        :return: string of the itentifier.
+        :rtype: str
         """
         if prefix:
             return SysUtil.get_identifier_from_name(prefix)
@@ -141,6 +145,7 @@ class SysUtil(object):
         """
         nested document lookup,
         works on dicts and lists
+
         :param key: string of key to lookup
         :param document: dict or list to lookup
         :return: yields item
@@ -168,9 +173,11 @@ class SysUtil(object):
         formats a number of bytes in to a human readable string.
         returns in SI units
         eg sizeof_fmt(1234) returns '1.2KiB'
+
         :param num: number of bytes to format
-        :param suffix:
-        :return:
+        :param suffix: the suffix to use
+        :return: human formattted string.
+        :rtype: str
         """
         for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
             if abs(num) < 1024.0:
@@ -180,6 +187,10 @@ class SysUtil(object):
 
     @classmethod
     def update_from_git(cls):
+        """
+        updates spc-eyepi from git.
+
+        """
         os.system("git fetch --all;git reset --hard origin/master")
         os.system("systemctl restart spc-eyepi_capture.service")
 
@@ -188,7 +199,9 @@ class SysUtil(object):
         """
         gets the current hostname.
         if there is no /etc/hostname file, sets the hostname randomly.
-        :return:
+
+        :return: the current hostname or the hostname it was set to
+        :rtype: str
         """
         if abs(cls._hostname[-1] - time.time()) > 10:
             if not os.path.isfile("/etc/hostname"):
@@ -203,9 +216,9 @@ class SysUtil(object):
     @classmethod
     def set_hostname(cls, hostname: str):
         """
-        sets the machines hosname
-        :param hostname:
-        :return:
+        sets the machines hosname, in /etc/hosts and /etc/hostname
+
+        :param hostname: the string of which to set the hostname to.
         """
         try:
             with open(os.path.join("/etc/", "hostname"), 'w') as f:
@@ -222,7 +235,9 @@ class SysUtil(object):
     def get_machineid(cls)->str:
         """
         gets the machine id, or initialises the machine id if it doesnt exist.
-        :return: str
+
+        :return: string of the machine-id
+        :rtype: str
         """
         if abs(cls._machine_id[-1] - time.time()) > 10:
             if not os.path.isfile("/etc/machine-id"):
@@ -235,7 +250,9 @@ class SysUtil(object):
     def get_tor_host(cls)->tuple:
         """
         gets a tuple of the current tor host.
+
         :return: tuple of hostname(onion address), client key, client name
+        :rtype: tuple[str, str, str]
         """
         if abs(cls._tor_host[-1] - time.time()) > 10:
             try:
@@ -249,8 +266,10 @@ class SysUtil(object):
     @classmethod
     def get_fs_space(cls)->tuple:
         """
-        returns free/total
-        :return:
+        returns free/total space of root filesystem as bytes(?)
+
+        :return: tuple of free/total space
+        :rtype: tuple[int, int]
         """
         if abs(cls._fs[-1] - time.time()) > 10:
             try:
@@ -264,8 +283,11 @@ class SysUtil(object):
     @classmethod
     def get_fs_space_mb(cls)->tuple:
         """
-        returns the filesystems free space in mebibytes
-        :return:
+        returns the filesystems free space in mebibytes.
+        see :func:`get_fs_space`
+
+        :return: tuple of free/total space
+        :rtype:tuple[int, int]
         """
         free_space, total_space = SysUtil.get_fs_space()
         for x in range(0, 2):
@@ -276,8 +298,10 @@ class SysUtil(object):
     @classmethod
     def get_version(cls)->str:
         """
-        gets the version of the git repo as a string.
-        :return:
+        gets the "describe" version of the current git repo as a string.
+
+        :return: the current version
+        :rtype: str
         """
         if abs(cls._version[-1] - time.time()) > 10:
             try:
@@ -292,7 +316,9 @@ class SysUtil(object):
     def get_internal_ip(cls):
         """
         gets the internal ip by attempting to connect to googles DNS
-        :return:
+
+        :return: the current internal ip
+        :rtype: str
         """
 
         if abs(cls._ip_address[-1] - time.time()) > 10:
@@ -314,7 +340,9 @@ class SysUtil(object):
     def get_log_files(cls) -> list:
         """
         returns the spc-eyepi log files that have been rotated.
-        :return:
+
+        :return: list of filenames
+        :rtype: list(str)
         """
         return list(glob("/home/spc-eyepi/spc-eyepi.log.*"))
 
@@ -323,8 +351,9 @@ class SysUtil(object):
         """
         removes all files in the list provided, skipping and logging on an error removing
         todo: Do different things based on whether is a directory.
-        :param filenames:
-        :return:
+
+        :param filenames: list of directories or files
+        :type filenames: list or tuple
         """
         for f in filenames:
             try:
@@ -340,7 +369,9 @@ class SysUtil(object):
     def get_isonow(cls):
         """
         gets the current time as an iso8601 string
-        :return:
+
+        :return: the current time as iso8601
+        :rtype: str
         """
         return datetime.datetime.now().isoformat()
 
@@ -348,7 +379,9 @@ class SysUtil(object):
     def get_external_ip(cls):
         """
         returns the external IP address of the raspberry pi through api.ipify.org
-        :return:
+
+        :return: the external ip address
+        :rtype: str
         """
         if abs(cls._external_ip[-1] - time.time()) > 60:
             try:
@@ -364,8 +397,11 @@ class SysUtil(object):
         """
         returns either the identifier (from name) or the name filled with the machine id
         clamps to 32 characters.
+
         :param name: name to fill
-        :return:
+        :type name: str
+        :return: filled name
+        :rtype: str
         """
         identifier = "".join((x if idx > len(name) - 1 else name[idx] for idx, x in enumerate(cls.get_machineid())))
         return identifier[:32]
@@ -374,8 +410,11 @@ class SysUtil(object):
     def get_identifier_from_filename(cls, file_name):
         """
         returns either the identifier (from the file name) or the name filled with the machine id
+
         :param file_name: filename
-        :return:
+        :type file_name: str
+        :return: string identifier,
+        :rtype: str
         """
         fsn = next(iter(os.path.splitext(os.path.basename(file_name))), "")
         return cls.get_identifier_from_name(fsn)
@@ -385,8 +424,11 @@ class SysUtil(object):
         """
         ensures a configuration file exists for this identifier.
         if a config file doesnt exist then it will create a default one.
-        :param identifier:
-        :return:
+
+        :param identifier: identifier to create or find a configuration file for.
+        :type identifier: str
+        :return: the configuration file dict or configparser object.
+        :rtype: dict or configparser.ConfigParser
         """
         config = configparser.ConfigParser()
         config.read_string(default_config)
@@ -413,8 +455,10 @@ class SysUtil(object):
     def write_config(cls, config: configparser.ConfigParser, identifier: str):
         """
         writes a configuration file to an correct config file path.
+
         :param config: configuration file (configparser object)
-        :param identifier:
+        :type identifier: str
+        :param identifier: identifier to user as the raget file name.
         :return: configparser object
         """
         path = SysUtil.identifier_to_ini(identifier)
@@ -426,8 +470,10 @@ class SysUtil(object):
     def identifier_to_ini(cls, identifier: str)->str:
         """
         gets a valid .ini path for an identifier.
-        :param identifier:
-        :return:
+
+        :param identifier: identifier to find an ini for.
+        :return: file path for identifier
+        :rtype: str
         """
         for fn in glob("configs_byserial/*.ini"):
             if identifier == cls.get_identifier_from_filename(fn):
@@ -440,8 +486,11 @@ class SysUtil(object):
         """
         ensures a configuration file exists for this identifier.
         if a config file doesnt exist then it will create a default one.
-        :param identifier:
-        :return:
+
+        :param identifier: identifier of the light
+        :type identifier: str
+        :return: configuration for the light
+        :rtype: configparser.ConfigParser
         """
         config = configparser.ConfigParser()
         config.read_string(default_light_config)
@@ -460,8 +509,10 @@ class SysUtil(object):
     @classmethod
     def get_light_configs(cls):
         """
-        gets a list of the light config files (.ini)
-        :return:
+        gets a dict of the light config files (.ini)
+
+        :return: dict of light configs
+        :rtype: dict(str: configparser.ConfigParser)
         """
         def slc_csv_exists(fp):
             return os.path.exists(os.path.splitext(fp)[0]+".csv") or os.path.exists(os.path.splitext(fp)[0]+".slc")
@@ -482,8 +533,10 @@ class SysUtil(object):
     def write_light_config(cls, config: configparser.ConfigParser, identifier: str):
         """
         writes a configuration file to an correct config file path.
+
         :param config: configuration file (configparser object)
-        :param identifier:
+        :param identifier: identifier of the light.
+        :type identifier: str
         :return: configparser object
         """
         path = SysUtil.light_identifier_to_ini(identifier)
@@ -495,8 +548,11 @@ class SysUtil(object):
     def get_light_datafile(cls, identifier: str)->str:
         """
         gets a light datafile
-        :param identifier:
-        :return:
+
+        :param identifier: identifier to use to find the data file.
+        :type identifier: str
+        :return: file path for csv or slc.
+        :rtype: str
         """
         csv = "lights_byip/{}.csv".format(identifier)
         slc = "lights_byip/{}.slc".format(identifier)
@@ -511,8 +567,11 @@ class SysUtil(object):
     def load_or_fix_solarcalc(cls, identifier: str)->list:
         """
         function to either load an existing fixed up solarcalc file or to coerce one into the fixed format.
+
         :param identifier: identifier of the light for which the solarcalc file exists.
+        :type identifier: str
         :return: light timing data as a list of lists.
+        :rtype: list(list())
         """
         lx = []
         fp = cls.get_light_datafile(identifier)
@@ -532,11 +591,6 @@ class SysUtil(object):
                 l = [x.strip().split(",") for x in f.readlines()]
 
                 def get_lines(li):
-                    """
-                    gets lines from a list and formats them into the new solarcalc format
-                    :param li:
-                    :return:
-                    """
                     print("Loading csv")
                     for idx, line in enumerate(li):
                         try:
@@ -568,8 +622,11 @@ class SysUtil(object):
     def light_identifier_to_ini(cls, identifier: str)->str:
         """
         gets a valid .ini path for an identifier.
-        :param identifier:
-        :return:
+
+        :param identifier: identifier for a light
+        :type identifier: str
+        :return: ini filename for a light
+        :rtype: str
         """
         for fn in glob("lights_byip/*.ini"):
             if identifier == cls.get_identifier_from_filename(fn):
@@ -581,8 +638,11 @@ class SysUtil(object):
     def identifier_to_yml(cls, identifier: str)->str:
         """
         the same as identifier_to_ini but for yml files
-        :param identifier:
-        :return:
+
+        :param identifier: identifier for a matching yml file.
+        :type identifier: str
+        :return: string filepath for the yml file.
+        :rtype: str
         """
         for fn in glob("configs_byserial/*.yml"):
             if identifier == cls.get_identifier_from_filename(fn):
@@ -595,8 +655,11 @@ class SysUtil(object):
         """
         given a set of identifiers, returns a dictionary of the data contained in those config files with the key
         for each config file data being the identifier
+
         :param identifiers:
+        :type identifiers: list(str)
         :return: dictionary of configuration datas
+        :rtype: dict(str: dict)
         """
         data = dict()
         for ini in ["configs_byserial/{}.ini".format(x) for x in identifiers]:
@@ -611,9 +674,10 @@ class SysUtil(object):
     def add_watch(cls, path: str, callback):
         """
         adds a watch that calls the callback on file change
+
         :param path: path of the file to watch
+        :type path: str
         :param callback: function signature to call when the file is changed
-        :return:
         """
         cls._watches.append((path, os.stat(path).st_mtime, callback))
 
@@ -621,8 +685,10 @@ class SysUtil(object):
     def open_yaml(cls, filename):
         """
         opens a yaml file using yaml.load
-        :param filename:
-        :return:
+
+        :param filename: yaml file to load
+        :return: dictionary of values in yaml file
+        :rtype: dict
         """
         try:
             with open(filename) as e:
@@ -630,12 +696,12 @@ class SysUtil(object):
             return q
         except Exception as e:
             print(str(e))
+            return dict()
 
     @classmethod
     def _thread(cls):
         """
         runs the watchers
-        :return:
         """
         while True and not cls.stop:
             try:
@@ -652,60 +718,3 @@ class SysUtil(object):
             except Exception as e:
                 break
         cls.thread = None
-
-
-class Test(object):
-    class testCLS(object):
-        def __init__(self):
-            self.path = "test.tmp"
-            self.completed_setup = False
-
-        def setup(self):
-            print("mock setup function called")
-            self.completed_setup = True
-
-    def __init__(self):
-        self.passed = 0
-        self.failed = []
-
-    def test_caching(self, function, private):
-        lasttime = private[-1]
-        time.sleep(20)
-        try:
-            a = function()
-            lasttime2 = private[-1]
-        except Exception as e:
-            self.failed.append(e)
-        assert lasttime != lasttime2, "access times are the same what gives?"
-
-    def test_system_id(self):
-        a = SysUtil.get_machineid()
-        try:
-            while True:
-                b = SysUtil.get_machineid()
-                assert b == a, 'at some point the system id changed, this is wrong.'
-                b = a
-                lasttime2 = SysUtil._machine_id[-1]
-        except Exception as e:
-            self.failed.append(e)
-
-    def test_watcher(self):
-        c = Test.testCLS()
-        try:
-            file = open(c.path, 'w')
-            file.write("test data")
-            file.close()
-            SysUtil().add_watch("test.tmp", c.setup)
-            time.sleep(2)
-            file = open(c.path, 'w')
-            file.write("changed test data")
-            file.close()
-            time.sleep(2)
-            os.remove(c.path)
-            SysUtil.stop = True
-
-        except Exception as e:
-            self.failed.append(e)
-        assert not c.completed_setup, "callback was not called from watcher"
-        assert not SysUtil.thread, "thread not closed"
-        assert not os.path.exists(c.path), 'test didnt remove file'

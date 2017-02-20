@@ -1437,195 +1437,419 @@ returns False if the conditions where the sensor should NOT capture are met.
 Helper class to cache various things like the hostname, machine-id, amount of space in the filesystem.</p>
 <dl class="attribute">
 <dt id="libs.SysUtil.SysUtil.a_statvfs">
-<code class="descname">a_statvfs</code><em class="property"> = os.statvfs_result(f_bsize=4096, f_frsize=4096, f_blocks=28682898, f_bfree=8413636, f_bavail=6950852, f_files=7299072, f_ffree=6482003, f_favail=6482003, f_flag=1024, f_namemax=255)</em><a class="headerlink" href="#libs.SysUtil.SysUtil.a_statvfs" title="Permalink to this definition">§</a></dt>
+<code class="descname">a_statvfs</code><em class="property"> = os.statvfs_result(f_bsize=4096, f_frsize=4096, f_blocks=28682898, f_bfree=8409817, f_bavail=6947033, f_files=7299072, f_ffree=6482003, f_favail=6482003, f_flag=1024, f_namemax=255)</em><a class="headerlink" href="#libs.SysUtil.SysUtil.a_statvfs" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.add_watch">
 <em class="property">classmethod </em><code class="descname">add_watch</code><span class="sig-paren">(</span><em>path: str</em>, <em>callback</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.add_watch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.add_watch" title="Permalink to this definition">§</a></dt>
-<dd><p>adds a watch that calls the callback on file change
-:param path: path of the file to watch
-:param callback: function signature to call when the file is changed
-:return:</p>
+<dd><p>adds a watch that calls the callback on file change</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) &#8211; path of the file to watch</li>
+<li><strong>callback</strong> &#8211; function signature to call when the file is changed</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.clear_files">
 <em class="property">classmethod </em><code class="descname">clear_files</code><span class="sig-paren">(</span><em>filenames: list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.clear_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.clear_files" title="Permalink to this definition">§</a></dt>
 <dd><p>removes all files in the list provided, skipping and logging on an error removing
-todo: Do different things based on whether is a directory.
-:param filenames:
-:return:</p>
+todo: Do different things based on whether is a directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filenames</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)"><em>list</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)"><em>tuple</em></a>) &#8211; list of directories or files</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.configs_from_identifiers">
 <em class="property">classmethod </em><code class="descname">configs_from_identifiers</code><span class="sig-paren">(</span><em>identifiers: set</em><span class="sig-paren">)</span> &rarr; dict<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.configs_from_identifiers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.configs_from_identifiers" title="Permalink to this definition">§</a></dt>
 <dd><p>given a set of identifiers, returns a dictionary of the data contained in those config files with the key
-for each config file data being the identifier
-:param identifiers:
-:return: dictionary of configuration datas</p>
+for each config file data being the identifier</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifiers</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a><em>)</em><em></em>) &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dictionary of configuration datas</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a>(str: dict)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="staticmethod">
 <dt id="libs.SysUtil.SysUtil.default_identifier">
 <em class="property">static </em><code class="descname">default_identifier</code><span class="sig-paren">(</span><em>prefix=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.default_identifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.default_identifier" title="Permalink to this definition">§</a></dt>
-<dd><p>returns an identifier, If no prefix available, generates something.
-:param prefix:
-:return:</p>
+<dd><p>returns an identifier, If no prefix available, generates something.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>prefix</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">string of the itentifier.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.ensure_config">
 <em class="property">classmethod </em><code class="descname">ensure_config</code><span class="sig-paren">(</span><em>identifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.ensure_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.ensure_config" title="Permalink to this definition">§</a></dt>
 <dd><p>ensures a configuration file exists for this identifier.
-if a config file doesnt exist then it will create a default one.
-:param identifier:
-:return:</p>
+if a config file doesnt exist then it will create a default one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) &#8211; identifier to create or find a configuration file for.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the configuration file dict or configparser object.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a> or <a class="reference external" href="https://docs.python.org/3.5/library/configparser.html#configparser.ConfigParser" title="(in Python v3.5)">configparser.ConfigParser</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.ensure_light_config">
 <em class="property">classmethod </em><code class="descname">ensure_light_config</code><span class="sig-paren">(</span><em>identifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.ensure_light_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.ensure_light_config" title="Permalink to this definition">§</a></dt>
 <dd><p>ensures a configuration file exists for this identifier.
-if a config file doesnt exist then it will create a default one.
-:param identifier:
-:return:</p>
+if a config file doesnt exist then it will create a default one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) &#8211; identifier of the light</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">configuration for the light</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/configparser.html#configparser.ConfigParser" title="(in Python v3.5)">configparser.ConfigParser</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.get_external_ip">
 <em class="property">classmethod </em><code class="descname">get_external_ip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_external_ip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_external_ip" title="Permalink to this definition">§</a></dt>
-<dd><p>returns the external IP address of the raspberry pi through api.ipify.org
-:return:</p>
+<dd><p>returns the external IP address of the raspberry pi through api.ipify.org</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the external ip address</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.get_fs_space">
 <em class="property">classmethod </em><code class="descname">get_fs_space</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; tuple<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_fs_space"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_fs_space" title="Permalink to this definition">§</a></dt>
-<dd><p>returns free/total
-:return:</p>
+<dd><p>returns free/total space of root filesystem as bytes(?)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">tuple of free/total space</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a>[<a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)">int</a>, <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)">int</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.get_fs_space_mb">
 <em class="property">classmethod </em><code class="descname">get_fs_space_mb</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; tuple<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_fs_space_mb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_fs_space_mb" title="Permalink to this definition">§</a></dt>
-<dd><p>returns the filesystems free space in mebibytes
-:return:</p>
+<dd><p>returns the filesystems free space in mebibytes.
+see <a class="reference internal" href="#libs.SysUtil.SysUtil.get_fs_space" title="libs.SysUtil.SysUtil.get_fs_space"><code class="xref py py-func docutils literal"><span class="pre">get_fs_space()</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">tuple of free/total space</td>
+</tr>
+</tbody>
+</table>
+<p>:rtype:tuple[int, int]</p>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.get_hostname">
 <em class="property">classmethod </em><code class="descname">get_hostname</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_hostname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_hostname" title="Permalink to this definition">§</a></dt>
 <dd><p>gets the current hostname.
-if there is no /etc/hostname file, sets the hostname randomly.
-:return:</p>
+if there is no /etc/hostname file, sets the hostname randomly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current hostname or the hostname it was set to</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.get_identifier_from_filename">
 <em class="property">classmethod </em><code class="descname">get_identifier_from_filename</code><span class="sig-paren">(</span><em>file_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_identifier_from_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_identifier_from_filename" title="Permalink to this definition">§</a></dt>
-<dd><p>returns either the identifier (from the file name) or the name filled with the machine id
-:param file_name: filename
-:return:</p>
+<dd><p>returns either the identifier (from the file name) or the name filled with the machine id</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>file_name</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) &#8211; filename</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">string identifier,</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.get_identifier_from_name">
 <em class="property">classmethod </em><code class="descname">get_identifier_from_name</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_identifier_from_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_identifier_from_name" title="Permalink to this definition">§</a></dt>
 <dd><p>returns either the identifier (from name) or the name filled with the machine id
-clamps to 32 characters.
-:param name: name to fill
-:return:</p>
+clamps to 32 characters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) &#8211; name to fill</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">filled name</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.get_internal_ip">
 <em class="property">classmethod </em><code class="descname">get_internal_ip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_internal_ip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_internal_ip" title="Permalink to this definition">§</a></dt>
-<dd><p>gets the internal ip by attempting to connect to googles DNS
-:return:</p>
+<dd><p>gets the internal ip by attempting to connect to googles DNS</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current internal ip</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.get_isonow">
 <em class="property">classmethod </em><code class="descname">get_isonow</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_isonow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_isonow" title="Permalink to this definition">§</a></dt>
-<dd><p>gets the current time as an iso8601 string
-:return:</p>
+<dd><p>gets the current time as an iso8601 string</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current time as iso8601</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.get_light_configs">
 <em class="property">classmethod </em><code class="descname">get_light_configs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_light_configs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_light_configs" title="Permalink to this definition">§</a></dt>
-<dd><p>gets a list of the light config files (.ini)
-:return:</p>
+<dd><p>gets a dict of the light config files (.ini)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dict of light configs</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a>(str: configparser.ConfigParser)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.get_light_datafile">
 <em class="property">classmethod </em><code class="descname">get_light_datafile</code><span class="sig-paren">(</span><em>identifier: str</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_light_datafile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_light_datafile" title="Permalink to this definition">§</a></dt>
-<dd><p>gets a light datafile
-:param identifier:
-:return:</p>
+<dd><p>gets a light datafile</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) &#8211; identifier to use to find the data file.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">file path for csv or slc.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.get_log_files">
 <em class="property">classmethod </em><code class="descname">get_log_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; list<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_log_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_log_files" title="Permalink to this definition">§</a></dt>
-<dd><p>returns the spc-eyepi log files that have been rotated.
-:return:</p>
+<dd><p>returns the spc-eyepi log files that have been rotated.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list of filenames</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a>(<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.get_machineid">
 <em class="property">classmethod </em><code class="descname">get_machineid</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_machineid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_machineid" title="Permalink to this definition">§</a></dt>
-<dd><p>gets the machine id, or initialises the machine id if it doesnt exist.
-:return: str</p>
+<dd><p>gets the machine id, or initialises the machine id if it doesnt exist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">string of the machine-id</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.get_tor_host">
 <em class="property">classmethod </em><code class="descname">get_tor_host</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; tuple<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_tor_host"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_tor_host" title="Permalink to this definition">§</a></dt>
-<dd><p>gets a tuple of the current tor host.
-:return: tuple of hostname(onion address), client key, client name</p>
+<dd><p>gets a tuple of the current tor host.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">tuple of hostname(onion address), client key, client name</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a>[<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a>, <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a>, <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.get_version">
 <em class="property">classmethod </em><code class="descname">get_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_version" title="Permalink to this definition">§</a></dt>
-<dd><p>gets the version of the git repo as a string.
-:return:</p>
+<dd><p>gets the &#8220;describe&#8221; version of the current git repo as a string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current version</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.identifier_to_ini">
 <em class="property">classmethod </em><code class="descname">identifier_to_ini</code><span class="sig-paren">(</span><em>identifier: str</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.identifier_to_ini"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.identifier_to_ini" title="Permalink to this definition">§</a></dt>
-<dd><p>gets a valid .ini path for an identifier.
-:param identifier:
-:return:</p>
+<dd><p>gets a valid .ini path for an identifier.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> &#8211; identifier to find an ini for.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">file path for identifier</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.identifier_to_yml">
 <em class="property">classmethod </em><code class="descname">identifier_to_yml</code><span class="sig-paren">(</span><em>identifier: str</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.identifier_to_yml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.identifier_to_yml" title="Permalink to this definition">§</a></dt>
-<dd><p>the same as identifier_to_ini but for yml files
-:param identifier:
-:return:</p>
+<dd><p>the same as identifier_to_ini but for yml files</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) &#8211; identifier for a matching yml file.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">string filepath for the yml file.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.light_identifier_to_ini">
 <em class="property">classmethod </em><code class="descname">light_identifier_to_ini</code><span class="sig-paren">(</span><em>identifier: str</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.light_identifier_to_ini"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.light_identifier_to_ini" title="Permalink to this definition">§</a></dt>
-<dd><p>gets a valid .ini path for an identifier.
-:param identifier:
-:return:</p>
+<dd><p>gets a valid .ini path for an identifier.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) &#8211; identifier for a light</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">ini filename for a light</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.load_or_fix_solarcalc">
 <em class="property">classmethod </em><code class="descname">load_or_fix_solarcalc</code><span class="sig-paren">(</span><em>identifier: str</em><span class="sig-paren">)</span> &rarr; list<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.load_or_fix_solarcalc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.load_or_fix_solarcalc" title="Permalink to this definition">§</a></dt>
-<dd><p>function to either load an existing fixed up solarcalc file or to coerce one into the fixed format.
-:param identifier: identifier of the light for which the solarcalc file exists.
-:return: light timing data as a list of lists.</p>
+<dd><p>function to either load an existing fixed up solarcalc file or to coerce one into the fixed format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) &#8211; identifier of the light for which the solarcalc file exists.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">light timing data as a list of lists.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a>(<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a>())</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
@@ -1636,26 +1860,51 @@ clamps to 32 characters.
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.open_yaml">
 <em class="property">classmethod </em><code class="descname">open_yaml</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.open_yaml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.open_yaml" title="Permalink to this definition">§</a></dt>
-<dd><p>opens a yaml file using yaml.load
-:param filename:
-:return:</p>
+<dd><p>opens a yaml file using yaml.load</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; yaml file to load</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dictionary of values in yaml file</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="staticmethod">
 <dt id="libs.SysUtil.SysUtil.reset_usb_device">
 <em class="property">static </em><code class="descname">reset_usb_device</code><span class="sig-paren">(</span><em>bus: int</em>, <em>dev: int</em><span class="sig-paren">)</span> &rarr; bool<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.reset_usb_device"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.reset_usb_device" title="Permalink to this definition">§</a></dt>
-<dd><p>resets a usb device.
-:param bus:
-:param dev:
-:return:</p>
+<dd><p>resets a usb device.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bus</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)"><em>int</em></a>) &#8211; bus number</li>
+<li><strong>dev</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)"><em>int</em></a>) &#8211; device number of the device on the bus above</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.set_hostname">
 <em class="property">classmethod </em><code class="descname">set_hostname</code><span class="sig-paren">(</span><em>hostname: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.set_hostname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.set_hostname" title="Permalink to this definition">§</a></dt>
-<dd><p>sets the machines hosname
-:param hostname:
-:return:</p>
+<dd><p>sets the machines hosname, in /etc/hosts and /etc/hostname</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>hostname</strong> &#8211; the string of which to set the hostname to.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="staticmethod">
@@ -1663,10 +1912,25 @@ clamps to 32 characters.
 <em class="property">static </em><code class="descname">sizeof_fmt</code><span class="sig-paren">(</span><em>num</em>, <em>suffix='B'</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.sizeof_fmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.sizeof_fmt" title="Permalink to this definition">§</a></dt>
 <dd><p>formats a number of bytes in to a human readable string.
 returns in SI units
-eg sizeof_fmt(1234) returns &#8216;1.2KiB&#8217;
-:param num: number of bytes to format
-:param suffix:
-:return:</p>
+eg sizeof_fmt(1234) returns &#8216;1.2KiB&#8217;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>num</strong> &#8211; number of bytes to format</li>
+<li><strong>suffix</strong> &#8211; the suffix to use</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">human formattted string.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
@@ -1682,57 +1946,50 @@ eg sizeof_fmt(1234) returns &#8216;1.2KiB&#8217;
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.update_from_git">
 <em class="property">classmethod </em><code class="descname">update_from_git</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.update_from_git"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.update_from_git" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
+<dd><p>updates spc-eyepi from git.</p>
+</dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.write_config">
 <em class="property">classmethod </em><code class="descname">write_config</code><span class="sig-paren">(</span><em>config: configparser.ConfigParser</em>, <em>identifier: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.write_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.write_config" title="Permalink to this definition">§</a></dt>
-<dd><p>writes a configuration file to an correct config file path.
-:param config: configuration file (configparser object)
-:param identifier:
-:return: configparser object</p>
+<dd><p>writes a configuration file to an correct config file path.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>config</strong> &#8211; configuration file (configparser object)</li>
+<li><strong>identifier</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) &#8211; identifier to user as the raget file name.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">configparser object</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.write_light_config">
 <em class="property">classmethod </em><code class="descname">write_light_config</code><span class="sig-paren">(</span><em>config: configparser.ConfigParser</em>, <em>identifier: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.write_light_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.write_light_config" title="Permalink to this definition">§</a></dt>
-<dd><p>writes a configuration file to an correct config file path.
-:param config: configuration file (configparser object)
-:param identifier:
-:return: configparser object</p>
+<dd><p>writes a configuration file to an correct config file path.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>config</strong> &#8211; configuration file (configparser object)</li>
+<li><strong>identifier</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) &#8211; identifier of the light.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">configparser object</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="libs.SysUtil.Test">
-<em class="property">class </em><code class="descclassname">libs.SysUtil.</code><code class="descname">Test</code><a class="reference internal" href="_modules/libs/SysUtil.html#Test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.Test" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
-<dl class="class">
-<dt id="libs.SysUtil.Test.testCLS">
-<em class="property">class </em><code class="descname">testCLS</code><a class="reference internal" href="_modules/libs/SysUtil.html#Test.testCLS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.Test.testCLS" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
-<dl class="method">
-<dt id="libs.SysUtil.Test.testCLS.setup">
-<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#Test.testCLS.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.Test.testCLS.setup" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="method">
-<dt id="libs.SysUtil.Test.test_caching">
-<code class="descclassname">Test.</code><code class="descname">test_caching</code><span class="sig-paren">(</span><em>function</em>, <em>private</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#Test.test_caching"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.Test.test_caching" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="libs.SysUtil.Test.test_system_id">
-<code class="descclassname">Test.</code><code class="descname">test_system_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#Test.test_system_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.Test.test_system_id" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="libs.SysUtil.Test.test_watcher">
-<code class="descclassname">Test.</code><code class="descname">test_watcher</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#Test.test_watcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.Test.test_watcher" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 

@@ -193,9 +193,11 @@
 <div class="viewcode-block" id="SysUtil.reset_usb_device"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.reset_usb_device">[docs]</a>    <span class="k">def</span> <span class="nf">reset_usb_device</span><span class="p">(</span><span class="n">bus</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dev</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        resets a usb device.</span>
-<span class="sd">        :param bus:</span>
-<span class="sd">        :param dev:</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :param bus: bus number</span>
+<span class="sd">        :type bus: int</span>
+<span class="sd">        :param dev: device number of the device on the bus above</span>
+<span class="sd">        :type dev: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">fn</span> <span class="o">=</span> <span class="s2">&quot;/dev/bus/usb/</span><span class="si">{bus:03d}</span><span class="s2">/</span><span class="si">{dev:03d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bus</span><span class="o">=</span><span class="n">bus</span><span class="p">,</span> <span class="n">dev</span><span class="o">=</span><span class="n">dev</span><span class="p">)</span>
@@ -209,8 +211,10 @@
 <div class="viewcode-block" id="SysUtil.default_identifier"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.default_identifier">[docs]</a>    <span class="k">def</span> <span class="nf">default_identifier</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        returns an identifier, If no prefix available, generates something.</span>
+
 <span class="sd">        :param prefix:</span>
-<span class="sd">        :return:</span>
+<span class="sd">        :return: string of the itentifier.</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">prefix</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">get_identifier_from_name</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
@@ -225,6 +229,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        nested document lookup,</span>
 <span class="sd">        works on dicts and lists</span>
+
 <span class="sd">        :param key: string of key to lookup</span>
 <span class="sd">        :param document: dict or list to lookup</span>
 <span class="sd">        :return: yields item</span>
@@ -252,9 +257,11 @@
 <span class="sd">        formats a number of bytes in to a human readable string.</span>
 <span class="sd">        returns in SI units</span>
 <span class="sd">        eg sizeof_fmt(1234) returns &#39;1.2KiB&#39;</span>
+
 <span class="sd">        :param num: number of bytes to format</span>
-<span class="sd">        :param suffix:</span>
-<span class="sd">        :return:</span>
+<span class="sd">        :param suffix: the suffix to use</span>
+<span class="sd">        :return: human formattted string.</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">unit</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;Ki&#39;</span><span class="p">,</span> <span class="s1">&#39;Mi&#39;</span><span class="p">,</span> <span class="s1">&#39;Gi&#39;</span><span class="p">,</span> <span class="s1">&#39;Ti&#39;</span><span class="p">,</span> <span class="s1">&#39;Pi&#39;</span><span class="p">,</span> <span class="s1">&#39;Ei&#39;</span><span class="p">,</span> <span class="s1">&#39;Zi&#39;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1024.0</span><span class="p">:</span>
@@ -264,6 +271,10 @@
 
     <span class="nd">@classmethod</span>
 <div class="viewcode-block" id="SysUtil.update_from_git"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.update_from_git">[docs]</a>    <span class="k">def</span> <span class="nf">update_from_git</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        updates spc-eyepi from git.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;git fetch --all;git reset --hard origin/master&quot;</span><span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;systemctl restart spc-eyepi_capture.service&quot;</span><span class="p">)</span></div>
 
@@ -272,7 +283,9 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        gets the current hostname.</span>
 <span class="sd">        if there is no /etc/hostname file, sets the hostname randomly.</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :return: the current hostname or the hostname it was set to</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_hostname</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="s2">&quot;/etc/hostname&quot;</span><span class="p">):</span>
@@ -287,9 +300,9 @@
     <span class="nd">@classmethod</span>
 <div class="viewcode-block" id="SysUtil.set_hostname"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.set_hostname">[docs]</a>    <span class="k">def</span> <span class="nf">set_hostname</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">hostname</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        sets the machines hosname</span>
-<span class="sd">        :param hostname:</span>
-<span class="sd">        :return:</span>
+<span class="sd">        sets the machines hosname, in /etc/hosts and /etc/hostname</span>
+
+<span class="sd">        :param hostname: the string of which to set the hostname to.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;/etc/&quot;</span><span class="p">,</span> <span class="s2">&quot;hostname&quot;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
@@ -306,7 +319,9 @@
 <div class="viewcode-block" id="SysUtil.get_machineid"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.get_machineid">[docs]</a>    <span class="k">def</span> <span class="nf">get_machineid</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        gets the machine id, or initialises the machine id if it doesnt exist.</span>
-<span class="sd">        :return: str</span>
+
+<span class="sd">        :return: string of the machine-id</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_machine_id</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="s2">&quot;/etc/machine-id&quot;</span><span class="p">):</span>
@@ -319,7 +334,9 @@
 <div class="viewcode-block" id="SysUtil.get_tor_host"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.get_tor_host">[docs]</a>    <span class="k">def</span> <span class="nf">get_tor_host</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">tuple</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        gets a tuple of the current tor host.</span>
+
 <span class="sd">        :return: tuple of hostname(onion address), client key, client name</span>
+<span class="sd">        :rtype: tuple[str, str, str]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_tor_host</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -333,8 +350,10 @@
     <span class="nd">@classmethod</span>
 <div class="viewcode-block" id="SysUtil.get_fs_space"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.get_fs_space">[docs]</a>    <span class="k">def</span> <span class="nf">get_fs_space</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">tuple</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        returns free/total</span>
-<span class="sd">        :return:</span>
+<span class="sd">        returns free/total space of root filesystem as bytes(?)</span>
+
+<span class="sd">        :return: tuple of free/total space</span>
+<span class="sd">        :rtype: tuple[int, int]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_fs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -348,8 +367,11 @@
     <span class="nd">@classmethod</span>
 <div class="viewcode-block" id="SysUtil.get_fs_space_mb"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.get_fs_space_mb">[docs]</a>    <span class="k">def</span> <span class="nf">get_fs_space_mb</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">tuple</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        returns the filesystems free space in mebibytes</span>
-<span class="sd">        :return:</span>
+<span class="sd">        returns the filesystems free space in mebibytes.</span>
+<span class="sd">        see :func:`get_fs_space`</span>
+
+<span class="sd">        :return: tuple of free/total space</span>
+<span class="sd">        :rtype:tuple[int, int]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">free_space</span><span class="p">,</span> <span class="n">total_space</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">get_fs_space</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
@@ -360,8 +382,10 @@
     <span class="nd">@classmethod</span>
 <div class="viewcode-block" id="SysUtil.get_version"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.get_version">[docs]</a>    <span class="k">def</span> <span class="nf">get_version</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        gets the version of the git repo as a string.</span>
-<span class="sd">        :return:</span>
+<span class="sd">        gets the &quot;describe&quot; version of the current git repo as a string.</span>
+
+<span class="sd">        :return: the current version</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_version</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -376,7 +400,9 @@
 <div class="viewcode-block" id="SysUtil.get_internal_ip"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.get_internal_ip">[docs]</a>    <span class="k">def</span> <span class="nf">get_internal_ip</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        gets the internal ip by attempting to connect to googles DNS</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :return: the current internal ip</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_ip_address</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
@@ -398,7 +424,9 @@
 <div class="viewcode-block" id="SysUtil.get_log_files"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.get_log_files">[docs]</a>    <span class="k">def</span> <span class="nf">get_log_files</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        returns the spc-eyepi log files that have been rotated.</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :return: list of filenames</span>
+<span class="sd">        :rtype: list(str)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;/home/spc-eyepi/spc-eyepi.log.*&quot;</span><span class="p">))</span></div>
 
@@ -407,8 +435,9 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        removes all files in the list provided, skipping and logging on an error removing</span>
 <span class="sd">        todo: Do different things based on whether is a directory.</span>
-<span class="sd">        :param filenames:</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :param filenames: list of directories or files</span>
+<span class="sd">        :type filenames: list or tuple</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -424,7 +453,9 @@
 <div class="viewcode-block" id="SysUtil.get_isonow"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.get_isonow">[docs]</a>    <span class="k">def</span> <span class="nf">get_isonow</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        gets the current time as an iso8601 string</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :return: the current time as iso8601</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span></div>
 
@@ -432,7 +463,9 @@
 <div class="viewcode-block" id="SysUtil.get_external_ip"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.get_external_ip">[docs]</a>    <span class="k">def</span> <span class="nf">get_external_ip</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        returns the external IP address of the raspberry pi through api.ipify.org</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :return: the external ip address</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_external_ip</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">60</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -448,8 +481,11 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        returns either the identifier (from name) or the name filled with the machine id</span>
 <span class="sd">        clamps to 32 characters.</span>
+
 <span class="sd">        :param name: name to fill</span>
-<span class="sd">        :return:</span>
+<span class="sd">        :type name: str</span>
+<span class="sd">        :return: filled name</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">identifier</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">x</span> <span class="k">if</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">name</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">get_machineid</span><span class="p">())))</span>
         <span class="k">return</span> <span class="n">identifier</span><span class="p">[:</span><span class="mi">32</span><span class="p">]</span></div>
@@ -458,8 +494,11 @@
 <div class="viewcode-block" id="SysUtil.get_identifier_from_filename"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.get_identifier_from_filename">[docs]</a>    <span class="k">def</span> <span class="nf">get_identifier_from_filename</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        returns either the identifier (from the file name) or the name filled with the machine id</span>
+
 <span class="sd">        :param file_name: filename</span>
-<span class="sd">        :return:</span>
+<span class="sd">        :type file_name: str</span>
+<span class="sd">        :return: string identifier,</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fsn</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file_name</span><span class="p">))),</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_identifier_from_name</span><span class="p">(</span><span class="n">fsn</span><span class="p">)</span></div>
@@ -469,8 +508,11 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        ensures a configuration file exists for this identifier.</span>
 <span class="sd">        if a config file doesnt exist then it will create a default one.</span>
-<span class="sd">        :param identifier:</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :param identifier: identifier to create or find a configuration file for.</span>
+<span class="sd">        :type identifier: str</span>
+<span class="sd">        :return: the configuration file dict or configparser object.</span>
+<span class="sd">        :rtype: dict or configparser.ConfigParser</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">()</span>
         <span class="n">config</span><span class="o">.</span><span class="n">read_string</span><span class="p">(</span><span class="n">default_config</span><span class="p">)</span>
@@ -497,8 +539,10 @@
 <div class="viewcode-block" id="SysUtil.write_config"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.write_config">[docs]</a>    <span class="k">def</span> <span class="nf">write_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        writes a configuration file to an correct config file path.</span>
+
 <span class="sd">        :param config: configuration file (configparser object)</span>
-<span class="sd">        :param identifier:</span>
+<span class="sd">        :type identifier: str</span>
+<span class="sd">        :param identifier: identifier to user as the raget file name.</span>
 <span class="sd">        :return: configparser object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">identifier_to_ini</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
@@ -510,8 +554,10 @@
 <div class="viewcode-block" id="SysUtil.identifier_to_ini"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.identifier_to_ini">[docs]</a>    <span class="k">def</span> <span class="nf">identifier_to_ini</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        gets a valid .ini path for an identifier.</span>
-<span class="sd">        :param identifier:</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :param identifier: identifier to find an ini for.</span>
+<span class="sd">        :return: file path for identifier</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">glob</span><span class="p">(</span><span class="s2">&quot;configs_byserial/*.ini&quot;</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">identifier</span> <span class="o">==</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_identifier_from_filename</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
@@ -524,8 +570,11 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        ensures a configuration file exists for this identifier.</span>
 <span class="sd">        if a config file doesnt exist then it will create a default one.</span>
-<span class="sd">        :param identifier:</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :param identifier: identifier of the light</span>
+<span class="sd">        :type identifier: str</span>
+<span class="sd">        :return: configuration for the light</span>
+<span class="sd">        :rtype: configparser.ConfigParser</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">()</span>
         <span class="n">config</span><span class="o">.</span><span class="n">read_string</span><span class="p">(</span><span class="n">default_light_config</span><span class="p">)</span>
@@ -544,8 +593,10 @@
     <span class="nd">@classmethod</span>
 <div class="viewcode-block" id="SysUtil.get_light_configs"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.get_light_configs">[docs]</a>    <span class="k">def</span> <span class="nf">get_light_configs</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        gets a list of the light config files (.ini)</span>
-<span class="sd">        :return:</span>
+<span class="sd">        gets a dict of the light config files (.ini)</span>
+
+<span class="sd">        :return: dict of light configs</span>
+<span class="sd">        :rtype: dict(str: configparser.ConfigParser)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">def</span> <span class="nf">slc_csv_exists</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">fp</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.csv&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">fp</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.slc&quot;</span><span class="p">)</span>
@@ -566,8 +617,10 @@
 <div class="viewcode-block" id="SysUtil.write_light_config"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.write_light_config">[docs]</a>    <span class="k">def</span> <span class="nf">write_light_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        writes a configuration file to an correct config file path.</span>
+
 <span class="sd">        :param config: configuration file (configparser object)</span>
-<span class="sd">        :param identifier:</span>
+<span class="sd">        :param identifier: identifier of the light.</span>
+<span class="sd">        :type identifier: str</span>
 <span class="sd">        :return: configparser object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">light_identifier_to_ini</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
@@ -579,8 +632,11 @@
 <div class="viewcode-block" id="SysUtil.get_light_datafile"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.get_light_datafile">[docs]</a>    <span class="k">def</span> <span class="nf">get_light_datafile</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        gets a light datafile</span>
-<span class="sd">        :param identifier:</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :param identifier: identifier to use to find the data file.</span>
+<span class="sd">        :type identifier: str</span>
+<span class="sd">        :return: file path for csv or slc.</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">csv</span> <span class="o">=</span> <span class="s2">&quot;lights_byip/</span><span class="si">{}</span><span class="s2">.csv&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
         <span class="n">slc</span> <span class="o">=</span> <span class="s2">&quot;lights_byip/</span><span class="si">{}</span><span class="s2">.slc&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
@@ -595,8 +651,11 @@
 <div class="viewcode-block" id="SysUtil.load_or_fix_solarcalc"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.load_or_fix_solarcalc">[docs]</a>    <span class="k">def</span> <span class="nf">load_or_fix_solarcalc</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">list</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        function to either load an existing fixed up solarcalc file or to coerce one into the fixed format.</span>
+
 <span class="sd">        :param identifier: identifier of the light for which the solarcalc file exists.</span>
+<span class="sd">        :type identifier: str</span>
 <span class="sd">        :return: light timing data as a list of lists.</span>
+<span class="sd">        :rtype: list(list())</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">lx</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">fp</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_light_datafile</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
@@ -616,11 +675,6 @@
                 <span class="n">l</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()]</span>
 
                 <span class="k">def</span> <span class="nf">get_lines</span><span class="p">(</span><span class="n">li</span><span class="p">):</span>
-                    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">                    gets lines from a list and formats them into the new solarcalc format</span>
-<span class="sd">                    :param li:</span>
-<span class="sd">                    :return:</span>
-<span class="sd">                    &quot;&quot;&quot;</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading csv&quot;</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">li</span><span class="p">):</span>
                         <span class="k">try</span><span class="p">:</span>
@@ -652,8 +706,11 @@
 <div class="viewcode-block" id="SysUtil.light_identifier_to_ini"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.light_identifier_to_ini">[docs]</a>    <span class="k">def</span> <span class="nf">light_identifier_to_ini</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        gets a valid .ini path for an identifier.</span>
-<span class="sd">        :param identifier:</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :param identifier: identifier for a light</span>
+<span class="sd">        :type identifier: str</span>
+<span class="sd">        :return: ini filename for a light</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">glob</span><span class="p">(</span><span class="s2">&quot;lights_byip/*.ini&quot;</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">identifier</span> <span class="o">==</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_identifier_from_filename</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
@@ -665,8 +722,11 @@
 <div class="viewcode-block" id="SysUtil.identifier_to_yml"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.identifier_to_yml">[docs]</a>    <span class="k">def</span> <span class="nf">identifier_to_yml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        the same as identifier_to_ini but for yml files</span>
-<span class="sd">        :param identifier:</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :param identifier: identifier for a matching yml file.</span>
+<span class="sd">        :type identifier: str</span>
+<span class="sd">        :return: string filepath for the yml file.</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">glob</span><span class="p">(</span><span class="s2">&quot;configs_byserial/*.yml&quot;</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">identifier</span> <span class="o">==</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_identifier_from_filename</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
@@ -679,8 +739,11 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        given a set of identifiers, returns a dictionary of the data contained in those config files with the key</span>
 <span class="sd">        for each config file data being the identifier</span>
+
 <span class="sd">        :param identifiers:</span>
+<span class="sd">        :type identifiers: list(str)</span>
 <span class="sd">        :return: dictionary of configuration datas</span>
+<span class="sd">        :rtype: dict(str: dict)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">ini</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;configs_byserial/</span><span class="si">{}</span><span class="s2">.ini&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">identifiers</span><span class="p">]:</span>
@@ -695,9 +758,10 @@
 <div class="viewcode-block" id="SysUtil.add_watch"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.add_watch">[docs]</a>    <span class="k">def</span> <span class="nf">add_watch</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        adds a watch that calls the callback on file change</span>
+
 <span class="sd">        :param path: path of the file to watch</span>
+<span class="sd">        :type path: str</span>
 <span class="sd">        :param callback: function signature to call when the file is changed</span>
-<span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">_watches</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">path</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">st_mtime</span><span class="p">,</span> <span class="n">callback</span><span class="p">))</span></div>
 
@@ -705,21 +769,23 @@
 <div class="viewcode-block" id="SysUtil.open_yaml"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.open_yaml">[docs]</a>    <span class="k">def</span> <span class="nf">open_yaml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        opens a yaml file using yaml.load</span>
-<span class="sd">        :param filename:</span>
-<span class="sd">        :return:</span>
+
+<span class="sd">        :param filename: yaml file to load</span>
+<span class="sd">        :return: dictionary of values in yaml file</span>
+<span class="sd">        :rtype: dict</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">q</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
             <span class="k">return</span> <span class="n">q</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+            <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">return</span> <span class="nb">dict</span><span class="p">()</span></div>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">_thread</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        runs the watchers</span>
-<span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">while</span> <span class="kc">True</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">stop</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -736,63 +802,6 @@
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">break</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">thread</span> <span class="o">=</span> <span class="kc">None</span></div>
-
-
-<div class="viewcode-block" id="Test"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.Test">[docs]</a><span class="k">class</span> <span class="nc">Test</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<div class="viewcode-block" id="Test.testCLS"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.Test.testCLS">[docs]</a>    <span class="k">class</span> <span class="nc">testCLS</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;test.tmp&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">completed_setup</span> <span class="o">=</span> <span class="kc">False</span>
-
-<div class="viewcode-block" id="Test.testCLS.setup"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.Test.testCLS.setup">[docs]</a>        <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mock setup function called&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">completed_setup</span> <span class="o">=</span> <span class="kc">True</span></div></div>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">failed</span> <span class="o">=</span> <span class="p">[]</span>
-
-<div class="viewcode-block" id="Test.test_caching"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.Test.test_caching">[docs]</a>    <span class="k">def</span> <span class="nf">test_caching</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">private</span><span class="p">):</span>
-        <span class="n">lasttime</span> <span class="o">=</span> <span class="n">private</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">a</span> <span class="o">=</span> <span class="n">function</span><span class="p">()</span>
-            <span class="n">lasttime2</span> <span class="o">=</span> <span class="n">private</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">failed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="n">lasttime</span> <span class="o">!=</span> <span class="n">lasttime2</span><span class="p">,</span> <span class="s2">&quot;access times are the same what gives?&quot;</span></div>
-
-<div class="viewcode-block" id="Test.test_system_id"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.Test.test_system_id">[docs]</a>    <span class="k">def</span> <span class="nf">test_system_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">a</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">get_machineid</span><span class="p">()</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">b</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">get_machineid</span><span class="p">()</span>
-                <span class="k">assert</span> <span class="n">b</span> <span class="o">==</span> <span class="n">a</span><span class="p">,</span> <span class="s1">&#39;at some point the system id changed, this is wrong.&#39;</span>
-                <span class="n">b</span> <span class="o">=</span> <span class="n">a</span>
-                <span class="n">lasttime2</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">_machine_id</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">failed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Test.test_watcher"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.Test.test_watcher">[docs]</a>    <span class="k">def</span> <span class="nf">test_watcher</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">c</span> <span class="o">=</span> <span class="n">Test</span><span class="o">.</span><span class="n">testCLS</span><span class="p">()</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;test data&quot;</span><span class="p">)</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-            <span class="n">SysUtil</span><span class="p">()</span><span class="o">.</span><span class="n">add_watch</span><span class="p">(</span><span class="s2">&quot;test.tmp&quot;</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">setup</span><span class="p">)</span>
-            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-            <span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;changed test data&quot;</span><span class="p">)</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
-            <span class="n">SysUtil</span><span class="o">.</span><span class="n">stop</span> <span class="o">=</span> <span class="kc">True</span>
-
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">failed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="ow">not</span> <span class="n">c</span><span class="o">.</span><span class="n">completed_setup</span><span class="p">,</span> <span class="s2">&quot;callback was not called from watcher&quot;</span>
-        <span class="k">assert</span> <span class="ow">not</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">thread</span><span class="p">,</span> <span class="s2">&quot;thread not closed&quot;</span>
-        <span class="k">assert</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">path</span><span class="p">),</span> <span class="s1">&#39;test didnt remove file&#39;</span></div></div>
 </pre></div>
 
           </div>
