@@ -46,7 +46,7 @@ Planned or in development:
  * Auto Bulb-ramping: we are aspiring to be able to shoot 24-7 DSLR timelapses through sunrise and sunset.
  * DB-based camera management system.
  * Weatherproof and solar powered camera housing for full remote timelapse solution.
- * Multiple configuration file formats and specifications (support yaml, similar to `Gigavision <https://borevitzlab.github.io/Gigavision>`_.
+ * Multiple configuration file formats and specifications (support yaml, similar to `Gigavision <https://borevitzlab.github.io/Gigavision>`_).
 
 Automatically detects connected usb DSLRs and the Raspberry Pi camera (just duplicate *example.ini* to *picam.ini* and *eyepi.ini* and change the configuration values). DSLR's are given a unique ID based on hardware serial.
 
