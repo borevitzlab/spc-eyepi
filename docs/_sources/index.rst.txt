@@ -9,6 +9,7 @@
    :hidden:
 
    ansible
+   genindex
    py-modindex
 
 
@@ -98,11 +99,3 @@ There is code to support the IVMech IVPort, however its a little tricky to get w
 To get into the web interface using the wifi the default ip address is 192.168.12.1 and you will need to use the user admin:spceyepidefaultaccess (it must be running first).
 
 SPC-EyePi also updates from the master branch of this repository.
-
-
-Documentation Links
--------------------
-
-* :doc:`ansible`
-* :ref:`genindex`
-* :ref:`modindex`
