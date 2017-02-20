@@ -110,61 +110,64 @@
 <dt>Currently supported and maintained:</dt>
 <dd><ul class="first last simple">
 <li>Control of multiple DSLR cameras.</li>
-<li>Upload of JPG, RAW or JPG+RAW images.</li>
-<li>Captured photos are cached locally and  uploaded to a central server of your choice via sftp or ftp.</li>
+<li>Captures to JPEG &amp; RAW images if using a DSLR, JPEG &amp; TIFF if you are using any other type of Camera.</li>
+<li>Captured photos are captured to ram, cached on disk and uploaded to a server of your choice via sftp or ftp.</li>
 <li>Cameras settings can be controlled from a web page.</li>
 <li>Wifi and ethernet. Creates an ad-hoc wifi network no know network is found for easier config of new systems and in new wifi environments.</li>
-<li>Camera uploads it&#8217;s IP address along with image for easy finding of the camera on your network</li>
-<li>Camera can auto-upload both timestamped and fixed filenames (for use as a webcam or with auto archiving systems requiring a fixed image name).</li>
-<li>Extensively tested with Canons (600D, 700D, 70D). Works with Nikon D7100 but not extensively tested.</li>
-<li>Ansible provisioning system for raspberry Pis running Arch Linux.</li>
+<li>Camera can auto-upload both timestamped and fixed filenames (for use as very slow framerate ip camera with auto archiving systems requiring a fixed image name).</li>
+<li>Extensively tested with Canons (600D, 700D, 70D). Should work with Nikon cameras but not extensively tested.</li>
+<li>Ansible provisioning system for Raspberry Pis running Arch Linux.</li>
 </ul>
 </dd>
 <dt>Planned or in development:</dt>
 <dd><ul class="first last simple">
-<li>Time-series scheduler  to auto-set camera exposure and shutter speed settings (useful for shooting 24-hrs a day in fixed but variable lighting situations like plant growth chambers)</li>
-<li>RAM spooling with sd card fallback to increase SD card life.</li>
-<li>Auto Bulb-ramping... we are aspiring to be able to shoot 24-7 DSLR timelapses through sunrise and sunset.</li>
+<li>Time-series scheduler  to auto-set camera exposure and shutter speed settings (useful for shooting 24-hrs a day in fixed but variable lighting situations like plant growth chambers).</li>
+<li>Auto Bulb-ramping: we are aspiring to be able to shoot 24-7 DSLR timelapses through sunrise and sunset.</li>
 <li>DB-based camera management system.</li>
-<li>Weatherproof and solar powered camera housing  for full remote timelapse solution</li>
+<li>Weatherproof and solar powered camera housing for full remote timelapse solution.</li>
+<li>Multiple configuration file formats and specifications (support yaml, similar to <a class="reference external" href="https://borevitzlab.github.io/Gigavision">Gigavision</a>.</li>
 </ul>
 </dd>
 </dl>
 <p>Automatically detects connected usb DSLRs and the Raspberry Pi camera (just duplicate <em>example.ini</em> to <em>picam.ini</em> and <em>eyepi.ini</em> and change the configuration values). DSLR&#8217;s are given a unique ID based on hardware serial.</p>
-<p>Camera name can be easily changed to a user friendly value.</p>
+<p>Camera name can be easily changed to a user friendly value through either the webinterface or through the configuration file.</p>
 </div>
 <div class="section" id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">§</a></h2>
+<p>These requirements are specified and provide installation methods within the ansible playbook.</p>
 <dl class="docutils">
 <dt><em>os:</em></dt>
 <dd><ul class="first last simple">
 <li>python3.5</li>
 <li>python-cffi</li>
 <li>exiv2</li>
+<li>gphoto2</li>
+<li>libgphoto2</li>
 <li>opencv 3.1 <a class="reference external" href="https://www.archlinux.org/packages/extra/x86_64/opencv/">[Arch-Extra]</a></li>
+<li>openvpn (optional)</li>
 <li>tor (optional)</li>
 </ul>
 </dd>
-<dt><em>python</em></dt>
+<dt><em>python/aur/extra</em></dt>
 <dd><ul class="first last simple">
+<li>numpy</li>
+<li>pillow <a class="reference external" href="https://pypi.python.org/pypi/Pillow/3.1.1">[pip]</a></li>
+<li>picamera (optional) <a class="reference external" href="https://pypi.python.org/pypi/picamera/1.12">[pip]</a></li>
+<li>py3exiv2 <a class="reference external" href="https://pypi.python.org/pypi/py3exiv2/0.2.1">[pip]</a></li>
+<li>gphoto2-cffi <a class="reference external" href="https://github.com/borevitzlab/gphoto2-cffi">[git]</a></li>
+<li>RPi.GPIO (optional) <a class="reference external" href="https://pypi.python.org/pypi/RPi.GPIO/0.6.3">[pip]</a></li>
+<li>pyudev <a class="reference external" href="https://pypi.python.org/pypi/pyudev">[pip]</a></li>
+<li>cryptography <a class="reference external" href="https://pypi.python.org/pypi/cryptography">[pip]</a></li>
+<li>pysftp <a class="reference external" href="https://pypi.python.org/pypi/pysftp">[pip]</a></li>
+<li>requests[socks] <a class="reference external" href="https://pypi.python.org/pypi/requests/2.11.1">[pip]</a></li>
+<li>schedule <a class="reference external" href="https://pypi.python.org/pypi/schedule">[pip]</a></li>
+<li>create_ap <a class="reference external" href="https://aur.archlinux.org/packages/create_ap">[aur]</a></li>
+<li>pyyaml <a class="reference external" href="https://pypi.python.org/pypi/PyYAML/3.12">[pip]</a></li>
 <li><a class="reference external" href="http://flask.pocoo.org/">flask</a></li>
 <li>flask-bcrypt <a class="reference external" href="https://pypi.python.org/pypi/Flask-Bcrypt">[pip]</a></li>
 <li>flask-login <a class="reference external" href="https://pypi.python.org/pypi/Flask-Login">[pip]</a></li>
 <li>WTForms <a class="reference external" href="https://pypi.python.org/pypi/WTForms">[pip]</a></li>
 <li>browsepy <a class="reference external" href="https://pypi.python.org/pypi/browsepy/0.4.0">[pip]</a></li>
-<li>pyudev <a class="reference external" href="https://pypi.python.org/pypi/pyudev">[pip]</a></li>
-<li>gphoto2-cffi <a class="reference external" href="https://github.com/borevitzlab/gphoto2-cffi">[git6]</a></li>
-<li>numpy</li>
-<li>pillow <a class="reference external" href="https://pypi.python.org/pypi/Pillow/3.1.1">[pip]</a></li>
-<li>picamera (optional) <a class="reference external" href="https://pypi.python.org/pypi/picamera/1.12">[pip]</a></li>
-<li>py3exiv2 (optional) <a class="reference external" href="https://pypi.python.org/pypi/py3exiv2/0.2.1">[pip]</a></li>
-<li>cryptography <a class="reference external" href="https://pypi.python.org/pypi/cryptography">[pip]</a></li>
-<li>pysftp <a class="reference external" href="https://pypi.python.org/pypi/pysftp">[pip]</a></li>
-<li>requests[socks] <a class="reference external" href="https://pypi.python.org/pypi/requests/2.11.1">[pip]</a></li>
-<li>create_ap <a class="reference external" href="https://aur.archlinux.org/packages/create_ap">[aur]</a></li>
-<li>schedule <a class="reference external" href="https://pypi.python.org/pypi/schedule">[pip]</a></li>
-<li>pyyaml <a class="reference external" href="https://pypi.python.org/pypi/PyYAML/3.12">[pip]</a></li>
-<li>RPi.GPIO (optional) <a class="reference external" href="https://pypi.python.org/pypi/RPi.GPIO/0.6.3">[pip]</a></li>
 </ul>
 </dd>
 </dl>

@@ -32,55 +32,60 @@ Features
 
 Currently supported and maintained:
  * Control of multiple DSLR cameras.
- * Upload of JPG, RAW or JPG+RAW images.
- * Captured photos are cached locally and  uploaded to a central server of your choice via sftp or ftp.
+ * Captures to JPEG & RAW images if using a DSLR, JPEG & TIFF if you are using any other type of Camera.
+ * Captured photos are captured to ram, cached on disk and uploaded to a server of your choice via sftp or ftp.
  * Cameras settings can be controlled from a web page.
  * Wifi and ethernet. Creates an ad-hoc wifi network no know network is found for easier config of new systems and in new wifi environments.
- * Camera uploads it's IP address along with image for easy finding of the camera on your network
- * Camera can auto-upload both timestamped and fixed filenames (for use as a webcam or with auto archiving systems requiring a fixed image name).
- * Extensively tested with Canons (600D, 700D, 70D). Works with Nikon D7100 but not extensively tested.
- * Ansible provisioning system for raspberry Pis running Arch Linux.
+ * Camera can auto-upload both timestamped and fixed filenames (for use as very slow framerate ip camera with auto archiving systems requiring a fixed image name).
+ * Extensively tested with Canons (600D, 700D, 70D). Should work with Nikon cameras but not extensively tested.
+ * Ansible provisioning system for Raspberry Pis running Arch Linux.
 
 Planned or in development:
- * Time-series scheduler  to auto-set camera exposure and shutter speed settings (useful for shooting 24-hrs a day in fixed but variable lighting situations like plant growth chambers)
- * RAM spooling with sd card fallback to increase SD card life.
- * Auto Bulb-ramping... we are aspiring to be able to shoot 24-7 DSLR timelapses through sunrise and sunset.
+ * Time-series scheduler  to auto-set camera exposure and shutter speed settings (useful for shooting 24-hrs a day in fixed but variable lighting situations like plant growth chambers).
+ * Auto Bulb-ramping: we are aspiring to be able to shoot 24-7 DSLR timelapses through sunrise and sunset.
  * DB-based camera management system.
- * Weatherproof and solar powered camera housing  for full remote timelapse solution
+ * Weatherproof and solar powered camera housing for full remote timelapse solution.
+ * Multiple configuration file formats and specifications (support yaml, similar to `Gigavision <https://borevitzlab.github.io/Gigavision>`_.
 
 Automatically detects connected usb DSLRs and the Raspberry Pi camera (just duplicate *example.ini* to *picam.ini* and *eyepi.ini* and change the configuration values). DSLR's are given a unique ID based on hardware serial.
 
-Camera name can be easily changed to a user friendly value.
+Camera name can be easily changed to a user friendly value through either the webinterface or through the configuration file.
+
 
 Requirements
 ------------
+
+These requirements are specified and provide installation methods within the ansible playbook.
 
 *os:*
  * python3.5
  * python-cffi
  * exiv2
+ * gphoto2
+ * libgphoto2
  * opencv 3.1 `[Arch-Extra] <https://www.archlinux.org/packages/extra/x86_64/opencv/>`_
+ * openvpn (optional)
  * tor (optional)
 
-*python*
+*python/aur/extra*
+ * numpy
+ * pillow `[pip] <https://pypi.python.org/pypi/Pillow/3.1.1>`__
+ * picamera (optional) `[pip] <https://pypi.python.org/pypi/picamera/1.12>`__
+ * py3exiv2 `[pip] <https://pypi.python.org/pypi/py3exiv2/0.2.1>`__
+ * gphoto2-cffi `[git] <https://github.com/borevitzlab/gphoto2-cffi>`__
+ * RPi.GPIO (optional) `[pip] <https://pypi.python.org/pypi/RPi.GPIO/0.6.3>`__
+ * pyudev `[pip] <https://pypi.python.org/pypi/pyudev>`__
+ * cryptography `[pip] <https://pypi.python.org/pypi/cryptography>`__
+ * pysftp `[pip] <https://pypi.python.org/pypi/pysftp>`__
+ * requests[socks] `[pip] <https://pypi.python.org/pypi/requests/2.11.1>`__
+ * schedule `[pip] <https://pypi.python.org/pypi/schedule>`__
+ * create_ap `[aur] <https://aur.archlinux.org/packages/create_ap>`__
+ * pyyaml `[pip] <https://pypi.python.org/pypi/PyYAML/3.12>`__
  * `flask <http://flask.pocoo.org/>`__
  * flask-bcrypt `[pip] <https://pypi.python.org/pypi/Flask-Bcrypt>`__
  * flask-login `[pip] <https://pypi.python.org/pypi/Flask-Login>`__
  * WTForms `[pip] <https://pypi.python.org/pypi/WTForms>`__
  * browsepy `[pip] <https://pypi.python.org/pypi/browsepy/0.4.0>`__
- * pyudev `[pip] <https://pypi.python.org/pypi/pyudev>`__
- * gphoto2-cffi `[git6] <https://github.com/borevitzlab/gphoto2-cffi>`__
- * numpy
- * pillow `[pip] <https://pypi.python.org/pypi/Pillow/3.1.1>`__
- * picamera (optional) `[pip] <https://pypi.python.org/pypi/picamera/1.12>`__
- * py3exiv2 (optional) `[pip] <https://pypi.python.org/pypi/py3exiv2/0.2.1>`__
- * cryptography `[pip] <https://pypi.python.org/pypi/cryptography>`__
- * pysftp `[pip] <https://pypi.python.org/pypi/pysftp>`__
- * requests[socks] `[pip] <https://pypi.python.org/pypi/requests/2.11.1>`__
- * create_ap `[aur] <https://aur.archlinux.org/packages/create_ap>`__
- * schedule `[pip] <https://pypi.python.org/pypi/schedule>`__
- * pyyaml `[pip] <https://pypi.python.org/pypi/PyYAML/3.12>`__
- * RPi.GPIO (optional) `[pip] <https://pypi.python.org/pypi/RPi.GPIO/0.6.3>`__
 
 
 Extra Details
