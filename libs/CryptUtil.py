@@ -22,12 +22,16 @@ try:
 except:
     pass
 
+# default keyserver
 keyserver = "traitcapture.org"
 
-def serialize_signature(signature) -> str:
+
+def serialize_signature(signature: bytes) -> str:
     """
     formats the signature for the server, with the correct boundaries
+
     :param signature: raw bytes signature.
+    :type signature: bytes
     :return: str formatted signature for sending to the server.
     """
     signature = b64encode(signature).decode("utf-8")
@@ -38,7 +42,9 @@ def serialize_signature(signature) -> str:
 def ssh_public_key(keypair: rsa.RSAPrivateKeyWithSerialization) -> str:
     """
     converts an rsa keypair to openssh format public key
-    :param keypair:
+
+    :param keypair: keypair.
+    :type keypair: cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKeyWithSerialization
     :return: string of public key
     """
     eb = utils.int_to_bytes(keypair.public_key().public_numbers().e)
@@ -51,20 +57,30 @@ def ssh_public_key(keypair: rsa.RSAPrivateKeyWithSerialization) -> str:
 
 
 class SSHManager(object):
+    """
+    a manager of ssh keys, with the ability to sign messages using them.
+
+    """
     def __init__(self, path="/home/.ssh"):
         self._key = self.ssh_agentKey = None
+        if not os.path.exists(path):
+            homepath = os.path.join(os.environ['HOME'], ".ssh")
+            if os.path.exists(homepath):
+                path = homepath
         self.path = path
         self.logger = logging.getLogger("SFTP Key Manager")
         self.token_path = os.path.join(path, "key_token")
-        self.priv_path = os.path.join(path, "id_rsa")
-        self.pub_path = os.path.join(path, "id_rsa.pub")
-        self.authorized_keys_path = os.path.join(path, "authorized_keys")
         if os.path.isfile(self.token_path):
             with open(self.token_path, 'r') as key_token_file:
                 token = key_token_file.read().strip()
-            self.logger.warn("Attempting to get new key from server with {}".format(token))
+            self.logger.warning("Attempting to get new key from server with {}".format(token))
             if self.get_new_key_from_server(token):
                 os.remove(self.token_path)
+
+        self.priv_path = os.path.join(path, "id_rsa")
+        self.pub_path = os.path.join(path, "id_rsa.pub")
+        self.known_hosts_path = os.path.join(path, "known_hosts")
+        self.authorized_keys_path = os.path.join(path, "authorized_keys")
 
         if os.path.isfile(self.priv_path) and not self._key:
             try:
@@ -76,14 +92,26 @@ class SSHManager(object):
 
     @property
     def paramiko_key(self):
+        """
+        property for a key usable by paramiko
+
+        :return: agentKey for use by paramiko/pysftp
+        :rtype: paramiko.rsakey.RSAKey
+        """
         return self.ssh_agentKey
 
     @property
     def ssh_key(self):
+        """
+        ssh key property
+        sets the internal rsa key and the agentKey for use by paramiko.
+
+        """
         return self._key
 
     @ssh_key.setter
     def ssh_key(self, value):
+
         self._key = serialization.load_pem_private_key(value, password=None, backend=default_backend())
         pbytes = self._key.private_bytes(encoding=serialization.Encoding.PEM,
                                          format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -91,11 +119,25 @@ class SSHManager(object):
         key_io = io.StringIO(pbytes.decode("utf-8"))
         self.ssh_agentKey = paramiko.RSAKey.from_private_key(key_io)
 
+    @property
+    def public_ssh_key_string(self) -> str:
+        """
+        property for the public ssh key string.
+
+        :return: string of the ssh public key, encoded to be added to a authorized_keys file
+        :rtype: str
+        """
+        if self._key:
+            return ssh_public_key(self._key)
+        return str()
+
     def get_new_key_from_server(self, token):
         """
-        acquires an ssh key from the server with a token.
+        acquires an ssh key from the server with a token and writes the key to the current path.
+
         :param token: a string token to send to the server.
-        :return:
+        :return: boolean indicating whether the operation was successful.
+        :rtype: bool
         """
         try:
             url = 'https://{}/api/camera/id_rsa/{}/{}/{}'.format(keyserver, token, SysUtil.get_machineid(),
@@ -118,8 +160,7 @@ class SSHManager(object):
 
     def write_key_to_path(self):
         """
-        writes public and private keys to their respective paths
-        :return:
+        writes internally stored public and private keys to their respective paths
         """
         priv_bytes = self.ssh_key.private_bytes(encoding=serialization.Encoding.PEM,
                                                 format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -138,21 +179,13 @@ class SSHManager(object):
             authorized_keys.write(ssh_key_string)
         os.chmod(self.authorized_keys_path, 0o744)
 
-    @property
-    def public_ssh_key_string(self) -> str:
-        """
-        gets the public ssh key string.
-        :return:
-        """
-        if self._key:
-            return ssh_public_key(self._key)
-        return str()
-
     def sign_message(self, message) -> str:
         """
-        signs a text message.
+        signs a text message using the internal key
+
         :param message: utf-8 encoded string
-        :return str: signature for message.
+        :return: signature for message.
+        :rtype: str
         """
         if not self._key:
             return message

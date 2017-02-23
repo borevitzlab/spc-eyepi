@@ -6,7 +6,7 @@ import time
 import tempfile
 import numpy
 import requests
-from requests.auth import HTTPBasicAuth
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from xml.etree import ElementTree
 from collections import deque
 from io import BytesIO
@@ -165,9 +165,10 @@ class Camera(object):
         self.logger = logging.getLogger(identifier)
         self.stopper = Event()
         self.identifier = identifier
-        self.orinal_config = None
+        self.camera_name = identifier
         self.failed = list()
         self._exif = dict()
+        self.focus_position = None
         self._frame = None
         self._image = numpy.empty((Camera.default_width, Camera.default_height, 3), numpy.uint8)
         if not noconf:
@@ -199,7 +200,7 @@ class Camera(object):
 
         self.camera_name = self.config["camera"]["name"]
         self.interval = self.config.getint("timelapse", "interval")
-        self.spool_directory = tempfile.mkdtemp("SPC-EYEPI_")
+        self.spool_directory = tempfile.mkdtemp(prefix="SPC-EYEPI")
         self.upload_directory = self.config["localfiles"]["upload_dir"]
         self.begin_capture = datetime.time(0, 0)
         self.end_capture = datetime.time(23, 59)
@@ -259,6 +260,10 @@ class Camera(object):
         :return: :func:`numpy.array` if filename not specified, otherwise list of files.
         :rtype: numpy.array
         """
+
+        if filename:
+            dirname = os.path.dirname(filename)
+            os.makedirs(dirname, exist_ok=True)
         return self.capture_image(filename=filename)
 
     def capture_monkey(self, filename: str = None) -> numpy.array:
@@ -581,7 +586,7 @@ class IPCamera(Camera):
 
         self.camera_name = config.get("camera_name", identifier)
         self.interval = int(config.get("interval", 300))
-        self.spool_directory = tempfile.mkdtemp("SPC-EYEPI_")
+        self.spool_directory = tempfile.mkdtemp()
 
         self.upload_directory = config.get("upload_dir", os.path.join(os.getcwd(), identifier))
         self.begin_capture = datetime.time(0, 0)
@@ -625,11 +630,16 @@ class IPCamera(Camera):
         self._notified = []
 
         format_str = config.get("format_url", "http://{HTTP_login}@{ip}{command}")
+        self.auth_type = config.get("auth_type", "basic")
         self.auth_object = None
         if format_str.startswith("http://{HTTP_login}@"):
             format_str = format_str.replace("{HTTP_login}@", "")
             self.auth_object = HTTPBasicAuth(config.get("username", "admin"),
                                              config.get("password", "admin"))
+            self.auth_object_digest = HTTPDigestAuth(config.get("username", "admin"),
+                                                     config.get("password", "admin"))
+            self.auth_object = self.auth_object_digest if self.auth_type == "digest" else self.auth_object
+
 
 
         self._HTTP_login = config.get("HTTP_login", "{user}:{password}").format(
@@ -657,9 +667,7 @@ class IPCamera(Camera):
         self._hfov = self._vfov = None
         self._zoom_list = config.get("zoom_list", [50, 150, 250, 350, 450, 550, 650, 750, 850, 950, 1000])
 
-
         self._focus_range = config.get("focus_range", [1, 99999])
-
 
         # set commands from the rest of the config.
         self.command_urls = config.get('urls', {})
@@ -687,11 +695,15 @@ class IPCamera(Camera):
         response = None
         try:
             response = requests.get(url, auth=self.auth_object)
+            if response.status_code == 401:
+                self.logger.debug("Auth is not basic, trying digest")
+                response = requests.get(url, auth=self.auth_object_digest)
         except Exception as e:
             self.logger.error("Some exception got raised {}".format(str(e)))
             return
         if response.status_code not in [200, 204]:
-            self.logger.error("[{}] - {}\n{}".format(str(response.status_code), str(response.reason), str(response.url)))
+            self.logger.error(
+                "[{}] - {}\n{}".format(str(response.status_code), str(response.reason), str(response.url)))
             return
         return response
 
@@ -749,12 +761,12 @@ class IPCamera(Camera):
             return return_values
         # apparently, there is an issue parsing when the ptz returns INVALID XML (WTF?)
         # these seem to be the tags that get mutilated.
-        illegal = [b'\n', b'\t', b'\r',
-                   b"<CPStatusMsg>", b"</CPStatusMsg>", b"<Text>",
-                   b"</Text>", b"<Type>Info</Type>", b"<Type>Info",
-                   b"Info</Type>", b"</Type>", b"<Type>"]
+        illegal = ['\n', '\t', '\r',
+                   "<CPStatusMsg>", "</CPStatusMsg>", "<Text>",
+                   "</Text>", "<Type>Info</Type>", "<Type>Info",
+                   "Info</Type>", "</Type>", "<Type>"]
         for ill in illegal:
-            message_xml = message_xml.replace(ill, b"")
+            message_xml = message_xml.replace(ill, "")
 
         root_element = ElementTree.Element("invalidation_tag")
         try:
@@ -948,7 +960,7 @@ class IPCamera(Camera):
         """
         cmd, keys = self._get_cmd("get_focus_mode")
         if not cmd:
-            return
+            return None
         stream_output = self._read_stream(cmd)
         return self.get_value_from_stream(stream_output, keys)['mode']
 
@@ -1094,18 +1106,6 @@ class IPCamera(Camera):
         # fmt_string = "zoom_pos:\t{}\nzoom_range:\t{}"
         fmt_string = "".join(("\nfocus_pos:\t{}\nfocus_range:\t{}"))
         return fmt_string.format(self.focus_position, self.focus_range)
-
-    # def focus(self):
-    #     """
-    #     forces a refocus of the the camera
-    #
-    #     :return: response from the camera.
-    #     """
-    #     cmd,keys = self._get_cmd("set_focus_mode")
-    #     if not cmd:
-    #         return None
-    #     stream_output = self._read_stream(cmd.format(mode="REFOCUS"))
-    #     return self.get_value_from_stream(stream_output, keys)
 
 
 class GPCamera(Camera):
@@ -1597,7 +1597,7 @@ class PiCamera(Camera):
 
         :param filename: image filename without extension
         :return: :func:`numpy.array` if filename not specified, otherwise list of files.
-        :rtype: numpy.array or list
+        :rtype: numpy.array
         """
         st = time.time()
         try:
@@ -1645,7 +1645,6 @@ class IVPortCamera(PiCamera):
         [True,  True,  False]
     ]
     gpio_groups = ("B",)
-
 
     def __init__(self,
                  identifier: str = None,

@@ -4,12 +4,15 @@ import logging.config
 from collections import deque
 from threading import Thread
 import requests
-from requests.auth import HTTPBasicAuth
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from xml.etree import ElementTree
 
-logging.config.fileConfig("logging.ini")
-logging.getLogger("paramiko").setLevel(logging.WARNING)
-
+try:
+    logging.config.fileConfig("logging.ini")
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
+except:
+    # it wont import if the logging file isnt present.
+    pass
 
 class PanTilt(object):
     """
@@ -43,12 +46,15 @@ class PanTilt(object):
         self._notified = []
         self.return_parser = config.get("return_parser", "plaintext")
         format_str = config.get("format_url", "http://{HTTP_login}@{ip}{command}")
-
+        self.auth_type = config.get("auth_type", "basic")
         self.auth_object = None
         if format_str.startswith("http://{HTTP_login}@"):
             format_str = format_str.replace("{HTTP_login}@", "")
             self.auth_object = HTTPBasicAuth(user or config.get("username", "admin"),
                                              password or config.get("password", "admin"))
+            self.auth_object_digest = HTTPDigestAuth(config.get("username", "admin"),
+                                             config.get("password", "admin"))
+            self.auth_object = self.auth_object_digest if self.auth_type == "digest" else self.auth_object
 
         self._HTTP_login = config.get("HTTP_login", "{user}:{password}").format(
             user=user or config.get("username", "admin"),
@@ -85,6 +91,7 @@ class PanTilt(object):
     def communicate_with_updater(self):
         """
         communication member. This is meant to send some metadata to the updater thread.
+        :return:
         """
         try:
             data = dict(
@@ -111,7 +118,12 @@ class PanTilt(object):
             url = url.replace("&", "?", 1)
         response = None
         try:
+
             response = requests.get(url, auth=self.auth_object)
+            if response.status_code == 401 and self.auth_type != "digest":
+                self.logger.debug("Auth is not basic, trying digest")
+                response = requests.get(url, auth=self.auth_object_digest)
+                self.logger.debug(response.text)
         except Exception as e:
             self.logger.error("Some exception got raised {}".format(str(e)))
             return
@@ -123,7 +135,6 @@ class PanTilt(object):
     def _read_stream(self, command_string, *args, **kwargs):
         """
         opens a url with the current HTTP_login string
-
         :type command_string: str
         :param command_string: url to go to with parameters
         :return: string of data returned from the camera
@@ -136,7 +147,6 @@ class PanTilt(object):
     def _read_stream_raw(self, command_string, *args, **kwargs):
         """
         opens a url with the current HTTP_login string
-
         :type command_string: str
         :param command_string: url to go to with parameters
         :return: string of data returned from the camera
@@ -175,12 +185,12 @@ class PanTilt(object):
             return return_values
         # apparently, there is an issue parsing when the ptz returns INVALID XML (WTF?)
         # these seem to be the tags that get mutilated.
-        illegal = [b'\n', b'\t', b'\r',
-                   b"<CPStatusMsg>", b"</CPStatusMsg>", b"<Text>",
-                   b"</Text>", b"<Type>Info</Type>", b"<Type>Info",
-                   b"Info</Type>", b"</Type>", b"<Type>"]
+        illegal = ['\n', '\t', '\r',
+                   "<CPStatusMsg>", "</CPStatusMsg>", "<Text>",
+                   "</Text>", "<Type>Info</Type>", "<Type>Info",
+                   "Info</Type>", "</Type>", "<Type>"]
         for ill in illegal:
-            message_xml = message_xml.replace(ill, b"")
+            message_xml = message_xml.replace(ill, "")
 
         root_element = ElementTree.Element("invalidation_tag")
         try:
@@ -191,7 +201,7 @@ class PanTilt(object):
             print("Couldnt parse XML!!!")
             print(message_xml)
 
-        return_values = dict
+        return_values = dict()
         for key in args:
             target_ele = root_element.find(key)
             if target_ele is None:
@@ -249,15 +259,6 @@ class PanTilt(object):
         return return_values
 
     def get_value_from_stream(self, stream, *keys):
-        """
-        gets a value from some text, based on what kind of parser this object uses (xml or plaintext)
-
-        :param stream: text data to search
-        :type stream: str
-        :param keys: list of keys to search for the values of
-        :return: dict of key: value pairs
-        :rtype: dict
-        """
         if stream is None: return
         if len(keys) is 0: return
         if self.return_parser == 'plaintext':
@@ -270,7 +271,6 @@ class PanTilt(object):
     def pan_step(self, direction, n_steps):
         """
         pans by step, steps must be less than or equal to 127
-
         :type n_steps: int
         :type direction: str
         :param direction:
@@ -289,7 +289,6 @@ class PanTilt(object):
     def tilt_step(self, direction, n_steps):
         """
         tilts by step, steps must be less than or equal to 127
-
         :type n_steps: int
         :type direction: str
         :param direction:
@@ -309,7 +308,7 @@ class PanTilt(object):
     @property
     def zoom_position(self):
         """
-        gets zoom position.
+        Zoom Position.
 
         :getter: from camera.
         :setter: to camera.
@@ -391,9 +390,7 @@ class PanTilt(object):
     def position(self):
         """
         gets the current pan/tilt position.
-
-        :return: tuple of current pan/tilt values
-        :rtype: tuple(float, float)
+        :return: tuple (pan, tilt)
         """
         cmd, keys = self._get_cmd("get_pan_tilt")
         if not cmd:
@@ -415,9 +412,7 @@ class PanTilt(object):
     def _get_pos(self):
         """
         slightly faster and less robust method of getting the position.
-
-        :return: tuple of current pan/tilt values
-        :rtype: tuple(float, float)
+        :return:
         """
         cmd, keys = self._get_cmd("get_pan_tilt")
         if cmd is None:
@@ -435,9 +430,9 @@ class PanTilt(object):
         """
         Sets the absolute pan/tilt position in degrees.
         float degree values are floored to int.
-
         :type position: tuple
         :param position: absolute degree value for pan,tilt as (pan,tilt)
+        :return:
         """
         pan_degrees, tilt_degrees = position
         start_pos = self._get_pos()
@@ -537,12 +532,6 @@ class PanTilt(object):
 
     @property
     def scale(self):
-        """
-        scale of the pantilt, every operation is multiplied by this value (except zoom).
-
-        :return: the scale
-        :rtype: float
-        """
         return self._pan_tilt_scale
 
     @scale.setter
@@ -551,12 +540,6 @@ class PanTilt(object):
 
     @property
     def pan(self):
-        """
-        pan position
-
-        :return: pan position
-        :rtype: float
-        """
         return self.position[0]
 
     @pan.setter
@@ -565,12 +548,6 @@ class PanTilt(object):
 
     @property
     def pan_range(self):
-        """
-        the range of panning
-
-        :return: list of [min, max] pan range
-        :rtype: list
-        """
         return self._pan_range
 
     @pan_range.setter
@@ -581,9 +558,6 @@ class PanTilt(object):
 
     @property
     def tilt(self):
-        """
-        see :func:`PanTilt.pan`
-        """
         return self.position[1]
 
     @tilt.setter
@@ -592,9 +566,6 @@ class PanTilt(object):
 
     @property
     def tilt_range(self):
-        """
-        see :func:`PanTilt.pan_range`
-        """
         return self._tilt_range
 
     @tilt_range.setter
@@ -607,9 +578,8 @@ class PanTilt(object):
         """
         unknown, presumably holds the pan-tilt in one place.
         doesnt work...
-
         :param state: ? beats me.
-        :return: whatever this does reads something?
+        :return:
         """
         cmd_str = "/Calibration.xml?Action=0" if state is True else "/Calibration.xml?Action=C"
         output = self._read_stream(cmd_str)

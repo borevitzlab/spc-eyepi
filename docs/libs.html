@@ -71,7 +71,7 @@
 <li><a class="reference internal" href="#module-libs.Camera">libs.Camera</a></li>
 <li><a class="reference internal" href="#module-libs.CryptUtil">libs.CryptUtil</a></li>
 <li><a class="reference internal" href="#module-libs.Light">libs.Light</a></li>
-<li><a class="reference internal" href="#libs-pantilt">libs.PanTilt</a></li>
+<li><a class="reference internal" href="#module-libs.PanTilt">libs.PanTilt</a></li>
 <li><a class="reference internal" href="#module-libs.Sensor">libs.Sensor</a></li>
 <li><a class="reference internal" href="#module-libs.SysUtil">libs.SysUtil</a></li>
 <li><a class="reference internal" href="#module-libs.Updater">libs.Updater</a></li>
@@ -881,7 +881,7 @@ automatically.</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.8)"><code class="xref py py-func docutils literal"><span class="pre">numpy.array()</span></code></a> if filename not specified, otherwise list of files.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.8)">numpy.array</a> or <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.8)">numpy.array</a></td>
 </tr>
 </tbody>
 </table>
@@ -1038,62 +1038,120 @@ works on dicts and lists
 <dt id="libs.CryptUtil.SSHManager">
 <em class="property">class </em><code class="descclassname">libs.CryptUtil.</code><code class="descname">SSHManager</code><span class="sig-paren">(</span><em>path='/home/.ssh'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager" title="Permalink to this definition">§</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>a manager of ssh keys, with the ability to sign messages using them.</p>
 <dl class="method">
 <dt id="libs.CryptUtil.SSHManager.get_new_key_from_server">
 <code class="descname">get_new_key_from_server</code><span class="sig-paren">(</span><em>token</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager.get_new_key_from_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager.get_new_key_from_server" title="Permalink to this definition">§</a></dt>
-<dd><p>acquires an ssh key from the server with a token.
-:param token: a string token to send to the server.
-:return:</p>
+<dd><p>acquires an ssh key from the server with a token and writes the key to the current path.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>token</strong> &#8211; a string token to send to the server.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">boolean indicating whether the operation was successful.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/functions.html#bool" title="(in Python v3.5)">bool</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="libs.CryptUtil.SSHManager.paramiko_key">
 <code class="descname">paramiko_key</code><a class="headerlink" href="#libs.CryptUtil.SSHManager.paramiko_key" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
+<dd><p>property for a key usable by paramiko</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">agentKey for use by paramiko/pysftp</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://docs.paramiko.org/en/latest/api/keys.html#paramiko.rsakey.RSAKey" title="(in Paramiko v)">paramiko.rsakey.RSAKey</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="libs.CryptUtil.SSHManager.public_ssh_key_string">
 <code class="descname">public_ssh_key_string</code><a class="headerlink" href="#libs.CryptUtil.SSHManager.public_ssh_key_string" title="Permalink to this definition">§</a></dt>
-<dd><p>gets the public ssh key string.
-:return:</p>
+<dd><p>property for the public ssh key string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">string of the ssh public key, encoded to be added to a authorized_keys file</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="libs.CryptUtil.SSHManager.sign_message">
 <code class="descname">sign_message</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager.sign_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager.sign_message" title="Permalink to this definition">§</a></dt>
-<dd><p>signs a text message.
-:param message: utf-8 encoded string
-:return str: signature for message.</p>
+<dd><p>signs a text message using the internal key</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> &#8211; utf-8 encoded string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">signature for message.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="libs.CryptUtil.SSHManager.ssh_key">
 <code class="descname">ssh_key</code><a class="headerlink" href="#libs.CryptUtil.SSHManager.ssh_key" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
+<dd><p>ssh key property
+sets the internal rsa key and the agentKey for use by paramiko.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="libs.CryptUtil.SSHManager.write_key_to_path">
 <code class="descname">write_key_to_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager.write_key_to_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager.write_key_to_path" title="Permalink to this definition">§</a></dt>
-<dd><p>writes public and private keys to their respective paths
-:return:</p>
+<dd><p>writes internally stored public and private keys to their respective paths</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="function">
 <dt id="libs.CryptUtil.serialize_signature">
-<code class="descclassname">libs.CryptUtil.</code><code class="descname">serialize_signature</code><span class="sig-paren">(</span><em>signature</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/CryptUtil.html#serialize_signature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.serialize_signature" title="Permalink to this definition">§</a></dt>
-<dd><p>formats the signature for the server, with the correct boundaries
-:param signature: raw bytes signature.
-:return: str formatted signature for sending to the server.</p>
+<code class="descclassname">libs.CryptUtil.</code><code class="descname">serialize_signature</code><span class="sig-paren">(</span><em>signature: bytes</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/CryptUtil.html#serialize_signature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.serialize_signature" title="Permalink to this definition">§</a></dt>
+<dd><p>formats the signature for the server, with the correct boundaries</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>signature</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/functions.html#bytes" title="(in Python v3.5)"><em>bytes</em></a>) &#8211; raw bytes signature.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">str formatted signature for sending to the server.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="libs.CryptUtil.ssh_public_key">
 <code class="descclassname">libs.CryptUtil.</code><code class="descname">ssh_public_key</code><span class="sig-paren">(</span><em>keypair: cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKeyWithSerialization</em><span class="sig-paren">)</span> &rarr; str<a class="reference internal" href="_modules/libs/CryptUtil.html#ssh_public_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.ssh_public_key" title="Permalink to this definition">§</a></dt>
-<dd><p>converts an rsa keypair to openssh format public key
-:param keypair:
-:return: string of public key</p>
+<dd><p>converts an rsa keypair to openssh format public key</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keypair</strong> (<a class="reference external" href="https://cryptography.io/en/latest/hazmat/primitives/asymmetric/rsa/#cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKeyWithSerialization" title="(in Cryptography v1.8.dev1)"><em>cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKeyWithSerialization</em></a>) &#8211; keypair.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">string of public key</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -1239,8 +1297,286 @@ this causes all the confiuration values to be reacquired, and a config to be rec
 </dd></dl>
 
 </div>
-<div class="section" id="libs-pantilt">
-<h2>libs.PanTilt<a class="headerlink" href="#libs-pantilt" title="Permalink to this headline">§</a></h2>
+<div class="section" id="module-libs.PanTilt">
+<span id="libs-pantilt"></span><h2>libs.PanTilt<a class="headerlink" href="#module-libs.PanTilt" title="Permalink to this headline">§</a></h2>
+<dl class="class">
+<dt id="libs.PanTilt.PanTilt">
+<em class="property">class </em><code class="descclassname">libs.PanTilt.</code><code class="descname">PanTilt</code><span class="sig-paren">(</span><em>ip=None</em>, <em>user=None</em>, <em>password=None</em>, <em>config=None</em>, <em>queue=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Control J-Systems PTZ</p>
+<p>For new system or new firmware, the system needs calibration as follows:
+- Open URL of the PTZ on a web browser
+- Click on &#8220;Calibration&#8221; tab, enter username and password if necessary
+- On Calibration window, click on &#8220;Open-loop&#8221; and then &#8220;Set Mode&#8221;
+- Use joystick controller to rotate the pan axis to minimum position
+- Click on &#8216;Pan Axis Min&#8217; line, enter &#8216;2.0&#8217;, and click &#8220;Set Calibration&#8221;
+- Use joystick controller to rotate the pan axis to maximum position
+- Click on &#8216;Pan Axis Max&#8217; line, enter &#8216;358.0&#8217;, and click &#8220;Set Calibration&#8221;
+- Use joystick controller to rotate the tilt axis to minimum position
+- Click on &#8216;Tilt Axis Min&#8217; line, enter &#8216;-90.0&#8217;, and click &#8220;Set Calibration&#8221;
+- Use joystick controller to rotate the tilt axis to maximum position
+- Click on &#8216;Tilt Axis Max&#8217; line, enter &#8216;30.0&#8217;, and click &#8220;Set Calibration&#8221;
+- Click on &#8220;Closed-loop&#8221; and then &#8220;Set Mode&#8221;
+- Close Calibration window</p>
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.PCCWLS">
+<code class="descname">PCCWLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.PCCWLS" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.PCWLS">
+<code class="descname">PCWLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.PCWLS" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.TDnLS">
+<code class="descname">TDnLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.TDnLS" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.TUpLS">
+<code class="descname">TUpLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.TUpLS" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.auto_patrol">
+<code class="descname">auto_patrol</code><a class="headerlink" href="#libs.PanTilt.PanTilt.auto_patrol" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.battery_voltage">
+<code class="descname">battery_voltage</code><a class="headerlink" href="#libs.PanTilt.PanTilt.battery_voltage" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.PanTilt.PanTilt.communicate_with_updater">
+<code class="descname">communicate_with_updater</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.communicate_with_updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.communicate_with_updater" title="Permalink to this definition">§</a></dt>
+<dd><p>communication member. This is meant to send some metadata to the updater thread.
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.control_mode">
+<code class="descname">control_mode</code><a class="headerlink" href="#libs.PanTilt.PanTilt.control_mode" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.dwell">
+<code class="descname">dwell</code><a class="headerlink" href="#libs.PanTilt.PanTilt.dwell" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.PanTilt.PanTilt.get_value_from_plaintext">
+<em class="property">static </em><code class="descname">get_value_from_plaintext</code><span class="sig-paren">(</span><em>message</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.get_value_from_plaintext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.get_value_from_plaintext" title="Permalink to this definition">§</a></dt>
+<dd><p>gets float, int or string values from a xml string where the key is the tag of the first element with value as
+text.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>message</strong> &#8211; </li>
+<li><strong>args</strong> &#8211; list of keys to find values for.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict of arg: value pairs requested</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.PanTilt.PanTilt.get_value_from_stream">
+<code class="descname">get_value_from_stream</code><span class="sig-paren">(</span><em>stream</em>, <em>*keys</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.get_value_from_stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.get_value_from_stream" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.PanTilt.PanTilt.get_value_from_xml">
+<em class="property">static </em><code class="descname">get_value_from_xml</code><span class="sig-paren">(</span><em>message_xml</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.get_value_from_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.get_value_from_xml" title="Permalink to this definition">§</a></dt>
+<dd><p>gets float, int or string values from a xml string where the key is the tag of the first element with value as
+text.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>message_xml</strong> &#8211; the xml to searach in.</li>
+<li><strong>args</strong> &#8211; list of keys to find values for.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict of arg: value pairs requested</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.heater">
+<code class="descname">heater</code><a class="headerlink" href="#libs.PanTilt.PanTilt.heater" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.PanTilt.PanTilt.hold_pan_tilt">
+<code class="descname">hold_pan_tilt</code><span class="sig-paren">(</span><em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.hold_pan_tilt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.hold_pan_tilt" title="Permalink to this definition">§</a></dt>
+<dd><p>unknown, presumably holds the pan-tilt in one place.
+doesnt work...
+:param state: ? beats me.
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.list_index">
+<code class="descname">list_index</code><a class="headerlink" href="#libs.PanTilt.PanTilt.list_index" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.list_state">
+<code class="descname">list_state</code><a class="headerlink" href="#libs.PanTilt.PanTilt.list_state" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.pan">
+<code class="descname">pan</code><a class="headerlink" href="#libs.PanTilt.PanTilt.pan" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.pan_range">
+<code class="descname">pan_range</code><a class="headerlink" href="#libs.PanTilt.PanTilt.pan_range" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.PanTilt.PanTilt.pan_step">
+<code class="descname">pan_step</code><span class="sig-paren">(</span><em>direction</em>, <em>n_steps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.pan_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.pan_step" title="Permalink to this definition">§</a></dt>
+<dd><p>pans by step, steps must be less than or equal to 127
+:type n_steps: int
+:type direction: str
+:param direction:
+:param n_steps: integer &lt;= 127. number of steps
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.position">
+<code class="descname">position</code><a class="headerlink" href="#libs.PanTilt.PanTilt.position" title="Permalink to this definition">§</a></dt>
+<dd><p>gets the current pan/tilt position.
+:return: tuple (pan, tilt)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.scale">
+<code class="descname">scale</code><a class="headerlink" href="#libs.PanTilt.PanTilt.scale" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.temp_f">
+<code class="descname">temp_f</code><a class="headerlink" href="#libs.PanTilt.PanTilt.temp_f" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.tilt">
+<code class="descname">tilt</code><a class="headerlink" href="#libs.PanTilt.PanTilt.tilt" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.tilt_range">
+<code class="descname">tilt_range</code><a class="headerlink" href="#libs.PanTilt.PanTilt.tilt_range" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.PanTilt.PanTilt.tilt_step">
+<code class="descname">tilt_step</code><span class="sig-paren">(</span><em>direction</em>, <em>n_steps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.tilt_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.tilt_step" title="Permalink to this definition">§</a></dt>
+<dd><p>tilts by step, steps must be less than or equal to 127
+:type n_steps: int
+:type direction: str
+:param direction:
+:param n_steps: integer &lt;= 127. number of steps
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.zoom_list">
+<code class="descname">zoom_list</code><a class="headerlink" href="#libs.PanTilt.PanTilt.zoom_list" title="Permalink to this definition">§</a></dt>
+<dd><p>List of zoom value intervals.</p>
+<p>Setting this also affects the state of other related variables.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">cached.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">recalculates, recalculates fov lists, resets zoom_position.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.zoom_position">
+<code class="descname">zoom_position</code><a class="headerlink" href="#libs.PanTilt.PanTilt.zoom_position" title="Permalink to this definition">§</a></dt>
+<dd><p>Zoom Position.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">from camera.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">to camera.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.zoom_range">
+<code class="descname">zoom_range</code><a class="headerlink" href="#libs.PanTilt.PanTilt.zoom_range" title="Permalink to this definition">§</a></dt>
+<dd><p>Range of zoom for the camera.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">from camera.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">cached.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.PanTilt.ThreadedPTZ">
+<em class="property">class </em><code class="descclassname">libs.PanTilt.</code><code class="descname">ThreadedPTZ</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#ThreadedPTZ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.ThreadedPTZ" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/threading.html#threading.Thread" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.PanTilt.ThreadedPanTilt">
+<em class="property">class </em><code class="descclassname">libs.PanTilt.</code><code class="descname">ThreadedPanTilt</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#ThreadedPanTilt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.ThreadedPanTilt" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.PanTilt.ThreadedPTZ" title="libs.PanTilt.ThreadedPTZ"><code class="xref py py-class docutils literal"><span class="pre">libs.PanTilt.ThreadedPTZ</span></code></a>, <a class="reference internal" href="#libs.PanTilt.PanTilt" title="libs.PanTilt.PanTilt"><code class="xref py py-class docutils literal"><span class="pre">libs.PanTilt.PanTilt</span></code></a></p>
+<dl class="method">
+<dt id="libs.PanTilt.ThreadedPanTilt.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#ThreadedPanTilt.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.ThreadedPanTilt.run" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="module-libs.Sensor">
 <span id="libs-sensor"></span><h2>libs.Sensor<a class="headerlink" href="#module-libs.Sensor" title="Permalink to this headline">§</a></h2>
@@ -1437,7 +1773,7 @@ returns False if the conditions where the sensor should NOT capture are met.
 Helper class to cache various things like the hostname, machine-id, amount of space in the filesystem.</p>
 <dl class="attribute">
 <dt id="libs.SysUtil.SysUtil.a_statvfs">
-<code class="descname">a_statvfs</code><em class="property"> = os.statvfs_result(f_bsize=4096, f_frsize=4096, f_blocks=28682898, f_bfree=8409817, f_bavail=6947033, f_files=7299072, f_ffree=6482003, f_favail=6482003, f_flag=1024, f_namemax=255)</em><a class="headerlink" href="#libs.SysUtil.SysUtil.a_statvfs" title="Permalink to this definition">§</a></dt>
+<code class="descname">a_statvfs</code><em class="property"> = os.statvfs_result(f_bsize=4096, f_frsize=4096, f_blocks=28682898, f_bfree=8458253, f_bavail=6995469, f_files=7299072, f_ffree=6481974, f_favail=6481974, f_flag=1024, f_namemax=255)</em><a class="headerlink" href="#libs.SysUtil.SysUtil.a_statvfs" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="classmethod">
@@ -2070,53 +2406,62 @@ eg sizeof_fmt(1234) returns &#8216;1.2KiB&#8217;</p>
 <span id="libs-uploader"></span><h2>libs.Uploader<a class="headerlink" href="#module-libs.Uploader" title="Permalink to this headline">§</a></h2>
 <dl class="class">
 <dt id="libs.Uploader.GenericUploader">
-<em class="property">class </em><code class="descclassname">libs.Uploader.</code><code class="descname">GenericUploader</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>source_dir: str</em>, <em>hostname: str</em>, <em>queue: collections.deque = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#GenericUploader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.GenericUploader" title="Permalink to this definition">§</a></dt>
+<em class="property">class </em><code class="descclassname">libs.Uploader.</code><code class="descname">GenericUploader</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>source_dir: str = None</em>, <em>host: str = None</em>, <em>config: dict = None</em>, <em>queue: collections.deque = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#GenericUploader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.GenericUploader" title="Permalink to this definition">§</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#libs.Uploader.Uploader" title="libs.Uploader.Uploader"><code class="xref py py-class docutils literal"><span class="pre">libs.Uploader.Uploader</span></code></a></p>
-<p>generic uploader for uploading logs sensor data, etc.</p>
+<p>Generic uploader for uploading logs sensor data, etc.</p>
+<dl class="method">
+<dt id="libs.Uploader.GenericUploader.fill_me">
+<code class="descname">fill_me</code><span class="sig-paren">(</span><em>dict_of_values: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#GenericUploader.fill_me"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.GenericUploader.fill_me" title="Permalink to this definition">§</a></dt>
+<dd><p>fills self with values from a dict.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dict_of_values</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)"><em>dict</em></a>) &#8211; dictionary of key: values</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="method">
 <dt id="libs.Uploader.GenericUploader.re_init">
 <code class="descname">re_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#GenericUploader.re_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.GenericUploader.re_init" title="Permalink to this definition">§</a></dt>
-<dd><p>there is no config to be reloaded here...
-:return:</p>
+<dd><p>Your config is in another castle.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="libs.Uploader.GenericUploader.remove_source_files">
-<code class="descname">remove_source_files</code><em class="property"> = False</em><a class="headerlink" href="#libs.Uploader.GenericUploader.remove_source_files" title="Permalink to this definition">§</a></dt>
+<code class="descname">remove_source_files</code><em class="property"> = True</em><a class="headerlink" href="#libs.Uploader.GenericUploader.remove_source_files" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="libs.Uploader.Uploader">
-<em class="property">class </em><code class="descclassname">libs.Uploader.</code><code class="descname">Uploader</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>queue: collections.deque = None</em>, <em>config_filename: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader" title="Permalink to this definition">§</a></dt>
+<em class="property">class </em><code class="descclassname">libs.Uploader.</code><code class="descname">Uploader</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>queue: collections.deque = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader" title="Permalink to this definition">§</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/threading.html#threading.Thread" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
 <p>Uploader class,
 used to upload,</p>
 <dl class="method">
 <dt id="libs.Uploader.Uploader.communicate_with_updater">
 <code class="descname">communicate_with_updater</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.communicate_with_updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.communicate_with_updater" title="Permalink to this definition">§</a></dt>
-<dd><p>communication member. This is meant to send some metadata to the updater thread.
-:return:</p>
+<dd><p>communication member. This is meant to send some metadata to the updater thread.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="libs.Uploader.Uploader.mkdir_recursive">
 <code class="descname">mkdir_recursive</code><span class="sig-paren">(</span><em>link</em>, <em>remote_directory</em>, <em>mkdir=None</em>, <em>chdir=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.mkdir_recursive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.mkdir_recursive" title="Permalink to this definition">§</a></dt>
-<dd><p>creates directories recursively on the remote server</p>
+<dd><p>Creates directories recursively on the remote server</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>link</strong> &#8211; ftp/sftp connection object</li>
 <li><strong>remote_directory</strong> &#8211; </li>
-<li><strong>chdir</strong> &#8211; </li>
-<li><strong>mkdir</strong> &#8211; </li>
+<li><strong>chdir</strong> &#8211; method used to change to a directory</li>
+<li><strong>mkdir</strong> &#8211; method used to make a directory</li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
 </td>
 </tr>
 </tbody>
@@ -2126,8 +2471,7 @@ used to upload,</p>
 <dl class="method">
 <dt id="libs.Uploader.Uploader.re_init">
 <code class="descname">re_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.re_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.re_init" title="Permalink to this definition">§</a></dt>
-<dd><p>setup to be run each time the config is reloaded
-:return:</p>
+<dd><p>setup to be run each time the config is reloaded</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -2139,23 +2483,28 @@ used to upload,</p>
 <dt id="libs.Uploader.Uploader.run">
 <code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.run" title="Permalink to this definition">§</a></dt>
 <dd><p>run method.
-main loop for Uploaders.
-:return:</p>
+main loop for Uploaders.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="libs.Uploader.Uploader.stop">
 <code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.stop" title="Permalink to this definition">§</a></dt>
-<dd><p>stopper method
-:return:</p>
+<dd><p>stopper method</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="libs.Uploader.Uploader.upload">
 <code class="descname">upload</code><span class="sig-paren">(</span><em>file_names</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.upload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.upload" title="Permalink to this definition">§</a></dt>
-<dd><p>uploads files via sftp. deletes the files as they are uploaded.
-:param file_names: filenames to upload
-:return:</p>
+<dd><p>uploads files via sftp.
+deletes the files as they are uploaded, creates new directories if needed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>file_names</strong> &#8211; filenames to upload</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">

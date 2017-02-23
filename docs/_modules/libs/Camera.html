@@ -90,7 +90,7 @@
 <span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">import</span> <span class="nn">requests</span>
-<span class="kn">from</span> <span class="nn">requests.auth</span> <span class="k">import</span> <span class="n">HTTPBasicAuth</span>
+<span class="kn">from</span> <span class="nn">requests.auth</span> <span class="k">import</span> <span class="n">HTTPBasicAuth</span><span class="p">,</span> <span class="n">HTTPDigestAuth</span>
 <span class="kn">from</span> <span class="nn">xml.etree</span> <span class="k">import</span> <span class="n">ElementTree</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">deque</span>
 <span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">BytesIO</span>
@@ -249,9 +249,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stopper</span> <span class="o">=</span> <span class="n">Event</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">orinal_config</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span> <span class="o">=</span> <span class="n">identifier</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">failed</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_exif</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">focus_position</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_frame</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">Camera</span><span class="o">.</span><span class="n">default_width</span><span class="p">,</span> <span class="n">Camera</span><span class="o">.</span><span class="n">default_height</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">noconf</span><span class="p">:</span>
@@ -283,7 +284,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;camera&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">interval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;timelapse&quot;</span><span class="p">,</span> <span class="s2">&quot;interval&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">spool_directory</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="s2">&quot;SPC-EYEPI_&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spool_directory</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;SPC-EYEPI&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;localfiles&quot;</span><span class="p">][</span><span class="s2">&quot;upload_dir&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">begin_capture</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">end_capture</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">59</span><span class="p">)</span>
@@ -343,6 +344,10 @@
 <span class="sd">        :return: :func:`numpy.array` if filename not specified, otherwise list of files.</span>
 <span class="sd">        :rtype: numpy.array</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
+            <span class="n">dirname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">capture_image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Camera.capture_monkey"><a class="viewcode-back" href="../../libs.html#libs.Camera.Camera.capture_monkey">[docs]</a>    <span class="k">def</span> <span class="nf">capture_monkey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
@@ -665,7 +670,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;camera_name&quot;</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">interval</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;interval&quot;</span><span class="p">,</span> <span class="mi">300</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">spool_directory</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="s2">&quot;SPC-EYEPI_&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spool_directory</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;upload_dir&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">identifier</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">begin_capture</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
@@ -709,11 +714,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_notified</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="n">format_str</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;format_url&quot;</span><span class="p">,</span> <span class="s2">&quot;http://</span><span class="si">{HTTP_login}</span><span class="s2">@</span><span class="si">{ip}{command}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auth_type</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;auth_type&quot;</span><span class="p">,</span> <span class="s2">&quot;basic&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">auth_object</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">format_str</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;http://</span><span class="si">{HTTP_login}</span><span class="s2">@&quot;</span><span class="p">):</span>
             <span class="n">format_str</span> <span class="o">=</span> <span class="n">format_str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{HTTP_login}</span><span class="s2">@&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">auth_object</span> <span class="o">=</span> <span class="n">HTTPBasicAuth</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">),</span>
                                              <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">auth_object_digest</span> <span class="o">=</span> <span class="n">HTTPDigestAuth</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">),</span>
+                                                     <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">auth_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">auth_object_digest</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auth_type</span> <span class="o">==</span> <span class="s2">&quot;digest&quot;</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">auth_object</span>
+
 
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_HTTP_login</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;HTTP_login&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{user}</span><span class="s2">:</span><span class="si">{password}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -741,9 +751,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_hfov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vfov</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_zoom_list</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;zoom_list&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">50</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">350</span><span class="p">,</span> <span class="mi">450</span><span class="p">,</span> <span class="mi">550</span><span class="p">,</span> <span class="mi">650</span><span class="p">,</span> <span class="mi">750</span><span class="p">,</span> <span class="mi">850</span><span class="p">,</span> <span class="mi">950</span><span class="p">,</span> <span class="mi">1000</span><span class="p">])</span>
 
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_focus_range</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;focus_range&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">99999</span><span class="p">])</span>
-
 
         <span class="c1"># set commands from the rest of the config.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">command_urls</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;urls&#39;</span><span class="p">,</span> <span class="p">{})</span>
@@ -771,11 +779,15 @@
         <span class="n">response</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">auth_object</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Auth is not basic, trying digest&quot;</span><span class="p">)</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">auth_object_digest</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Some exception got raised </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
             <span class="k">return</span>
         <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">204</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">{}</span><span class="s2">] - </span><span class="si">{}</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">reason</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">url</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;[</span><span class="si">{}</span><span class="s2">] - </span><span class="si">{}</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">reason</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">url</span><span class="p">)))</span>
             <span class="k">return</span>
         <span class="k">return</span> <span class="n">response</span>
 
@@ -833,12 +845,12 @@
             <span class="k">return</span> <span class="n">return_values</span>
         <span class="c1"># apparently, there is an issue parsing when the ptz returns INVALID XML (WTF?)</span>
         <span class="c1"># these seem to be the tags that get mutilated.</span>
-        <span class="n">illegal</span> <span class="o">=</span> <span class="p">[</span><span class="sa">b</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">,</span>
-                   <span class="sa">b</span><span class="s2">&quot;&lt;CPStatusMsg&gt;&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&lt;/CPStatusMsg&gt;&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&lt;Text&gt;&quot;</span><span class="p">,</span>
-                   <span class="sa">b</span><span class="s2">&quot;&lt;/Text&gt;&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&lt;Type&gt;Info&lt;/Type&gt;&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&lt;Type&gt;Info&quot;</span><span class="p">,</span>
-                   <span class="sa">b</span><span class="s2">&quot;Info&lt;/Type&gt;&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&lt;/Type&gt;&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&lt;Type&gt;&quot;</span><span class="p">]</span>
+        <span class="n">illegal</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">,</span>
+                   <span class="s2">&quot;&lt;CPStatusMsg&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;/CPStatusMsg&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;Text&gt;&quot;</span><span class="p">,</span>
+                   <span class="s2">&quot;&lt;/Text&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;Type&gt;Info&lt;/Type&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;Type&gt;Info&quot;</span><span class="p">,</span>
+                   <span class="s2">&quot;Info&lt;/Type&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;/Type&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;Type&gt;&quot;</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">ill</span> <span class="ow">in</span> <span class="n">illegal</span><span class="p">:</span>
-            <span class="n">message_xml</span> <span class="o">=</span> <span class="n">message_xml</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">ill</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">message_xml</span> <span class="o">=</span> <span class="n">message_xml</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">ill</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
 
         <span class="n">root_element</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;invalidation_tag&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1032,7 +1044,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cmd</span><span class="p">,</span> <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_cmd</span><span class="p">(</span><span class="s2">&quot;get_focus_mode&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">cmd</span><span class="p">:</span>
-            <span class="k">return</span>
+            <span class="k">return</span> <span class="kc">None</span>
         <span class="n">stream_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_stream</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_value_from_stream</span><span class="p">(</span><span class="n">stream_output</span><span class="p">,</span> <span class="n">keys</span><span class="p">)[</span><span class="s1">&#39;mode&#39;</span><span class="p">]</span>
 
@@ -1178,18 +1190,6 @@
         <span class="c1"># fmt_string = &quot;zoom_pos:\t{}\nzoom_range:\t{}&quot;</span>
         <span class="n">fmt_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">focus_pos:</span><span class="se">\t</span><span class="si">{}</span><span class="se">\n</span><span class="s2">focus_range:</span><span class="se">\t</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">fmt_string</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_position</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus_range</span><span class="p">)</span></div>
-
-    <span class="c1"># def focus(self):</span>
-    <span class="c1">#     &quot;&quot;&quot;</span>
-    <span class="c1">#     forces a refocus of the the camera</span>
-    <span class="c1">#</span>
-    <span class="c1">#     :return: response from the camera.</span>
-    <span class="c1">#     &quot;&quot;&quot;</span>
-    <span class="c1">#     cmd,keys = self._get_cmd(&quot;set_focus_mode&quot;)</span>
-    <span class="c1">#     if not cmd:</span>
-    <span class="c1">#         return None</span>
-    <span class="c1">#     stream_output = self._read_stream(cmd.format(mode=&quot;REFOCUS&quot;))</span>
-    <span class="c1">#     return self.get_value_from_stream(stream_output, keys)</span>
 
 
 <div class="viewcode-block" id="GPCamera"><a class="viewcode-back" href="../../libs.html#libs.Camera.GPCamera">[docs]</a><span class="k">class</span> <span class="nc">GPCamera</span><span class="p">(</span><span class="n">Camera</span><span class="p">):</span>
@@ -1681,7 +1681,7 @@
 
 <span class="sd">        :param filename: image filename without extension</span>
 <span class="sd">        :return: :func:`numpy.array` if filename not specified, otherwise list of files.</span>
-<span class="sd">        :rtype: numpy.array or list</span>
+<span class="sd">        :rtype: numpy.array</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1729,7 +1729,6 @@
         <span class="p">[</span><span class="kc">True</span><span class="p">,</span>  <span class="kc">True</span><span class="p">,</span>  <span class="kc">False</span><span class="p">]</span>
     <span class="p">]</span>
     <span class="n">gpio_groups</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,)</span>
-
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>

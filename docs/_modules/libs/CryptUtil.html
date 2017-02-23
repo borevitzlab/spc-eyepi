@@ -106,12 +106,16 @@
 <span class="k">except</span><span class="p">:</span>
     <span class="k">pass</span>
 
+<span class="c1"># default keyserver</span>
 <span class="n">keyserver</span> <span class="o">=</span> <span class="s2">&quot;traitcapture.org&quot;</span>
 
-<div class="viewcode-block" id="serialize_signature"><a class="viewcode-back" href="../../libs.html#libs.CryptUtil.serialize_signature">[docs]</a><span class="k">def</span> <span class="nf">serialize_signature</span><span class="p">(</span><span class="n">signature</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+
+<div class="viewcode-block" id="serialize_signature"><a class="viewcode-back" href="../../libs.html#libs.CryptUtil.serialize_signature">[docs]</a><span class="k">def</span> <span class="nf">serialize_signature</span><span class="p">(</span><span class="n">signature</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    formats the signature for the server, with the correct boundaries</span>
+
 <span class="sd">    :param signature: raw bytes signature.</span>
+<span class="sd">    :type signature: bytes</span>
 <span class="sd">    :return: str formatted signature for sending to the server.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">signature</span> <span class="o">=</span> <span class="n">b64encode</span><span class="p">(</span><span class="n">signature</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
@@ -122,7 +126,9 @@
 <div class="viewcode-block" id="ssh_public_key"><a class="viewcode-back" href="../../libs.html#libs.CryptUtil.ssh_public_key">[docs]</a><span class="k">def</span> <span class="nf">ssh_public_key</span><span class="p">(</span><span class="n">keypair</span><span class="p">:</span> <span class="n">rsa</span><span class="o">.</span><span class="n">RSAPrivateKeyWithSerialization</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    converts an rsa keypair to openssh format public key</span>
-<span class="sd">    :param keypair:</span>
+
+<span class="sd">    :param keypair: keypair.</span>
+<span class="sd">    :type keypair: cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKeyWithSerialization</span>
 <span class="sd">    :return: string of public key</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">eb</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">int_to_bytes</span><span class="p">(</span><span class="n">keypair</span><span class="o">.</span><span class="n">public_key</span><span class="p">()</span><span class="o">.</span><span class="n">public_numbers</span><span class="p">()</span><span class="o">.</span><span class="n">e</span><span class="p">)</span>
@@ -135,20 +141,30 @@
 
 
 <div class="viewcode-block" id="SSHManager"><a class="viewcode-back" href="../../libs.html#libs.CryptUtil.SSHManager">[docs]</a><span class="k">class</span> <span class="nc">SSHManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    a manager of ssh keys, with the ability to sign messages using them.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;/home/.ssh&quot;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_agentKey</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">homepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;HOME&#39;</span><span class="p">],</span> <span class="s2">&quot;.ssh&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">homepath</span><span class="p">):</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="n">homepath</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;SFTP Key Manager&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">token_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;key_token&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">priv_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;id_rsa&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pub_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;id_rsa.pub&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">authorized_keys_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;authorized_keys&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">token_path</span><span class="p">):</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">token_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">key_token_file</span><span class="p">:</span>
                 <span class="n">token</span> <span class="o">=</span> <span class="n">key_token_file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Attempting to get new key from server with </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">token</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Attempting to get new key from server with </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">token</span><span class="p">))</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_new_key_from_server</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">token_path</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">priv_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;id_rsa&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pub_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;id_rsa.pub&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">known_hosts_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;known_hosts&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">authorized_keys_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;authorized_keys&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">priv_path</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -160,14 +176,26 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">paramiko_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        property for a key usable by paramiko</span>
+
+<span class="sd">        :return: agentKey for use by paramiko/pysftp</span>
+<span class="sd">        :rtype: paramiko.rsakey.RSAKey</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_agentKey</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">ssh_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        ssh key property</span>
+<span class="sd">        sets the internal rsa key and the agentKey for use by paramiko.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
 
     <span class="nd">@ssh_key</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">ssh_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">serialization</span><span class="o">.</span><span class="n">load_pem_private_key</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">default_backend</span><span class="p">())</span>
         <span class="n">pbytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="o">.</span><span class="n">private_bytes</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="n">serialization</span><span class="o">.</span><span class="n">Encoding</span><span class="o">.</span><span class="n">PEM</span><span class="p">,</span>
                                          <span class="nb">format</span><span class="o">=</span><span class="n">serialization</span><span class="o">.</span><span class="n">PrivateFormat</span><span class="o">.</span><span class="n">TraditionalOpenSSL</span><span class="p">,</span>
@@ -175,11 +203,25 @@
         <span class="n">key_io</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">pbytes</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ssh_agentKey</span> <span class="o">=</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">RSAKey</span><span class="o">.</span><span class="n">from_private_key</span><span class="p">(</span><span class="n">key_io</span><span class="p">)</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">public_ssh_key_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        property for the public ssh key string.</span>
+
+<span class="sd">        :return: string of the ssh public key, encoded to be added to a authorized_keys file</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ssh_public_key</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">()</span>
+
 <div class="viewcode-block" id="SSHManager.get_new_key_from_server"><a class="viewcode-back" href="../../libs.html#libs.CryptUtil.SSHManager.get_new_key_from_server">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_key_from_server</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        acquires an ssh key from the server with a token.</span>
+<span class="sd">        acquires an ssh key from the server with a token and writes the key to the current path.</span>
+
 <span class="sd">        :param token: a string token to send to the server.</span>
-<span class="sd">        :return:</span>
+<span class="sd">        :return: boolean indicating whether the operation was successful.</span>
+<span class="sd">        :rtype: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;https://</span><span class="si">{}</span><span class="s1">/api/camera/id_rsa/</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">keyserver</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">get_machineid</span><span class="p">(),</span>
@@ -202,8 +244,7 @@
 
 <div class="viewcode-block" id="SSHManager.write_key_to_path"><a class="viewcode-back" href="../../libs.html#libs.CryptUtil.SSHManager.write_key_to_path">[docs]</a>    <span class="k">def</span> <span class="nf">write_key_to_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        writes public and private keys to their respective paths</span>
-<span class="sd">        :return:</span>
+<span class="sd">        writes internally stored public and private keys to their respective paths</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">priv_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_key</span><span class="o">.</span><span class="n">private_bytes</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="n">serialization</span><span class="o">.</span><span class="n">Encoding</span><span class="o">.</span><span class="n">PEM</span><span class="p">,</span>
                                                 <span class="nb">format</span><span class="o">=</span><span class="n">serialization</span><span class="o">.</span><span class="n">PrivateFormat</span><span class="o">.</span><span class="n">TraditionalOpenSSL</span><span class="p">,</span>
@@ -222,21 +263,13 @@
             <span class="n">authorized_keys</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ssh_key_string</span><span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">authorized_keys_path</span><span class="p">,</span> <span class="mo">0o744</span><span class="p">)</span></div>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">public_ssh_key_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        gets the public ssh key string.</span>
-<span class="sd">        :return:</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">ssh_public_key</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">()</span>
-
 <div class="viewcode-block" id="SSHManager.sign_message"><a class="viewcode-back" href="../../libs.html#libs.CryptUtil.SSHManager.sign_message">[docs]</a>    <span class="k">def</span> <span class="nf">sign_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        signs a text message.</span>
+<span class="sd">        signs a text message using the internal key</span>
+
 <span class="sd">        :param message: utf-8 encoded string</span>
-<span class="sd">        :return str: signature for message.</span>
+<span class="sd">        :return: signature for message.</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">message</span>

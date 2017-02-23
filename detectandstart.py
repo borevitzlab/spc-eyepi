@@ -172,6 +172,7 @@ def detect_sensors(updater: Updater) -> tuple:
                     shat = ThreadedSenseHat(identifier=SysUtil.get_hostname() + "-sensehat",
                                             queue=updater.communication_queue)
                     ul = GenericUploader(shat.identifier, shat.data_directory, "sftp.traitcapture.org")
+                    ul.remove_source_files = False
                     workers.append(shat)
                     workers.append(ul)
                 else:
