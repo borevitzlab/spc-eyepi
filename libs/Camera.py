@@ -47,6 +47,7 @@ def nested_lookup(key, document):
     """
     nested document lookup,
     works on dicts and lists
+
     :param key: string of key to lookup
     :param document: dict or list to lookup
     :return: yields item
