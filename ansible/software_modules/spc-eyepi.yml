@@ -1,16 +1,16 @@
-- name: Install gphoto2-cffi
- pip:
-   name: "git+https://github.com/borevitzlab/gphoto2-cffi#egg=gphoto2-cffi"
-   editable: no
-   state: latest
- no_log: yes
+-   name: Install gphoto2-cffi
+    pip:
+        name: "git+https://github.com/borevitzlab/gphoto2-cffi#egg=gphoto2-cffi"
+        editable: no
+        state: latest
+    no_log: yes
 
-- name: Install Adafruit_DHT
- pip:
-   name: "git+https://github.com/adafruit/Adafruit_Python_DHT#egg=Adafruit_Python_DHT"
-   editable: no
-   state: latest
- no_log: yes
+-   name: Install Adafruit_DHT
+    pip:
+        name: "git+https://github.com/adafruit/Adafruit_Python_DHT#egg=Adafruit_Python_DHT"
+        editable: no
+        state: latest
+    no_log: yes
 
 - name: Download spc-eyepi
   git:

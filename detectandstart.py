@@ -211,6 +211,28 @@ def detect_lights(updater: Updater) -> tuple:
         logger.error("Couldnt detect light configs: {}".format(str(e)))
 
 
+def detect_ivport(updater: Updater) -> tuple:
+    """
+    Method to detect IVport multiplexer.
+    Its difficult to actually detect the existence of an ivport so we must just assume taht it exists if there is a
+    config file matching the right pattern
+
+    :creates: :mod:`libs.Camera.IVPortCamera`, :mod:`libs.Uploader.Uploader`
+    :param updater: instance that has a `communication_queue` member that implements an `append` method
+    :type updater: Updater
+    :return: tuple of camera thread objects and associated uploader thread objects.
+    :rtype: tuple(Camera, Uploader)
+    """
+    from glob import glob
+    workers = []
+    for iv_conf in list(glob("configs/ivport*.ini")):
+        camera = ThreadedIVPortCamera(SysUtil.default_identifier(prefix="ivport"), queue=updater.communication_queue)
+        updater.add_to_identifiers(camera.identifier)
+        workers.append(camera)
+        workers.append(Uploader(SysUtil.default_identifier(prefix="ivport"), queue=updater.communication_queue))
+    return start_workers(workers)
+
+
 def enumerate_usb_devices() -> set:
     """
     Gets a set of the current usb devices from pyudev
@@ -221,7 +243,7 @@ def enumerate_usb_devices() -> set:
     return set(pyudev.Context().list_devices(subsystem="usb"))
 
 
-def start_workers(worker_objects: tuple) -> tuple:
+def start_workers(worker_objects: tuple or list) -> tuple:
     """
     Starts threaded workers
 
@@ -250,20 +272,6 @@ def kill_workers(worker_objects: tuple):
         thread.stop()
 
 
-def detect_ivport(updater: Updater) -> tuple:
-    """
-    Detect IVport, uninplemented as of 14/06/2016
-
-    todo: implement
-
-    :creates: :mod:`libs.Camera.IVPortCamera`, :mod:`libs.Uploader.Uploader`
-    :param updater: instance that has a `communication_queue` member that implements an `append` method
-    :type updater: Updater
-    :return: tuple of camera thread objects and associated uploader thread objects.
-    """
-    return tuple()
-
-
 if __name__ == "__main__":
 
     logger = logging.getLogger("Worker_dispatch")
@@ -282,7 +290,9 @@ if __name__ == "__main__":
         logger.debug("Starting up the updater")
         updater = Updater()
         start_workers((updater,))
-        raspberry = detect_picam(updater) or detect_ivport(updater)
+
+        ivport = detect_ivport(updater)
+        raspberry = detect_ivport(updater) or detect_picam(updater)
         webcams = detect_webcam(updater)
         lights = detect_lights(updater)
         sensors = detect_sensors(updater)

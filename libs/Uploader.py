@@ -18,19 +18,19 @@ except:
 
 
 class Uploader(Thread):
-    """ Uploader class,
-        used to upload,
+    """
+    Uploader class,
+    used to upload,
     """
     # upload interval
-    upload_interval = 120
+    upload_interval = 30
     remove_source_files = True
 
     def __init__(self, identifier: str, queue: deque = None):
         # same thread name hackery that the Camera threads use
         Thread.__init__(self, name=identifier + "-Uploader")
         self.stopper = Event()
-        if queue is None:
-            queue = deque(tuple(), 256)
+        queue = deque(tuple(), 256) if queue is None else queue
 
         self.communication_queue = queue
         self.identifier = identifier
@@ -60,7 +60,6 @@ class Uploader(Thread):
     def re_init(self):
         """
         setup to be run each time the config is reloaded
-
         """
         self.machine_id = SysUtil.get_machineid()
         self.config = SysUtil.ensure_config(self.identifier)
@@ -87,7 +86,7 @@ class Uploader(Thread):
             params['cnopts'] = pysftp.CnOpts(knownhosts=self.ssh_manager.known_hosts_path)
             params['cnopts'].hostkeys = None
 
-            if self.password is not None:
+            if self.password is not None and not self.password == "DEFAULT_PASSWORD":
                 params['password'] = self.password
 
             if os.path.exists(self.ssh_manager.priv_path) and os.path.exists(self.ssh_manager.known_hosts_path):
@@ -103,49 +102,62 @@ class Uploader(Thread):
                     self.mkdir_recursive(link, root)
                 link.chdir(root)
                 root = os.path.join(link.getcwd())
-                self.logger.info(root)
                 self.logger.debug("Uploading...")
                 # dump ze files.
                 total_time = time.time()
                 total_size = 0
+                self.logger.info(root)
+                link.chdir(root)
                 for idx, f in enumerate(file_names):
                     try:
+                        # time it
                         onefile_time = time.time()
+                        # replace the source dir in the filename to get the target directory
                         target_file = f.replace(self.source_dir, "")
+                        # remove the leading slash if it exists
                         target_file = target_file[1:] if target_file.startswith("/") else target_file
-                        dirname = os.path.dirname(target_file)
+                        # get the target directory.
+                        dirname = os.path.join(os.path.dirname(target_file))
+                        # create the target directory
+                        self.mkdir_recursive(link, dirname)
+                        # if the source is a directory, move on, dont try and upload a directory inode
                         if os.path.isdir(f):
-                            self.mkdir_recursive(link, target_file)
                             continue
-
-                        if not link.isdir(dirname):
-                            self.mkdir_recursive(link, dirname)
-                        link.chdir(os.path.join(root, dirname))
-
+                        # upload the file to a temp file.
                         link.put(f, os.path.basename(target_file) + ".tmp")
+                        # if our target file exists, remove it
                         if link.exists(os.path.basename(target_file)):
                             link.remove(os.path.basename(target_file))
+                        # atomic rename for our file.
                         link.rename(os.path.basename(target_file) + ".tmp", os.path.basename(target_file))
+                        # change ownership
                         link.chmod(os.path.basename(target_file), mode=755)
+                        # increment counters
                         self.total_data_uploaded_b += os.path.getsize(f)
+                        size = os.path.getsize(f)
+                        total_size += size
+                        mbps = (size / (time.time() - onefile_time)) / 1024 / 1024
+                        # remove source files.
                         if self.remove_source_files:
-                            size = os.path.getsize(f)
-                            total_size += size
-                            mbps = (size/(time.time() - onefile_time))/1024/1024
-
                             os.remove(f)
                             self.logger.debug(
-                                "Uploaded file {0}/{1} through sftp and removed from local filesystem, {2:.2f}Mb/s".format(idx, len(file_names), mbps))
+                                "Uploaded file {0}/{1} through sftp and removed from local filesystem, {2:.2f}Mb/s".format(
+                                    idx + 1, len(file_names), mbps))
+
                         else:
-                            self.logger.debug("Successfully uploaded {}/{} through sftp".format(idx, len(file_names)))
+                            self.logger.debug(
+                                "Uploaded file {0}/{1} through sftp, {2:.2f}Mb/s".format(idx + 1, len(file_names),
+                                                                                         mbps))
                         self.last_upload_time = datetime.datetime.now()
                     except Exception as e:
-                        self.logger.error("sftp:{}".format(str(e)))
+                        self.logger.error("SFTP failed put/mkdir: {}".format(str(e)))
                     finally:
                         link.chdir(root)
-
-                mbps = (total_size/(time.time() - total_time))/1024/1024
+                # get the total mbps
+                mbps = (total_size / (time.time() - total_time)) / 1024 / 1024
                 self.logger.debug("Finished uploading, {0:.2f}Mb/s".format(mbps))
+
+            # update counters
             if self.total_data_uploaded_b > 1000000000000:
                 curr = (((self.total_data_uploaded_b / 1024) / 1024) / 1024) / 1024
                 self.total_data_uploaded_b = 0
@@ -315,4 +327,3 @@ class GenericUploader(Uploader):
         Your config is in another castle.
         """
         self.last_upload_list = []
-
