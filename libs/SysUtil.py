@@ -40,7 +40,7 @@ replace = on
 resize = on
 timestamped = on
 server = sftp.traitcapture.org
-directory = /
+directory = /picam
 username = picam
 password = DEFAULT_PASSWORD
 
