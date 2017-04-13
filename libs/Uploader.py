@@ -87,12 +87,12 @@ class Uploader(Thread):
             params['cnopts'] = pysftp.CnOpts(knownhosts=self.ssh_manager.known_hosts_path)
             params['cnopts'].hostkeys = None
 
-            if self.password is not None:
-                params['password'] = self.password
 
             if os.path.exists(self.ssh_manager.priv_path) and os.path.exists(self.ssh_manager.known_hosts_path):
                 params['private_key'] = self.ssh_manager.priv_path
                 params['cnopts'] = pysftp.CnOpts(knownhosts=self.ssh_manager.known_hosts_path)
+            elif self.password is not None:
+                params['password'] = self.password
 
             with pysftp.Connection(**params) as link:
                 root = os.path.join(link.getcwd() or "", self.server_dir, self.camera_name)
