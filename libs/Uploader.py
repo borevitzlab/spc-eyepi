@@ -300,7 +300,7 @@ class GenericUploader(Uploader):
         self.upload_enabled = True
         self.username = "picam"
         self.password = None
-        self.server_dir = "/"
+        self.server_dir = "/picam"
 
         if config and type(config) is dict:
             self.camera_name = config.get("name", self.camera_name)
