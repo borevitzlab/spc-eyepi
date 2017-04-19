@@ -179,6 +179,7 @@ def detect_sensors(updater: Updater) -> tuple:
                     shat = ThreadedDHT(identifier=SysUtil.get_hostname() + "-" + i,
                                        queue=updater.communication_queue)
                     ul = GenericUploader(shat.identifier, shat.data_directory, "sftp.traitcapture.org")
+                    ul.remove_source_files = False
                     workers.append(shat)
                     workers.append(ul)
             except Exception as exc:
