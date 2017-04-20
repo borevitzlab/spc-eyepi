@@ -170,20 +170,32 @@ class Sensor(object):
         :return:
         """
         try:
-            fn = os.path.join(self.data_directory, "{}-alltime".format(self.identifier))
-            csvf, tsvf, jsonf = fn + ".csv", fn + ".tsv", fn + ".json"
+            fn = os.path.join(self.data_directory, "{}-lastday".format(self.identifier))
+            fn2 = os.path.join(self.data_directory, "{}-alltime".format(self.identifier))
+            csvf, tsvf = fn + ".csv", fn + ".tsv"
+            csvf2, tsvf2 = fn + ".csv", fn + ".tsv"
             self.rotate(csvf, tsvf)
-            # write the headers if the files are new.
-            if not os.path.exists(csvf):
-                with open(csvf, 'w') as csvfile:
-                    csvfile.write(",".join(("datetime", *self.data_headers))+"\n")
-            if not os.path.exists(tsvf):
-                with open(tsvf, 'w') as tsvfile:
-                    tsvfile.write("\t".join(("datetime", *self.data_headers))+"\n")
-            # append the measurements to the files.
-            with open(csvf, 'a') as csvfile, open(tsvf, 'a') as tsvfile:
-                csvfile.write(",".join(str(x) for x in measurement)+"\n")
-                tsvfile.write("\t".join(str(x) for x in measurement)+"\n")
+
+            def create_with_headers(path, delimiter=","):
+                # write the headers if the files are new.
+                if not os.path.exists(path):
+                    with open(path, 'w') as f:
+                        f.write(delimiter.join(("datetime", *self.data_headers))+"\n")
+
+            create_with_headers(csvf)
+            create_with_headers(csvf2)
+            create_with_headers(tsvf, delimiter='\t')
+            create_with_headers(tsvf2, delimiter='\t')
+
+            def append_measurement(fn, delimiter=","):
+                with open(fn, 'a') as f:
+                    f.write(delimiter.join(str(x) for x in measurement)+"\n")
+
+            append_measurement(csvf)
+            append_measurement(csvf2)
+            append_measurement(tsvf, delimiter='\t')
+            append_measurement(tsvf2, delimiter='\t')
+
         except Exception as e:
             self.logger.error("Error appending measurement to the all time data: {}".format(str(e)))
 
@@ -200,7 +212,7 @@ class Sensor(object):
                     rotatecsv = True
 
             if rotatecsv:
-                shutil.move(csvf, csvf.replace("alltime", lastd.strftime(self.timestamp_format)))
+                shutil.move(csvf, csvf.replace("lastday", lastd.strftime(self.timestamp_format)))
         except:
             # cannot parse datetime because the last line is the header or file doesnt exist
             pass
@@ -211,7 +223,7 @@ class Sensor(object):
                 if lastd.day != datetime.date.today().day:
                     rotatetsv = True
             if rotatetsv:
-                shutil.move(tsvf, tsvf.replace("alltime", lastd.strftime(self.timestamp_format)))
+                shutil.move(tsvf, tsvf.replace("lastday", lastd.strftime(self.timestamp_format)))
         except:
             # cannot parse datetime because the last line is the header or file doesnt exist
             pass
