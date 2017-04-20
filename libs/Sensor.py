@@ -173,7 +173,7 @@ class Sensor(object):
             fn = os.path.join(self.data_directory, "{}-lastday".format(self.identifier))
             fn2 = os.path.join(self.data_directory, "{}-alltime".format(self.identifier))
             csvf, tsvf = fn + ".csv", fn + ".tsv"
-            csvf2, tsvf2 = fn + ".csv", fn + ".tsv"
+            csvf2, tsvf2 = fn2 + ".csv", fn2 + ".tsv"
             self.rotate(csvf, tsvf)
 
             def create_with_headers(path, delimiter=","):
