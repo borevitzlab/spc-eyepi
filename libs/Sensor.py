@@ -35,6 +35,7 @@ class Sensor(object):
     """
     accuracy = 1
     data_headers = tuple()
+    timestamp_format = "%Y-%m-%dT%H:%M:%S"
 
     def __init__(self, identifier: str = None, queue: deque = None, write_out: bool = True, interval: int = 60,
                  **kwargs):
@@ -61,6 +62,7 @@ class Sensor(object):
                 os.makedirs(self.data_directory)
         self.current_capture_time = datetime.datetime.now()
         self.failed = list()
+
 
     @staticmethod
     def timestamp(tn: datetime.datetime) -> str:
@@ -198,7 +200,7 @@ class Sensor(object):
                     self.logger.info("Capturing data for {}".format(self.identifier))
                     measurement = self.get_measurement()
                     self.logger.info("Got Measurement {}".format(str(measurement)))
-                    self.measurements.append([self.current_capture_time.isoformat(), *measurement])
+                    self.measurements.append([self.current_capture_time.strftime(self.timestamp_format), *measurement])
                     self.append_to_alltime(self.measurements[-1])
                     self.write_daily_rolling()
                     self.communicate_with_updater()
@@ -248,7 +250,7 @@ class DHTMonitor(Sensor):
         :return:
         """
         def round_to_1dp(n):
-            return round(n,1)
+            return round(n, 1)
         try:
             return tuple(map(round_to_1dp, Adafruit_DHT.read_retry(self.sensor_type, self.pin)))
         except Exception as e:
