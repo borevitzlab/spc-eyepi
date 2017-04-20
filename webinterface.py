@@ -352,7 +352,7 @@ def available_networks():
 
         todo: get fluffybunny to fix this.
         """
-        networks = str.splitlines(os.popen('sudo iw dev wlp6s0 scan | grep "SSID: " | cut -c 8- | sort |uniq').read())
+        networks = str.splitlines(os.popen('iw dev wlan0 scan | grep "SSID: " | cut -c 8- | sort |uniq').read())
         networks = [x for x in networks if "x00" not in x]
         for net in networks:
             yield net + '\n'
