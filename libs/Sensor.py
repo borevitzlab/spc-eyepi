@@ -3,7 +3,7 @@ import logging.config
 import os
 import time
 from collections import deque
-
+import shutil
 from threading import Thread, Event
 from libs.SysUtil import SysUtil
 import csv, json
@@ -24,6 +24,36 @@ try:
 except Exception as e:
     logging.error("Couldnt import Adafruit_DHT: {}".format(str(e)))
 
+def last_line(in_file, block_size=1024, ignore_ending_newline=False):
+    suffix = ""
+    in_file.seek(0, os.SEEK_END)
+    in_file_length = in_file.tell()
+    seek_offset = 0
+
+    while(-seek_offset < in_file_length):
+        # Read from end.
+        seek_offset -= block_size
+        if -seek_offset > in_file_length:
+            # Limit if we ran out of file (can't seek backward from start).
+            block_size -= -seek_offset - in_file_length
+            if block_size == 0:
+                break
+            seek_offset = -in_file_length
+        in_file.seek(seek_offset, os.SEEK_END)
+        buf = in_file.read(block_size)
+
+        # Search for line end.
+        if ignore_ending_newline and seek_offset == -block_size and buf[-1] == '\n':
+            buf = buf[:-1]
+        pos = buf.rfind('\n')
+        if pos != -1:
+            # Found line end.
+            return buf[pos+1:] + suffix
+
+        suffix = buf + suffix
+
+    # One-line file.
+    return suffix
 
 class Sensor(object):
     """
@@ -172,6 +202,7 @@ class Sensor(object):
         try:
             fn = os.path.join(self.data_directory, "{}-alltime".format(self.identifier))
             csvf, tsvf, jsonf = fn + ".csv", fn + ".tsv", fn + ".json"
+            self.rotate(csvf, tsvf)
             # write the headers if the files are new.
             if not os.path.exists(csvf):
                 with open(csvf, 'w') as csvfile:
@@ -185,6 +216,36 @@ class Sensor(object):
                 tsvfile.write("\t".join(str(x) for x in measurement)+"\n")
         except Exception as e:
             self.logger.error("Error appending measurement to the all time data: {}".format(str(e)))
+
+    def rotate(self, csvf, tsvf):
+        rotatecsv, rotatetsv = False, False
+        try:
+            with open(csvf, 'r') as f:
+                last = last_line(ignore_ending_newline=True)
+                lastd = datetime.datetime.strptime(last.split(",")[0])
+                if lastd.day != datetime.date.today().day:
+                    rotatecsv = True
+
+                if rotatecsv:
+                    shutil.move(csvf, csvf.replace("alltime", lastd.strftime(self.timestamp_format)))
+        except:
+            # cannot parse datetime because the last line is the header or file doesnt exist
+            pass
+
+        try:
+            with open(tsvf, 'r') as f:
+                last = last_line(ignore_ending_newline=True)
+                lastd = datetime.datetime.strptime(last.split("\t")[0])
+                if lastd.day != datetime.date.today().day:
+                    rotatetsv = True
+            if rotatetsv:
+                shutil.move(tsvf, tsvf.replace("alltime", lastd.strftime(self.timestamp_format)))
+        except:
+            # cannot parse datetime because the last line is the header or file doesnt exist
+            pass
+
+
+
 
     def run(self):
         """
