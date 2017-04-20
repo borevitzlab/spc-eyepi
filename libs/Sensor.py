@@ -35,7 +35,7 @@ class Sensor(object):
     """
     accuracy = 1
     data_headers = tuple()
-    timestamp_format = "%Y-%m-%dT%H:%M:%S%z"
+    timestamp_format = "%Y-%m-%dT%H:%M:%S"
 
     def __init__(self, identifier: str = None, queue: deque = None, write_out: bool = True, interval: int = 60,
                  **kwargs):
@@ -193,7 +193,7 @@ class Sensor(object):
         :return:
         """
         while True and not self.stopper.is_set():
-            self.current_capture_time = datetime.datetime.now()
+            self.current_capture_time = datetime.datetime.utcnow()
             # checking if enabled and other stuff
             if self.time_to_measure:
                 try:
