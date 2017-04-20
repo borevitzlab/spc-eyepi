@@ -199,8 +199,8 @@ class Sensor(object):
                 if lastd.day != datetime.date.today().day:
                     rotatecsv = True
 
-                if rotatecsv:
-                    shutil.move(csvf, csvf.replace("alltime", lastd.strftime(self.timestamp_format)))
+            if rotatecsv:
+                shutil.move(csvf, csvf.replace("alltime", lastd.strftime(self.timestamp_format)))
         except:
             # cannot parse datetime because the last line is the header or file doesnt exist
             pass
@@ -215,9 +215,6 @@ class Sensor(object):
         except:
             # cannot parse datetime because the last line is the header or file doesnt exist
             pass
-
-
-
 
     def run(self):
         """
