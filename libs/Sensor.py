@@ -207,7 +207,7 @@ class Sensor(object):
                 except Exception as e:
                     self.logger.critical("Sensor data error - {}".format(str(e)))
 
-            time.sleep(0.1)
+            time.sleep(1)
 
     def get_measurement(self):
         """
