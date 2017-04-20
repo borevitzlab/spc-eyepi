@@ -6,6 +6,7 @@ import socket
 import subprocess
 import dbm
 import logging
+import re
 from jinja2 import Environment, FileSystemLoader
 from configparser import ConfigParser
 from datetime import datetime
@@ -377,6 +378,7 @@ def focus():
     """
 
     a = subprocess.check_output("gphoto2 --auto-detect", shell=True).decode()
+
     for port in re.finditer("usb:", a):
         port = a[port.start():port.end() + 7]
         cmdret = subprocess.check_output('gphoto2 --port "' + port + '" --get-config serialnumber',
@@ -809,63 +811,7 @@ def get_net_size(netmask):
 
 
 def commit_ip(ipaddress: str = None, subnet: str = None, gateway: str = None, dev="eth0"):
-    """
-    commits an ip to the current system
-
-    TODO: more platform independend solution, use the device specified in the arguments.
-
-    :param ipaddress: ip address to commit
-    :param subnet: subnet to user
-    :param gateway: gateway to template
-    :param dev: device to use TODO: actually make this do something
-    """
-    if ipaddress is not None and subnet is not None and gateway is not None:
-        dev = "eth0"
-
-        broadcast = trunc_at(ipaddress, ".") + ".255"
-        netmask = get_net_size(subnet)
-        if not os.path.exists("/etc/conf.d/"):
-            os.makedirs("/etc/conf.d/")
-        with open("/etc/conf.d/net-conf-" + dev) as f:
-            f.write(
-                "address=" + ipaddress + "\nnetmask=" + netmask + "\nbroadcast=" + broadcast + "\ngateway=" + gateway)
-        with open("/usr/local/bin/net-up.sh") as f:
-            script = """#!/bin/bash
-						ip link set dev "$1" up
-						ip addr add ${address}/${netmask} broadcast ${broadcast} dev "$1"
-						[[ -z ${gateway} ]] || {
-						  ip route add default via ${gateway}
-						}
-					"""
-            f.write(script)
-        with open("/usr/local/bin/net-down.sh") as f:
-            script = """#!/bin/bash
-						ip addr flush dev "$1"
-						ip route flush dev "$1"
-						ip link set dev "$1" down
-					"""
-            f.write(script)
-        os.system("chmod +x /usr/local/bin/net-{up,down}.sh")
-        with open("/etc/systemd/system/network@.service") as f:
-            script = """[Unit]
-						Description=Network connectivity (%i)
-						Wants=network.target
-						Before=network.target
-						BindsTo=sys-subsystem-net-devices-%i.device
-						After=sys-subsystem-net-devices-%i.device
-
-						[Service]
-						Type=oneshot
-						RemainAfterExit=yes
-						EnvironmentFile=/etc/conf.d/net-conf-%i
-						ExecStart=/usr/local/bin/net-up.sh %i
-						ExecStop=/usr/local/bin/net-down.sh %i
-
-						[Install]
-						WantedBy=multi-user.target
-					"""
-            f.write(script)
-        os.system("systemctl enable network@" + dev)
+    # this is blank on purpose. It needs fixing so its not so shit.
 
 
 def make_dynamic(dev: str):
@@ -890,8 +836,8 @@ def set_ip(ipaddress: str=None, subnet: str=None, gateway: str=None, dev: str="e
     :param dev: device to use TODO: actually make this do something
     """
     if ipaddress is not None and subnet is not None and gateway is not None:
-        os.system("ip addr add " + ipaddress + "/" + get_net_size(subnet) + " broadcast " + trunc_at(ipaddress,
-                                                                                                     ".") + ".255 dev " + dev)
+        os.system("ip addr add {}/{} broadcast {}.255 dev {}".format(ipaddress, get_net_size(subnet),
+                                                                     trunc_at(ipaddress, ".", 3), dev))
         os.system("ip route add default via " + gateway)
     else:
         make_dynamic(dev)
@@ -921,8 +867,7 @@ def set_ips():
                 socket.inet_aton(request.form["ip-form-ipaddress"])
                 socket.inet_aton(request.form["ip-form-subnet"])
                 socket.inet_aton(request.form["ip-form-gateway"])
-
-                commit_ip(ipaddress=request.form["ip-form-ipaddress"],
+                set_ip(ipaddress=request.form["ip-form-ipaddress"],
                           subnet=request.form["ip-form-subnet"],
                           gateway=request.form["ip-form-gateway"])
                 return 'success'
@@ -1044,19 +989,9 @@ def change_hostname():
     pi_config_path = "picam.ini"
     pi_config.read(config_path)
     pi_config["camera"]["name"] = hostname + "-Picam"
-    hostsfilestring = """#
-# /etc/hosts: static lookup table for host names
-#
-
-#<ip-address>	<hostname.domain.org>	<hostname>
-127.0.0.1	localhost.localdomain	localhost CHANGE
-::1		localhost.localdomain	localhost CHANGE
-
-# End of file
-"""
     try:
         with open("/etc/hosts", 'w') as hostsfile:
-            hostsfile.write(hostsfilestring.replace("CHANGE", hostname))
+            hostsfile.write(render_template('hosts.j2', hostname=hostname))
 
         with open("/etc/hostname", 'w') as hostnamefile:
             hostnamefile.write(hostname + '\n')
@@ -1072,7 +1007,6 @@ def change_hostname():
         return "success"
     except Exception as e:
         abort(500)
-
 
 @app.route('/')
 @requires_auth
@@ -1120,6 +1054,8 @@ def images():
         configs[os.path.basename(file)[:-4]] = ConfigParser()
         configs[os.path.basename(file)[:-4]].read(file)
     urls = []
+    #
+    # TODO: this is hella broken. need to find a better way of doing this....
     for file in glob(os.path.join("static", "temp", "*.jpg")):
         urls.append(os.path.basename(file)[:-4])
     return render_template("images.html", configs=configs, image_urls=urls, example=example)

@@ -1,40 +1,72 @@
+packages_base:
+  - base-devel
+  - mlocate
+  - nano
+  - curl
+  - fish
+  - git
+  - gnupg
+  - htop
+  - iftop
+  - lua-filesystem
+  - lua
+  - ncdu
+  - parallel
+  - rsync
+  - screen
+  - tar
+  - tor
+  - tree
+  - zsh
+  - wget
+  - python
+  - python-pip
+  - ipython
+  - glances
+  - cmake
+  - boost
+
 pacman_pkgs:
+  - gdbm
+  - python-jinja
+  - python-werkzeug
+  - python-flask
   - gcc-fortran
   - python-numpy
+  - python-levenshtein
   - opencv
   - python-cffi
+  - python-cryptography
   - python-pycparser
   - openvpn
   - exiv2
   - create_ap
   - wpa_supplicant
   - wpa_actiond
+  - python-yaml
+  - python-paramiko
+  - python-pysocks
+  - python-requests
 
 python_pkgs:
   - {name: ExifRead,            pythons: [3]}
   - {name: netifaces,           pythons: [3]}
-  - {name: ipython,             pythons: [3]}
   - {name: "requests[socks]",   pythons: [3]}
   - {name: py3exiv2,            pythons: [3]}
   - {name: pysftp,              pythons: [3]}
   - {name: pillow,              pythons: [3]}
-  - {name: paramiko,            pythons: [3]}
-  - {name: flask,               pythons: [3]}
   - {name: Flask-Bcrypt,        pythons: [3]}
   - {name: Flask-Login,         pythons: [3]}
-  - {name: cryptography,        pythons: [3]}
   - {name: WTForms,             pythons: [3]}
   - {name: browsepy,            pythons: [3]}
   - {name: pyudev,              pythons: [3]}
   - {name: picamera,            pythons: [3]}
-  - {name: pyyaml,              pythons: [3]}
   - {name: pexif,               pythons: [3]}
   - {name: twilio,              pythons: [3]}
   - {name: opbeat,              pythons: [3]}
   - {name: psutil,              pythons: [3]}
   - {name: schedule,            pythons: [3]}
   - {name: fuzzywuzzy,          pythons: [3]}
-  - {name: python-Levenshtein,  pythons: [3]}
   - {name: RPi.GPIO,            pythons: [3]}
   - {name: "sense-hat",         pythons: [3]}
 # - {name: imreg-dft,           pythons: [3]}

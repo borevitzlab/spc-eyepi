@@ -1,6 +1,6 @@
 - hosts: all
   vars_files:
-    - vars/pkgs_base.yml
+    - vars/misc.yml
     - vars/userlist.yml
     - vars/pkgs.yml
     - vars/hostmap.yml

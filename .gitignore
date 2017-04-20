@@ -4,6 +4,5 @@ db_private
 .idea/
 configs_byserial/*
 spc-eyepi.log*
-/ansible/secure/*
 **/*.retry
 **/*.pyc
