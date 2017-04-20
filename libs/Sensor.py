@@ -248,8 +248,10 @@ class Sensor(object):
                     self.communicate_with_updater()
                 except Exception as e:
                     self.logger.critical("Sensor data error - {}".format(str(e)))
+                # make sure we cannot record twice.
+                time.sleep(Sensor.accuracy * 2 )
 
-            time.sleep(1)
+            time.sleep(0.1)
 
     def get_measurement(self):
         """
