@@ -812,7 +812,7 @@ def get_net_size(netmask):
 
 def commit_ip(ipaddress: str = None, subnet: str = None, gateway: str = None, dev="eth0"):
     # this is blank on purpose. It needs fixing so its not so shit.
-
+    pass
 
 def make_dynamic(dev: str):
     """
