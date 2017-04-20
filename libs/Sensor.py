@@ -193,7 +193,7 @@ class Sensor(object):
         :return:
         """
         while True and not self.stopper.is_set():
-            self.current_capture_time = datetime.datetime.utcnow()
+            self.current_capture_time = datetime.datetime.now()
             # checking if enabled and other stuff
             if self.time_to_measure:
                 try:
