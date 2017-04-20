@@ -24,36 +24,6 @@ try:
 except Exception as e:
     logging.error("Couldnt import Adafruit_DHT: {}".format(str(e)))
 
-def last_line(in_file, block_size=1024, ignore_ending_newline=False):
-    suffix = ""
-    in_file.seek(0, os.SEEK_END)
-    in_file_length = in_file.tell()
-    seek_offset = 0
-
-    while(-seek_offset < in_file_length):
-        # Read from end.
-        seek_offset -= block_size
-        if -seek_offset > in_file_length:
-            # Limit if we ran out of file (can't seek backward from start).
-            block_size -= -seek_offset - in_file_length
-            if block_size == 0:
-                break
-            seek_offset = -in_file_length
-        in_file.seek(seek_offset, os.SEEK_END)
-        buf = in_file.read(block_size)
-
-        # Search for line end.
-        if ignore_ending_newline and seek_offset == -block_size and buf[-1] == '\n':
-            buf = buf[:-1]
-        pos = buf.rfind('\n')
-        if pos != -1:
-            # Found line end.
-            return buf[pos+1:] + suffix
-
-        suffix = buf + suffix
-
-    # One-line file.
-    return suffix
 
 class Sensor(object):
     """
@@ -218,11 +188,14 @@ class Sensor(object):
             self.logger.error("Error appending measurement to the all time data: {}".format(str(e)))
 
     def rotate(self, csvf, tsvf):
+        def last_line(f):
+            f.seek(-1024, 2)
+            return f.readlines()[-1].decode()
+
         rotatecsv, rotatetsv = False, False
         try:
-            with open(csvf, 'r') as f:
-                last = last_line(ignore_ending_newline=True)
-                lastd = datetime.datetime.strptime(last.split(",")[0])
+            with open(csvf, 'rb') as f:
+                lastd = datetime.datetime.strptime(last_line(f).split(",")[0])
                 if lastd.day != datetime.date.today().day:
                     rotatecsv = True
 
@@ -233,9 +206,8 @@ class Sensor(object):
             pass
 
         try:
-            with open(tsvf, 'r') as f:
-                last = last_line(ignore_ending_newline=True)
-                lastd = datetime.datetime.strptime(last.split("\t")[0])
+            with open(tsvf, 'rb') as f:
+                lastd = datetime.datetime.strptime(last_line(f).split("\t")[0])
                 if lastd.day != datetime.date.today().day:
                     rotatetsv = True
             if rotatetsv:
