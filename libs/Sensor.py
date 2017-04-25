@@ -245,7 +245,7 @@ class Sensor(object):
                     self.measurements.append([self.current_capture_time.strftime(self.timestamp_format), *measurement])
                     self.append_to_alltime(self.measurements[-1])
                     self.write_daily_rolling()
-                    self.communicate_with_updater()
+                    # self.communicate_with_updater()
                 except Exception as e:
                     self.logger.critical("Sensor data error - {}".format(str(e)))
                 # make sure we cannot record twice.
