@@ -166,6 +166,7 @@ class Sensor(object):
     def append_to_alltime(self, measurement: tuple):
         """
         appends the measurement to the csv and tsv files.
+        
         :param measurement:
         :return:
         """
