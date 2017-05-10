@@ -1,0 +1,357 @@
+# Telegraf Configuration
+#
+# Telegraf is entirely plugin driven. All metrics are gathered from the
+# declared inputs, and sent to the declared outputs.
+#
+# Plugins must be declared in here to be active.
+# To deactivate a plugin, comment out the name and any variables.
+#
+# Use 'telegraf -config telegraf.conf -test' to see what metrics a config
+# file would generate.
+#
+# Environment variables can be used anywhere in this config file, simply prepend
+# them with $. For strings the variable must be within quotes (ie, "$STR_VAR"),
+# for numbers and booleans they should be plain (ie, $INT_VAR, $BOOL_VAR)
+
+
+# Global tags can be specified here in key="value" format.
+[global_tags]
+  # dc = "us-east-1" # will tag all metrics with dc=us-east-1
+  # rack = "1a"
+  ## Environment variables can be used as tags, and throughout the config file
+  # user = "$USER"
+
+
+# Configuration for telegraf agent
+[agent]
+  ## Default data collection interval for all inputs
+  interval = "10s"
+  ## Rounds collection interval to 'interval'
+  ## ie, if interval="10s" then always collect on :00, :10, :20, etc.
+  round_interval = true
+
+  ## Telegraf will send metrics to outputs in batches of at most
+  ## metric_batch_size metrics.
+  ## This controls the size of writes that Telegraf sends to output plugins.
+  metric_batch_size = 1000
+
+  ## For failed writes, telegraf will cache metric_buffer_limit metrics for each
+  ## output, and will flush this buffer on a successful write. Oldest metrics
+  ## are dropped first when this buffer fills.
+  ## This buffer only fills when writes fail to output plugin(s).
+  metric_buffer_limit = 10000
+
+  ## Collection jitter is used to jitter the collection by a random amount.
+  ## Each plugin will sleep for a random time within jitter before collecting.
+  ## This can be used to avoid many plugins querying things like sysfs at the
+  ## same time, which can have a measurable effect on the system.
+  collection_jitter = "0s"
+
+  ## Default flushing interval for all outputs. You shouldn't set this below
+  ## interval. Maximum flush_interval will be flush_interval + flush_jitter
+  flush_interval = "10s"
+  ## Jitter the flush interval by a random amount. This is primarily to avoid
+  ## large write spikes for users running a large number of telegraf instances.
+  ## ie, a jitter of 5s and interval 10s means flushes will happen every 10-15s
+  flush_jitter = "0s"
+
+  ## By default, precision will be set to the same timestamp order as the
+  ## collection interval, with the maximum being 1s.
+  ## Precision will NOT be used for service inputs, such as logparser and statsd.
+  ## Valid values are "ns", "us" (or "µs"), "ms", "s".
+  precision = ""
+
+  ## Logging configuration:
+  ## Run telegraf with debug log messages.
+  debug = false
+  ## Run telegraf in quiet mode (error log messages only).
+  quiet = false
+  ## Specify the log file name. The empty string means to log to stderr.
+  logfile = ""
+
+  ## Override default hostname, if empty use os.Hostname()
+  hostname = ""
+  ## If set to true, do no set the "host" tag in the telegraf agent.
+  omit_hostname = false
+
+
+###############################################################################
+#                            OUTPUT PLUGINS                                   #
+###############################################################################
+
+# Configuration for influxdb server to send metrics to
+[[outputs.influxdb]]
+  ## The full HTTP or UDP endpoint URL for your InfluxDB instance.
+  ## Multiple urls can be specified as part of the same cluster,
+  ## this means that only ONE of the urls will be written to each interval.
+  # urls = ["udp://localhost:8089"] # UDP endpoint example
+  urls = ["http://10.8.0.1:8086"] # required
+  ## The target database for metrics (telegraf will create it if not exists).
+  database = "{{influxdb_database}}" # required
+
+  ## Retention policy to write to. Empty string writes to the default rp.
+  retention_policy = ""
+  ## Write consistency (clusters only), can be: "any", "one", "quorum", "all"
+  write_consistency = "any"
+
+  ## Write timeout (for the InfluxDB client), formatted as a string.
+  ## If not provided, will default to 5s. 0s means no timeout (not recommended).
+  timeout = "5s"
+  username = "{{influxdb_username}}"
+  password = "{{influxdb_password}}"
+  ## Set the user agent for HTTP POSTs (can be useful for log differentiation)
+  # user_agent = "telegraf"
+  ## Set UDP payload size, defaults to InfluxDB UDP Client default (512 bytes)
+  # udp_payload = 512
+
+  ## Optional SSL Config
+  # ssl_ca = "/etc/telegraf/ca.pem"
+  # ssl_cert = "/etc/telegraf/cert.pem"
+  # ssl_key = "/etc/telegraf/key.pem"
+  ## Use SSL but skip chain & host verification
+  # insecure_skip_verify = false
+
+
+# # Send telegraf metrics to file(s)
+# [[outputs.file]]
+#   ## Files to write to, "stdout" is a specially handled file.
+#   files = ["stdout", "/tmp/metrics.out"]
+#
+#   ## Data format to output.
+#   ## Each data format has it's own unique set of configuration options, read
+#   ## more about them here:
+#   ## https://github.com/influxdata/telegraf/blob/master/docs/DATA_FORMATS_OUTPUT.md
+#   data_format = "influx"
+
+
+
+###############################################################################
+#                            PROCESSOR PLUGINS                                #
+###############################################################################
+
+# # Print all metrics that pass through this filter.
+# [[processors.printer]]
+
+
+
+###############################################################################
+#                            AGGREGATOR PLUGINS                               #
+###############################################################################
+
+# # Keep the aggregate min/max of each metric passing through.
+# [[aggregators.minmax]]
+#   ## General Aggregator Arguments:
+#   ## The period on which to flush & clear the aggregator.
+#   period = "30s"
+#   ## If true, the original metric will be dropped by the
+#   ## aggregator and will not get sent to the output plugins.
+#   drop_original = false
+
+
+
+###############################################################################
+#                            INPUT PLUGINS                                    #
+###############################################################################
+
+# Read metrics about cpu usage
+[[inputs.cpu]]
+  ## Whether to report per-cpu stats or not
+  percpu = true
+  ## Whether to report total system cpu stats or not
+  totalcpu = true
+  ## If true, collect raw CPU time metrics.
+  collect_cpu_time = false
+
+
+# Read metrics about disk usage by mount point
+[[inputs.disk]]
+  ## By default, telegraf gather stats for all mountpoints.
+  ## Setting mountpoints will restrict the stats to the specified mountpoints.
+  # mount_points = ["/"]
+
+  ## Ignore some mountpoints by filesystem type. For example (dev)tmpfs (usually
+  ## present on /run, /var/run, /dev/shm or /dev).
+  ignore_fs = ["tmpfs", "devtmpfs"]
+
+
+# Read metrics about disk IO by device
+[[inputs.diskio]]
+  ## By default, telegraf will gather stats for all devices including
+  ## disk partitions.
+  ## Setting devices will restrict the stats to the specified devices.
+  # devices = ["sda", "sdb"]
+  ## Uncomment the following line if you need disk serial numbers.
+  # skip_serial_number = false
+
+
+# Get kernel statistics from /proc/stat
+# [[inputs.kernel]]
+  # no configuration
+
+
+# Read metrics about memory usage
+[[inputs.mem]]
+  # no configuration
+
+
+# Get the number of processes and group them by status
+[[inputs.processes]]
+  # no configuration
+
+
+# Read metrics about swap memory usage
+#[[inputs.swap]]
+  # no configuration
+
+
+# Read metrics about system load & uptime
+[[inputs.system]]
+  # no configuration
+
+
+# # Read metrics from one or more commands that can output to stdout
+# [[inputs.exec]]
+#   ## Commands array
+#   commands = [
+#     "/tmp/test.sh",
+#     "/usr/bin/mycollector --foo=bar",
+#     "/tmp/collect_*.sh"
+#   ]
+#
+#   ## Timeout for each command to complete.
+#   timeout = "5s"
+#
+#   ## measurement name suffix (for separating different commands)
+#   name_suffix = "_mycollector"
+#
+#   ## Data format to consume.
+#   ## Each data format has it's own unique set of configuration options, read
+#   ## more about them here:
+#   ## https://github.com/influxdata/telegraf/blob/master/docs/DATA_FORMATS_INPUT.md
+#   data_format = "influx"
+
+
+# # Read stats about given file(s)
+# [[inputs.filestat]]
+#   ## Files to gather stats about.
+#   ## These accept standard unix glob matching rules, but with the addition of
+#   ## ** as a "super asterisk". ie:
+#   ##   "/var/log/**.log"  -> recursively find all .log files in /var/log
+#   ##   "/var/log/*/*.log" -> find all .log files with a parent dir in /var/log
+#   ##   "/var/log/apache.log" -> just tail the apache log file
+#   ##
+#   ## See https://github.com/gobwas/glob for more examples
+#   ##
+#   files = ["/var/log/**.log"]
+#   ## If true, read the entire file and calculate an md5 checksum.
+#   md5 = false
+
+
+
+
+# # Read metrics about network interface usage
+# [[inputs.net]]
+#   ## By default, telegraf gathers stats from any up interface (excluding loopback)
+#   ## Setting interfaces will tell it to gather these explicit interfaces,
+#   ## regardless of status.
+#   ##
+#   # interfaces = ["eth0"]
+
+# # Ping given url(s) and return statistics
+# [[inputs.ping]]
+#   ## NOTE: this plugin forks the ping command. You may need to set capabilities
+#   ## via setcap cap_net_raw+p /bin/ping
+#   #
+#   ## urls to ping
+#   urls = ["www.google.com"] # required
+#   ## number of pings to send per collection (ping -c <COUNT>)
+#   # count = 1
+#   ## interval, in s, at which to ping. 0 == default (ping -i <PING_INTERVAL>)
+#   # ping_interval = 1.0
+#   ## per-ping timeout, in s. 0 == no timeout (ping -W <TIMEOUT>)
+#   # timeout = 1.0
+#   ## interface to send ping from (ping -I <INTERFACE>)
+#   # interface = ""
+
+# # Monitor process cpu and memory usage
+# [[inputs.procstat]]
+#   ## Must specify one of: pid_file, exe, or pattern
+#   ## PID file to monitor process
+#   pid_file = "/var/run/nginx.pid"
+#   ## executable name (ie, pgrep <exe>)
+#   # exe = "nginx"
+#   ## pattern as argument for pgrep (ie, pgrep -f <pattern>)
+#   # pattern = "nginx"
+#   ## user as argument for pgrep (ie, pgrep -u <user>)
+#   # user = "nginx"
+#
+#   ## override for process_name
+#   ## This is optional; default is sourced from /proc/<pid>/status
+#   # process_name = "bar"
+#   ## Field name prefix
+#   prefix = ""
+#   ## comment this out if you want raw cpu_time stats
+#   fielddrop = ["cpu_time_*"]
+#   ## This is optional; moves pid into a tag instead of a field
+#   pid_tag = false
+
+
+
+###############################################################################
+#                            SERVICE INPUT PLUGINS                            #
+###############################################################################
+
+[[inputs.udp_listener]]
+  service_address = "localhost:8092"
+  allowed_pending_messages = 10000
+  data_format = "influx"
+
+
+# # Influx HTTP write listener
+# [[inputs.http_listener]]
+#   ## Address and port to host HTTP listener on
+#   service_address = ":8186"
+#
+#   ## maximum duration before timing out read of the request
+#   read_timeout = "10s"
+#   ## maximum duration before timing out write of the response
+#   write_timeout = "10s"
+#
+#   ## Maximum allowed http request body size in bytes.
+#   ## 0 means to use the default of 536,870,912 bytes (500 mebibytes)
+#   max_body_size = 0
+#
+#   ## Maximum line size allowed to be sent in bytes.
+#   ## 0 means to use the default of 65536 bytes (64 kibibytes)
+#   max_line_size = 0
+
+
+# # Stream and parse log file(s).
+# [[inputs.logparser]]
+#   ## Log files to parse.
+#   ## These accept standard unix glob matching rules, but with the addition of
+#   ## ** as a "super asterisk". ie:
+#   ##   /var/log/**.log     -> recursively find all .log files in /var/log
+#   ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
+#   ##   /var/log/apache.log -> only tail the apache log file
+#   files = ["/var/log/apache/access.log"]
+#   ## Read file from beginning.
+#   from_beginning = false
+#
+#   ## Parse logstash-style "grok" patterns:
+#   ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
+#   [inputs.logparser.grok]
+#     ## This is a list of patterns to check the given log file(s) for.
+#     ## Note that adding patterns here increases processing time. The most
+#     ## efficient configuration is to have one pattern per logparser.
+#     ## Other common built-in patterns are:
+#     ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
+#     ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
+#     patterns = ["%{COMBINED_LOG_FORMAT}"]
+#     ## Name of the outputted measurement name.
+#     measurement = "apache_access_log"
+#     ## Full path(s) to custom pattern files.
+#     custom_pattern_files = []
+#     ## Custom patterns can also be defined here. Put one pattern per line.
+#     custom_patterns = '''
+#     '''

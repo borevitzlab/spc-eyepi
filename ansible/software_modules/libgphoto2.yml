@@ -35,15 +35,34 @@
     state: directory
   no_log: yes
 
-- name: Copy gphoto2 to build dir
+- name: Copy libgphoto2 to build dir
   command: "rsync -a {{libgphoto2_src}}/ {{libgphoto2_build}}"
+  no_log: yes
+  
+# # for some reason this just doesnt work :(
+# - name: configure libgphoto2
+#   shell: autoreconf --install --symlink &&./configure --prefix /usr
+#   args:
+#     chdir: "{{libgphoto2_build}}"
+#
+# - name: Make libgphoto2
+#   make:
+#     chdir: "{{libgphoto2_build}}"
+#     params:
+#       NUM_THREADS: "{{ansible_processor_cores}}"
+#
+# - name: Install libgphoto2
+#   make:
+#     chdir: "{{libgphoto2_build}}"
+#     target: install
+#     creates: "/usr/lib/libgphoto2.so"
 
 - name: Build libgphoto2
   shell: >
     cd "{{libgphoto2_build}}" &&
     autoreconf --install --symlink &&
     ./configure --prefix /usr &&
-    make -j2 &&
+    make -j{{ansible_processor_cores}} &&
     make install
   args:
     creates: "/usr/lib/libgphoto2.so"

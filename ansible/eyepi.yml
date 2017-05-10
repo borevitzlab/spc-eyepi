@@ -4,14 +4,10 @@
     - vars/userlist.yml
     - vars/pkgs.yml
     - vars/hostmap.yml
+    - secure/wireless_networks.yml
 
   vars:
-    - source_dir: /opt/source
-    - soft_dir: /opt/apps
-    - build_dir: /opt/build
-    - home_dir: /home
-    - vpn_conf: secure/vpn.conf
-    - host_locale: en_GB.UTF-8
+    - host_locale: en_AU.UTF-8
     - host_locale_dict: {
             LANG: "{{ host_locale }}",
             LC_COLLATE: "{{ host_locale }}",
@@ -42,9 +38,6 @@
     - include: tasks/installpkgs.yml suite="Eyepi" pkgs="{{pacman_pkgs}}"
       tags: pkgs,dist
 
-    - stat: path=secure/vpn.conf
-      register: ovpn_conf
-
     - include: tasks/openvpn.yml vpn_config_file="{{vpn_conf}}"
       tags: network
 
@@ -53,6 +46,7 @@
 
     - include: tasks/wireless.yml interface="wlan0"
       tags: network,wireless
+      when: wireless_keys is defined
 
     - include: tasks/sftp_key.yml
       tags: network,sftp
@@ -67,4 +61,7 @@
       tags: pkgs,python
 
     - include: software_modules/spc-eyepi.yml
-      tags: modules,spc_eyepi
+      tags: modules,eyepi
+
+    - include: software_modules/telegraf.yml
+      tags: telegraf,metrics

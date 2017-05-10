@@ -49,7 +49,7 @@ FIELDS = ['cmd',
           'stdout',
           'stderr',
           'results']
-
+from pprint import pformat
 
 class CallbackModule(object):
     """
@@ -66,49 +66,15 @@ class CallbackModule(object):
                 no_log = data.get('_ansible_no_log')
                 if field in data.keys() and data[field] and no_log is not True:
                     output = self._format_output(data[field])
-                    print("\n{0}: {1}".format(field, output.replace("\\n", "\n")))
+                    print("\n{0}:\n{1}".format(field, output.replace("\\n", "\n")))
 
     def _format_output(self, output):
         if type(output) is bytes:
-            output = output.decode("utf-8")
-
+            return output.decode("utf-8")
         # Strip unicode
         if type(output) is str:
-            output = output.encode(sys.getdefaultencoding(), 'ignore').decode(sys.getdefaultencoding())
-
-        # If output is a dict
-        if type(output) is dict:
-            for k, v in output:
-                output[k] = self._format_output(v)
-            return pformat(output)
-
-        # If output is a list of dicts
-        if type(output) is list and type(output[0]) is dict:
-            # This gets a little complicated because it potentially means
-            # nested results, usually because of with_items.
-            real_output = list()
-            for index, item in enumerate(output):
-                copy = item
-                if type(item) is dict:
-                    for field in [x for x in FIELDS if x in item.keys()]:
-                        copy[field] = self._format_output(item[field])
-                real_output.append(copy)
-            return pformat(real_output)
-
-        # If output is a list of strings
-        if type(output) is list and type(output[0]) is str:
-            # Strip newline characters
-            real_output = list()
-            for item in output:
-                if "\n" in item:
-                    for string in item.split("\n"):
-                        real_output.append(self._format_output(string))
-                else:
-                    real_output.append(self._format_output(item))
-            return pformat(real_output)
-
-        # Otherwise it's a string, (or an int, float, etc.) just return it
-        return str(output)
+            return output
+        return pformat(output, indent=2, width=75)
 
     def on_any(self, *args, **kwargs):
         pass

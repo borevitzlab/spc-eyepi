@@ -34,6 +34,7 @@ pacman_pkgs:
   - gcc-fortran
   - python-numpy
   - python-levenshtein
+  - python-pillow
   - opencv
   - python-cffi
   - python-cryptography
@@ -54,7 +55,6 @@ python_pkgs:
   - {name: "requests[socks]",   pythons: [3]}
   - {name: py3exiv2,            pythons: [3]}
   - {name: pysftp,              pythons: [3]}
-  - {name: pillow,              pythons: [3]}
   - {name: Flask-Bcrypt,        pythons: [3]}
   - {name: Flask-Login,         pythons: [3]}
   - {name: WTForms,             pythons: [3]}
@@ -69,5 +69,6 @@ python_pkgs:
   - {name: fuzzywuzzy,          pythons: [3]}
   - {name: RPi.GPIO,            pythons: [3]}
   - {name: "sense-hat",         pythons: [3]}
+  - {name: "pytelegraf",        pythons: [3]}
 # - {name: imreg-dft,           pythons: [3]}
 # - {name: ImageHash,           pythons: [3]}

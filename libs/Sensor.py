@@ -24,6 +24,10 @@ try:
 except Exception as e:
     logging.error("Couldnt import Adafruit_DHT: {}".format(str(e)))
 
+try:
+    import telegraf
+except Exception as e:
+    logging.error("Couldnt import Telegraf, not sending metrics: {}".format(str(e)))
 
 class Sensor(object):
     """
@@ -166,7 +170,7 @@ class Sensor(object):
     def append_to_alltime(self, measurement: tuple):
         """
         appends the measurement to the csv and tsv files.
-        
+
         :param measurement:
         :return:
         """
@@ -243,6 +247,11 @@ class Sensor(object):
                     self.logger.info("Capturing data for {}".format(self.identifier))
                     measurement = self.get_measurement()
                     self.logger.info("Got Measurement {}".format(str(measurement)))
+                    try:
+                        telegraf_client = telegraf.TelegrafClient(host="localhost", port=8092)
+                        telegraf_client.metric("env_sensors", dict([(n,float(measurement[i]) for i,n in enumerate(self.data_headers))]))
+                    except:
+                        pass
                     self.measurements.append([self.current_capture_time.strftime(self.timestamp_format), *measurement])
                     self.append_to_alltime(self.measurements[-1])
                     self.write_daily_rolling()
@@ -258,7 +267,9 @@ class Sensor(object):
         """
         override this method with the method of collecting measurements from the sensor
         should return a list or tuple
-        :return:
+
+        :return: list or tuple of measurements
+        :rtype: list or tuple
         """
         return tuple()
 

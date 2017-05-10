@@ -2,9 +2,11 @@
   pacman:
     update_cache: yes
 
+# force is probably not a good idea, however we should be fine in this case
 - name: Install {{suite}} packages
   pacman:
     name: "{{ item }}"
     state: present
+    force: yes
   with_items:
     - "{{ pkgs }}"

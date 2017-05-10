@@ -1,3 +1,4 @@
+# this doesnt work.... yet.
 - local_action: stat path=secure/wired_networks.yml
   register: wireless_keyfile
 

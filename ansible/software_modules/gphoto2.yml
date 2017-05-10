@@ -5,6 +5,11 @@
     gphoto2_build: "{{build_dir}}/gphoto2"
   no_log: yes
 
+- file:
+    state: absent
+    path: "{{gphoto2_build}}/"
+  no_log: yes
+
 - name: Download gphoto2
   git:
     repo: https://github.com/gphoto/gphoto2.git
@@ -15,17 +20,31 @@
     dest: "{{gphoto2_src}}"
 
 - file:
-    state: absent
-    path: "{{gphoto2_build}}/"
-  no_log: yes
-
-- file:
     path: "{{gphoto2_build}}"
     state: directory
   no_log: yes
 
 - name: Copy gphoto2 to build dir
   command: "rsync -a {{gphoto2_src}}/ {{gphoto2_build}}"
+  no_log: yes
+
+# # for some reason this just doesnt work :(
+# - name: configure gphoto2
+#   shell: autoreconf --install --symlink && ./configure --prefix /usr
+#   args:
+#     chdir: "{{gphoto2_build}}"
+#
+# - name: Make gphoto2
+#   make:
+#     chdir: "{{gphoto2_build}}"
+#     params:
+#       NUM_THREADS: "{{ansible_processor_cores}}"
+#
+# - name: Install gphoto2
+#   make:
+#     chdir: "{{gphoto2_build}}"
+#     target: install
+#     creates: "/usr/local/bin/gphoto2"
 
 - name: Build gphoto2
   shell: >

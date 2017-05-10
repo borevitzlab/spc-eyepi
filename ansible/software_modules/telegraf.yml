@@ -1,0 +1,22 @@
+# install telegraf thru aur
+- include: tasks/aur.yml pkg_name="telegraf-bin"
+
+- name: Template config out
+  template:
+    src: templates/telegraf.conf.j2
+    dest: /etc/telegraf/telegraf.conf
+
+- name: Template service out
+  template:
+    src: templates/telegraf.service.j2
+    dest: /usr/lib/systemd/system/telegraf.service
+
+- name: start service
+  service:
+    name: telegraf
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+
+# install pytelegraf
+- include: tasks/python-modules.yml modules=[{name: "pytelegraf", pythons: [3]}]

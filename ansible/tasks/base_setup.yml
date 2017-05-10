@@ -27,7 +27,7 @@
 
 - name: Set /etc/hosts
   template:
-    src: templates/hosts
+    src: templates/hosts.j2
     dest: /etc/hosts
 
 - name: Generate locales

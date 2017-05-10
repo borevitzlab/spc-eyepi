@@ -5,7 +5,7 @@
 
 - name: Rewrite torrc
   template:
-    src: templates/torrc
+    src: templates/torrc.j2
     dest: /etc/tor/torrc
 
 - file:
