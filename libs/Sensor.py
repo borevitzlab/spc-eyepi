@@ -250,8 +250,9 @@ class Sensor(object):
                     try:
                         telegraf_client = telegraf.TelegrafClient(host="localhost", port=8092)
                         telegraf_client.metric("env_sensors", dict([(n,float(measurement[i])) for i,n in enumerate(self.data_headers)]))
-                    except:
-                        pass
+                        self.logger.debug("Communicated sesor data to telegraf")
+                    except Exception as exc:
+                        self.logger.error("Couldnt communicate with telegraf client. {}".format(str(exc)))
                     self.measurements.append([self.current_capture_time.strftime(self.timestamp_format), *measurement])
                     self.append_to_alltime(self.measurements[-1])
                     self.write_daily_rolling()

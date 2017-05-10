@@ -60,8 +60,8 @@
     - include: tasks/python_modules.yml modules="{{python_pkgs}}"
       tags: pkgs,python
 
-    - include: software_modules/spc-eyepi.yml
-      tags: modules,eyepi
-
     - include: software_modules/telegraf.yml
       tags: telegraf,metrics
+
+    - include: software_modules/spc-eyepi.yml
+      tags: modules,eyepi

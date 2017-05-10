@@ -18,5 +18,8 @@
     enabled: yes
     daemon_reload: yes
 
+- set_fact:
+    pytgrafmo:
+      - {name: "pytelegraf", pythons: [3]}
 # install pytelegraf
-- include: tasks/python-modules.yml modules=[{name: "pytelegraf", pythons: [3]}]
+- include: tasks/python_modules.yml modules="{{pytgrafmo}}"

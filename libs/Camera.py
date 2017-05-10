@@ -40,6 +40,11 @@ except Exception as e:
     logging.error("Couldnt import picamera module, no picamera camera support: {}".format(str(e)))
     pass
 
+try:
+    import telegraf
+except Exception as e:
+    logging.error("Couldnt import pytelegraf module, no telemetry: {}".format(str(e)))
+
 USBDEVFS_RESET = 21780
 
 
@@ -501,12 +506,14 @@ class Camera(object):
                     raw_image = self.timestamped_imagename
 
                     self.logger.info("Capturing for {}".format(self.identifier))
-
+                    telemetry = dict()
                     files = self.capture(filename=os.path.join(self.spool_directory, raw_image))
                     # capture. if capture didnt happen dont continue with the rest.
                     if len(files) == 0:
                         self.failed.append(self.current_capture_time)
                         continue
+
+                    telemetry["timing_capture_s"] = float(time.time() - start_capture_time)
 
                     if self.config.getboolean("ftp", "replace"):
                         st = time.time()
@@ -528,7 +535,7 @@ class Camera(object):
                         cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"), self._image)
                         shutil.copy(os.path.join("/dev/shm", self.identifier + ".jpg"),
                                     os.path.join(self.upload_directory, "last_image.jpg"))
-
+                        telemetry["timing_resize_s"] = float(resize_t)
                         self.logger.info("Resize {0:.3f}s, total: {0:.3f}s".format(resize_t, time.time() - st))
 
                     # copying/renaming for files
@@ -540,7 +547,10 @@ class Camera(object):
                             files.extend(fn)
                         else:
                             files.append(fn)
-
+                    try:
+                        telemetry["num_files_created"] = len(files)
+                    except:
+                        pass
                     for fn in files:
                         # move files to the upload directory
                         try:
@@ -558,8 +568,17 @@ class Camera(object):
                         except Exception as e:
                             self.logger.error("Couldn't remove spooled when it still exists: {}".format(str(e)))
                     # log total capture time
-                    self.logger.info("Total capture time: {0:.2f}s".format(time.time() - start_capture_time))
+                    total_capture_time = time.time() - start_capture_time
+                    self.logger.info("Total capture time: {0:.2f}s".format(total_capture_time))
+                    telemetry["timing_total_s"] = float(total_capture_time)
                     # communicate our success with the updater
+                    try:
+                        telegraf_client = telegraf.TelegrafClient(host="localhost", port=8092)
+                        telegraf_client.metric("camera", telemetry, tags={"camera_name": self.camera_name})
+                        self.logger.debug("Communicated sesor data to telegraf")
+                    except Exception as exc:
+                        self.logger.error("Couldnt communicate with telegraf client. {}".format(str(exc)))
+                    
                     self.communicate_with_updater()
                     # sleep for a little bit so we dont try and capture again so soon.
                     time.sleep(Camera.accuracy * 2)
