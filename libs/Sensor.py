@@ -249,7 +249,7 @@ class Sensor(object):
                     self.logger.info("Got Measurement {}".format(str(measurement)))
                     try:
                         telegraf_client = telegraf.TelegrafClient(host="localhost", port=8092)
-                        telegraf_client.metric("env_sensors", dict([(n,float(measurement[i]) for i,n in enumerate(self.data_headers))]))
+                        telegraf_client.metric("env_sensors", dict([(n,float(measurement[i])) for i,n in enumerate(self.data_headers)]))
                     except:
                         pass
                     self.measurements.append([self.current_capture_time.strftime(self.timestamp_format), *measurement])
