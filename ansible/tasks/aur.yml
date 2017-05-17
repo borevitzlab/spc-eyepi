@@ -45,6 +45,7 @@
 
 # This will break if run as root. Set user to use with makepkg with 'makepkg_user' var
 - name: AUR | {{ pkg_name }} | build package, including missing dependencies
+  when: version_check_result.changed
   become: yes
   become_user: "{{ansible_user}}"
   command: >
@@ -53,6 +54,7 @@
   register: aur_makepkg_result
 
 - name: AUR | {{ pkg_name }} | install newly-built aur package with pacman
+  when: version_check_result.changed
   shell: >
     pacman --noconfirm --noprogressbar --needed -U *.pkg.tar.xz
     chdir={{build_dir}}/{{ pkg_name }}

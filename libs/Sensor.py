@@ -29,6 +29,11 @@ try:
 except Exception as e:
     logging.error("Couldnt import Telegraf, not sending metrics: {}".format(str(e)))
 
+
+def round_to_1dp(n):
+    return round(n, 1)
+
+
 class Sensor(object):
     """
     Sensor base.
@@ -41,7 +46,7 @@ class Sensor(object):
     data_headers = tuple()
     timestamp_format = "%Y-%m-%dT%H:%M:%S"
 
-    def __init__(self, identifier: str = None, queue: deque = None, write_out: bool = True, interval: int = 60,
+    def __init__(self, identifier: str = None, config: dict = None, queue: deque = None, write_out: bool = True, interval: int = 60,
                  **kwargs):
         # identifier is NOT OPTIONAL!
         # data headers need to be set
@@ -51,6 +56,8 @@ class Sensor(object):
         self.logger = logging.getLogger(identifier)
         self.stopper = Event()
         self.identifier = identifier
+        if config:
+            interval = config.get("interval", interval)
         # interval in seconds
         self.interval = interval
         # chunking interval in number of datapoints
@@ -66,7 +73,6 @@ class Sensor(object):
                 os.makedirs(self.data_directory)
         self.current_capture_time = datetime.datetime.now()
         self.failed = list()
-
 
     @staticmethod
     def timestamp(tn: datetime.datetime) -> str:
@@ -161,7 +167,7 @@ class Sensor(object):
                     for idx, m in enumerate(measurement[:len(d.keys())]):
                         header = "datetime"
                         if idx != 0:
-                            header = self.data_headers[idx-1]
+                            header = self.data_headers[idx - 1]
                         d[header].append(m)
                 jsonfile.write(json.dumps(d))
         except Exception as e:
@@ -185,7 +191,7 @@ class Sensor(object):
                 # write the headers if the files are new.
                 if not os.path.exists(path):
                     with open(path, 'w') as f:
-                        f.write(delimiter.join(("datetime", *self.data_headers))+"\n")
+                        f.write(delimiter.join(("datetime", *self.data_headers)) + "\n")
 
             create_with_headers(csvf)
             create_with_headers(csvf2)
@@ -194,7 +200,7 @@ class Sensor(object):
 
             def append_measurement(fn, delimiter=","):
                 with open(fn, 'a') as f:
-                    f.write(delimiter.join(str(x) for x in measurement)+"\n")
+                    f.write(delimiter.join(str(x) for x in measurement) + "\n")
 
             append_measurement(csvf)
             append_measurement(csvf2)
@@ -249,10 +255,12 @@ class Sensor(object):
                     self.logger.info("Got Measurement {}".format(str(measurement)))
                     try:
                         telegraf_client = telegraf.TelegrafClient(host="localhost", port=8092)
-                        telegraf_client.metric("env_sensors", dict([(n,float(measurement[i])) for i,n in enumerate(self.data_headers)]))
+                        telegraf_client.metric("env_sensors", measurement)
                         self.logger.debug("Communicated sesor data to telegraf")
                     except Exception as exc:
                         self.logger.error("Couldnt communicate with telegraf client. {}".format(str(exc)))
+                    # make ordered list of the data for writing. to disk.
+                    m = [measurement[k] for k in self.data_headers]
                     self.measurements.append([self.current_capture_time.strftime(self.timestamp_format), *measurement])
                     self.append_to_alltime(self.measurements[-1])
                     self.write_daily_rolling()
@@ -260,19 +268,24 @@ class Sensor(object):
                 except Exception as e:
                     self.logger.critical("Sensor data error - {}".format(str(e)))
                 # make sure we cannot record twice.
-                time.sleep(Sensor.accuracy * 2 )
+                time.sleep(Sensor.accuracy * 2)
 
             time.sleep(0.1)
 
-    def get_measurement(self):
+    def get_measurement(self) -> dict:
         """
         override this method with the method of collecting measurements from the sensor
-        should return a list or tuple
+        should return a dict
 
-        :return: list or tuple of measurements
-        :rtype: list or tuple
+        :return: dict of measurements and their names
+        :rtype: dict
         """
-        return tuple()
+        return dict()
+
+
+"""
+TODO: make conviron "sensor" to do the monitoring in a more regular .
+"""
 
 
 class DHTMonitor(Sensor):
@@ -301,18 +314,20 @@ class DHTMonitor(Sensor):
         self.sensor_type = sensor_args.get(sensor_type, Adafruit_DHT.AM2302)
         super(DHTMonitor, self).__init__(identifier, **kwargs)
 
-    def get_measurement(self) -> tuple:
+    def get_measurement(self) -> dict:
         """
         gets data from the DHT22
         :return:
         """
-        def round_to_1dp(n):
-            return round(n, 1)
+
         try:
-            return tuple(map(round_to_1dp, Adafruit_DHT.read_retry(self.sensor_type, self.pin)))
+
+            measurement = Adafruit_DHT.read_retry(self.sensor_type, self.pin)
+            return {key: round_to_1dp(value) for key, value in zip(self.data_headers, measurement)}
         except Exception as e:
             self.logger.error("Couldnt get data, {}".format(str(e)))
-            return tuple(None for _ in range(len(self.data_headers)))
+
+            return {_: None for _ in self.data_headers}
 
 
 class SenseHatMonitor(Sensor):
@@ -341,19 +356,20 @@ class SenseHatMonitor(Sensor):
         except Exception as e:
             self.logger.error(str(e))
 
-    def get_measurement(self) -> tuple:
+    def get_measurement(self) -> dict:
         """
         get measurements for sensehat
         :return:
         """
         try:
-            return self.sensehat.temperature, self.sensehat.humidity, self.sensehat.pressure
+            measurement = [self.sensehat.temperature, self.sensehat.humidity, self.sensehat.pressure]
+            return {key: round_to_1dp(value) for key, value in zip(self.data_headers, measurement)}
         except Exception as e:
             self.logger.error("Couldnt get data, {}".format(str(e)))
-            return tuple(None for _ in range(len(self.data_headers)))
+            return {_: None for _ in self.data_headers}
 
 
-class ThreadedSensor(Thread):
+class ThreadedSensor(Thread, Sensor):
     """
     threaded implementation of the sensor cclass.
     """

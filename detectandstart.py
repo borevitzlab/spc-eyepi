@@ -8,9 +8,10 @@ import pyudev
 from libs.Camera import *
 from libs.Updater import Updater
 from libs.Uploader import Uploader, GenericUploader
-from libs.Light import ThreadedLights
+from libs.Chamber import ThreadedChamber
 from libs.Sensor import ThreadedSenseHat, ThreadedDHT
 from threading import Lock
+import traceback
 
 __author__ = "Gareth Dunstone"
 __copyright__ = "Copyright 2016, Borevitz Lab"
@@ -189,27 +190,158 @@ def detect_sensors(updater: Updater) -> tuple:
         logger.error("Couldnt detect sensors for some reason: {}".format(str(e)))
     return tuple()
 
+def get_default_camera_conf(ident):
+    return {
+        'name': ident,
+        'interval': 300,
+        'starttime': "05:00",
+        'stoptime': "22:00",
+        'resize': True,
+        'output_dir': "/home/images/{}".format(ident)
+    }
 
-def detect_lights(updater: Updater) -> tuple:
+def run_from_global_config(updater: Updater) -> tuple:
     """
-    Detects lights from the config files that exist.
+    Runs the startup from a yaml file defining the devices connected to the raspberry pi.
+    
+    :param updater: 
+    :return: 
+    """
+    workers = []
+    hostname = SysUtil.get_hostname()
+    config_data = yaml.load(open("/home/spc-eyepi/{}.yml".format(hostname)))
+    camera_confs = config_data.get("cameras", dict())
+    #
+    # Picamer detect
+    #
+    logger.info("Detecting picamera")
+    if not (os.path.exists("/opt/vc/bin/vcgencmd")):
+        logger.error("vcgencmd not found, cannot detect picamera.")
+    else:
+        try:
+            ident = SysUtil.default_identifier(prefix="picam")
+            section = camera_confs.get(ident, get_default_camera_conf(ident))
+            cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
+            if "detected=1" in cmdret:
+                camera = ThreadedPiCamera(ident,
+                                          config=section,
+                                          queue=updater.communication_queue)
 
-    :creates: :mod:`libs.Light.Light`
-    :param updater: instance that has a `communication_queue` member that implements an `append` method
-    :type updater: Updater
-    :return: tuple of light thread objects.
-    :rtype: tuple(Light)
-    """
+                updater.add_to_identifiers(camera.identifier)
+                uploader = Uploader(SysUtil.default_identifier(prefix="picam"),
+                                    config=section,
+                                    queue=updater.communication_queue)
+                workers.append(camera)
+                workers.append(uploader)
+                camera_confs[ident] = section
+            else:
+                logger.error("No picamera detected by /opt/vc/bin/vcgencmd, check /boot/config.txt and connections")
+        except subprocess.CalledProcessError as e:
+            logger.error("Couldn't detect picamera. Error calling vcgencmd. {}".format(str(e)))
+            pass
+        except Exception as e:
+            logger.error("General Exception in picamera detection. {}".format(str(e)))
+    #
+    # DSLR detect
+    #
+    logger.info("Detecting DSLRs")
+    lock = Lock()
+    dslr_usb_addresses = dict()
     try:
-        workers = list()
-        for identifier, cfg_p in SysUtil.get_light_configs().items():
-            try:
-                workers.append(ThreadedLights(identifier, queue=updater.communication_queue))
-            except Exception as e:
-                logger.error("Couldnt detect light at {} : ".format(identifier, str(e)))
-        return start_workers(tuple(workers))
+        with lock:
+            for c in gp.list_cameras():
+                dslr_usb_addresses[str(c.status.serialnumber)] = c._usb_address
     except Exception as e:
-        logger.error("Couldnt detect light configs: {}".format(str(e)))
+        logger.error("Couldnt enumberate DSLRs {}".format(str(e)))
+    logger.debug("List of cameras is {} long".format(str(len(dslr_usb_addresses))))
+
+    for ident, usb_add in dslr_usb_addresses.items():
+        try:
+            section = camera_confs.get(ident, get_default_camera_conf(ident))
+            usb_add = dslr_usb_addresses[ident]
+            camera = ThreadedGPCamera(identifier=ident,
+                                      usb_address=usb_add,
+                                      config=section,
+                                      lock=lock,
+                                      queue=updater.communication_queue)
+            updater.add_to_temp_identifiers(camera.identifier)
+            uploader = Uploader(camera.identifier,
+                                config=section,
+                                queue=updater.communication_queue)
+            workers.extend([camera, uploader])
+            camera_confs[ident] = section
+            logger.debug("Sucessfully detected {} @ {}".format(ident, ":".join(map(str, usb_add))))
+        except Exception as e:
+            logger.error("Couldnt detect DSLR from global yaml {}".format(str(e)))
+    #
+    # Webcamera detect
+    #
+    try:
+        logger.info("Detecting USB web cameras.")
+        workers = []
+        for device in pyudev.Context().list_devices(subsystem="video4linux"):
+            serial = device.get("ID_SERIAL_SHORT", None)
+            if not serial:
+                serial = device.get("ID_SERIAL", None)
+                if len(serial) > 6:
+                    serial = serial[:6]
+                logger.info("Detected USB camera. Using default machine id serial {}".format(str(serial)))
+            else:
+                logger.info("Detected USB camera {}".format(str(serial)))
+
+            identifier = SysUtil.default_identifier(prefix="USB-{}".format(serial))
+            sys_number = device.sys_number
+            section = camera_confs.get(identifier, get_default_camera_conf(identifier))
+            try:
+                # logger.warning("adding {} on {}".format(identifier, sys_number))
+                camera = ThreadedUSBCamera(identifier=identifier,
+                                           sys_number=sys_number,
+                                           config=section,
+                                           queue=updater.communication_queue)
+                updater.add_to_temp_identifiers(camera.identifier)
+                workers.append(camera)
+                workers.append(Uploader(identifier,
+                                        config=section,
+                                        queue=updater.communication_queue))
+                camera_confs = config_data.get("cameras", dict())
+            except Exception as e:
+                logger.error("Unable to start usb webcamera {} on {}".format(identifier, sys_number))
+                logger.error("{}".format(str(e)))
+    except Exception as e:
+        logger.error("couldnt detect usb cameras {}".format(str(e)))
+    #
+    # sensor detect
+    #
+    for type, section in config_data.get("sensors", dict()).items():
+        try:
+            if type.lower() == "sensehat":
+                sensor = ThreadedSenseHat(identifier="{}-{}".format(SysUtil.get_hostname(), type),
+                                          config_section=section,
+                                          queue=updater.communication_queue)
+                ul = GenericUploader(sensor.identifier, sensor.data_directory, "sftp.traitcapture.org")
+                ul.remove_source_files = False
+                workers.append(sensor)
+                workers.append(ul)
+            else:
+                sensor = ThreadedDHT(identifier="{}-{}".format(SysUtil.get_hostname(), type),
+                                     config_section=section,
+                                     queue=updater.communication_queue)
+                ul = GenericUploader(sensor.identifier, sensor.data_directory, "sftp.traitcapture.org")
+                ul.remove_source_files = False
+                workers.append(sensor)
+                workers.append(ul)
+        except Exception as e:
+            logger.error("Couldnt create sensor from global yaml {}".format(str(e)))
+
+    #
+    # Chamber detect
+    #
+    chamber_conf = config_data.get("chamber", None)
+    if chamber_conf:
+        chamber = ThreadedChamber(identifier=chamber_conf.get("name"))
+
+    return start_workers(workers)
+
 
 
 def detect_ivport(updater: Updater) -> tuple:

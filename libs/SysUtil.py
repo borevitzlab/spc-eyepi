@@ -10,6 +10,8 @@ import logging.config
 import fcntl
 import datetime
 
+import collections
+
 USBDEVFS_RESET = 21780
 try:
     logging.config.fileConfig("logging.ini")
@@ -79,6 +81,38 @@ set_all_wavelength_command = "wl1":{}, "wl2":{}, "wl3":{}, "wl4":{}, "wl5":{}, "
 
 """
 
+default_chamber_config = """
+
+# this file should live in "spc-eyepi/chambers_byip/<ip>.ini"
+# this file shoudl be accompanied by a "spc-eyepi/light_configs_byip/<ip>" .csv or .slc file
+
+[chamber]
+name = GC36
+temperature_multiplier = 10.0
+file_path = "chambers_byip/{identifier}.scf"
+
+[telnet]
+telnet_host = 192.168.0.36
+telnet_port = 50630
+telnet_user = root
+telnet_password = froot
+deviceid = 0
+
+# this should contain the ip address for a light, or no ip if  
+[light] 
+ip = 192.168.2.124
+
+"""
+
+
+def recursive_update(d, u):
+    for k, v in u.items():
+        if isinstance(v, collections.Mapping):
+            r = recursive_update(d.get(k, {}), v)
+            d[k] = r
+        else:
+            d[k] = u[k]
+    return d
 
 class SysUtil(object):
     """
@@ -104,6 +138,21 @@ class SysUtil(object):
             SysUtil.thread = threading.Thread(target=self._thread)
             SysUtil.thread.start()
         pass
+
+    @staticmethod
+    def write_global_config(data: dict):
+        """
+        Writes a global configuration to the global_config.yml 
+        
+        :param data: dict of data to write to the config
+        :return: 
+        """
+        path = "/home/spc-eyepi/{}.yml".format(SysUtil.get_hostname())
+        with open(path, 'r') as fh:
+            current_config = yaml.load(fh.read())
+        recursive_update(current_config, data)
+        with open(path, 'w') as fh:
+            yaml.dump(current_config, fh, default_flow_style=False)
 
     @staticmethod
     def reset_usb_device(bus: int, dev: int) -> bool:
@@ -452,36 +501,6 @@ class SysUtil(object):
         return config
 
     @classmethod
-    def write_config(cls, config: configparser.ConfigParser, identifier: str):
-        """
-        writes a configuration file to an correct config file path.
-
-        :param config: configuration file (configparser object)
-        :type identifier: str
-        :param identifier: identifier to user as the raget file name.
-        :return: configparser object
-        """
-        path = SysUtil.identifier_to_ini(identifier)
-        with open(path, 'w+') as configfile:
-            config.write(configfile)
-        return config
-
-    @classmethod
-    def identifier_to_ini(cls, identifier: str)->str:
-        """
-        gets a valid .ini path for an identifier.
-
-        :param identifier: identifier to find an ini for.
-        :return: file path for identifier
-        :rtype: str
-        """
-        for fn in glob("configs_byserial/*.ini"):
-            if identifier == cls.get_identifier_from_filename(fn):
-                return fn
-        else:
-            return os.path.join("configs_byserial/", identifier) + ".ini"
-
-    @classmethod
     def ensure_light_config(cls, identifier):
         """
         ensures a configuration file exists for this identifier.
@@ -492,9 +511,11 @@ class SysUtil(object):
         :return: configuration for the light
         :rtype: configparser.ConfigParser
         """
+        prefix ="lights_byip"
+
         config = configparser.ConfigParser()
         config.read_string(default_light_config)
-        path = cls.identifier_to_ini(identifier)
+        path = cls.identifier_to_ini(identifier, prefix=prefix)
         try:
             if len(config.read(path)):
                 return config
@@ -503,46 +524,65 @@ class SysUtil(object):
         if "{identifier}" in config.get("light", "file_path"):
             config.set("light", "file_path",
                        config.get('light', "file_path").format(identifier=identifier))
-        cls.write_light_config(config, identifier)
+        cls.write_config(config, identifier, prefix=prefix)
+        return config
+
+
+    @classmethod
+    def ensure_chamber_config(cls, identifier):
+        """
+        ensures a configuration file exists for this identifier.
+        if a config file doesnt exist then it will create a default one.
+
+        :param identifier: identifier of the light
+        :type identifier: str
+        :return: configuration for the light
+        :rtype: configparser.ConfigParser
+        """
+        prefix = "chambers_byip"
+        config = configparser.ConfigParser()
+        config.read_string(default_chamber_config)
+        path = cls.identifier_to_ini(identifier, prefix=prefix)
+        try:
+            if len(config.read(path)):
+                return config
+        except Exception as e:
+            print(str(e))
+        if "{identifier}" in config.get("light", "file_path"):
+            config.set("light", "file_path",
+                       config.get('light', "file_path").format(identifier=identifier))
+        cls.write_config(config, identifier, prefix=prefix)
         return config
 
     @classmethod
-    def get_light_configs(cls):
-        """
-        gets a dict of the light config files (.ini)
-
-        :return: dict of light configs
-        :rtype: dict(str: configparser.ConfigParser)
-        """
-        def slc_csv_exists(fp):
-            return os.path.exists(os.path.splitext(fp)[0]+".csv") or os.path.exists(os.path.splitext(fp)[0]+".slc")
-
-        def get_id(fp):
-            n, ext = os.path.splitext(os.path.basename(fp))
-            return n
-
-        try:
-            files = [x for x in glob("light_configs_byip/*.ini") if slc_csv_exists(x)]
-            f_and_id = {get_id(x): x for x in files}
-            return f_and_id
-        except Exception as e:
-            cls.logger.error("Couldnt enumerate lights, no light functionality. {}".format(str(e)))
-            return dict()
-
-    @classmethod
-    def write_light_config(cls, config: configparser.ConfigParser, identifier: str):
+    def write_config(cls, config: configparser.ConfigParser, identifier: str, prefix="configs_byserial"):
         """
         writes a configuration file to an correct config file path.
 
         :param config: configuration file (configparser object)
-        :param identifier: identifier of the light.
         :type identifier: str
+        :param identifier: identifier to user as the raget file name.
         :return: configparser object
         """
-        path = SysUtil.light_identifier_to_ini(identifier)
+        path = SysUtil.identifier_to_ini(identifier, prefix=prefix)
         with open(path, 'w+') as configfile:
             config.write(configfile)
         return config
+
+    @classmethod
+    def identifier_to_ini(cls, identifier: str, prefix="configs_byserial")->str:
+        """
+        gets a valid .ini path for an identifier.
+
+        :param identifier: identifier to find an ini for.
+        :return: file path for identifier
+        :rtype: str
+        """
+        for fn in glob("{prefix}/*.ini".format(prefix=prefix)):
+            if identifier == cls.get_identifier_from_filename(fn):
+                return fn
+        else:
+            return os.path.join("{prefix}/".format(prefix=prefix), identifier) + ".ini"
 
     @classmethod
     def get_light_datafile(cls, identifier: str)->str:
@@ -617,22 +657,6 @@ class SysUtil(object):
             lx[idx+1][0] = datetime.datetime.strptime(x[0], "%Y-%m-%dT%H:%M:%S")
             lx[idx+1][-1] = datetime.datetime.strptime(x[-1], "%Y-%m-%dT%H:%M:%S")
         return lx[1:]
-
-    @classmethod
-    def light_identifier_to_ini(cls, identifier: str)->str:
-        """
-        gets a valid .ini path for an identifier.
-
-        :param identifier: identifier for a light
-        :type identifier: str
-        :return: ini filename for a light
-        :rtype: str
-        """
-        for fn in glob("lights_byip/*.ini"):
-            if identifier == cls.get_identifier_from_filename(fn):
-                return fn
-        else:
-            return os.path.join("lights_byip/", identifier) + ".ini"
 
     @classmethod
     def identifier_to_yml(cls, identifier: str)->str:

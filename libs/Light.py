@@ -15,6 +15,7 @@ try:
 except:
     pass
 
+
 def clamp(v: float, minimum: float, maximum: float) -> float:
     """
     clamps a number to the minimum and maximum.
@@ -46,16 +47,18 @@ class Controller(object):
         """
         unimplemented,
         override this to define how the controller should do things.
+        
         :return:
         """
-        pass
+        return False
 
     def set_all(self, power: int = None, percent: int = None):
         """
         sets all wavelengths to either an absolute value or a percentage of the total
-        :param power:
-        :param percent:
-        :return:
+        
+        :param power: power to set all wavelengths to
+        :param percent: 0-100 percentage to set the lights to.
+        :return: true/false depending on whether the command was successful
         """
         if not self.set_all_command:
             self.logger.error("set_all call without set_all_command")
@@ -76,6 +79,7 @@ class Controller(object):
         """
         sets a specific wavelength to a value
         either a power or a percent must be specified
+        
         :param wl: string of wavelength name (eg 400nm)
         :param power: absolute power value
         :param percent: percent value, calculated from min/max.
@@ -141,7 +145,7 @@ class TelNetController(Controller):
     """
 
     def __init__(self, config_section):
-        self.telnet_host = \
+        self.ip = \
             self.telnet_port = ""
         super(TelNetController, self).__init__(config_section)
 
@@ -151,7 +155,7 @@ class TelNetController(Controller):
         :param cmd:
         :return: bool successful
         """
-        telnet = Telnet(self.telnet_host, self.telnet_port, 60)
+        telnet = Telnet(self.ip, self.telnet_port, 60)
         response = telnet.read_until(b'>', timeout=0.1)
         self.logger.debug("Intial response is: {0!s}".format(response.decode()))
 
@@ -187,16 +191,16 @@ class TelNetController(Controller):
 
 class HTTPController(Controller):
     def __init__(self, config_section):
-        self.url_host = self.control_uri = ""
+        self.ip = self.control_uri = ""
         super(HTTPController, self).__init__(config_section)
-        if not self.url_host.startswith("http://"):
-            self.url_host = "http://" + self.url_host
+        if not self.ip.startswith("http://"):
+            self.ip = "http://" + self.ip
         if not self.control_uri.startswith("/"):
             self.control_uri = "/" + self.control_uri
 
     def _run_command(self, cmd):
         payload = json.loads("{" + cmd + "}")
-        response = requests.post(self.url_host + self.control_uri, data=payload)
+        response = requests.post(self.ip + self.control_uri, data=payload)
         if response.status_code == 200:
             return True
         else:
@@ -225,241 +229,71 @@ class HTTPController(Controller):
             'A13': 0,
             'Submit': 'Set schedule'
         }
-        response = requests.post(self.url_host + "/cgi-bin/sched.cgi", data=payload)
+        response = requests.post(self.ip + "/cgi-bin/sched.cgi", data=payload)
         if response.status_code == 200:
             return True
         else:
             return False
 
 
-class Light(object):
+class HelioSpectra(object):
     """
-    Schedule runner for a light.
+    Dumb runnner for a light, must be controlled by a chamber.
+    automatically scales the power from 0-100 to the provided min-max (0-1000) by default
     """
     accuracy = 3
+    s10wls = ["400nm", "420nm", "450nm", "530nm", "630nm", "660nm", "735nm"]
+    s20wls = ["370nm", "400nm", "420nm", "450nm", "530nm", "620nm", "660nm", "735nm", "850nm", "6500k"]
 
-    def __init__(self, identifier: str = None, queue: deque = None, **kwargs):
-        # identifier is NOT OPTIONAL!
-        # init with name or not, just extending some of the functionality of Thread
+    def __init__(self, config):
+        self.name = config.get("name")
 
-        self.communication_queue = queue or deque(tuple(), 256)
-        self.logger = logging.getLogger(identifier)
-        self.stopper = Event()
-        self.identifier = identifier
-        self.config_filename = SysUtil.ensure_light_config(self.identifier)
-        self.config = \
-            self.controller = \
-            self.wavelengths = \
-            self.csv = \
-            self.out_of_range = \
-            self.current_timepoint = None
-        self.datetimefmt = None
-        self._current_wavelength_intentisies = dict()
-        self._current_csv_index = 0
+        self.logger = logging.getLogger(self.name)
+        self.logger.info("init...")
+        self.config = config.copy()
         self.failed = list()
-        self.re_init()
 
-    def re_init(self):
-        """
-        re-initialisation.
-        this causes all the confiuration values to be reacquired, and a config to be recreated as valid if it is broken.
-        :return:
-        """
-        self.logger.info("Re-init...")
-        self.config = SysUtil.ensure_light_config(self.identifier)
+        telnet_config = self.config.get('telnet', {})
+        telnet_config['ip'] = self.config.get('ip')
+        telnet_config['max'] = self.config.get('max_power', 1000)
+        telnet_config['min'] = self.config.get('min_power', 0)
+        self.controller = TelNetController(telnet_config)
 
-        telnet_config = dict(self.config['telnet'])
-        telnet_config['max'] = self.config['light']['max_power']
-        telnet_config['min'] = self.config['light']['min_power']
-        self.controller = TelNetController(dict(telnet_config))
-        http_config = dict(self.config['url'])
-        http_config['max'] = self.config['light']['max_power']
-        http_config['min'] = self.config['light']['min_power']
+        http_config = config.get("http", {})
+        http_config['ip'] = self.config.get('ip')
+        http_config['max'] = self.config.get('max_power', 1000)
+        http_config['min'] = self.config.get('min_power', 0)
         self.logger.info("Killing the schedule")
-        HTTPController(dict(http_config)).kill_schedule()
+        HTTPController(http_config).kill_schedule()
+        # self.wavelengths = self.config.get("wavelengths",
+        #                                    fallback=["400nm", "420nm", "450nm", "530nm", "630nm", "660nm", "735nm"])
+        # these are the s20 wls.
+        self.wavelengths = self.config.get("wavelengths",
+                                           fallback=["370nm", "400nm", "420nm", "450nm", "530nm", "620nm", "660nm",
+                                                     "735nm", "850nm", "6500k"])
 
-        self.datetimefmt = None
-
-        wavelengths = self.config.get("light", "wavelengths", fallback="400nm,420nm,450nm,530nm,630nm,660nm,735nm")
-        self.wavelengths = [s.strip() for s in wavelengths.split(",")]
-        data_fp = SysUtil.get_light_datafile(self.identifier)
-        self.csv = SysUtil.load_or_fix_solarcalc(data_fp)
-        self.logger.info("Loaded {}".format(data_fp))
-
-        self._current_wavelength_intentisies = {wl: 0 for wl in self.wavelengths}
-        self._current_csv_index = 0
-
-        def parse_datestring(datestring: str) -> datetime.datetime:
-            """
-            parses a datestring into a datetime.
-            first tries the member self.datetimefmt to speed it up.
-            Then tries getting it from timestamp (unix style)
-            and then descending accuracies (and standardisation) of timestamp.
-            the order and list is as follows:
-            iso8601 datetime accurate to microseconds with timezone
-            iso8601 datetime accurate to microseconds
-            iso8601 datetime accurate to seconds with timezone
-            iso8601 datetime accurate to seconds
-            iso8601 datetime accurate to minutes
-            timestream format (YY_mm_DD_HH_MM_SS) accurate to seconds
-            timestream format accurate to minutes
-            Alternate date format (YY/mm/DD) accurate to seconds
-            Alternate date format accurate to minutes
-            iso8601 with reverse ordered date part accurate to seconds
-            iso8601 with reverse ordered date part accurate to minutes
-            timestream format with reverse ordered date part accurate to seconds
-            timestream format with reverse ordered date part accurate to minutes
-            Alternate date format with reverse ordered date part accurate to seconds
-            Alternate date format with reverse ordered date part accurate to minutes
-
-            :param datestring: string to parse
-            :rtype datetime:
-            :return: datetime
-            """
-            datetime_fmts = ["%Y-%m-%dT%H:%M:%S.%f%z",
-                             "%Y-%m-%dT%H:%M:%S.%f",
-                             "%Y-%m-%dT%H:%M:%S%z",
-                             "%Y-%m-%dT%H:%M:%SZ",
-                             "%Y-%m-%d %H:%M:%S",
-                             "%Y-%m-%d %H:%M",
-                             "%Y_%m_%d_%H_%M_%S",
-                             "%Y_%m_%d_%H_%M",
-                             "%Y/%m/%d %H:%M:%S",
-                             "%Y/%m/%d %H:%M",
-                             "%d-%m-%Y %H:%M:%S",
-                             "%d-%m-%Y %H:%M",
-                             "%d_%m_%Y_%H_%M_%S",
-                             "%d_%m_%Y_%H_%M",
-                             "%d/%m/%Y %H:%M:%S",
-                             "%d/%m/%Y %H:%M"]
-
-            if self.datetimefmt:
-                try:
-                    return datetime.datetime.strptime(datestring, self.datetimefmt)
-                except:
-                    pass
-            try:
-                return datetime.datetime.fromtimestamp(datestring)
-            except:
-                pass
-            for fmt in datetime_fmts:
-                try:
-                    q = datetime.datetime.strptime(datestring, fmt)
-                    self.datetimefmt = fmt
-                    return q
-                except:
-                    pass
+    def set(self, intensities: list) -> dict:
+        """
+        sets the lights wavelengths to the values in the list.
+        
+        returns a dict of the wavelengths set and their values.
+         
+        If the length of the list of intensities doesnt match the number of custom wavelengths, but does match the 
+        length of the list of s10 or s20 wavelengths, then they will be used.
+        
+        If none of those conditions are met, returns an empty dict.
+        
+        :param intensities: intensities to set to
+        :return: 
+        """
+        values = dict(zip(self.wavelengths, intensities))
+        if len(intensities) != len(self.wavelengths):
+            if len(intensities) == len(HelioSpectra.s10wls):
+                values = dict(zip(HelioSpectra.s10wls, intensities))
+            elif len(intensities) == len(HelioSpectra.s20wls):
+                values = dict(zip(HelioSpectra.s20wls, intensities))
             else:
-                raise ValueError("Error parsing {} to a valida datetime".format(str(datestring)))
-
-        self.current_timepoint = datetime.datetime.now()
-        self.out_of_range = self.current_timepoint > self.csv[-1][0]
-
-    def calculate_current_state(self):
-        """
-        determines the current state the lights should be in.
-        doesnt send the state.
-        sets the internal state of the Light object
-        :param nowdt:
-        :return:
-        """
-
-        def nfunc(in_dt: datetime.datetime) -> bool:
-            """
-            returns true if the input time is greater than that of the current csv
-            :return:
-            """
-            csvdt = self.csv[self._current_csv_index][0]
-            return in_dt >= csvdt
-
-        current_timepoint = self.current_timepoint
-
-        if self.out_of_range:
-            last = self.csv[-1][0]
-            current_timepoint = current_timepoint.replace(year=last.year, month=last.month, day=last.day)
-
-        while nfunc(current_timepoint):
-            # print(current_timepoint, self.csv[self._current_csv_index%len(self.csv)][0])
-            self._current_csv_index += 1
-            if self._current_csv_index >= len(self.csv):
-                self.out_of_range = True
-                self._current_csv_index = len(self.csv) - 1
-                while (self.csv[-1][0] - datetime.timedelta(hours=24)) < self.csv[self._current_csv_index][0]:
-                    self._current_csv_index -= 1
-                break
-        self._current_wavelength_intentisies = dict(zip(self.wavelengths,
-                                                        self.csv[self._current_csv_index][3:-1]))
-
-    def test(self):
-        self.current_timepoint = self.csv[-1][0] - datetime.timedelta(hours=12)
-        date_end = self.csv[-1][0] + datetime.timedelta(days=4)
-        self.logger.info("Running from {} to {}".format(self.current_timepoint.strftime("%Y-%m-%d %H:%M"),
-                                                        date_end.strftime("%Y-%m-%d %H:%M")))
-        while self.current_timepoint < date_end:
-            self.current_timepoint = self.current_timepoint + datetime.timedelta(minutes=5)
-            wl = self._current_wavelength_intentisies
-            self.calculate_current_state()
-            if wl != self._current_wavelength_intentisies:
-                s = "  ".join(
-                    wl + ":" + i.zfill(3) for wl, i in sorted(self._current_wavelength_intentisies.items(),
-                                                              key=operator.itemgetter(0)))
-                # if self.out_of_range:
-                #     self.logger.warning("Running outside of Solarcalc file time range. Repeating the last 24 hours")
-                self.logger.info("#{0:05d} @ {1} - {2}".format(self._current_csv_index,
-                                                               self.current_timepoint.strftime("%Y-%m-%d %H:%M"), s))
-                self.send_state()
-
-    def send_state(self):
-        while not self.controller.set_all_wavelengths(self._current_wavelength_intentisies):
-            self.logger.error("Failure running telnet command.")
-
-    def stop(self):
-        self.stopper.set()
-
-    def communicate_with_updater(self):
-        """
-        communication member. This is meant to send some metadata to the updater thread.
-        :return:
-        """
-        try:
-            data = dict(
-                name="Light-" + self.identifier,
-                identifier=self.identifier,
-                failed=self.failed,
-                last_timepoint=int(self.current_timepoint.strftime("%s")))
-            self.communication_queue.append(data)
-            self.failed = list()
-        except Exception as e:
-            self.logger.error("thread communication error: {}".format(str(e)))
-
-    def run(self):
-        while True and not self.stopper.is_set():
-            self.current_timepoint = datetime.datetime.now()
-            wl = self._current_wavelength_intentisies
-            self.calculate_current_state()
-            if wl != self._current_wavelength_intentisies:
-                s = " ".join(wl + ":" + inte for wl, inte in self._current_wavelength_intentisies.items())
-                if self.out_of_range:
-                    self.logger.warning("Running outside of Solarcalc file time range. Repeating the last 24 hours")
-                self.logger.info("#{0:05d} @ {1} - {2}".format(self._current_csv_index,
-                                                               self.current_timepoint.strftime("%Y-%m-%d %H:%M"), s))
-
-                self.send_state()
-            time.sleep(1)
-
-
-class ThreadedLights(Thread):
-    """
-    threaded implementation.
-    """
-    def __init__(self, *args, **kwargs):
-        if hasattr(self, "identifier"):
-            Thread.__init__(self, name=self.identifier)
-        else:
-            Thread.__init__(self)
-
-        print("Threaded startup")
-        super(ThreadedLights, self).__init__(*args, **kwargs)
-        self.daemon = True
-        if hasattr(self, "config_filename") and hasattr(self, "re_init"):
-            SysUtil().add_watch(self.config_filename, self.re_init)
+                return {}
+        if self.controller.set_all_wavelengths(values):
+            return values
+        return {}

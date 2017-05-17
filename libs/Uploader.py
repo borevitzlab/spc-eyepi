@@ -25,7 +25,15 @@ class Uploader(Thread):
     upload_interval = 120
     remove_source_files = True
 
-    def __init__(self, identifier: str, queue: deque = None):
+    def __init__(self, identifier: str, config: dict = None, queue: deque = None):
+        """
+        Uploader init.
+        `config` may be specified as a dict.
+        
+        :param identifier: 
+        :param config: 
+        :param queue: 
+        """
         # same thread name hackery that the Camera threads use
         Thread.__init__(self, name=identifier + "-Uploader")
         self.stopper = Event()
@@ -44,33 +52,30 @@ class Uploader(Thread):
         self.total_data_uploaded_tb = 0
         self.total_data_uploaded_b = 0
 
-        self.config_filename = SysUtil.identifier_to_ini(self.identifier)
-        self.config = \
-            self.host = \
-            self.username = \
-            self.password = \
-            self.camera_name = \
-            self.source_dir = \
-            self.server_dir = \
-            self.upload_enabled = None
+        self.config = config
+        if not config:
+            self.config_filename = SysUtil.identifier_to_ini(self.identifier)
+            self.config = SysUtil.ensure_config(self.identifier)
 
-        self.re_init()
-        SysUtil().add_watch(self.config_filename, self.re_init)
+            self.host = self.config["ftp"]["server"]
+            self.username = self.config["ftp"]["username"]
+            self.password = self.config["ftp"]["password"]
+            self.server_dir = self.config["ftp"]["directory"]
+            self.name = self.config["camera"]["name"]
+            self.source_dir = self.config["localfiles"]["upload_dir"]
+            self.upload_enabled = self.config.getboolean("ftp", "enabled")
+        else:
+            upload_conf = self.config.get("upload", {})
+            self.host = upload_conf.get("host", "sftp.traitcapture.org")
+            self.username = upload_conf.get("username", "picam")
+            self.password = upload_conf.get("password", "NONE_SPECIFIED")
+            self.server_dir = upload_conf.get("directory", "/picam")
+            self.name = self.config.get("name", self.identifier)
+            self.source_dir = self.config.get("output_dir", "/home/images/{}".format(str(identifier)))
+            self.upload_enabled = bool(len(upload_conf))
 
-    def re_init(self):
-        """
-        setup to be run each time the config is reloaded
-
-        """
         self.machine_id = SysUtil.get_machineid()
-        self.config = SysUtil.ensure_config(self.identifier)
-        self.host = self.config["ftp"]["server"]
-        self.username = self.config["ftp"]["username"]
-        self.password = self.config["ftp"]["password"]
-        self.server_dir = self.config["ftp"]["directory"]
-        self.camera_name = self.config["camera"]["name"]
-        self.source_dir = self.config["localfiles"]["upload_dir"]
-        self.upload_enabled = self.config.getboolean("ftp", "enabled")
+
         self.last_upload_list = []
 
     def upload(self, file_names):
@@ -95,7 +100,7 @@ class Uploader(Thread):
                 params['password'] = self.password
 
             with pysftp.Connection(**params) as link:
-                root = os.path.join(link.getcwd() or "", self.server_dir, self.camera_name)
+                root = os.path.join(link.getcwd() or "", self.server_dir, self.name)
                 root = root[1:] if root.startswith("/") else root
                 # make the root dir in case it doesnt exist.
                 if not link.isdir(root):
@@ -159,7 +164,7 @@ class Uploader(Thread):
                 # open link and create directory if for some reason it doesnt exist
                 ftp = ftplib.FTP(self.host)
                 ftp.login(self.username, self.password)
-                self.mkdir_recursive(ftp, os.path.join(self.server_dir, self.camera_name))
+                self.mkdir_recursive(ftp, os.path.join(self.server_dir, self.name))
                 self.logger.info("Uploading")
                 # dump ze files.
                 for f in file_names:
@@ -286,7 +291,7 @@ class GenericUploader(Uploader):
 
         self.communication_queue = queue
         self.identifier = identifier
-        self.camera_name = identifier
+        self.name = identifier
         self.source_dir = source_dir
         self.logger = logging.getLogger(self.getName())
         self.startup_time = datetime.datetime.now()
@@ -303,7 +308,7 @@ class GenericUploader(Uploader):
         self.server_dir = "/picam"
 
         if config and type(config) is dict:
-            self.camera_name = config.get("name", self.camera_name)
+            self.name = config.get("name", self.name)
             self.source_dir = config.get("output_dir", self.source_dir)
             if type(config.get("upload")) is dict:
                 config = config.get("upload")
