@@ -725,7 +725,7 @@ class IPCamera(Camera):
 
         self.image_quality = self.image_quality
 
-        super(IPCamera, self).__init__(identifier, **kwargs)
+        super(IPCamera, self).__init__(identifier, config, **kwargs)
 
         self.logger.info(self.status)
 
@@ -1165,7 +1165,7 @@ class GPCamera(Camera):
     identifier and usb_address are NOT OPTIONAL
     """
 
-    def __init__(self, identifier: str = None, usb_address: tuple = None, lock=Lock(), **kwargs):
+    def __init__(self, identifier: str = None, config: dict=None, usb_address: tuple = None, lock=Lock(), **kwargs):
         """
         Providing a usb address and no identifier or an identifier but no usb address will cause
         
@@ -1183,7 +1183,7 @@ class GPCamera(Camera):
             self.usb_address = usb_address
 
         self.exposure_length = self.config.get('camera', "exposure")
-        super(GPCamera, self).__init__(identifier, **kwargs)
+        super(GPCamera, self).__init__(identifier, config, **kwargs)
         if self.usb_address[0] is None:
             with self.lock:
                 serialnumber = None
@@ -1507,7 +1507,7 @@ class USBCamera(Camera):
         self.logger.info("Capturing at {w}x{h}".format(w=self.video_capture.get(cv2.CAP_PROP_FRAME_WIDTH),
                                                        h=self.video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
-        super(USBCamera, self).__init__(identifier, **kwargs)
+        super(USBCamera, self).__init__(identifier, config, **kwargs)
 
     def stop(self):
         """
