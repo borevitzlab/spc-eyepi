@@ -246,7 +246,7 @@ def run_from_global_config(updater: Updater) -> tuple:
             section = camera_confs.get(ident, get_default_camera_conf(ident))
             cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
             if "detected=1" in cmdret:
-                camera = ThreadedPiCamera(ident,
+                camera = ThreadedPiCamera(identifier=ident,
                                           config=section,
                                           queue=updater.communication_queue)
 

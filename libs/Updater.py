@@ -9,6 +9,8 @@ from schedule import Scheduler
 from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
 
+
+
 try:
     logging.config.fileConfig("logging.ini")
     logging.getLogger("paramiko").setLevel(logging.WARNING)
@@ -91,6 +93,8 @@ class Updater(Thread):
             self.logger.error("Error collecting data to post to server: {}".format(str(e)))
 
     def set_config_data(self, data: dict):
+        SysUtil.write_global_config(data)
+
         for identifier, update_data in data.items():
             # dont rewrite empty...
             if not len(update_data):

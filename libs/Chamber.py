@@ -453,5 +453,8 @@ class ThreadedChamber(Thread, Chamber):
             Thread.__init__(self)
 
         print("Threaded startup < {} >".format(self.__class__))
-        super(ThreadedChamber, self).__init__(*args, **kwargs)
+        super(self.__class__, self).__init__(*args, **kwargs)
         self.daemon = True
+
+    def run(self):
+        super(Chamber, self).run()
