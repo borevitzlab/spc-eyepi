@@ -181,9 +181,11 @@ class Camera(object):
         self.focus_position = None
         self._frame = None
         self._image = numpy.empty((Camera.default_width, Camera.default_height, 3), numpy.uint8)
+        self.config = dict()
         try:
             self.config = config.copy()
-        except:
+        except Exception as e:
+            print(str(e))
             pass
         if config is None:
             self.config_filename = SysUtil.identifier_to_ini(self.identifier)
@@ -1174,16 +1176,14 @@ class GPCamera(Camera):
         :param usb_address: 
         :param kwargs: 
         """
-
+        super(GPCamera, self).__init__(identifier, config=config, **kwargs)
         self.lock = lock
         self.usb_address = [None, None]
-        self.identifier = identifier
         self._serialnumber = identifier
         if type(usb_address) is tuple and len(usb_address) is 2:
             self.usb_address = usb_address
 
         self.exposure_length = self.config.get('camera', "exposure")
-        super(GPCamera, self).__init__(identifier, **kwargs)
         if self.usb_address[0] is None:
             with self.lock:
                 serialnumber = None
@@ -1214,7 +1214,12 @@ class GPCamera(Camera):
                 self._serialnumber = serialnumber
                 camera.release()
         self.logger.info("Camera detected at usb port {}:{}".format(*self.usb_address))
-        self.exposure_length = self.config.getint("camera", "exposure")
+        try:
+            self.exposure_length = self.config.getint("camera", "exposure")
+        except:
+            pass
+
+
 
     def get_exif_fields(self):
         """
