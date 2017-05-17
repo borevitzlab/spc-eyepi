@@ -389,8 +389,12 @@ def start_workers(worker_objects: tuple or list) -> tuple:
     """
     logger.debug("Starting {} worker threads".format(str(len(worker_objects))))
     for thread in worker_objects:
-        thread.daemon = True
-        thread.start()
+        try:
+            thread.daemon = True
+            thread.start()
+        except Exception as e:
+            print(str(e))
+            raise e
     return worker_objects
 
 
