@@ -338,7 +338,8 @@ def run_from_global_config(updater: Updater) -> tuple:
     #
     chamber_conf = config_data.get("chamber", None)
     if chamber_conf:
-        chamber = ThreadedChamber(identifier=chamber_conf.get("name"))
+        chamber = ThreadedChamber(identifier=chamber_conf.get("name"),
+                                  config=chamber_conf)
 
     return start_workers(workers)
 
@@ -412,31 +413,14 @@ if __name__ == "__main__":
     # The main loop for capture
 
     # these should be all detected at some point.
-    gphoto_workers = tuple()
-    raspberry = tuple()
-    webcams = tuple()
-    lights = tuple()
-    sensors = tuple()
     updater = None
+    workers = tuple()
     try:
         # start the updater. this is the first thing that should happen.
         logger.debug("Starting up the updater")
         updater = Updater()
         start_workers((updater,))
-
-        ivport = detect_ivport(updater)
-        raspberry = detect_ivport(updater) or detect_picam(updater)
-        webcams = detect_webcam(updater)
-        lights = detect_lights(updater)
-        sensors = detect_sensors(updater)
-        # try 10 times to detect gphoto cameras. Maybe they arent awake yet.
-        for x in range(10):
-            gphoto_workers = detect_gphoto(updater)
-            if gphoto_workers:
-                break
-            time.sleep(1)
-        else:
-            logger.warning("no gphoto cameras detected. Something might be wrong.")
+        workers = run_from_global_config(updater)
 
         # enumerate the usb devices to compare them later on.
         usb_devices = enumerate_usb_devices()
@@ -445,19 +429,12 @@ if __name__ == "__main__":
             try:
                 if usb_devices != enumerate_usb_devices():
                     logger.warning("USB device list change. Killing camera threads")
-                    kill_workers(gphoto_workers)
-                    updater.temp_identifiers = set()
-                    gphoto_workers = detect_gphoto(updater)
-                    # should redetect webcams.
-
-                    webcams = detect_webcam(updater)
+                    kill_workers(workers)
+                    workers = run_from_global_config(updater)
                     usb_devices = enumerate_usb_devices()
                 time.sleep(1)
             except (KeyboardInterrupt, SystemExit) as e:
-                kill_workers(gphoto_workers)
-                kill_workers(webcams)
-                kill_workers(raspberry)
-                kill_workers(lights)
+                kill_workers(workers)
                 kill_workers([updater])
                 raise e
             except Exception as e:
@@ -465,10 +442,7 @@ if __name__ == "__main__":
 
     except (KeyboardInterrupt, SystemExit):
         print("exiting...")
-        kill_workers(gphoto_workers)
-        kill_workers(raspberry)
-        kill_workers(webcams)
-        kill_workers(lights)
+        kill_workers(workers)
         kill_workers([updater])
         sys.exit()
     except Exception as e:
