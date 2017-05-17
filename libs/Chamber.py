@@ -452,6 +452,6 @@ class ThreadedChamber(Thread, Chamber):
         else:
             Thread.__init__(self)
 
-        print("Threaded startup")
+        print("Threaded startup < {} >".format(self.__class__))
         super(ThreadedChamber, self).__init__(*args, **kwargs)
         self.daemon = True

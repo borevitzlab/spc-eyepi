@@ -380,7 +380,7 @@ class ThreadedSensor(Thread, Sensor):
         else:
             Thread.__init__(self)
 
-        print("Threaded startup")
+        print("Threaded startup < {} >".format(self.__class__))
         # super(ThreadedSensor, self).__init__(*args, **kwargs)
         self.daemon = True
 

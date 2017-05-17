@@ -190,6 +190,28 @@ def detect_sensors(updater: Updater) -> tuple:
         logger.error("Couldnt detect sensors for some reason: {}".format(str(e)))
     return tuple()
 
+def detect_ivport(updater: Updater) -> tuple:
+    """
+    Method to detect IVport multiplexer.
+    Its difficult to actually detect the existence of an ivport so we must just assume taht it exists if there is a
+    config file matching the right pattern
+
+    :creates: :mod:`libs.Camera.IVPortCamera`, :mod:`libs.Uploader.Uploader`
+    :param updater: instance that has a `communication_queue` member that implements an `append` method
+    :type updater: Updater
+    :return: tuple of camera thread objects and associated uploader thread objects.
+    :rtype: tuple(Camera, Uploader)
+    """
+    from glob import glob
+    workers = []
+    for iv_conf in list(glob("configs/ivport*.ini")):
+        camera = ThreadedIVPortCamera(SysUtil.default_identifier(prefix="ivport"), queue=updater.communication_queue)
+        updater.add_to_identifiers(camera.identifier)
+        workers.append(camera)
+        workers.append(Uploader(SysUtil.default_identifier(prefix="ivport"), queue=updater.communication_queue))
+    return start_workers(workers)
+
+
 def get_default_camera_conf(ident):
     return {
         'name': ident,
@@ -199,6 +221,7 @@ def get_default_camera_conf(ident):
         'resize': True,
         'output_dir': "/home/images/{}".format(ident)
     }
+
 
 def run_from_global_config(updater: Updater) -> tuple:
     """
@@ -344,27 +367,6 @@ def run_from_global_config(updater: Updater) -> tuple:
     return start_workers(workers)
 
 
-
-def detect_ivport(updater: Updater) -> tuple:
-    """
-    Method to detect IVport multiplexer.
-    Its difficult to actually detect the existence of an ivport so we must just assume taht it exists if there is a
-    config file matching the right pattern
-
-    :creates: :mod:`libs.Camera.IVPortCamera`, :mod:`libs.Uploader.Uploader`
-    :param updater: instance that has a `communication_queue` member that implements an `append` method
-    :type updater: Updater
-    :return: tuple of camera thread objects and associated uploader thread objects.
-    :rtype: tuple(Camera, Uploader)
-    """
-    from glob import glob
-    workers = []
-    for iv_conf in list(glob("configs/ivport*.ini")):
-        camera = ThreadedIVPortCamera(SysUtil.default_identifier(prefix="ivport"), queue=updater.communication_queue)
-        updater.add_to_identifiers(camera.identifier)
-        workers.append(camera)
-        workers.append(Uploader(SysUtil.default_identifier(prefix="ivport"), queue=updater.communication_queue))
-    return start_workers(workers)
 
 
 def enumerate_usb_devices() -> set:

@@ -1838,8 +1838,8 @@ class ThreadedCamera(Thread):
         else:
             Thread.__init__(self)
 
-        print("Threaded startup < {} >".format(type(self)))
-        # super(self.__class__, self).__init__(*args, **kwargs)
+        print("Threaded startup < {} >".format(self.__class__))
+        super(self.__class__, self).__init__(*args, **kwargs)
         self.daemon = True
         # add any functions you want to run for every camera type here.
 
