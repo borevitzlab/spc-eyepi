@@ -6,6 +6,7 @@ import time
 import tempfile
 import numpy
 import requests
+from dateutil import parser
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from xml.etree import ElementTree
 from collections import deque
@@ -23,7 +24,6 @@ except:
 try:
     # improt yaml module and assert that it has a load function
     import yaml
-
     assert yaml.load
 except Exception as e:
     logging.error("Couldnt import suitable yaml module, no IP camera support: {}".format(str(e)))
@@ -44,6 +44,22 @@ try:
     import telegraf
 except Exception as e:
     logging.error("Couldnt import pytelegraf module, no telemetry: {}".format(str(e)))
+
+
+class TwentyFourHourTimeParserInfo(parser.parserinfo):
+    def validate(self, res):
+        if res.year is not None:
+            time = str(res.year)
+            res.year = None
+            res.hour = int(time[:2])
+            res.minute = int(time[2:])
+        if res.tzoffset == 0 and not res.tzname or res.tzname == 'Z':
+            res.tzname = "UTC"
+            res.tzoffset = 0
+        elif res.tzoffset != 0 and res.tzname and self.utczone(res.tzname):
+            res.tzoffset = 0
+        return True
+
 
 USBDEVFS_RESET = 21780
 
@@ -75,7 +91,7 @@ def nested_lookup(key, document):
                         yield result
 
 
-class Camera(object):
+class Camera(Thread):
     """
     Base Camera class.
 
@@ -91,7 +107,6 @@ class Camera(object):
     :ivar str identifier: Unique identifier for the camera. Used to distinguish cameras from one another.
     :ivar list failed: List of failed capture timepoints.
     :ivar str config_filename: Confuguration file path, unused if camera is instantiated with the noconf init parameter.
-    :ivar configparser.ConfigParser config: Configuration object.
     :ivar str camera_name: Human friendly name of the camera.
     :ivar int interval: Capture interval (in seconds).
     :ivar str spool_directory: Path to stream images into during the capture process.
@@ -155,7 +170,8 @@ class Camera(object):
                     break
         cls._thread = None
 
-    def __init__(self, identifier: str = None, config: dict = None, queue: deque = None, noconf: bool = False,
+    def __init__(self, identifier: str, config: dict = None, queue: deque = None,
+                 noconf: bool = False,
                  **kwargs):
         """
         Initialiser for cameras...
@@ -166,6 +182,8 @@ class Camera(object):
         :param noconf: dont create a config, or watch anything. Used for temporarily streaming from a camera
         :param kwargs:
         """
+        super().__init__(name=identifier)
+        print("Thread started {}: {}".format(self.__class__, identifier))
         if queue is None:
             queue = deque(tuple(), 256)
         self.communication_queue = queue
@@ -182,41 +200,13 @@ class Camera(object):
         self._frame = None
         self._image = numpy.empty((Camera.default_width, Camera.default_height, 3), numpy.uint8)
         self.config = dict()
-        try:
-            self.config = config.copy()
-        except Exception as e:
-            print(str(e))
-            pass
-        if config is None:
-            self.config_filename = SysUtil.identifier_to_ini(self.identifier)
-            self.config = SysUtil.ensure_config(self.identifier)
-        try:
-            self.name = self.config["camera"]["name"]
-        except:
-            pass
-        try:
-            self.name = self.config["name"]
-        except:
-            pass
+        self.config = config.copy()
+        self.name = self.config.get("name", identifier)
 
-        try:
-            self.interval = self.config.getint("timelapse", "interval")
-        except:
-            pass
-        try:
-            self.interval = int(self.config.get("interval", 300))
-        except:
-            pass
-
+        self.interval = int(self.config.get("interval", 300))
         self.upload_directory = "/home/images/{}".format(str(self.identifier))
         try:
-            self.upload_directory = self.config["localfiles"]["upload_dir"]
-        except:
-            pass
-
-        try:
-            upload_section = config.get("upload", {})
-            self.upload_directory = upload_section["local_dir"]
+            self.upload_directory = self.config["output_dir"]
         except:
             pass
 
@@ -224,53 +214,31 @@ class Camera(object):
 
         self.begin_capture = datetime.time(0, 0)
         self.end_capture = datetime.time(23, 59)
-        start_time_string = "NA"
-        end_time_string = "NA"
 
         try:
-            start_time_string = str(self.config['timelapse']['starttime'])
-            start_time_string = start_time_string.replace(":", "")
-        except:
-            pass
-        try:
-            start_time_string = str(self.config['starttime'])
-            start_time_string = start_time_string.replace(":", "")
-        except:
-            pass
-
-        try:
-            end_time_string = str(self.config['timelapse']['endtime'])
-            end_time_string = end_time_string.replace(":", "")
-        except:
-            pass
-        try:
-            end_time_string = str(self.config['endtime'])
-            end_time_string = end_time_string.replace(":", "")
-        except:
-            pass
-
-        try:
-            start_time_string = start_time_string[:4]
-            assert start_time_string.isdigit(), "Non numerical start time, {}".format(str(start_time_string))
-            self.begin_capture = datetime.datetime.strptime(start_time_string, "%H%M").time()
+            self.begin_capture = parser.parse(str(self.config["starttime"]),
+                                              parserinfo=TwentyFourHourTimeParserInfo()).time()
         except Exception as e:
             self.logger.error("Time conversion error starttime - {}".format(str(e)))
         try:
             # cut string to max of 4.
-            end_time_string = end_time_string[:4]
-            assert end_time_string.isdigit(), "Non numerical end time, {}".format(str(end_time_string))
-            self.end_capture = datetime.datetime.strptime(end_time_string, "%H%M").time()
+            self.end_capture = parser.parse(str(self.config["stoptime"]),
+                                            parserinfo=TwentyFourHourTimeParserInfo()).time()
         except Exception as e:
             self.logger.error("Time conversion error stoptime - {}".format(str(e)))
 
         try:
             if not os.path.exists(self.upload_directory):
-                self.logger.info("Creating local upload dir {}".format(self.upload_directory))
+                self.logger.info("Creating local output dir {}".format(self.upload_directory))
                 os.makedirs(self.upload_directory)
         except Exception as e:
             self.logger.error("Creating directories {}".format(str(e)))
 
         self._exif = self.get_exif_fields()
+
+        self.logger.info("Capturing from {} to {}".format(self.begin_capture.strftime("%H:%M"),
+                                                          self.end_capture.strftime("%H:%M")))
+        self.logger.info("Interval: {}".format(self.interval))
 
         self.current_capture_time = datetime.datetime.now()
 
@@ -285,7 +253,7 @@ class Camera(object):
 
         :param filename: image filename without extension
         :return: :func:`numpy.array` if filename not specified, otherwise list of files.
-        :rtype: numpy.array
+        :rtype: numpy.array or list(str)
         """
         return self._image
 
@@ -412,9 +380,9 @@ class Camera(object):
         """
         current_naive_time = self.current_capture_time.time()
 
-        if not self.config.getboolean("camera", "enabled"):
-            # if the camera is disabled, never take photos
-            return False
+        # if not self.config.getboolean("camera", "enabled"):
+        #     # if the camera is disabled, never take photos
+        #     return False
 
         if self.begin_capture < self.end_capture:
             # where the start capture time is less than the end capture time
@@ -549,28 +517,27 @@ class Camera(object):
 
                     telemetry["timing_capture_s"] = float(time.time() - start_capture_time)
 
-                    if self.config.getboolean("ftp", "replace"):
-                        st = time.time()
-                        resize_t = 0.0
-                        if self.config.getboolean("ftp", "resize"):
-                            self._image = cv2.resize(self._image, (Camera.default_width, Camera.default_height),
-                                                     interpolation=cv2.INTER_NEAREST)
-                            resize_t = time.time() - st
+                    st = time.time()
+                    resize_t = 0.0
+                    if self.config.get("resize_last", False):
+                        self._image = cv2.resize(self._image, (Camera.default_width, Camera.default_height),
+                                                 interpolation=cv2.INTER_NEAREST)
+                        resize_t = time.time() - st
 
-                        cv2.putText(self._image,
-                                    self.timestamped_imagename,
-                                    org=(20, self._image.shape[0] - 20),
-                                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                                    fontScale=1,
-                                    color=(0, 0, 255),
-                                    thickness=2,
-                                    lineType=cv2.LINE_AA)
+                    cv2.putText(self._image,
+                                self.timestamped_imagename,
+                                org=(20, self._image.shape[0] - 20),
+                                fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                                fontScale=1,
+                                color=(0, 0, 255),
+                                thickness=2,
+                                lineType=cv2.LINE_AA)
 
-                        cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"), self._image)
-                        shutil.copy(os.path.join("/dev/shm", self.identifier + ".jpg"),
-                                    os.path.join(self.upload_directory, "last_image.jpg"))
-                        telemetry["timing_resize_s"] = float(resize_t)
-                        self.logger.info("Resize {0:.3f}s, total: {0:.3f}s".format(resize_t, time.time() - st))
+                    cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"), self._image)
+                    shutil.copy(os.path.join("/dev/shm", self.identifier + ".jpg"),
+                                os.path.join(self.upload_directory, "last_image.jpg"))
+                    telemetry["timing_resize_s"] = float(resize_t)
+                    self.logger.info("Resize {0:.3f}s, total: {0:.3f}s".format(resize_t, time.time() - st))
 
                     # copying/renaming for files
                     oldfiles = files[:]
@@ -588,7 +555,7 @@ class Camera(object):
                     for fn in files:
                         # move files to the upload directory
                         try:
-                            if self.config.getboolean("ftp", "timestamped"):
+                            if self.config.get("capture_timelapse", False):
                                 shutil.move(fn, self.upload_directory)
                                 self.logger.info("Captured & stored for upload - {}".format(os.path.basename(fn)))
                         except Exception as e:
@@ -618,7 +585,7 @@ class Camera(object):
                     time.sleep(Camera.accuracy * 2)
                 except Exception as e:
                     self.logger.critical("Image Capture error - {}".format(str(e)))
-            time.sleep(0.1)
+            time.sleep(1)
 
 
 class IPCamera(Camera):
@@ -655,7 +622,7 @@ class IPCamera(Camera):
             assert end_time_string.isdigit(), "Non numerical start time, {}".format(str(end_time_string))
             self.begin_capture = datetime.datetime.strptime(start_time_string, "%H%M").time()
         except Exception as e:
-            self.logger.error("Time conversion error starttime - {}".format_map(str(e)))
+            self.logger.error("Time conversion error starttime - {}".format(str(e)))
         try:
             # cut string to max of 4.
             end_time_string = end_time_string[:4]
@@ -727,7 +694,7 @@ class IPCamera(Camera):
 
         self.image_quality = self.image_quality
 
-        super(IPCamera, self).__init__(identifier, **kwargs)
+        super(IPCamera, self).__init__(identifier, config=config, **kwargs)
 
         self.logger.info(self.status)
 
@@ -1167,7 +1134,7 @@ class GPCamera(Camera):
     identifier and usb_address are NOT OPTIONAL
     """
 
-    def __init__(self, identifier: str = None, usb_address: tuple = None, config: dict=None, lock=Lock(), **kwargs):
+    def __init__(self, identifier: str, usb_address: tuple = None, lock=Lock(), **kwargs):
         """
         Providing a usb address and no identifier or an identifier but no usb address will cause
         
@@ -1176,14 +1143,13 @@ class GPCamera(Camera):
         :param usb_address: 
         :param kwargs: 
         """
-        super(GPCamera, self).__init__(identifier, config=config, **kwargs)
+
         self.lock = lock
         self.usb_address = [None, None]
         self._serialnumber = identifier
+        self.identifier = identifier
         if type(usb_address) is tuple and len(usb_address) is 2:
             self.usb_address = usb_address
-
-        self.exposure_length = self.config.get('camera', "exposure")
         if self.usb_address[0] is None:
             with self.lock:
                 serialnumber = None
@@ -1213,13 +1179,14 @@ class GPCamera(Camera):
                 self.usb_address = camera._usb_address
                 self._serialnumber = serialnumber
                 camera.release()
+
+        super().__init__(self.identifier, **kwargs)
+
         self.logger.info("Camera detected at usb port {}:{}".format(*self.usb_address))
         try:
             self.exposure_length = self.config.getint("camera", "exposure")
         except:
             pass
-
-
 
     def get_exif_fields(self):
         """
@@ -1245,7 +1212,7 @@ class GPCamera(Camera):
             except:
                 pass
         except Exception as e:
-            self.logger.error("Couldnt get full exif data. {}".format(str(e)))
+            self.logger.warning("Couldnt get full exif data. {}".format(str(e)))
         return exif
 
     def _get_camera(self):
@@ -1256,14 +1223,15 @@ class GPCamera(Camera):
                     self.logger.debug("Camera matched for {}:{}".format(*self.usb_address))
                     return camera
             except Exception as e:
-                self.logger.info("Camera wasnt at the correct usb address or something: {}".format(str(e)))
+                self.logger.warning(
+                    "Camera wasnt at the correct usb address or usb address wasnt specified: {}".format(str(e)))
 
             for camera in gp.list_cameras():
                 try:
                     if camera.status.serialnumber == self._serialnumber:
                         return camera
                 except Exception as e:
-                    self.logger.info("Couldnt acquire lock for camera. {}".format(str(e)))
+                    self.logger.warning("Couldnt acquire lock for camera: {}".format(str(e)))
             else:
                 raise FileNotFoundError("Camera cannot be found")
 
@@ -1715,8 +1683,7 @@ class IVPortCamera(PiCamera):
     gpio_groups = ("B",)
 
     def __init__(self,
-                 identifier: str = None,
-                 queue: deque = None,
+                 identifier: str,
                  gpio_group: tuple = ("B",),
                  camera_number: int = None, **kwargs):
         """
@@ -1733,7 +1700,7 @@ class IVPortCamera(PiCamera):
         self.__class__.gpio_groups = sorted(gpio_group)
 
         if camera_number is None:
-            super(IVPortCamera, self).__init__(identifier=identifier, queue=queue, **kwargs)
+            super(IVPortCamera, self).__init__(identifier, **kwargs)
         else:
             self.__class__.current_camera_index = camera_number
             IVPortCamera.switch(idx=self.__class__.current_camera_index)
@@ -1834,61 +1801,55 @@ class IVPortCamera(PiCamera):
 """
 Threaded implementations
 """
-
-
-class ThreadedCamera(Thread):
-    def __init__(self, *args, **kwargs):
-        if hasattr(self, "identifier"):
-            Thread.__init__(self, name=self.identifier)
-        else:
-            Thread.__init__(self)
-
-        print("Threaded startup < {} >".format(self.__class__))
-        super(self.__class__, self).__init__(*args, **kwargs)
-        self.daemon = True
-        # add any functions you want to run for every camera type here.
-
-
-class ThreadedGPCamera(ThreadedCamera, GPCamera):
-    def __init__(self, *args, **kwargs):
-        GPCamera.__init__(self, *args, **kwargs)
-        super(ThreadedGPCamera, self).__init__(*args, **kwargs)
-
-    def run(self):
-        super(GPCamera, self).run()
-
-
-class ThreadedIPCamera(ThreadedCamera, IPCamera):
-    def __init__(self, *args, **kwargs):
-        IPCamera.__init__(self, *args, **kwargs)
-        super(ThreadedIPCamera, self).__init__(*args, **kwargs)
-
-    def run(self):
-        super(IPCamera, self).run()
-
-
-class ThreadedUSBCamera(ThreadedCamera, USBCamera):
-    def __init__(self, *args, **kwargs):
-        USBCamera.__init__(self, *args, **kwargs)
-        super(ThreadedUSBCamera, self).__init__(*args, **kwargs)
-
-    def run(self):
-        super(USBCamera, self).run()
-
-
-class ThreadedPiCamera(ThreadedCamera, PiCamera):
-    def __init__(self, *args, **kwargs):
-        PiCamera.__init__(self, *args, **kwargs)
-        super(ThreadedPiCamera, self).__init__(*args, **kwargs)
-
-    def run(self):
-        super(PiCamera, self).run()
-
-
-class ThreadedIVPortCamera(ThreadedCamera, IVPortCamera):
-    def __init__(self, *args, **kwargs):
-        IVPortCamera.__init__(self, *args, **kwargs)
-        super(ThreadedIVPortCamera, self).__init__(*args, **kwargs)
-
-    def run(self):
-        super(IVPortCamera, self).run()
+#
+# class ThreadedCamera(Camera, Thread):
+#     """
+#     threaded implementation of the Camera cclass.
+#     """
+#     def __init__(self, identifier, *args, **kwargs):
+#         Thread.__init__(self, name=identifier)
+#         self.daemon = True
+#         print("Threaded started {}: {}".format(self.__class__, identifier))
+#
+#
+# class ThreadedPiCamera(PiCamera, ThreadedCamera):
+#     def __init__(self, identifier, *args, **kwargs):
+#         super(ThreadedPiCamera, self).__init__(identifier, *args, **kwargs)
+#         super(ThreadedCamera, self).__init__(identifier, *args, **kwargs)
+#
+#     def run(self):
+#         super(PiCamera, self).run()
+#
+# class ThreadedGPCamera(GPCamera, ThreadedCamera):
+#     def __init__(self, identifier, *args, **kwargs):
+#         super(GPCamera, self).__init__(identifier, *args, **kwargs)
+#         super(ThreadedCamera, self).__init__(identifier, *args, **kwargs)
+#
+#     def run(self):
+#         super(GPCamera, self).run()
+#
+# class ThreadedIPCamera(IPCamera, ThreadedCamera):
+#     def __init__(self, identifier, *args, **kwargs):
+#         super(ThreadedIPCamera, self).__init__(identifier, *args, **kwargs)
+#         super(ThreadedCamera, self).__init__(identifier, *args, **kwargs)
+#
+#     def run(self):
+#         super(IPCamera, self).run()
+#
+# class ThreadedUSBCamera(USBCamera, ThreadedCamera):
+#     def __init__(self, identifier, *args, **kwargs):
+#         super(ThreadedUSBCamera, self).__init__(identifier, *args, **kwargs)
+#         super(ThreadedCamera, self).__init__(identifier, *args, **kwargs)
+#
+#     def run(self):
+#         super(USBCamera, self).run()
+#
+#
+# class ThreadedIVPortCamera(IVPortCamera, ThreadedCamera):
+#     def __init__(self, identifier, *args, **kwargs):
+#         super(ThreadedIVPortCamera, self).__init__(identifier, *args, **kwargs)
+#         super(ThreadedCamera, self).__init__(identifier, *args, **kwargs)
+#
+#     def run(self):
+#         super(IVPortCamera, self).run()
+#

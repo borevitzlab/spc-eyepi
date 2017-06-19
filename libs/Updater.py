@@ -9,8 +9,6 @@ from schedule import Scheduler
 from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
 
-
-
 try:
     logging.config.fileConfig("logging.ini")
     logging.getLogger("paramiko").setLevel(logging.WARNING)
@@ -24,6 +22,7 @@ class Updater(Thread):
     def __init__(self):
         Thread.__init__(self, name="Updater")
         self.logger = logging.getLogger(self.getName())
+        print("Thread started {}: {}".format(self.__class__, "Updater"))
         self.communication_queue = deque(tuple(), 512)
         self.scheduler = Scheduler()
         self.scheduler.every(60).seconds.do(self.go)

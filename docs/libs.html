@@ -1,6 +1,6 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
@@ -34,7 +34,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
-  <body role="document">
+  <body>
   <div class="document">
     
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -68,14 +68,14 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">SubModules</a><ul>
-<li><a class="reference internal" href="#libs-camera">libs.Camera</a></li>
-<li><a class="reference internal" href="#libs-cryptutil">libs.CryptUtil</a></li>
-<li><a class="reference internal" href="#libs-light">libs.Light</a></li>
-<li><a class="reference internal" href="#libs-pantilt">libs.PanTilt</a></li>
-<li><a class="reference internal" href="#libs-sensor">libs.Sensor</a></li>
-<li><a class="reference internal" href="#libs-sysutil">libs.SysUtil</a></li>
-<li><a class="reference internal" href="#libs-updater">libs.Updater</a></li>
-<li><a class="reference internal" href="#libs-uploader">libs.Uploader</a></li>
+<li><a class="reference internal" href="#module-libs.Camera">libs.Camera</a></li>
+<li><a class="reference internal" href="#module-libs.CryptUtil">libs.CryptUtil</a></li>
+<li><a class="reference internal" href="#module-libs.Light">libs.Light</a></li>
+<li><a class="reference internal" href="#module-libs.PanTilt">libs.PanTilt</a></li>
+<li><a class="reference internal" href="#module-libs.Sensor">libs.Sensor</a></li>
+<li><a class="reference internal" href="#module-libs.SysUtil">libs.SysUtil</a></li>
+<li><a class="reference internal" href="#module-libs.Updater">libs.Updater</a></li>
+<li><a class="reference internal" href="#module-libs.Uploader">libs.Uploader</a></li>
 </ul>
 </li>
 </ul>
@@ -98,29 +98,2336 @@
             
   <div class="section" id="submodules">
 <h1>SubModules<a class="headerlink" href="#submodules" title="Permalink to this headline">§</a></h1>
-<div class="section" id="libs-camera">
-<h2>libs.Camera<a class="headerlink" href="#libs-camera" title="Permalink to this headline">§</a></h2>
+<div class="section" id="module-libs.Camera">
+<span id="libs-camera"></span><h2>libs.Camera<a class="headerlink" href="#module-libs.Camera" title="Permalink to this headline">§</a></h2>
+<dl class="class">
+<dt id="libs.Camera.Camera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">Camera</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>config: dict = None</em>, <em>queue: collections.deque = None</em>, <em>noconf: bool = False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/threading.html#threading.Thread" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+<p>Base Camera class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference internal" href="#libs.Camera.Camera.accuracy" title="libs.Camera.Camera.accuracy"><strong>accuracy</strong></a> (<a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)"><em>int</em></a>) – 3: Number of seconds caputre should be accurate to.</li>
+<li><a class="reference internal" href="#libs.Camera.Camera.default_width" title="libs.Camera.Camera.default_width"><strong>default_width</strong></a> (<a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)"><em>int</em></a>) – 1080: Default width of resized images.</li>
+<li><a class="reference internal" href="#libs.Camera.Camera.default_height" title="libs.Camera.Camera.default_height"><strong>default_height</strong></a> (<a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)"><em>int</em></a>) – 720: Default height of resuzed images.</li>
+<li><a class="reference internal" href="#libs.Camera.Camera.file_types" title="libs.Camera.Camera.file_types"><strong>file_types</strong></a> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)"><em>list</em></a>) – [“CR2”, “RAW”, “NEF”, “JPG”, “JPEG”, “PPM”, “TIF”, “TIFF”]: Supported output image types.</li>
+<li><a class="reference internal" href="#libs.Camera.Camera.output_types" title="libs.Camera.Camera.output_types"><strong>output_types</strong></a> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)"><em>list</em></a>) – [“tif”, “jpg”]: Output image types, ignored by GPCamera.</li>
+<li><strong>communication_queue</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/collections.html#collections.deque" title="(in Python v3.5)"><em>collections.deque</em></a>) – Reference to a deque, or a deque.</li>
+<li><a class="reference internal" href="#libs.SysUtil.SysUtil.logger" title="libs.SysUtil.SysUtil.logger"><strong>logger</strong></a> (<a class="reference external" href="https://docs.python.org/3.5/library/logging.html#logging.Logger" title="(in Python v3.5)"><em>logging.Logger</em></a>) – Logger for each Camera.</li>
+<li><strong>stopper</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/threading.html#threading.Event" title="(in Python v3.5)"><em>threading.Event</em></a>) – Stopper event object to allow thread stopping.</li>
+<li><strong>identifier</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) – Unique identifier for the camera. Used to distinguish cameras from one another.</li>
+<li><strong>failed</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)"><em>list</em></a>) – List of failed capture timepoints.</li>
+<li><strong>config_filename</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) – Confuguration file path, unused if camera is instantiated with the noconf init parameter.</li>
+<li><strong>camera_name</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) – Human friendly name of the camera.</li>
+<li><strong>interval</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)"><em>int</em></a>) – Capture interval (in seconds).</li>
+<li><strong>spool_directory</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) – Path to stream images into during the capture process.</li>
+<li><strong>upload_directory</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) – Path to move images to after the captre process.</li>
+<li><strong>begin_capture</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/datetime.html#datetime.time" title="(in Python v3.5)"><em>datetime.time</em></a>) – Naive start time for capture.</li>
+<li><strong>end_capture</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/datetime.html#datetime.time" title="(in Python v3.5)"><em>datetime.time</em></a>) – Naive end time for capture.</li>
+<li><strong>current_capture_time</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/datetime.html#datetime.datetime" title="(in Python v3.5)"><em>datetime.datetime</em></a>) – When the capture process began.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="libs.Camera.Camera.accuracy">
+<code class="descname">accuracy</code><em class="property"> = 3</em><a class="headerlink" href="#libs.Camera.Camera.accuracy" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.capture">
+<code class="descname">capture</code><span class="sig-paren">(</span><em>filename: str = None</em><span class="sig-paren">)</span> &#x2192; &lt;built-in function array&gt;<a class="reference internal" href="_modules/libs/Camera.html#Camera.capture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.capture" title="Permalink to this definition">§</a></dt>
+<dd><p>capture method, only extends functionality of <a class="reference internal" href="#libs.Camera.Camera.capture" title="libs.Camera.Camera.capture"><code class="xref py py-func docutils literal"><span class="pre">Camera.capture()</span></code></a> so that testing with  can happen</p>
+<p>Camera.capture = Camera.capture_monkey
+For extending the Camera class override the Camera.capture_image method, not this one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – image filename without extension</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)"><code class="xref py py-func docutils literal"><span class="pre">numpy.array()</span></code></a> if filename not specified, otherwise list of files.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)">numpy.array</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.capture_image">
+<code class="descname">capture_image</code><span class="sig-paren">(</span><em>filename: str = None</em><span class="sig-paren">)</span> &#x2192; &lt;built-in function array&gt;<a class="reference internal" href="_modules/libs/Camera.html#Camera.capture_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.capture_image" title="Permalink to this definition">§</a></dt>
+<dd><p>Camera capture method.
+override this method when creating a new type of camera.</p>
+<dl class="docutils">
+<dt>Behavior:</dt>
+<dd><ul class="first last simple">
+<li>if filename is a string, write images to disk as filename.ext, and return the names of the images written sucessfully.</li>
+<li>if filename is None, it will set the instance attribute <cite>_image</cite> to a numpy array of the image and return that.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – image filename without extension</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)"><code class="xref py py-func docutils literal"><span class="pre">numpy.array()</span></code></a> if filename not specified, otherwise list of files.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)">numpy.array</a> or <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a>(<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.capture_monkey">
+<code class="descname">capture_monkey</code><span class="sig-paren">(</span><em>filename: str = None</em><span class="sig-paren">)</span> &#x2192; &lt;built-in function array&gt;<a class="reference internal" href="_modules/libs/Camera.html#Camera.capture_monkey"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.capture_monkey" title="Permalink to this definition">§</a></dt>
+<dd><p>Simulates things going horribly wrong with the capture.
+Will sometimes return None, an empty list or an invalid filename.
+Sometimes will raise a generic Exception.
+The rest of the time it will capture a valid image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – image filename without extension</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)"><code class="xref py py-func docutils literal"><span class="pre">numpy.array()</span></code></a> if filename not specified, otherwise list of files.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)">numpy.array</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.communicate_with_updater">
+<code class="descname">communicate_with_updater</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.communicate_with_updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.communicate_with_updater" title="Permalink to this definition">§</a></dt>
+<dd><p>Inter-thread communication method.
+Communicates with this objects <a class="reference internal" href="#libs.Updater.Updater" title="libs.Updater.Updater"><code class="xref py py-class docutils literal"><span class="pre">libs.Updater.Updater</span></code></a> by keeping a reference to its member
+‘communication_queue’ and appending this objects current state to the queue.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.default_height">
+<code class="descname">default_height</code><em class="property"> = 720</em><a class="headerlink" href="#libs.Camera.Camera.default_height" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.default_width">
+<code class="descname">default_width</code><em class="property"> = 1080</em><a class="headerlink" href="#libs.Camera.Camera.default_width" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.encode_write_np_array">
+<code class="descname">encode_write_np_array</code><span class="sig-paren">(</span><em>np_image_array: &lt;built-in function array&gt;</em>, <em>fn: str</em><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/libs/Camera.html#Camera.encode_write_np_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.encode_write_np_array" title="Permalink to this definition">§</a></dt>
+<dd><p>takes a RGB numpy image array like the ones from cv2 and writes it to disk as a tif and jpg
+converts from rgb to bgr for cv2 so that the images save correctly
+also tries to add exif data to the images</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>np_image_array</strong> (<a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)"><em>numpy.array</em></a>) – 3 dimensional image array, x,y,rgb</li>
+<li><strong>fn</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) – filename</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">files successfully written.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a>(<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a>)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.exif">
+<code class="descname">exif</code><a class="headerlink" href="#libs.Camera.Camera.exif" title="Permalink to this definition">§</a></dt>
+<dd><p>Gets the current exif data, sets the exif datetime field to now.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dictionary of exif fields and their values.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.file_types">
+<code class="descname">file_types</code><em class="property"> = [‘CR2’, ‘RAW’, ‘NEF’, ‘JPG’, ‘JPEG’, ‘PPM’, ‘TIF’, ‘TIFF’]</em><a class="headerlink" href="#libs.Camera.Camera.file_types" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.focus">
+<code class="descname">focus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.focus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.focus" title="Permalink to this definition">§</a></dt>
+<dd><p>AutoFocus trigger method.
+Unimplemented.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.get_exif_fields">
+<code class="descname">get_exif_fields</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/libs/Camera.html#Camera.get_exif_fields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.get_exif_fields" title="Permalink to this definition">§</a></dt>
+<dd><p>Get default fields for exif dict, this should be overriden and super-ed if you want to add custom exif tags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">exif fields</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.get_frame">
+<code class="descname">get_frame</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bytes<a class="reference internal" href="_modules/libs/Camera.html#Camera.get_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.get_frame" title="Permalink to this definition">§</a></dt>
+<dd><p>Gets a frame from the a running <a class="reference internal" href="#libs.Camera.Camera.stream_thread" title="libs.Camera.Camera.stream_thread"><code class="xref py py-func docutils literal"><span class="pre">stream_thread()</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">encoded image data as bytes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.image">
+<code class="descname">image</code><a class="headerlink" href="#libs.Camera.Camera.image" title="Permalink to this definition">§</a></dt>
+<dd><p>Gets the current image (last image taken and stored) as a numpy.array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">numpy array of the currently stored image.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)">numpy.array</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.init_stream">
+<code class="descname">init_stream</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.init_stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.init_stream" title="Permalink to this definition">§</a></dt>
+<dd><p>Initialises a video stream class thread.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.output_types">
+<code class="descname">output_types</code><em class="property"> = [‘tif’, ‘jpg’]</em><a class="headerlink" href="#libs.Camera.Camera.output_types" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.run" title="Permalink to this definition">§</a></dt>
+<dd><p>Main method. continuously captures and stores images.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.stop" title="Permalink to this definition">§</a></dt>
+<dd><p>Stops the capture thread, if self is an instance of <a class="reference external" href="https://docs.python.org/3.5/library/threading.html#threading.Thread" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a>.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.Camera.Camera.stream_thread">
+<em class="property">classmethod </em><code class="descname">stream_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.stream_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.stream_thread" title="Permalink to this definition">§</a></dt>
+<dd><p>Boilerplate stream thread.
+Override this with the correct method of opening the camera, grabbing image data and closing the camera.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.Camera.Camera.time2seconds">
+<em class="property">static </em><code class="descname">time2seconds</code><span class="sig-paren">(</span><em>t: datetime.datetime</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/libs/Camera.html#Camera.time2seconds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.time2seconds" title="Permalink to this definition">§</a></dt>
+<dd><p>Converts a datetime to an integer of seconds since epoch</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">integer of seconds since 1970-01-01</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.time_to_capture">
+<code class="descname">time_to_capture</code><a class="headerlink" href="#libs.Camera.Camera.time_to_capture" title="Permalink to this definition">§</a></dt>
+<dd><p>Filters out times for capture.</p>
+<p>returns True by default.</p>
+<p>returns False if the conditions where the camera should capture are NOT met.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether or not it is time to capture</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/functions.html#bool" title="(in Python v3.5)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.Camera.Camera.timestamp">
+<em class="property">static </em><code class="descname">timestamp</code><span class="sig-paren">(</span><em>tn: datetime.datetime</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/Camera.html#Camera.timestamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.timestamp" title="Permalink to this definition">§</a></dt>
+<dd><p>Creates a properly formatted timestamp from a datetime object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>tn</strong> – datetime to format to timestream timestamp string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">formatted timestamp.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.Camera.timestamped_imagename">
+<code class="descname">timestamped_imagename</code><a class="headerlink" href="#libs.Camera.Camera.timestamped_imagename" title="Permalink to this definition">§</a></dt>
+<dd><p>Builds a timestamped image basename without extension from <code class="xref py py-func docutils literal"><span class="pre">Camera.current_capture_time()</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">image basename</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.GPCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">GPCamera</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>usb_address: tuple = None</em>, <em>lock=&lt;unlocked _thread.lock object&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#GPCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.GPCamera" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.Camera" title="libs.Camera.Camera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.Camera</span></code></a></p>
+<p>Camera class
+other cameras inherit from this class.
+identifier and usb_address are NOT OPTIONAL</p>
+<dl class="method">
+<dt id="libs.Camera.GPCamera.capture_image">
+<code class="descname">capture_image</code><span class="sig-paren">(</span><em>filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#GPCamera.capture_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.GPCamera.capture_image" title="Permalink to this definition">§</a></dt>
+<dd><p>Gapture method for DSLRs.
+Some contention exists around this method, as its definitely not the easiest thing to have operate robustly.
+<code class="xref py py-func docutils literal"><span class="pre">GPCamera._cffi_capture()</span></code> is how it _should_ be done, however that method is unreliable and causes many
+crashes when in real world timelapse situations.
+This method calls gphoto2 directly, which makes us dependent on gphoto2 (not just libgphoto2 and gphoto2-cffi),
+and there is probably some issue with calling gphoto2 at the same time like 5 times, maybe dont push it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – filename without extension to capture to.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of filenames (of captured images) if filename was specified, otherwise a numpy array of the image.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)">numpy.array</a> or <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.GPCamera.eos_serial_number">
+<code class="descname">eos_serial_number</code><a class="headerlink" href="#libs.Camera.GPCamera.eos_serial_number" title="Permalink to this definition">§</a></dt>
+<dd><p>returns the eosserialnumber of supported cameras, otherwise the normal serialnumber</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.GPCamera.focus">
+<code class="descname">focus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#GPCamera.focus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.GPCamera.focus" title="Permalink to this definition">§</a></dt>
+<dd><p>this is meant to trigger the autofocus. currently not in use because it causes some distortion in the images.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.GPCamera.get_exif_fields">
+<code class="descname">get_exif_fields</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#GPCamera.get_exif_fields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.GPCamera.get_exif_fields" title="Permalink to this definition">§</a></dt>
+<dd><p>This is meant to get the exif fields for the image if we want to manually save them.
+This is incomplete.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dictionary of exif fields.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.GPCamera.serial_number">
+<code class="descname">serial_number</code><a class="headerlink" href="#libs.Camera.GPCamera.serial_number" title="Permalink to this definition">§</a></dt>
+<dd><p>returns the current serialnumber for the camera.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.IPCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">IPCamera</code><span class="sig-paren">(</span><em>identifier=None</em>, <em>ip=None</em>, <em>config=None</em>, <em>queue=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.Camera" title="libs.Camera.Camera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.Camera</span></code></a></p>
+<p>IPCamera, unfinished and untested.</p>
+<p>TODO: needs work to support both yml config and normal configs</p>
+<dl class="method">
+<dt id="libs.Camera.IPCamera.capture_image">
+<code class="descname">capture_image</code><span class="sig-paren">(</span><em>filename=None</em><span class="sig-paren">)</span> &#x2192; &lt;built-in function array&gt;<a class="reference internal" href="_modules/libs/Camera.html#IPCamera.capture_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.capture_image" title="Permalink to this definition">§</a></dt>
+<dd><p>Captures an image with the IP camera, uses requests.get to acqire the image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – filename without extension to capture to.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of filenames (of captured images) if filename was specified, otherwise a numpy array of the image.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)">numpy.array</a> or <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.IPCamera.focus">
+<code class="descname">focus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera.focus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.focus" title="Permalink to this definition">§</a></dt>
+<dd><p>focuses the camera by cycling it through its autofocus modes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.focus_mode">
+<code class="descname">focus_mode</code><a class="headerlink" href="#libs.Camera.IPCamera.focus_mode" title="Permalink to this definition">§</a></dt>
+<dd><p>TODO: this is broken, returns the dict of key: value not value</p>
+<p>Focus Mode</p>
+<p>When setting, the mode provided must be in ‘focus_modes’</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">from camera.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">to camera.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.focus_position">
+<code class="descname">focus_position</code><a class="headerlink" href="#libs.Camera.IPCamera.focus_position" title="Permalink to this definition">§</a></dt>
+<dd><p>Focal position as an absolute value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">from camera.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">to camera.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/functions.html#float" title="(in Python v3.5)">float</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.focus_range">
+<code class="descname">focus_range</code><a class="headerlink" href="#libs.Camera.IPCamera.focus_range" title="Permalink to this definition">§</a></dt>
+<dd><p>Information about the focus of the camera</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">focus type, focus max, focus min</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a> [<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a>, <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#float" title="(in Python v3.5)">float</a>, <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#float" title="(in Python v3.5)">float</a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.Camera.IPCamera.get_value_from_plaintext">
+<em class="property">static </em><code class="descname">get_value_from_plaintext</code><span class="sig-paren">(</span><em>message</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera.get_value_from_plaintext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.get_value_from_plaintext" title="Permalink to this definition">§</a></dt>
+<dd><p>gets float, int or string values from a xml string where the key is the tag of the first element with value as
+text.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>message</strong> – </li>
+<li><strong>args</strong> – list of keys to find values for.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict of arg: value pairs requested</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.IPCamera.get_value_from_stream">
+<code class="descname">get_value_from_stream</code><span class="sig-paren">(</span><em>stream</em>, <em>*keys</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera.get_value_from_stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.get_value_from_stream" title="Permalink to this definition">§</a></dt>
+<dd><p>Gets a value from some text data (xml or plaintext = separated values)
+returns a dict of “key”:value pairs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stream</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) – text data to search for values</li>
+<li><strong>keys</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)"><em>list</em></a>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict of values</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.Camera.IPCamera.get_value_from_xml">
+<em class="property">static </em><code class="descname">get_value_from_xml</code><span class="sig-paren">(</span><em>message_xml</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IPCamera.get_value_from_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IPCamera.get_value_from_xml" title="Permalink to this definition">§</a></dt>
+<dd><p>gets float, int or string values from a xml string where the key is the tag of the first element with value as
+text.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>message_xml</strong> – the xml to searach in.</li>
+<li><strong>args</strong> – list of keys to find values for.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict of arg: value pairs requested</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.hfov">
+<code class="descname">hfov</code><a class="headerlink" href="#libs.Camera.IPCamera.hfov" title="Permalink to this definition">§</a></dt>
+<dd><p>Horizontal FoV</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">calculated using cached zoom_position, zoom_list and hfov_list.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">cache.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Rrtype:</th><td class="field-body">list(float)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.hfov_list">
+<code class="descname">hfov_list</code><a class="headerlink" href="#libs.Camera.IPCamera.hfov_list" title="Permalink to this definition">§</a></dt>
+<dd><p>List of horizontal FoV values according to focus list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">cached.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">cache.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Rrtype:</th><td class="field-body">list(float)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.image_quality">
+<code class="descname">image_quality</code><a class="headerlink" href="#libs.Camera.IPCamera.image_quality" title="Permalink to this definition">§</a></dt>
+<dd><p>Image quality as a percentage.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">cached.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">to camera.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/functions.html#float" title="(in Python v3.5)">float</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.image_size">
+<code class="descname">image_size</code><a class="headerlink" href="#libs.Camera.IPCamera.image_size" title="Permalink to this definition">§</a></dt>
+<dd><p>Image resolution in pixels, tuple of (width, height)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">from camera.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">to camera.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.status">
+<code class="descname">status</code><a class="headerlink" href="#libs.Camera.IPCamera.status" title="Permalink to this definition">§</a></dt>
+<dd><p>Helper property for a string of the current zoom/focus status.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">informative string of zoom_pos zoom_range focus_pos focus_range</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.vfov">
+<code class="descname">vfov</code><a class="headerlink" href="#libs.Camera.IPCamera.vfov" title="Permalink to this definition">§</a></dt>
+<dd><p>Vertical FoV</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">calculated using cached zoom_position, zoom_list and vfov_list.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">cache.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Rrtype:</th><td class="field-body">list(float)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IPCamera.vfov_list">
+<code class="descname">vfov_list</code><a class="headerlink" href="#libs.Camera.IPCamera.vfov_list" title="Permalink to this definition">§</a></dt>
+<dd><p>List of vertical FoV values according to focus list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">cached.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">cache.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Rrtype:</th><td class="field-body">list(float)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.IVPortCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">IVPortCamera</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>gpio_group: tuple = (‘B’</em>, <em>)</em>, <em>camera_number: int = None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IVPortCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IVPortCamera" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.PiCamera" title="libs.Camera.PiCamera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.PiCamera</span></code></a></p>
+<p>IVPort class for multiple capture.
+the 4 tags on the IVport are setout below.</p>
+<dl class="attribute">
+<dt id="libs.Camera.IVPortCamera.TRUTH_TABLE">
+<code class="descname">TRUTH_TABLE</code><em class="property"> = [[False, False, True], [True, False, True], [False, True, False], [True, True, False]]</em><a class="headerlink" href="#libs.Camera.IVPortCamera.TRUTH_TABLE" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.IVPortCamera.capture_image">
+<code class="descname">capture_image</code><span class="sig-paren">(</span><em>filename: str = None</em><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/libs/Camera.html#IVPortCamera.capture_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IVPortCamera.capture_image" title="Permalink to this definition">§</a></dt>
+<dd><p>capture method for IVPort
+iterates over the number of vameras</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)"><code class="xref py py-func docutils literal"><span class="pre">numpy.array()</span></code></a> if filename not specified, otherwise list of files.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)">numpy.array</a> or <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IVPortCamera.current_camera_index">
+<code class="descname">current_camera_index</code><em class="property"> = 0</em><a class="headerlink" href="#libs.Camera.IVPortCamera.current_camera_index" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IVPortCamera.enable_pins">
+<code class="descname">enable_pins</code><em class="property"> = {‘A’: [11, 12], ‘B’: [15, 16], ‘C’: [21, 22], ‘D’: [23, 24]}</em><a class="headerlink" href="#libs.Camera.IVPortCamera.enable_pins" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IVPortCamera.gpio_groups">
+<code class="descname">gpio_groups</code><em class="property"> = (‘B’,)</em><a class="headerlink" href="#libs.Camera.IVPortCamera.gpio_groups" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Camera.IVPortCamera.select">
+<code class="descname">select</code><em class="property"> = 7</em><a class="headerlink" href="#libs.Camera.IVPortCamera.select" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.Camera.IVPortCamera.switch">
+<em class="property">classmethod </em><code class="descname">switch</code><span class="sig-paren">(</span><em>idx: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IVPortCamera.switch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IVPortCamera.switch" title="Permalink to this definition">§</a></dt>
+<dd><p>switches the IVPort to a new camera
+with no index, switches to the next camera, looping around from the beginning</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>idx</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)"><em>int</em></a>) – index to switch the camera to (optional)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.PiCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">PiCamera</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>config: dict = None</em>, <em>queue: collections.deque = None</em>, <em>noconf: bool = False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#PiCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.PiCamera" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.Camera" title="libs.Camera.Camera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.Camera</span></code></a></p>
+<p>Picamera extension to the Camera abstract class.</p>
+<dl class="method">
+<dt id="libs.Camera.PiCamera.capture_image">
+<code class="descname">capture_image</code><span class="sig-paren">(</span><em>filename: str = None</em><span class="sig-paren">)</span> &#x2192; &lt;built-in function array&gt;<a class="reference internal" href="_modules/libs/Camera.html#PiCamera.capture_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.PiCamera.capture_image" title="Permalink to this definition">§</a></dt>
+<dd><p>Captures image using the Raspberry Pi Camera Module, at either max resolution, or resolution
+specified in the config file.</p>
+<p>Writes images disk using <code class="xref py py-func docutils literal"><span class="pre">encode_write_np_array()</span></code>, so it should write out to all supported image formats
+automatically.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – image filename without extension</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)"><code class="xref py py-func docutils literal"><span class="pre">numpy.array()</span></code></a> if filename not specified, otherwise list of files.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)">numpy.array</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.PiCamera.set_camera_settings">
+<code class="descname">set_camera_settings</code><span class="sig-paren">(</span><em>camera</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#PiCamera.set_camera_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.PiCamera.set_camera_settings" title="Permalink to this definition">§</a></dt>
+<dd><p>Sets the camera resolution to the max resolution</p>
+<p>if the config provides camera/height or camera/width attempts to set the resolution to that.
+if the config provides camera/isoattempts to set the iso to that.
+if the config provides camera/shutter_speed to set the shutterspeed to that.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>camera</strong> (<a class="reference external" href="http://picamera.readthedocs.io/en/release-1.12/api_camera.html#picamera.PiCamera" title="(in Picamera v1.12)"><em>picamera.PiCamera</em></a>) – picamera camera instance to modify</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.Camera.PiCamera.stream_thread">
+<em class="property">classmethod </em><code class="descname">stream_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#PiCamera.stream_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.PiCamera.stream_thread" title="Permalink to this definition">§</a></dt>
+<dd><p>Streaming thread member.</p>
+<p>uses <code class="xref py py-func docutils literal"><span class="pre">picamera.PiCamera.capture_continuous()</span></code> to stream data from the rpi camera video port.</p>
+<p><a class="reference external" href="https://docs.python.org/3.5/library/time.html#time.sleep" title="(in Python v3.5)"><code class="xref py py-func docutils literal"><span class="pre">time.sleep()</span></code></a> added to rate limit a little bit.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.TwentyFourHourTimeParserInfo">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">TwentyFourHourTimeParserInfo</code><span class="sig-paren">(</span><em>dayfirst=False</em>, <em>yearfirst=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#TwentyFourHourTimeParserInfo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.TwentyFourHourTimeParserInfo" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">dateutil.parser.parserinfo</span></code></p>
+<dl class="method">
+<dt id="libs.Camera.TwentyFourHourTimeParserInfo.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>res</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#TwentyFourHourTimeParserInfo.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.TwentyFourHourTimeParserInfo.validate" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Camera.USBCamera">
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">USBCamera</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>sys_number: int</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#USBCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.USBCamera" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Camera.Camera" title="libs.Camera.Camera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.Camera</span></code></a></p>
+<p>USB Camera Class</p>
+<dl class="method">
+<dt id="libs.Camera.USBCamera.capture_image">
+<code class="descname">capture_image</code><span class="sig-paren">(</span><em>filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#USBCamera.capture_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.USBCamera.capture_image" title="Permalink to this definition">§</a></dt>
+<dd><p>captures an image from the usb webcam.
+Writes some limited exif data to the image if it can.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – filename to output without excension</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of image filenames if filename was specified, otherwise a numpy array.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://numpy.readthedocs.io/en/latest/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.11)">numpy.array</a> or <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.USBCamera.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#USBCamera.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.USBCamera.stop" title="Permalink to this definition">§</a></dt>
+<dd><p>releases the video device and stops the camera thread</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.Camera.USBCamera.stream_thread">
+<em class="property">classmethod </em><code class="descname">stream_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#USBCamera.stream_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.USBCamera.stream_thread" title="Permalink to this definition">§</a></dt>
+<dd><p>usb camera stream thread.
+TODO: Needs to be aware of multiple cameras.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="libs.Camera.nested_lookup">
+<code class="descclassname">libs.Camera.</code><code class="descname">nested_lookup</code><span class="sig-paren">(</span><em>key</em>, <em>document</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#nested_lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.nested_lookup" title="Permalink to this definition">§</a></dt>
+<dd><p>nested document lookup,
+works on dicts and lists</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> – string of key to lookup</li>
+<li><strong>document</strong> – dict or list to lookup</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">yields item</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
-<div class="section" id="libs-cryptutil">
-<h2>libs.CryptUtil<a class="headerlink" href="#libs-cryptutil" title="Permalink to this headline">§</a></h2>
+<div class="section" id="module-libs.CryptUtil">
+<span id="libs-cryptutil"></span><h2>libs.CryptUtil<a class="headerlink" href="#module-libs.CryptUtil" title="Permalink to this headline">§</a></h2>
+<dl class="class">
+<dt id="libs.CryptUtil.SSHManager">
+<em class="property">class </em><code class="descclassname">libs.CryptUtil.</code><code class="descname">SSHManager</code><span class="sig-paren">(</span><em>path=’/home/.ssh’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>a manager of ssh keys, with the ability to sign messages using them.</p>
+<dl class="method">
+<dt id="libs.CryptUtil.SSHManager.get_new_key_from_server">
+<code class="descname">get_new_key_from_server</code><span class="sig-paren">(</span><em>token</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager.get_new_key_from_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager.get_new_key_from_server" title="Permalink to this definition">§</a></dt>
+<dd><p>acquires an ssh key from the server with a token and writes the key to the current path.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>token</strong> – a string token to send to the server.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">boolean indicating whether the operation was successful.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/functions.html#bool" title="(in Python v3.5)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.CryptUtil.SSHManager.paramiko_key">
+<code class="descname">paramiko_key</code><a class="headerlink" href="#libs.CryptUtil.SSHManager.paramiko_key" title="Permalink to this definition">§</a></dt>
+<dd><p>property for a key usable by paramiko</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">agentKey for use by paramiko/pysftp</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://docs.paramiko.org/en/latest/api/keys.html#paramiko.rsakey.RSAKey" title="(in Paramiko v)">paramiko.rsakey.RSAKey</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.CryptUtil.SSHManager.public_ssh_key_string">
+<code class="descname">public_ssh_key_string</code><a class="headerlink" href="#libs.CryptUtil.SSHManager.public_ssh_key_string" title="Permalink to this definition">§</a></dt>
+<dd><p>property for the public ssh key string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">string of the ssh public key, encoded to be added to a authorized_keys file</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.CryptUtil.SSHManager.sign_message">
+<code class="descname">sign_message</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager.sign_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager.sign_message" title="Permalink to this definition">§</a></dt>
+<dd><p>signs a text message using the internal key</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> – utf-8 encoded string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">signature for message.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.CryptUtil.SSHManager.ssh_key">
+<code class="descname">ssh_key</code><a class="headerlink" href="#libs.CryptUtil.SSHManager.ssh_key" title="Permalink to this definition">§</a></dt>
+<dd><p>ssh key property
+sets the internal rsa key and the agentKey for use by paramiko.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.CryptUtil.SSHManager.write_key_to_path">
+<code class="descname">write_key_to_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager.write_key_to_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager.write_key_to_path" title="Permalink to this definition">§</a></dt>
+<dd><p>writes internally stored public and private keys to their respective paths</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="libs.CryptUtil.serialize_signature">
+<code class="descclassname">libs.CryptUtil.</code><code class="descname">serialize_signature</code><span class="sig-paren">(</span><em>signature: bytes</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/CryptUtil.html#serialize_signature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.serialize_signature" title="Permalink to this definition">§</a></dt>
+<dd><p>formats the signature for the server, with the correct boundaries</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>signature</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/functions.html#bytes" title="(in Python v3.5)"><em>bytes</em></a>) – raw bytes signature.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">str formatted signature for sending to the server.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="libs.CryptUtil.ssh_public_key">
+<code class="descclassname">libs.CryptUtil.</code><code class="descname">ssh_public_key</code><span class="sig-paren">(</span><em>keypair: cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKeyWithSerialization</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/CryptUtil.html#ssh_public_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.ssh_public_key" title="Permalink to this definition">§</a></dt>
+<dd><p>converts an rsa keypair to openssh format public key</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keypair</strong> (<a class="reference external" href="https://cryptography.io/en/latest/hazmat/primitives/asymmetric/rsa/#cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKeyWithSerialization" title="(in Cryptography v2.0.dev1)"><em>cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKeyWithSerialization</em></a>) – keypair.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">string of public key</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
-<div class="section" id="libs-light">
-<h2>libs.Light<a class="headerlink" href="#libs-light" title="Permalink to this headline">§</a></h2>
+<div class="section" id="module-libs.Light">
+<span id="libs-light"></span><h2>libs.Light<a class="headerlink" href="#module-libs.Light" title="Permalink to this headline">§</a></h2>
+<dl class="class">
+<dt id="libs.Light.Controller">
+<em class="property">class </em><code class="descclassname">libs.Light.</code><code class="descname">Controller</code><span class="sig-paren">(</span><em>config_section: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Controller"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Controller" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>controller abstract that takes a dictionary config section and sets self attributes to it.</p>
+<dl class="method">
+<dt id="libs.Light.Controller.get_wavelength">
+<code class="descname">get_wavelength</code><span class="sig-paren">(</span><em>wavelength: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Controller.get_wavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Controller.get_wavelength" title="Permalink to this definition">§</a></dt>
+<dd><p>gets the power of a specific wavelength
+:param wavelength: wavelength string to get the power of (eg 400nm)
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Light.Controller.set_all">
+<code class="descname">set_all</code><span class="sig-paren">(</span><em>power: int = None</em>, <em>percent: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Controller.set_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Controller.set_all" title="Permalink to this definition">§</a></dt>
+<dd><p>sets all wavelengths to either an absolute value or a percentage of the total</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>power</strong> – power to set all wavelengths to</li>
+<li><strong>percent</strong> – 0-100 percentage to set the lights to.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">true/false depending on whether the command was successful</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Light.Controller.set_all_wavelengths">
+<code class="descname">set_all_wavelengths</code><span class="sig-paren">(</span><em>values: dict</em>, <em>percent=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Controller.set_all_wavelengths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Controller.set_all_wavelengths" title="Permalink to this definition">§</a></dt>
+<dd><p>sets all wavelengths to specific values.
+only absolute values may be specified
+values should be specified as a dict of wavelength: value pairs</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>values</strong> – dict of wavelengths and their respective values</li>
+<li><strong>percent</strong> – whether the values are expressed as 0-100 or absolute.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Light.Controller.set_wavelength">
+<code class="descname">set_wavelength</code><span class="sig-paren">(</span><em>wl: str</em>, <em>power: int = None</em>, <em>percent: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#Controller.set_wavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.Controller.set_wavelength" title="Permalink to this definition">§</a></dt>
+<dd><p>sets a specific wavelength to a value
+either a power or a percent must be specified</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>wl</strong> – string of wavelength name (eg 400nm)</li>
+<li><strong>power</strong> – absolute power value</li>
+<li><strong>percent</strong> – percent value, calculated from min/max.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Light.HTTPController">
+<em class="property">class </em><code class="descclassname">libs.Light.</code><code class="descname">HTTPController</code><span class="sig-paren">(</span><em>config_section</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#HTTPController"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.HTTPController" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Light.Controller" title="libs.Light.Controller"><code class="xref py py-class docutils literal"><span class="pre">libs.Light.Controller</span></code></a></p>
+<dl class="method">
+<dt id="libs.Light.HTTPController.kill_schedule">
+<code class="descname">kill_schedule</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#HTTPController.kill_schedule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.HTTPController.kill_schedule" title="Permalink to this definition">§</a></dt>
+<dd><p>turns off all the heliospectras internal scheduling sysm
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Light.HelioSpectra">
+<em class="property">class </em><code class="descclassname">libs.Light.</code><code class="descname">HelioSpectra</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#HelioSpectra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.HelioSpectra" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Dumb runnner for a light, must be controlled by a chamber.
+automatically scales the power from 0-100 to the provided min-max (0-1000) by default</p>
+<dl class="attribute">
+<dt id="libs.Light.HelioSpectra.accuracy">
+<code class="descname">accuracy</code><em class="property"> = 3</em><a class="headerlink" href="#libs.Light.HelioSpectra.accuracy" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Light.HelioSpectra.s10wls">
+<code class="descname">s10wls</code><em class="property"> = [‘400nm’, ‘420nm’, ‘450nm’, ‘530nm’, ‘630nm’, ‘660nm’, ‘735nm’]</em><a class="headerlink" href="#libs.Light.HelioSpectra.s10wls" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Light.HelioSpectra.s20wls">
+<code class="descname">s20wls</code><em class="property"> = [‘370nm’, ‘400nm’, ‘420nm’, ‘450nm’, ‘530nm’, ‘620nm’, ‘660nm’, ‘735nm’, ‘850nm’, ‘6500k’]</em><a class="headerlink" href="#libs.Light.HelioSpectra.s20wls" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Light.HelioSpectra.set">
+<code class="descname">set</code><span class="sig-paren">(</span><em>intensities: list</em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/libs/Light.html#HelioSpectra.set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.HelioSpectra.set" title="Permalink to this definition">§</a></dt>
+<dd><p>sets the lights wavelengths to the values in the list.</p>
+<p>returns a dict of the wavelengths set and their values.</p>
+<p>If the length of the list of intensities doesnt match the number of custom wavelengths, but does match the 
+length of the list of s10 or s20 wavelengths, then they will be used.</p>
+<p>If none of those conditions are met, returns an empty dict.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>intensities</strong> – intensities to set to</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Light.TelNetController">
+<em class="property">class </em><code class="descclassname">libs.Light.</code><code class="descname">TelNetController</code><span class="sig-paren">(</span><em>config_section</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Light.html#TelNetController"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.TelNetController" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Light.Controller" title="libs.Light.Controller"><code class="xref py py-class docutils literal"><span class="pre">libs.Light.Controller</span></code></a></p>
+<p>controller for a Light.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="libs.Light.clamp">
+<code class="descclassname">libs.Light.</code><code class="descname">clamp</code><span class="sig-paren">(</span><em>v: float</em>, <em>minimum: float</em>, <em>maximum: float</em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/libs/Light.html#clamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Light.clamp" title="Permalink to this definition">§</a></dt>
+<dd><p>clamps a number to the minimum and maximum.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>v</strong> – </li>
+<li><strong>minimum</strong> – </li>
+<li><strong>maximum</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
-<div class="section" id="libs-pantilt">
-<h2>libs.PanTilt<a class="headerlink" href="#libs-pantilt" title="Permalink to this headline">§</a></h2>
+<div class="section" id="module-libs.PanTilt">
+<span id="libs-pantilt"></span><h2>libs.PanTilt<a class="headerlink" href="#module-libs.PanTilt" title="Permalink to this headline">§</a></h2>
+<dl class="class">
+<dt id="libs.PanTilt.PanTilt">
+<em class="property">class </em><code class="descclassname">libs.PanTilt.</code><code class="descname">PanTilt</code><span class="sig-paren">(</span><em>ip=None</em>, <em>user=None</em>, <em>password=None</em>, <em>config=None</em>, <em>queue=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Control J-Systems PTZ</p>
+<p>For new system or new firmware, the system needs calibration as follows:
+- Open URL of the PTZ on a web browser
+- Click on “Calibration” tab, enter username and password if necessary
+- On Calibration window, click on “Open-loop” and then “Set Mode”
+- Use joystick controller to rotate the pan axis to minimum position
+- Click on ‘Pan Axis Min’ line, enter ‘2.0’, and click “Set Calibration”
+- Use joystick controller to rotate the pan axis to maximum position
+- Click on ‘Pan Axis Max’ line, enter ‘358.0’, and click “Set Calibration”
+- Use joystick controller to rotate the tilt axis to minimum position
+- Click on ‘Tilt Axis Min’ line, enter ‘-90.0’, and click “Set Calibration”
+- Use joystick controller to rotate the tilt axis to maximum position
+- Click on ‘Tilt Axis Max’ line, enter ‘30.0’, and click “Set Calibration”
+- Click on “Closed-loop” and then “Set Mode”
+- Close Calibration window</p>
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.PCCWLS">
+<code class="descname">PCCWLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.PCCWLS" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.PCWLS">
+<code class="descname">PCWLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.PCWLS" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.TDnLS">
+<code class="descname">TDnLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.TDnLS" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.TUpLS">
+<code class="descname">TUpLS</code><a class="headerlink" href="#libs.PanTilt.PanTilt.TUpLS" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.auto_patrol">
+<code class="descname">auto_patrol</code><a class="headerlink" href="#libs.PanTilt.PanTilt.auto_patrol" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.battery_voltage">
+<code class="descname">battery_voltage</code><a class="headerlink" href="#libs.PanTilt.PanTilt.battery_voltage" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.PanTilt.PanTilt.communicate_with_updater">
+<code class="descname">communicate_with_updater</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.communicate_with_updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.communicate_with_updater" title="Permalink to this definition">§</a></dt>
+<dd><p>communication member. This is meant to send some metadata to the updater thread.
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.control_mode">
+<code class="descname">control_mode</code><a class="headerlink" href="#libs.PanTilt.PanTilt.control_mode" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.dwell">
+<code class="descname">dwell</code><a class="headerlink" href="#libs.PanTilt.PanTilt.dwell" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.PanTilt.PanTilt.get_value_from_plaintext">
+<em class="property">static </em><code class="descname">get_value_from_plaintext</code><span class="sig-paren">(</span><em>message</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.get_value_from_plaintext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.get_value_from_plaintext" title="Permalink to this definition">§</a></dt>
+<dd><p>gets float, int or string values from a xml string where the key is the tag of the first element with value as
+text.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>message</strong> – </li>
+<li><strong>args</strong> – list of keys to find values for.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict of arg: value pairs requested</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.PanTilt.PanTilt.get_value_from_stream">
+<code class="descname">get_value_from_stream</code><span class="sig-paren">(</span><em>stream</em>, <em>*keys</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.get_value_from_stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.get_value_from_stream" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.PanTilt.PanTilt.get_value_from_xml">
+<em class="property">static </em><code class="descname">get_value_from_xml</code><span class="sig-paren">(</span><em>message_xml</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.get_value_from_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.get_value_from_xml" title="Permalink to this definition">§</a></dt>
+<dd><p>gets float, int or string values from a xml string where the key is the tag of the first element with value as
+text.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>message_xml</strong> – the xml to searach in.</li>
+<li><strong>args</strong> – list of keys to find values for.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict of arg: value pairs requested</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.heater">
+<code class="descname">heater</code><a class="headerlink" href="#libs.PanTilt.PanTilt.heater" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.PanTilt.PanTilt.hold_pan_tilt">
+<code class="descname">hold_pan_tilt</code><span class="sig-paren">(</span><em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.hold_pan_tilt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.hold_pan_tilt" title="Permalink to this definition">§</a></dt>
+<dd><p>unknown, presumably holds the pan-tilt in one place.
+doesnt work…
+:param state: ? beats me.
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.list_index">
+<code class="descname">list_index</code><a class="headerlink" href="#libs.PanTilt.PanTilt.list_index" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.list_state">
+<code class="descname">list_state</code><a class="headerlink" href="#libs.PanTilt.PanTilt.list_state" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.pan">
+<code class="descname">pan</code><a class="headerlink" href="#libs.PanTilt.PanTilt.pan" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.pan_range">
+<code class="descname">pan_range</code><a class="headerlink" href="#libs.PanTilt.PanTilt.pan_range" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.PanTilt.PanTilt.pan_step">
+<code class="descname">pan_step</code><span class="sig-paren">(</span><em>direction</em>, <em>n_steps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.pan_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.pan_step" title="Permalink to this definition">§</a></dt>
+<dd><p>pans by step, steps must be less than or equal to 127
+:type n_steps: int
+:type direction: str
+:param direction:
+:param n_steps: integer &lt;= 127. number of steps
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.position">
+<code class="descname">position</code><a class="headerlink" href="#libs.PanTilt.PanTilt.position" title="Permalink to this definition">§</a></dt>
+<dd><p>gets the current pan/tilt position.
+:return: tuple (pan, tilt)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.scale">
+<code class="descname">scale</code><a class="headerlink" href="#libs.PanTilt.PanTilt.scale" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.temp_f">
+<code class="descname">temp_f</code><a class="headerlink" href="#libs.PanTilt.PanTilt.temp_f" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.tilt">
+<code class="descname">tilt</code><a class="headerlink" href="#libs.PanTilt.PanTilt.tilt" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.tilt_range">
+<code class="descname">tilt_range</code><a class="headerlink" href="#libs.PanTilt.PanTilt.tilt_range" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.PanTilt.PanTilt.tilt_step">
+<code class="descname">tilt_step</code><span class="sig-paren">(</span><em>direction</em>, <em>n_steps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#PanTilt.tilt_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.PanTilt.tilt_step" title="Permalink to this definition">§</a></dt>
+<dd><p>tilts by step, steps must be less than or equal to 127
+:type n_steps: int
+:type direction: str
+:param direction:
+:param n_steps: integer &lt;= 127. number of steps
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.zoom_list">
+<code class="descname">zoom_list</code><a class="headerlink" href="#libs.PanTilt.PanTilt.zoom_list" title="Permalink to this definition">§</a></dt>
+<dd><p>List of zoom value intervals.</p>
+<p>Setting this also affects the state of other related variables.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">cached.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">recalculates, recalculates fov lists, resets zoom_position.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.zoom_position">
+<code class="descname">zoom_position</code><a class="headerlink" href="#libs.PanTilt.PanTilt.zoom_position" title="Permalink to this definition">§</a></dt>
+<dd><p>Zoom Position.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">from camera.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">to camera.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.PanTilt.PanTilt.zoom_range">
+<code class="descname">zoom_range</code><a class="headerlink" href="#libs.PanTilt.PanTilt.zoom_range" title="Permalink to this definition">§</a></dt>
+<dd><p>Range of zoom for the camera.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">from camera.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">cached.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.PanTilt.ThreadedPTZ">
+<em class="property">class </em><code class="descclassname">libs.PanTilt.</code><code class="descname">ThreadedPTZ</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#ThreadedPTZ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.ThreadedPTZ" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/threading.html#threading.Thread" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.PanTilt.ThreadedPanTilt">
+<em class="property">class </em><code class="descclassname">libs.PanTilt.</code><code class="descname">ThreadedPanTilt</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#ThreadedPanTilt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.ThreadedPanTilt" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.PanTilt.ThreadedPTZ" title="libs.PanTilt.ThreadedPTZ"><code class="xref py py-class docutils literal"><span class="pre">libs.PanTilt.ThreadedPTZ</span></code></a>, <a class="reference internal" href="#libs.PanTilt.PanTilt" title="libs.PanTilt.PanTilt"><code class="xref py py-class docutils literal"><span class="pre">libs.PanTilt.PanTilt</span></code></a></p>
+<dl class="method">
+<dt id="libs.PanTilt.ThreadedPanTilt.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/PanTilt.html#ThreadedPanTilt.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.PanTilt.ThreadedPanTilt.run" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
-<div class="section" id="libs-sensor">
-<h2>libs.Sensor<a class="headerlink" href="#libs-sensor" title="Permalink to this headline">§</a></h2>
+<div class="section" id="module-libs.Sensor">
+<span id="libs-sensor"></span><h2>libs.Sensor<a class="headerlink" href="#module-libs.Sensor" title="Permalink to this headline">§</a></h2>
+<dl class="class">
+<dt id="libs.Sensor.ConvironChamberSensor">
+<em class="property">class </em><code class="descclassname">libs.Sensor.</code><code class="descname">ConvironChamberSensor</code><span class="sig-paren">(</span><em>identifier</em>, <em>config</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#ConvironChamberSensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.ConvironChamberSensor" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Sensor.Sensor" title="libs.Sensor.Sensor"><code class="xref py py-class docutils literal"><span class="pre">libs.Sensor.Sensor</span></code></a></p>
+<dl class="attribute">
+<dt id="libs.Sensor.ConvironChamberSensor.data_headers">
+<code class="descname">data_headers</code><em class="property"> = (‘temp_set’, ‘humidity_set’, ‘temp_recorded’, ‘humidity_recorded’, ‘par’)</em><a class="headerlink" href="#libs.Sensor.ConvironChamberSensor.data_headers" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.ConvironChamberSensor.get_measurement">
+<code class="descname">get_measurement</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#ConvironChamberSensor.get_measurement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.ConvironChamberSensor.get_measurement" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Sensor.DHTMonitor">
+<em class="property">class </em><code class="descclassname">libs.Sensor.</code><code class="descname">DHTMonitor</code><span class="sig-paren">(</span><em>identifier</em>, <em>pin: int = 14</em>, <em>sensor_type=’AM2302’</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#DHTMonitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.DHTMonitor" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Sensor.Sensor" title="libs.Sensor.Sensor"><code class="xref py py-class docutils literal"><span class="pre">libs.Sensor.Sensor</span></code></a></p>
+<p>Data logger class for DHT11, DHT22 &amp; AM2302 GPIO temperature &amp; humidity sensors from Adafruit.</p>
+<p>supply the identifier and the gpio pi that the sensor is connected to, along with the type of sensor.
+defaults to pin 14, DHT22</p>
+<dl class="attribute">
+<dt id="libs.Sensor.DHTMonitor.data_headers">
+<code class="descname">data_headers</code><em class="property"> = (‘humidity’, ‘temperature’)</em><a class="headerlink" href="#libs.Sensor.DHTMonitor.data_headers" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.DHTMonitor.get_measurement">
+<code class="descname">get_measurement</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/libs/Sensor.html#DHTMonitor.get_measurement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.DHTMonitor.get_measurement" title="Permalink to this definition">§</a></dt>
+<dd><p>gets data from the DHT22</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Sensor.SenseHatMonitor">
+<em class="property">class </em><code class="descclassname">libs.Sensor.</code><code class="descname">SenseHatMonitor</code><span class="sig-paren">(</span><em>identifier: str = None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#SenseHatMonitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.SenseHatMonitor" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Sensor.Sensor" title="libs.Sensor.Sensor"><code class="xref py py-class docutils literal"><span class="pre">libs.Sensor.Sensor</span></code></a></p>
+<p>Data logger class for Astro Pi Sensehat
+No need to supply anything except the identifier as the SenseHad uses some kind of black sorcery to work it out.</p>
+<dl class="attribute">
+<dt id="libs.Sensor.SenseHatMonitor.data_headers">
+<code class="descname">data_headers</code><em class="property"> = (‘temperature’, ‘humidity’, ‘pressure’)</em><a class="headerlink" href="#libs.Sensor.SenseHatMonitor.data_headers" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.SenseHatMonitor.get_measurement">
+<code class="descname">get_measurement</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/libs/Sensor.html#SenseHatMonitor.get_measurement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.SenseHatMonitor.get_measurement" title="Permalink to this definition">§</a></dt>
+<dd><p>get measurements for sensehat
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.SenseHatMonitor.show_data">
+<code class="descname">show_data</code><span class="sig-paren">(</span><em>measurement</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#SenseHatMonitor.show_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.SenseHatMonitor.show_data" title="Permalink to this definition">§</a></dt>
+<dd><p>displays the data on the osd.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>measurement</strong> – meausrement to display</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Sensor.Sensor">
+<em class="property">class </em><code class="descclassname">libs.Sensor.</code><code class="descname">Sensor</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>config: dict = None</em>, <em>queue: collections.deque = None</em>, <em>write_out: bool = True</em>, <em>interval: int = 60</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#Sensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/threading.html#threading.Thread" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+<p>Sensor base.
+To use this class you need to override ‘get_measurement()’ so that it returns a tuple of the measurements that match
+the headers defined in the data_headers classvar.
+by default it will write 5 files, rolling 24 hour files (csv, tsv &amp; json) and all time files that are appended to
+(csv &amp; tsv only)</p>
+<dl class="attribute">
+<dt id="libs.Sensor.Sensor.accuracy">
+<code class="descname">accuracy</code><em class="property"> = 1</em><a class="headerlink" href="#libs.Sensor.Sensor.accuracy" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.Sensor.append_to_alltime">
+<code class="descname">append_to_alltime</code><span class="sig-paren">(</span><em>measurement: tuple</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#Sensor.append_to_alltime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.append_to_alltime" title="Permalink to this definition">§</a></dt>
+<dd><p>appends the measurement to the csv and tsv files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>measurement</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.Sensor.communicate_with_updater">
+<code class="descname">communicate_with_updater</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#Sensor.communicate_with_updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.communicate_with_updater" title="Permalink to this definition">§</a></dt>
+<dd><p>communication member. This is meant to send some metadata to the updater thread.
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Sensor.Sensor.data_headers">
+<code class="descname">data_headers</code><em class="property"> = ()</em><a class="headerlink" href="#libs.Sensor.Sensor.data_headers" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.Sensor.get_measurement">
+<code class="descname">get_measurement</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/libs/Sensor.html#Sensor.get_measurement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.get_measurement" title="Permalink to this definition">§</a></dt>
+<dd><p>override this method with the method of collecting measurements from the sensor
+should return a dict</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dict of measurements and their names</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.Sensor.rotate">
+<code class="descname">rotate</code><span class="sig-paren">(</span><em>csvf</em>, <em>tsvf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#Sensor.rotate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.rotate" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.Sensor.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#Sensor.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.run" title="Permalink to this definition">§</a></dt>
+<dd><p>run method.
+used for threaded sensors
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.Sensor.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#Sensor.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.stop" title="Permalink to this definition">§</a></dt>
+<dd><p>stops the thread.
+:return:</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.Sensor.Sensor.time2seconds">
+<em class="property">static </em><code class="descname">time2seconds</code><span class="sig-paren">(</span><em>t: &lt;module ‘datetime’ from ‘/usr/lib/python3.6/datetime.py’&gt;</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/libs/Sensor.html#Sensor.time2seconds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.time2seconds" title="Permalink to this definition">§</a></dt>
+<dd><p>converts a datetime to an integer of seconds since epoch</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Sensor.Sensor.time_to_measure">
+<code class="descname">time_to_measure</code><a class="headerlink" href="#libs.Sensor.Sensor.time_to_measure" title="Permalink to this definition">§</a></dt>
+<dd><p>filters out times for mesauring, returns True by default
+returns False if the conditions where the sensor should NOT capture are met.
+:return:</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.Sensor.Sensor.timestamp">
+<em class="property">static </em><code class="descname">timestamp</code><span class="sig-paren">(</span><em>tn: datetime.datetime</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/Sensor.html#Sensor.timestamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.timestamp" title="Permalink to this definition">§</a></dt>
+<dd><p>creates a properly formatted timestamp.
+:param tn: datetime to format to timestream timestamp string
+:return:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Sensor.Sensor.timestamp_format">
+<code class="descname">timestamp_format</code><em class="property"> = ‘%Y-%m-%dT%H:%M:%S’</em><a class="headerlink" href="#libs.Sensor.Sensor.timestamp_format" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Sensor.Sensor.timestamped_filename">
+<code class="descname">timestamped_filename</code><a class="headerlink" href="#libs.Sensor.Sensor.timestamped_filename" title="Permalink to this definition">§</a></dt>
+<dd><p>builds a timestamped image basename without extension from a datetime.
+:param time_now:
+:return: string image basename</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Sensor.Sensor.write_daily_rolling">
+<code class="descname">write_daily_rolling</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#Sensor.write_daily_rolling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.write_daily_rolling" title="Permalink to this definition">§</a></dt>
+<dd><p>writes full rolling daily daita files.
+:param rows:
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="libs.Sensor.round_to_1dp">
+<code class="descclassname">libs.Sensor.</code><code class="descname">round_to_1dp</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#round_to_1dp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.round_to_1dp" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
 </div>
-<div class="section" id="libs-sysutil">
-<h2>libs.SysUtil<a class="headerlink" href="#libs-sysutil" title="Permalink to this headline">§</a></h2>
+<div class="section" id="module-libs.SysUtil">
+<span id="libs-sysutil"></span><h2>libs.SysUtil<a class="headerlink" href="#module-libs.SysUtil" title="Permalink to this headline">§</a></h2>
+<dl class="class">
+<dt id="libs.SysUtil.LazySolarCalcReader">
+<em class="property">class </em><code class="descclassname">libs.SysUtil.</code><code class="descname">LazySolarCalcReader</code><span class="sig-paren">(</span><em>fn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#LazySolarCalcReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.LazySolarCalcReader" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.SysUtil.SysUtil">
+<em class="property">class </em><code class="descclassname">libs.SysUtil.</code><code class="descname">SysUtil</code><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>System utility class.
+Helper class to cache various things like the hostname, machine-id, amount of space in the filesystem.</p>
+<dl class="attribute">
+<dt id="libs.SysUtil.SysUtil.a_statvfs">
+<code class="descname">a_statvfs</code><em class="property"> = os.statvfs_result(f_bsize=4096, f_frsize=4096, f_blocks=28682898, f_bfree=5527711, f_bavail=4064927, f_files=7299072, f_ffree=6405762, f_favail=6405762, f_flag=1024, f_namemax=255)</em><a class="headerlink" href="#libs.SysUtil.SysUtil.a_statvfs" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.add_watch">
+<em class="property">classmethod </em><code class="descname">add_watch</code><span class="sig-paren">(</span><em>path: str</em>, <em>callback</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.add_watch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.add_watch" title="Permalink to this definition">§</a></dt>
+<dd><p>adds a watch that calls the callback on file change</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) – path of the file to watch</li>
+<li><strong>callback</strong> – function signature to call when the file is changed</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.clear_files">
+<em class="property">classmethod </em><code class="descname">clear_files</code><span class="sig-paren">(</span><em>filenames: list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.clear_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.clear_files" title="Permalink to this definition">§</a></dt>
+<dd><p>removes all files in the list provided, skipping and logging on an error removing
+todo: Do different things based on whether is a directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filenames</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)"><em>list</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)"><em>tuple</em></a>) – list of directories or files</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.configs_from_identifiers">
+<em class="property">classmethod </em><code class="descname">configs_from_identifiers</code><span class="sig-paren">(</span><em>identifiers: set</em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.configs_from_identifiers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.configs_from_identifiers" title="Permalink to this definition">§</a></dt>
+<dd><p>given a set of identifiers, returns a dictionary of the data contained in those config files with the key
+for each config file data being the identifier</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifiers</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a><em>)</em>) – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dictionary of configuration datas</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a>(str: dict)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.SysUtil.SysUtil.default_identifier">
+<em class="property">static </em><code class="descname">default_identifier</code><span class="sig-paren">(</span><em>prefix=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.default_identifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.default_identifier" title="Permalink to this definition">§</a></dt>
+<dd><p>returns an identifier, If no prefix available, generates something.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>prefix</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">string of the itentifier.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.ensure_config">
+<em class="property">classmethod </em><code class="descname">ensure_config</code><span class="sig-paren">(</span><em>identifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.ensure_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.ensure_config" title="Permalink to this definition">§</a></dt>
+<dd><p>ensures a configuration file exists for this identifier.
+if a config file doesnt exist then it will create a default one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) – identifier to create or find a configuration file for.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the configuration file dict or configparser object.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a> or <a class="reference external" href="https://docs.python.org/3.5/library/configparser.html#configparser.ConfigParser" title="(in Python v3.5)">configparser.ConfigParser</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_external_ip">
+<em class="property">classmethod </em><code class="descname">get_external_ip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_external_ip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_external_ip" title="Permalink to this definition">§</a></dt>
+<dd><p>returns the external IP address of the raspberry pi through api.ipify.org</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the external ip address</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_fs_space">
+<em class="property">classmethod </em><code class="descname">get_fs_space</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_fs_space"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_fs_space" title="Permalink to this definition">§</a></dt>
+<dd><p>returns free/total space of root filesystem as bytes(?)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">tuple of free/total space</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a>[<a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)">int</a>, <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)">int</a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_fs_space_mb">
+<em class="property">classmethod </em><code class="descname">get_fs_space_mb</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_fs_space_mb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_fs_space_mb" title="Permalink to this definition">§</a></dt>
+<dd><p>returns the filesystems free space in mebibytes.
+see <a class="reference internal" href="#libs.SysUtil.SysUtil.get_fs_space" title="libs.SysUtil.SysUtil.get_fs_space"><code class="xref py py-func docutils literal"><span class="pre">get_fs_space()</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">tuple of free/total space</td>
+</tr>
+</tbody>
+</table>
+<p>:rtype:tuple[int, int]</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_hostname">
+<em class="property">classmethod </em><code class="descname">get_hostname</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_hostname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_hostname" title="Permalink to this definition">§</a></dt>
+<dd><p>gets the current hostname.
+if there is no /etc/hostname file, sets the hostname randomly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current hostname or the hostname it was set to</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_identifier_from_filename">
+<em class="property">classmethod </em><code class="descname">get_identifier_from_filename</code><span class="sig-paren">(</span><em>file_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_identifier_from_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_identifier_from_filename" title="Permalink to this definition">§</a></dt>
+<dd><p>returns either the identifier (from the file name) or the name filled with the machine id</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>file_name</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) – filename</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">string identifier,</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_identifier_from_name">
+<em class="property">classmethod </em><code class="descname">get_identifier_from_name</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_identifier_from_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_identifier_from_name" title="Permalink to this definition">§</a></dt>
+<dd><p>returns either the identifier (from name) or the name filled with the machine id
+clamps to 32 characters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) – name to fill</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">filled name</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_internal_ip">
+<em class="property">classmethod </em><code class="descname">get_internal_ip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_internal_ip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_internal_ip" title="Permalink to this definition">§</a></dt>
+<dd><p>gets the internal ip by attempting to connect to googles DNS</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current internal ip</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_isonow">
+<em class="property">classmethod </em><code class="descname">get_isonow</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_isonow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_isonow" title="Permalink to this definition">§</a></dt>
+<dd><p>gets the current time as an iso8601 string</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current time as iso8601</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_log_files">
+<em class="property">classmethod </em><code class="descname">get_log_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_log_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_log_files" title="Permalink to this definition">§</a></dt>
+<dd><p>returns the spc-eyepi log files that have been rotated.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list of filenames</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a>(<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_machineid">
+<em class="property">classmethod </em><code class="descname">get_machineid</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_machineid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_machineid" title="Permalink to this definition">§</a></dt>
+<dd><p>gets the machine id, or initialises the machine id if it doesnt exist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">string of the machine-id</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_tor_host">
+<em class="property">classmethod </em><code class="descname">get_tor_host</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_tor_host"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_tor_host" title="Permalink to this definition">§</a></dt>
+<dd><p>gets a tuple of the current tor host.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">tuple of hostname(onion address), client key, client name</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a>[<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a>, <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a>, <a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.get_version">
+<em class="property">classmethod </em><code class="descname">get_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_version" title="Permalink to this definition">§</a></dt>
+<dd><p>gets the “describe” version of the current git repo as a string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current version</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.identifier_to_ini">
+<em class="property">classmethod </em><code class="descname">identifier_to_ini</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>prefix=’configs_byserial’</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.identifier_to_ini"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.identifier_to_ini" title="Permalink to this definition">§</a></dt>
+<dd><p>gets a valid .ini path for an identifier.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> – identifier to find an ini for.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">file path for identifier</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.identifier_to_yml">
+<em class="property">classmethod </em><code class="descname">identifier_to_yml</code><span class="sig-paren">(</span><em>identifier: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.identifier_to_yml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.identifier_to_yml" title="Permalink to this definition">§</a></dt>
+<dd><p>the same as identifier_to_ini but for yml files</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) – identifier for a matching yml file.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">string filepath for the yml file.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.load_or_fix_solarcalc">
+<em class="property">classmethod </em><code class="descname">load_or_fix_solarcalc</code><span class="sig-paren">(</span><em>fp: str</em><span class="sig-paren">)</span> &#x2192; libs.SysUtil.LazySolarCalcReader<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.load_or_fix_solarcalc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.load_or_fix_solarcalc" title="Permalink to this definition">§</a></dt>
+<dd><p>function to either load an existing fixed up solarcalc file or to coerce one into the fixed format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) – identifier of the light for which the solarcalc file exists.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">light timing data as a list of lists.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a>(<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#list" title="(in Python v3.5)">list</a>())</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.SysUtil.SysUtil.logger">
+<code class="descname">logger</code><em class="property"> = &lt;Logger SysUtil (NOTSET)&gt;</em><a class="headerlink" href="#libs.SysUtil.SysUtil.logger" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.open_yaml">
+<em class="property">classmethod </em><code class="descname">open_yaml</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.open_yaml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.open_yaml" title="Permalink to this definition">§</a></dt>
+<dd><p>opens a yaml file using yaml.load</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – yaml file to load</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dictionary of values in yaml file</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.SysUtil.SysUtil.reset_usb_device">
+<em class="property">static </em><code class="descname">reset_usb_device</code><span class="sig-paren">(</span><em>bus: int</em>, <em>dev: int</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.reset_usb_device"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.reset_usb_device" title="Permalink to this definition">§</a></dt>
+<dd><p>resets a usb device.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bus</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)"><em>int</em></a>) – bus number</li>
+<li><strong>dev</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/functions.html#int" title="(in Python v3.5)"><em>int</em></a>) – device number of the device on the bus above</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.set_hostname">
+<em class="property">classmethod </em><code class="descname">set_hostname</code><span class="sig-paren">(</span><em>hostname: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.set_hostname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.set_hostname" title="Permalink to this definition">§</a></dt>
+<dd><p>sets the machines hosname, in /etc/hosts and /etc/hostname</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>hostname</strong> – the string of which to set the hostname to.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.SysUtil.SysUtil.sizeof_fmt">
+<em class="property">static </em><code class="descname">sizeof_fmt</code><span class="sig-paren">(</span><em>num</em>, <em>suffix=’B’</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.sizeof_fmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.sizeof_fmt" title="Permalink to this definition">§</a></dt>
+<dd><p>formats a number of bytes in to a human readable string.
+returns in SI units
+eg sizeof_fmt(1234) returns ‘1.2KiB’</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>num</strong> – number of bytes to format</li>
+<li><strong>suffix</strong> – the suffix to use</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">human formattted string.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)">str</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.SysUtil.SysUtil.stop">
+<code class="descname">stop</code><em class="property"> = False</em><a class="headerlink" href="#libs.SysUtil.SysUtil.stop" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="libs.SysUtil.SysUtil.thread">
+<code class="descname">thread</code><em class="property"> = None</em><a class="headerlink" href="#libs.SysUtil.SysUtil.thread" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.update_from_git">
+<em class="property">classmethod </em><code class="descname">update_from_git</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.update_from_git"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.update_from_git" title="Permalink to this definition">§</a></dt>
+<dd><p>updates spc-eyepi from git.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="libs.SysUtil.SysUtil.write_config">
+<em class="property">classmethod </em><code class="descname">write_config</code><span class="sig-paren">(</span><em>config: configparser.ConfigParser</em>, <em>identifier: str</em>, <em>prefix=’configs_byserial’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.write_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.write_config" title="Permalink to this definition">§</a></dt>
+<dd><p>writes a configuration file to an correct config file path.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>config</strong> – configuration file (configparser object)</li>
+<li><strong>identifier</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><em>str</em></a>) – identifier to user as the raget file name.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">configparser object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.SysUtil.SysUtil.write_global_config">
+<em class="property">static </em><code class="descname">write_global_config</code><span class="sig-paren">(</span><em>data: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.write_global_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.write_global_config" title="Permalink to this definition">§</a></dt>
+<dd><p>Writes a global configuration to the global_config.yml</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> – dict of data to write to the config</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="libs.SysUtil.get_generator">
+<code class="descclassname">libs.SysUtil.</code><code class="descname">get_generator</code><span class="sig-paren">(</span><em>fh</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#get_generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.get_generator" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="libs.SysUtil.recursive_update">
+<code class="descclassname">libs.SysUtil.</code><code class="descname">recursive_update</code><span class="sig-paren">(</span><em>d</em>, <em>u</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#recursive_update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.recursive_update" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="libs.SysUtil.sizeof_fmt">
+<code class="descclassname">libs.SysUtil.</code><code class="descname">sizeof_fmt</code><span class="sig-paren">(</span><em>num</em>, <em>suffix=’B’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#sizeof_fmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.sizeof_fmt" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
 </div>
-<div class="section" id="libs-updater">
-<h2>libs.Updater<a class="headerlink" href="#libs-updater" title="Permalink to this headline">§</a></h2>
+<div class="section" id="module-libs.Updater">
+<span id="libs-updater"></span><h2>libs.Updater<a class="headerlink" href="#module-libs.Updater" title="Permalink to this headline">§</a></h2>
+<dl class="class">
+<dt id="libs.Updater.Updater">
+<em class="property">class </em><code class="descclassname">libs.Updater.</code><code class="descname">Updater</code><a class="reference internal" href="_modules/libs/Updater.html#Updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/threading.html#threading.Thread" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+<dl class="method">
+<dt id="libs.Updater.Updater.add_to_identifiers">
+<code class="descname">add_to_identifiers</code><span class="sig-paren">(</span><em>identifier: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.add_to_identifiers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.add_to_identifiers" title="Permalink to this definition">§</a></dt>
+<dd><p>adds an identifier to the set of identifiers.
+:param identifier: identifier to add
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.add_to_temp_identifiers">
+<code class="descname">add_to_temp_identifiers</code><span class="sig-paren">(</span><em>temp_identifier: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.add_to_temp_identifiers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.add_to_temp_identifiers" title="Permalink to this definition">§</a></dt>
+<dd><p>adds an identifier to the set of temporary identifiers. that may disappear
+:param temp_identifier: identifier to add
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.gather_data">
+<code class="descname">gather_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.gather_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.gather_data" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.go">
+<code class="descname">go</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.go"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.go" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.process_deque">
+<code class="descname">process_deque</code><span class="sig-paren">(</span><em>cameras=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.process_deque"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.process_deque" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.run" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.set_config_data">
+<code class="descname">set_config_data</code><span class="sig-paren">(</span><em>data: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.set_config_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.set_config_data" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.set_yaml_data">
+<code class="descname">set_yaml_data</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.set_yaml_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.set_yaml_data" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.stop" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.upload_logs">
+<code class="descname">upload_logs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.upload_logs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.upload_logs" title="Permalink to this definition">§</a></dt>
+<dd><p>uploads rotated logs to the server.
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
-<div class="section" id="libs-uploader">
-<h2>libs.Uploader<a class="headerlink" href="#libs-uploader" title="Permalink to this headline">§</a></h2>
+<div class="section" id="module-libs.Uploader">
+<span id="libs-uploader"></span><h2>libs.Uploader<a class="headerlink" href="#module-libs.Uploader" title="Permalink to this headline">§</a></h2>
+<dl class="class">
+<dt id="libs.Uploader.GenericUploader">
+<em class="property">class </em><code class="descclassname">libs.Uploader.</code><code class="descname">GenericUploader</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>source_dir: str = None</em>, <em>host: str = None</em>, <em>config: dict = None</em>, <em>queue: collections.deque = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#GenericUploader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.GenericUploader" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libs.Uploader.Uploader" title="libs.Uploader.Uploader"><code class="xref py py-class docutils literal"><span class="pre">libs.Uploader.Uploader</span></code></a></p>
+<p>Generic uploader for uploading logs sensor data, etc.</p>
+<dl class="method">
+<dt id="libs.Uploader.GenericUploader.fill_me">
+<code class="descname">fill_me</code><span class="sig-paren">(</span><em>dict_of_values: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#GenericUploader.fill_me"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.GenericUploader.fill_me" title="Permalink to this definition">§</a></dt>
+<dd><p>fills self with values from a dict.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dict_of_values</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)"><em>dict</em></a>) – dictionary of key: values</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Uploader.GenericUploader.re_init">
+<code class="descname">re_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#GenericUploader.re_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.GenericUploader.re_init" title="Permalink to this definition">§</a></dt>
+<dd><p>Your config is in another castle.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Uploader.GenericUploader.remove_source_files">
+<code class="descname">remove_source_files</code><em class="property"> = True</em><a class="headerlink" href="#libs.Uploader.GenericUploader.remove_source_files" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libs.Uploader.Uploader">
+<em class="property">class </em><code class="descclassname">libs.Uploader.</code><code class="descname">Uploader</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>config: dict = None</em>, <em>queue: collections.deque = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/threading.html#threading.Thread" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+<p>Uploader class,
+used to upload,</p>
+<dl class="method">
+<dt id="libs.Uploader.Uploader.communicate_with_updater">
+<code class="descname">communicate_with_updater</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.communicate_with_updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.communicate_with_updater" title="Permalink to this definition">§</a></dt>
+<dd><p>communication member. This is meant to send some metadata to the updater thread.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Uploader.Uploader.mkdir_recursive">
+<code class="descname">mkdir_recursive</code><span class="sig-paren">(</span><em>link</em>, <em>remote_directory</em>, <em>mkdir=None</em>, <em>chdir=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.mkdir_recursive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.mkdir_recursive" title="Permalink to this definition">§</a></dt>
+<dd><p>Creates directories recursively on the remote server</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>link</strong> – ftp/sftp connection object</li>
+<li><strong>remote_directory</strong> – </li>
+<li><strong>chdir</strong> – method used to change to a directory</li>
+<li><strong>mkdir</strong> – method used to make a directory</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Uploader.Uploader.remove_source_files">
+<code class="descname">remove_source_files</code><em class="property"> = True</em><a class="headerlink" href="#libs.Uploader.Uploader.remove_source_files" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Uploader.Uploader.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.run" title="Permalink to this definition">§</a></dt>
+<dd><p>run method.
+main loop for Uploaders.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Uploader.Uploader.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.stop" title="Permalink to this definition">§</a></dt>
+<dd><p>stopper method</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libs.Uploader.Uploader.upload">
+<code class="descname">upload</code><span class="sig-paren">(</span><em>file_names</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.upload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.upload" title="Permalink to this definition">§</a></dt>
+<dd><p>uploads files via sftp.
+deletes the files as they are uploaded, creates new directories if needed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>file_names</strong> – filenames to upload</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="libs.Uploader.Uploader.upload_interval">
+<code class="descname">upload_interval</code><em class="property"> = 120</em><a class="headerlink" href="#libs.Uploader.Uploader.upload_interval" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 
@@ -134,7 +2441,7 @@
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.5</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>

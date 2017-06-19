@@ -1,6 +1,6 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -34,7 +34,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
-  <body role="document">
+  <body>
   <div class="document">
     
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -102,19 +102,28 @@
 
 
 <div class="viewcode-block" id="Uploader"><a class="viewcode-back" href="../../libs.html#libs.Uploader.Uploader">[docs]</a><span class="k">class</span> <span class="nc">Uploader</span><span class="p">(</span><span class="n">Thread</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Uploader class,</span>
-<span class="sd">    used to upload,</span>
+    <span class="sd">&quot;&quot;&quot; Uploader class,</span>
+<span class="sd">        used to upload,</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># upload interval</span>
-    <span class="n">upload_interval</span> <span class="o">=</span> <span class="mi">30</span>
+    <span class="n">upload_interval</span> <span class="o">=</span> <span class="mi">120</span>
     <span class="n">remove_source_files</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">queue</span><span class="p">:</span> <span class="n">deque</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">queue</span><span class="p">:</span> <span class="n">deque</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Uploader init.</span>
+<span class="sd">        `config` may be specified as a dict.</span>
+<span class="sd">        </span>
+<span class="sd">        :param identifier: </span>
+<span class="sd">        :param config: </span>
+<span class="sd">        :param queue: </span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># same thread name hackery that the Camera threads use</span>
-        <span class="n">Thread</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">identifier</span> <span class="o">+</span> <span class="s2">&quot;-Uploader&quot;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;UPLOAD|</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">identifier</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Thread started </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">identifier</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stopper</span> <span class="o">=</span> <span class="n">Event</span><span class="p">()</span>
-        <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(),</span> <span class="mi">256</span><span class="p">)</span> <span class="k">if</span> <span class="n">queue</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">queue</span>
+        <span class="k">if</span> <span class="n">queue</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(),</span> <span class="mi">256</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">communication_queue</span> <span class="o">=</span> <span class="n">queue</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span>
@@ -128,33 +137,31 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">total_data_uploaded_tb</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">total_data_uploaded_b</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">config_filename</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">identifier_to_ini</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> \
-            <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> \
-            <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> \
-            <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> \
-            <span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span> <span class="o">=</span> \
-            <span class="bp">self</span><span class="o">.</span><span class="n">source_dir</span> <span class="o">=</span> \
-            <span class="bp">self</span><span class="o">.</span><span class="n">server_dir</span> <span class="o">=</span> \
-            <span class="bp">self</span><span class="o">.</span><span class="n">upload_enabled</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config_filename</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">identifier_to_ini</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">ensure_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">re_init</span><span class="p">()</span>
-        <span class="n">SysUtil</span><span class="p">()</span><span class="o">.</span><span class="n">add_watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_filename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">re_init</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;ftp&quot;</span><span class="p">][</span><span class="s2">&quot;server&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;ftp&quot;</span><span class="p">][</span><span class="s2">&quot;username&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;ftp&quot;</span><span class="p">][</span><span class="s2">&quot;password&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">server_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;ftp&quot;</span><span class="p">][</span><span class="s2">&quot;directory&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;camera&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;localfiles&quot;</span><span class="p">][</span><span class="s2">&quot;upload_dir&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upload_enabled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s2">&quot;ftp&quot;</span><span class="p">,</span> <span class="s2">&quot;enabled&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">upload_conf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;upload&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">upload_conf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;host&quot;</span><span class="p">,</span> <span class="s2">&quot;sftp.traitcapture.org&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">upload_conf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="s2">&quot;picam&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="n">upload_conf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="s2">&quot;NONE_SPECIFIED&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">server_dir</span> <span class="o">=</span> <span class="n">upload_conf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;directory&quot;</span><span class="p">,</span> <span class="s2">&quot;/picam&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_dir&quot;</span><span class="p">,</span> <span class="s2">&quot;/home/images/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">identifier</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upload_enabled</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">upload_conf</span><span class="p">))</span>
 
-<div class="viewcode-block" id="Uploader.re_init"><a class="viewcode-back" href="../../libs.html#libs.Uploader.Uploader.re_init">[docs]</a>    <span class="k">def</span> <span class="nf">re_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        setup to be run each time the config is reloaded</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">machine_id</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">get_machineid</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">ensure_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;ftp&quot;</span><span class="p">][</span><span class="s2">&quot;server&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;ftp&quot;</span><span class="p">][</span><span class="s2">&quot;username&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;ftp&quot;</span><span class="p">][</span><span class="s2">&quot;password&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">server_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;ftp&quot;</span><span class="p">][</span><span class="s2">&quot;directory&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;camera&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">source_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;localfiles&quot;</span><span class="p">][</span><span class="s2">&quot;upload_dir&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">upload_enabled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s2">&quot;ftp&quot;</span><span class="p">,</span> <span class="s2">&quot;enabled&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">last_upload_list</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_upload_list</span> <span class="o">=</span> <span class="p">[]</span>
 
 <div class="viewcode-block" id="Uploader.upload"><a class="viewcode-back" href="../../libs.html#libs.Uploader.Uploader.upload">[docs]</a>    <span class="k">def</span> <span class="nf">upload</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_names</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -170,15 +177,15 @@
             <span class="n">params</span><span class="p">[</span><span class="s1">&#39;cnopts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pysftp</span><span class="o">.</span><span class="n">CnOpts</span><span class="p">(</span><span class="n">knownhosts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ssh_manager</span><span class="o">.</span><span class="n">known_hosts_path</span><span class="p">)</span>
             <span class="n">params</span><span class="p">[</span><span class="s1">&#39;cnopts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">hostkeys</span> <span class="o">=</span> <span class="kc">None</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">==</span> <span class="s2">&quot;DEFAULT_PASSWORD&quot;</span><span class="p">:</span>
-                <span class="n">params</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span>
 
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ssh_manager</span><span class="o">.</span><span class="n">priv_path</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ssh_manager</span><span class="o">.</span><span class="n">known_hosts_path</span><span class="p">):</span>
                 <span class="n">params</span><span class="p">[</span><span class="s1">&#39;private_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_manager</span><span class="o">.</span><span class="n">priv_path</span>
                 <span class="n">params</span><span class="p">[</span><span class="s1">&#39;cnopts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pysftp</span><span class="o">.</span><span class="n">CnOpts</span><span class="p">(</span><span class="n">knownhosts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ssh_manager</span><span class="o">.</span><span class="n">known_hosts_path</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">params</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span>
 
             <span class="k">with</span> <span class="n">pysftp</span><span class="o">.</span><span class="n">Connection</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span> <span class="k">as</span> <span class="n">link</span><span class="p">:</span>
-                <span class="n">root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span><span class="p">)</span>
+                <span class="n">root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
                 <span class="n">root</span> <span class="o">=</span> <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">root</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">root</span>
                 <span class="c1"># make the root dir in case it doesnt exist.</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">link</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">root</span><span class="p">):</span>
@@ -186,62 +193,49 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">mkdir_recursive</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">root</span><span class="p">)</span>
                 <span class="n">link</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
                 <span class="n">root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Uploading...&quot;</span><span class="p">)</span>
                 <span class="c1"># dump ze files.</span>
                 <span class="n">total_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
                 <span class="n">total_size</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
-                <span class="n">link</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">file_names</span><span class="p">):</span>
                     <span class="k">try</span><span class="p">:</span>
-                        <span class="c1"># time it</span>
                         <span class="n">onefile_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-                        <span class="c1"># replace the source dir in the filename to get the target directory</span>
                         <span class="n">target_file</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_dir</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-                        <span class="c1"># remove the leading slash if it exists</span>
                         <span class="n">target_file</span> <span class="o">=</span> <span class="n">target_file</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">target_file</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">target_file</span>
-                        <span class="c1"># get the target directory.</span>
-                        <span class="n">dirname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">target_file</span><span class="p">))</span>
-                        <span class="c1"># create the target directory</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">mkdir_recursive</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span>
-                        <span class="c1"># if the source is a directory, move on, dont try and upload a directory inode</span>
+                        <span class="n">dirname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">target_file</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">mkdir_recursive</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">target_file</span><span class="p">)</span>
                             <span class="k">continue</span>
-                        <span class="c1"># upload the file to a temp file.</span>
+
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">link</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dirname</span><span class="p">):</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">mkdir_recursive</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span>
+                        <span class="n">link</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">dirname</span><span class="p">))</span>
+
                         <span class="n">link</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">target_file</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.tmp&quot;</span><span class="p">)</span>
-                        <span class="c1"># if our target file exists, remove it</span>
                         <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">target_file</span><span class="p">)):</span>
                             <span class="n">link</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">target_file</span><span class="p">))</span>
-                        <span class="c1"># atomic rename for our file.</span>
                         <span class="n">link</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">target_file</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.tmp&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">target_file</span><span class="p">))</span>
-                        <span class="c1"># change ownership</span>
                         <span class="n">link</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">target_file</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="mi">755</span><span class="p">)</span>
-                        <span class="c1"># increment counters</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">total_data_uploaded_b</span> <span class="o">+=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-                        <span class="n">size</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-                        <span class="n">total_size</span> <span class="o">+=</span> <span class="n">size</span>
-                        <span class="n">mbps</span> <span class="o">=</span> <span class="p">(</span><span class="n">size</span> <span class="o">/</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">onefile_time</span><span class="p">))</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">1024</span>
-                        <span class="c1"># remove source files.</span>
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_source_files</span><span class="p">:</span>
+                            <span class="n">size</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                            <span class="n">total_size</span> <span class="o">+=</span> <span class="n">size</span>
+                            <span class="n">mbps</span> <span class="o">=</span> <span class="p">(</span><span class="n">size</span><span class="o">/</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">onefile_time</span><span class="p">))</span><span class="o">/</span><span class="mi">1024</span><span class="o">/</span><span class="mi">1024</span>
+
                             <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                                <span class="s2">&quot;Uploaded file </span><span class="si">{0}</span><span class="s2">/</span><span class="si">{1}</span><span class="s2"> through sftp and removed from local filesystem, </span><span class="si">{2:.2f}</span><span class="s2">Mb/s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                                    <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_names</span><span class="p">),</span> <span class="n">mbps</span><span class="p">))</span>
-
+                                <span class="s2">&quot;Uploaded file </span><span class="si">{0}</span><span class="s2">/</span><span class="si">{1}</span><span class="s2"> through sftp and removed from local filesystem, </span><span class="si">{2:.2f}</span><span class="s2">Mb/s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_names</span><span class="p">),</span> <span class="n">mbps</span><span class="p">))</span>
                         <span class="k">else</span><span class="p">:</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                                <span class="s2">&quot;Uploaded file </span><span class="si">{0}</span><span class="s2">/</span><span class="si">{1}</span><span class="s2"> through sftp, </span><span class="si">{2:.2f}</span><span class="s2">Mb/s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_names</span><span class="p">),</span>
-                                                                                         <span class="n">mbps</span><span class="p">))</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Successfully uploaded </span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2"> through sftp&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_names</span><span class="p">)))</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">last_upload_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
                     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;SFTP failed put/mkdir: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;sftp:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
                     <span class="k">finally</span><span class="p">:</span>
                         <span class="n">link</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
-                <span class="c1"># get the total mbps</span>
-                <span class="n">mbps</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_size</span> <span class="o">/</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">total_time</span><span class="p">))</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">1024</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Finished uploading, </span><span class="si">{0:.2f}</span><span class="s2">Mb/s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mbps</span><span class="p">))</span>
 
-            <span class="c1"># update counters</span>
+                <span class="n">mbps</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_size</span><span class="o">/</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">total_time</span><span class="p">))</span><span class="o">/</span><span class="mi">1024</span><span class="o">/</span><span class="mi">1024</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Finished uploading, </span><span class="si">{0:.2f}</span><span class="s2">Mb/s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mbps</span><span class="p">))</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_data_uploaded_b</span> <span class="o">&gt;</span> <span class="mi">1000000000000</span><span class="p">:</span>
                 <span class="n">curr</span> <span class="o">=</span> <span class="p">(((</span><span class="bp">self</span><span class="o">.</span><span class="n">total_data_uploaded_b</span> <span class="o">/</span> <span class="mi">1024</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1024</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1024</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1024</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">total_data_uploaded_b</span> <span class="o">=</span> <span class="mi">0</span>
@@ -255,7 +249,7 @@
                 <span class="c1"># open link and create directory if for some reason it doesnt exist</span>
                 <span class="n">ftp</span> <span class="o">=</span> <span class="n">ftplib</span><span class="o">.</span><span class="n">FTP</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">)</span>
                 <span class="n">ftp</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">mkdir_recursive</span><span class="p">(</span><span class="n">ftp</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mkdir_recursive</span><span class="p">(</span><span class="n">ftp</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Uploading&quot;</span><span class="p">)</span>
                 <span class="c1"># dump ze files.</span>
                 <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">file_names</span><span class="p">:</span>
@@ -382,7 +376,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">communication_queue</span> <span class="o">=</span> <span class="n">queue</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span> <span class="o">=</span> <span class="n">identifier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">identifier</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source_dir</span> <span class="o">=</span> <span class="n">source_dir</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getName</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">startup_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
@@ -396,10 +390,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">upload_enabled</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="s2">&quot;picam&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">server_dir</span> <span class="o">=</span> <span class="s2">&quot;/&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">server_dir</span> <span class="o">=</span> <span class="s2">&quot;/picam&quot;</span>
 
         <span class="k">if</span> <span class="n">config</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">source_dir</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_dir&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_dir</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;upload&quot;</span><span class="p">))</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
                 <span class="n">config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;upload&quot;</span><span class="p">)</span>
@@ -411,6 +405,7 @@
 <span class="sd">        Your config is in another castle.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">last_upload_list</span> <span class="o">=</span> <span class="p">[]</span></div></div>
+
 </pre></div>
 
           </div>
@@ -422,8 +417,8 @@
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>
 

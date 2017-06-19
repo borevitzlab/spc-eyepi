@@ -9,14 +9,16 @@ import logging
 import logging.config
 import fcntl
 import datetime
-
 import collections
+from dateutil import parser
+import traceback
 
 USBDEVFS_RESET = 21780
 try:
     logging.config.fileConfig("logging.ini")
 except:
     pass
+
 
 def sizeof_fmt(num, suffix='B'):
     for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
@@ -114,6 +116,137 @@ def recursive_update(d, u):
             d[k] = u[k]
     return d
 
+
+def get_generator(fh):
+    while True:
+        data = fh.readline()
+        if not data:
+            break
+        yield data
+
+
+class LazySolarCalcReader(object):
+    def __init__(self, fn):
+        self._fn = fn
+        self._fh = open(self._fn)
+        self._rewind()
+
+    def _rewind(self, index=0):
+        self._fh.seek(0)
+        self._generator = get_generator(self._fh)
+        self._index = 0
+        while self._index < index:
+            try:
+                next(self._generator)
+                self._index += 1
+            except StopIteration:
+                self._rewind(index=0)
+                break
+
+    def _getitem_slice(self, slice):
+        start, stop, step = slice.start, slice.stop, slice.step
+        start = 0 if start is None else start
+        stop = float("inf") if stop is None else stop
+        step = 1 if step is None else step
+        if stop is not None and stop < start:
+            start, stop = stop, start
+            step *= -1
+        r = []
+        ii = start
+        while ii <= stop:
+            try:
+                r.append(self[ii])
+                ii += step
+            except IndexError:
+                break
+        return r
+
+    def _parse_line(self, line_str: str) -> list:
+        """
+        parses a string into a list that can be read by the chamber
+        
+        :param line_str:  
+        :return: list of values.
+        """
+        line = line_str.strip().split(",")
+
+        def f(v):
+            try:
+                return float(v)
+            except:
+                return v
+
+        if len(line) in (16, 13):
+            try:
+                return [
+                    parser.parse("{} {}".format(line[0], line[1]), dayfirst=True),
+                    *map(f, line[2:-1]),
+                    parser.parse(line[-1])
+                ]
+            except Exception as e:
+                traceback.print_exc()
+        else:
+            try:
+                return [
+                    parser.parse(line[0], dayfirst=True),
+                    *map(f, line[1:-1]),
+                    parser.parse(line[-1])
+                ]
+
+            except:
+                traceback.print_exc()
+        return list(map(f, line))
+
+    def __len__(self):
+        tempindex = 0
+        self._rewind()
+        while True:
+            try:
+                next(self._generator)
+                tempindex += 1
+            except StopIteration:
+                break
+        self._rewind()
+        return tempindex
+
+    def _getitem_int(self, index):
+        if index < 0:
+            index = len(self)+index
+            if index < 0:
+                raise IndexError
+        if index == 0:
+            self._rewind()
+        if index < self._index:
+            self._rewind()
+        v = ""
+        while self._index <= index:
+            try:
+                v = next(self._generator)
+                self._index += 1
+            except StopIteration:
+                raise IndexError
+        return self._parse_line(v)
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return self._getitem_slice(index)
+        elif isinstance(index, int):
+            return self._getitem_int(index)
+
+    def __next__(self):
+        v = self._parse_line(next(self._generator))
+        self._index += 1
+        return v
+
+    def __iter__(self):
+        self._rewind()
+        for v in self._generator:
+            yield self._parse_line(v)
+
+    def __del__(self):
+        self._fh.close()
+
+
 class SysUtil(object):
     """
     System utility class.
@@ -131,7 +264,6 @@ class SysUtil(object):
     thread = None
     stop = False
     logger = logging.getLogger("SysUtil")
-
 
     def __init__(self):
         if SysUtil.thread is None:
@@ -501,60 +633,6 @@ class SysUtil(object):
         return config
 
     @classmethod
-    def ensure_light_config(cls, identifier):
-        """
-        ensures a configuration file exists for this identifier.
-        if a config file doesnt exist then it will create a default one.
-
-        :param identifier: identifier of the light
-        :type identifier: str
-        :return: configuration for the light
-        :rtype: configparser.ConfigParser
-        """
-        prefix ="lights_byip"
-
-        config = configparser.ConfigParser()
-        config.read_string(default_light_config)
-        path = cls.identifier_to_ini(identifier, prefix=prefix)
-        try:
-            if len(config.read(path)):
-                return config
-        except Exception as e:
-            print(str(e))
-        if "{identifier}" in config.get("light", "file_path"):
-            config.set("light", "file_path",
-                       config.get('light', "file_path").format(identifier=identifier))
-        cls.write_config(config, identifier, prefix=prefix)
-        return config
-
-
-    @classmethod
-    def ensure_chamber_config(cls, identifier):
-        """
-        ensures a configuration file exists for this identifier.
-        if a config file doesnt exist then it will create a default one.
-
-        :param identifier: identifier of the light
-        :type identifier: str
-        :return: configuration for the light
-        :rtype: configparser.ConfigParser
-        """
-        prefix = "chambers_byip"
-        config = configparser.ConfigParser()
-        config.read_string(default_chamber_config)
-        path = cls.identifier_to_ini(identifier, prefix=prefix)
-        try:
-            if len(config.read(path)):
-                return config
-        except Exception as e:
-            print(str(e))
-        if "{identifier}" in config.get("light", "file_path"):
-            config.set("light", "file_path",
-                       config.get('light', "file_path").format(identifier=identifier))
-        cls.write_config(config, identifier, prefix=prefix)
-        return config
-
-    @classmethod
     def write_config(cls, config: configparser.ConfigParser, identifier: str, prefix="configs_byserial"):
         """
         writes a configuration file to an correct config file path.
@@ -584,27 +662,9 @@ class SysUtil(object):
         else:
             return os.path.join("{prefix}/".format(prefix=prefix), identifier) + ".ini"
 
-    @classmethod
-    def get_light_datafile(cls, identifier: str)->str:
-        """
-        gets a light datafile
-
-        :param identifier: identifier to use to find the data file.
-        :type identifier: str
-        :return: file path for csv or slc.
-        :rtype: str
-        """
-        csv = "lights_byip/{}.csv".format(identifier)
-        slc = "lights_byip/{}.slc".format(identifier)
-        if os.path.exists(slc) and os.path.isfile(slc):
-            return slc
-        elif os.path.exists(csv) and os.path.isfile(csv):
-            return csv
-        else:
-            return ""
 
     @classmethod
-    def load_or_fix_solarcalc(cls, identifier: str)->list:
+    def load_or_fix_solarcalc(cls, fp: str)-> LazySolarCalcReader:
         """
         function to either load an existing fixed up solarcalc file or to coerce one into the fixed format.
 
@@ -614,49 +674,53 @@ class SysUtil(object):
         :rtype: list(list())
         """
         lx = []
-        fp = cls.get_light_datafile(identifier)
+
         path, ext = os.path.splitext(fp)
-        header10 = ['datetime', 'temp', 'relativehumidity', 'LED1', 'LED2', 'LED3', 'LED4', 'LED5', 'LED6', 'LED7',
-                    'LED8', 'LED9', 'LED10', 'total_solar_watt', 'simulated_datetime']
-        header7 = ['datetime', 'temp', 'relativehumidity', 'LED1', 'LED2', 'LED3', 'LED4', 'LED5', 'LED6', 'LED7',
-                   'total_solar_watt', 'simulated_datetime']
+        if ext not in (".csv", ".slc"):
+            raise ValueError("Only .csv or .slc files are supported")
         if not os.path.isfile(fp):
             SysUtil.logger.error("no SolarCalc file.")
             raise FileNotFoundError()
-        if ext == ".slc":
-            with open(fp) as f:
-                lx = [x.strip().split(",") for x in f.readlines()]
-        else:
-            with open(fp) as f:
-                l = [x.strip().split(",") for x in f.readlines()]
+        return LazySolarCalcReader(fp)
 
-                def get_lines(li):
-                    print("Loading csv")
-                    for idx, line in enumerate(li):
-                        try:
-                            yield [
-                                datetime.datetime.strptime("{}_{}".format(line[0], line[1]), "%d/%m/%Y_%H:%M").isoformat(),
-                                *line[2:-1],
-                                datetime.datetime.strptime(line[-1], "%d %b %Y %H:%M").isoformat()
-                            ]
-                        except Exception as e:
-                            SysUtil.logger.error("Couldnt fix solarcalc file. {}".format(str(e)))
-                            print(l)
-
-                lx.extend(get_lines(l))
-
-                if len(l[0]) == 15:
-                    lx.insert(0, header10)
-                else:
-                    lx.insert(0, header7)
-
-            with open(path+".slc", 'w') as f:
-                f.write("\n".join([",".join(x) for x in lx]))
-
-        for idx, x in enumerate(lx[1:]):
-            lx[idx+1][0] = datetime.datetime.strptime(x[0], "%Y-%m-%dT%H:%M:%S")
-            lx[idx+1][-1] = datetime.datetime.strptime(x[-1], "%Y-%m-%dT%H:%M:%S")
-        return lx[1:]
+        # headerstart = ['datetime', 'temp', 'relativehumidity']
+        # headerend = ['total_solar_watt', 'simulated_datetime']
+        # fill = "LED{}"
+        #
+        # if not os.path.isfile(fp):
+        #     SysUtil.logger.error("no SolarCalc file.")
+        #     raise FileNotFoundError()
+        # if ext == ".slc":
+        #     with open(fp) as f:
+        #         lx = [x.strip().split(",") for x in f.readlines()]
+        #         for i,l in enumerate(lx):
+        #             lx[i][0] = parser.parse(lx[i][0])
+        #             lx[i][-1] = parser.parse(lx[i][-1])
+        # else:
+        #     def get_lines(fh):
+        #         with open(fh) as f:
+        #             for line_str in f.readlines():
+        #                 try:
+        #                     line = line_str.strip().split(",")
+        #                     l = [
+        #                         parser.parse("{} {}".format(line[0], line[1])).isoformat(),
+        #                         *line[2:-1],
+        #                         parser.parse(line[-1]).isoformat()
+        #                     ]
+        #                     yield l
+        #                 except Exception as e:
+        #                     SysUtil.logger.error("Couldnt fix solarcalc file. {}".format(str(e)))
+        #                     traceback.print_exc()
+        #
+        #     with open(path + ".slc", 'w') as slc:
+        #         for line in get_lines(fp):
+        #             slc.write(",".join(line)+"\n")
+        #             lx.append(line)
+        #
+        #         # led_fields = [fill.format(i) for i in range(len(lx[0])-len(headerstart)-len(headerend))]
+        #         # header = headerstart + led_fields + headerend
+        #         # lx.insert(0, header)
+        # return lx[1:]
 
     @classmethod
     def identifier_to_yml(cls, identifier: str)->str:

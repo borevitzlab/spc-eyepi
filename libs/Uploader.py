@@ -35,7 +35,8 @@ class Uploader(Thread):
         :param queue: 
         """
         # same thread name hackery that the Camera threads use
-        Thread.__init__(self, name=identifier + "-Uploader")
+        super().__init__(name="UPLOAD|{}".format(identifier))
+        print("Thread started {}: {}".format(self.__class__, identifier))
         self.stopper = Event()
         if queue is None:
             queue = deque(tuple(), 256)

@@ -7,6 +7,7 @@ import shutil
 from threading import Thread, Event
 from libs.SysUtil import SysUtil
 import csv, json
+import traceback
 
 try:
     logging.config.fileConfig("logging.ini")
@@ -17,12 +18,12 @@ except:
 try:
     from sense_hat import SenseHat
 except Exception as e:
-    logging.error("Couldnt import sensehat: {}".format(str(e)))
+    logging.warning("Couldnt import sensehat: {}".format(str(e)))
 
 try:
     import Adafruit_DHT
 except Exception as e:
-    logging.error("Couldnt import Adafruit_DHT: {}".format(str(e)))
+    logging.warning("Couldnt import Adafruit_DHT: {}".format(str(e)))
 
 try:
     import telegraf
@@ -34,7 +35,7 @@ def round_to_1dp(n):
     return round(n, 1)
 
 
-class Sensor(object):
+class Sensor(Thread):
     """
     Sensor base.
     To use this class you need to override 'get_measurement()' so that it returns a tuple of the measurements that match
@@ -46,9 +47,15 @@ class Sensor(object):
     data_headers = tuple()
     timestamp_format = "%Y-%m-%dT%H:%M:%S"
 
-    def __init__(self, identifier: str = None, config: dict = None, queue: deque = None, write_out: bool = True, interval: int = 60,
+    def __init__(self, identifier: str,
+                 config: dict = None,
+                 queue: deque = None,
+                 write_out: bool = True,
+                 interval: int = 60,
                  **kwargs):
         # identifier is NOT OPTIONAL!
+        super().__init__(name=identifier)
+        print("Thread started {}: {}".format(self.__class__, identifier))
         # data headers need to be set
         if queue is None:
             queue = deque(tuple(), 256)
@@ -67,10 +74,11 @@ class Sensor(object):
         self.measurements = deque(maxlen=dlen)
         self.write_out = write_out
 
-        self.data_directory = os.path.join(os.getcwd(), "sensors", self.identifier)
+        out_dir = os.path.join(os.getcwd(), "sensors", self.identifier)
+        self.output_dir = config.get("output_dir", out_dir)
         if write_out:
-            if not os.path.exists(self.data_directory):
-                os.makedirs(self.data_directory)
+            if not os.path.exists(self.output_dir):
+                os.makedirs(self.output_dir)
         self.current_capture_time = datetime.datetime.now()
         self.failed = list()
 
@@ -148,7 +156,7 @@ class Sensor(object):
         :return:
         """
         try:
-            fn = os.path.join(self.data_directory, "{}-daily".format(self.identifier))
+            fn = os.path.join(self.output_dir, "{}-daily".format(self.identifier))
             csvf, tsvf, jsonf = fn + ".csv", fn + ".tsv", fn + ".json"
 
             with open(csvf, 'w', newline='') as csvfile, open(tsvf, 'w', newline='') as tsvfile, open(jsonf, 'w',
@@ -181,8 +189,8 @@ class Sensor(object):
         :return:
         """
         try:
-            fn = os.path.join(self.data_directory, "{}-lastday".format(self.identifier))
-            fn2 = os.path.join(self.data_directory, "{}-alltime".format(self.identifier))
+            fn = os.path.join(self.output_dir, "{}-lastday".format(self.identifier))
+            fn2 = os.path.join(self.output_dir, "{}-alltime".format(self.identifier))
             csvf, tsvf = fn + ".csv", fn + ".tsv"
             csvf2, tsvf2 = fn2 + ".csv", fn2 + ".tsv"
             self.rotate(csvf, tsvf)
@@ -256,7 +264,7 @@ class Sensor(object):
                     try:
                         telegraf_client = telegraf.TelegrafClient(host="localhost", port=8092)
                         telegraf_client.metric("env_sensors", measurement)
-                        self.logger.debug("Communicated sesor data to telegraf")
+                        self.logger.debug("Communicated sensor data to telegraf")
                     except Exception as exc:
                         self.logger.error("Couldnt communicate with telegraf client. {}".format(str(exc)))
                     # make ordered list of the data for writing. to disk.
@@ -298,7 +306,7 @@ class DHTMonitor(Sensor):
 
     data_headers = ('humidity', "temperature")
 
-    def __init__(self, identifier: str = None, pin: int = 14, sensor_type="AM2302", **kwargs):
+    def __init__(self, identifier, pin: int = 14, sensor_type="AM2302", **kwargs):
         self.pin = pin
         sensor_args = {
             11: Adafruit_DHT.DHT11,
@@ -312,14 +320,12 @@ class DHTMonitor(Sensor):
             "AM2302": Adafruit_DHT.AM2302,
         }
         self.sensor_type = sensor_args.get(sensor_type, Adafruit_DHT.AM2302)
-        super(DHTMonitor, self).__init__(identifier, **kwargs)
+        super().__init__(identifier, **kwargs)
 
     def get_measurement(self) -> dict:
         """
         gets data from the DHT22
-        :return:
         """
-
         try:
 
             measurement = Adafruit_DHT.read_retry(self.sensor_type, self.pin)
@@ -328,6 +334,35 @@ class DHTMonitor(Sensor):
             self.logger.error("Couldnt get data, {}".format(str(e)))
 
             return {_: None for _ in self.data_headers}
+
+from .Chamber import ConvironTelNetController
+class ConvironChamberSensor(Sensor):
+    data_headers = ("temp_set", "humidity_set", "temp_recorded", "humidity_recorded", "par")
+
+    def __init__(self, identifier, config, *args, **kwargs):
+        self.controller = ConvironTelNetController(config['telnet'])
+        self.temperature_multiplier = config.get("temperature_multiplier", 10.0)
+        super().__init__(identifier, **kwargs)
+
+    def get_measurement(self):
+        measurement = dict()
+        for _ in range(10):
+            try:
+                measurement.update(self.controller.get_values())
+                # collect chamber sensor metrics
+                if type(measurement.get("temp_recorded")) is float:
+                    measurement['temp_recorded'] /= self.temperature_multiplier
+                if type(measurement.get("temp_set")) is float:
+                    measurement['temp_set'] /= self.temperature_multiplier
+                return measurement
+            except Exception as e:
+                traceback.print_exc()
+                self.logger.warning("Couldnt collect chamber sensor metric retrying: {}".format(str(e)))
+                print("Failed, retrying ({}/10)".format(_))
+        else:
+            print("Totally failed getting chamber metrics")
+            self.logger.error("Totally failed getting chamber metrics")
+        return measurement
 
 
 class SenseHatMonitor(Sensor):
@@ -338,21 +373,22 @@ class SenseHatMonitor(Sensor):
 
     data_headers = ("temperature", "humidity", "pressure")
 
-    def __init__(self, identifier: str = None, **kwargs):
+    def __init__(self, identifier: str = None, *args, **kwargs):
         self.sensehat = SenseHat()
         self.display_str = "Init Sensors..."
         self.sensehat.show_message(self.display_str)
-        super(SenseHatMonitor, self).__init__(identifier, **kwargs)
+        super().__init__(identifier, **kwargs)
 
     def show_data(self, measurement):
         """
         displays the data on the osd.
-        :param measurement:
+        
+        :param measurement: meausrement to display
         :return:
         """
         try:
-            message_str = "T:{0:.2f} H:{1:.2f} P:{2:.2f}"
-            self.sensehat.show_message(message_str.format(*measurement))
+            message_str = "T:{temperature:.2f} H:{humidity:.2f} P:{pressure:.2f}"
+            self.sensehat.show_message(message_str.format(**measurement))
         except Exception as e:
             self.logger.error(str(e))
 
@@ -368,47 +404,32 @@ class SenseHatMonitor(Sensor):
             self.logger.error("Couldnt get data, {}".format(str(e)))
             return {_: None for _ in self.data_headers}
 
-
-class ThreadedSensor(Thread, Sensor):
-    """
-    threaded implementation of the sensor cclass.
-    """
-
-    def __init__(self, *args, **kwargs):
-        if hasattr(self, "identifier"):
-            Thread.__init__(self, name=self.identifier)
-        else:
-            Thread.__init__(self)
-
-        print("Threaded startup < {} >".format(self.__class__))
-        # super(ThreadedSensor, self).__init__(*args, **kwargs)
-        self.daemon = True
-
-    def run(self):
-        super(Sensor, self).run()
-
-
-class ThreadedSenseHat(ThreadedSensor, SenseHatMonitor):
-    """
-    threaded implementation for the AstroPI SenseHat
-    """
-
-    def __init__(self, *args, **kwargs):
-        SenseHatMonitor.__init__(self, *args, **kwargs)
-        super(ThreadedSenseHat, self).__init__(*args, **kwargs)
-
-    def run(self):
-        super(SenseHatMonitor, self).run()
-
-
-class ThreadedDHT(ThreadedSensor, DHTMonitor):
-    """
-    threaded implementation for the Adafruit DHT/AM GPIO sensor module
-    """
-
-    def __init__(self, *args, **kwargs):
-        DHTMonitor.__init__(self, *args, **kwargs)
-        super(ThreadedDHT, self).__init__(*args, **kwargs)
-
-    def run(self):
-        super(DHTMonitor, self).run()
+#
+# class ThreadedSensor(Sensor, Thread):
+#     """
+#     threaded implementation of the sensor cclass.
+#     """
+#
+#     def __init__(self, identifier, *args, **kwargs):
+#         Thread.__init__(self, name=identifier)
+#         self.daemon = True
+#         print("Threaded started {}: {}".format(self.__class__, identifier))
+#
+#
+# class ThreadedSenseHat(SenseHatMonitor, ThreadedSensor):
+#     """
+#     threaded implementation for the AstroPI SenseHat
+#     """
+#
+#     def __init__(self, identifier, *args, **kwargs):
+#         super().__init__(identifier,  *args, **kwargs)
+#         super(ThreadedSensor, self).__init__(identifier, *args, **kwargs)
+#
+#
+# class ThreadedDHT(DHTMonitor, ThreadedSensor):
+#     """
+#     threaded implementation for the Adafruit DHT/AM GPIO sensor module
+#     """
+#     def __init__(self, identifier,  *args, **kwargs):
+#         super().__init__(identifier, *args, **kwargs)
+#         super(ThreadedSensor, self).__init__(identifier, *args, **kwargs)

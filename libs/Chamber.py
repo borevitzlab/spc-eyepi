@@ -6,6 +6,7 @@ from threading import Thread, Event
 from libs.SysUtil import SysUtil
 import re
 import os
+import traceback
 from .Light import HelioSpectra
 
 try:
@@ -32,7 +33,7 @@ def clamp(v: float, minimum: float, maximum: float) -> float:
     return min(max(v, minimum), maximum)
 
 
-TIMEOUT = 60
+TIMEOUT = 10
 shell_re = re.compile(b"#")
 
 
@@ -42,9 +43,8 @@ class ConvironTelNetController(object):
     """
 
     def __init__(self, config_section):
-        self.telnet_host = \
-            self.telnet_port = \
-            self.telnet_user = \
+        self.ip = \
+            self.telnet_username = \
             self.telnet_password = ""
         self.set_command = "pcoset"
         self.get_command = "pcoget"
@@ -62,11 +62,10 @@ class ConvironTelNetController(object):
         self.temp_dtype = "I"
         self.humidity_dtype = "I"
 
-
-        # these all seem to be indexes into the same data
+        # these all seem to be indexes into the  same data
         self.get_temp_command = "A 1 2"  # get from A row, index 1, count 2
         self.get_humidity_command = "I 4 2"  # get from I row, index 4, count 2
-        self.get_par_command = "I 11"  # count is optional
+        self.get_par_command = "I 11 1"
 
         self.logger = logging.getLogger(str(self.__class__))
 
@@ -94,7 +93,6 @@ class ConvironTelNetController(object):
 
     def _run(self, telnet, command, expected):
         """Do the leg work between this and the conviron."""
-
         self.logger.debug("Sending command:  {0!s}".format(command.decode()))
         telnet.write(command + b'\n')
         response = telnet.expect([expected, ], timeout=TIMEOUT)
@@ -104,15 +102,15 @@ class ConvironTelNetController(object):
         return response
 
     def _connect_login(self):
-        telnet = Telnet(self.telnet_host)
+        telnet = Telnet(self.ip)
         response = telnet.expect([re.compile(b'login'), ], timeout=TIMEOUT)
 
-        self.logger.debug("Intial response is: {0!s}".format(response.decode()))
         if response[0] < 0:
             raise RuntimeError("Login prompt not recieved")
+        self.logger.debug("Intial response is: {0!s}".format(response[2].decode()))
         # we MUST wait a little bit before writing to ensure that the stream isnt being written to.
         time.sleep(0.1)
-        payload = bytes(self.telnet_user + "\n", encoding="UTF8")
+        payload = bytes(self.telnet_username + "\n", encoding="UTF8")
         telnet.write(payload)
 
         response = telnet.expect([re.compile(b"Password:"), ], timeout=TIMEOUT)
@@ -129,7 +127,6 @@ class ConvironTelNetController(object):
         self.logger.debug("Received: {}".format(response[2].decode()))
         if response[0] < 0:  # No match found
             raise RuntimeError("Shell prompt was not received")
-
         return telnet
 
     def _clear_write_unflag(self, telnet):
@@ -140,100 +137,101 @@ class ConvironTelNetController(object):
         time.sleep(2)
         self._run(telnet, self._clear_busy, shell_re)
 
-    def set(self, temperature=None, humidity=None) -> bool:
+    def set(self, temperature: int = None, humidity: int = None) -> bool:
         """
-        sends a telnet command to the host
+        Sets the chamber to a specific temperature and humidity.
         
-        :param cmd:
+        Usually to get fine grained control of the temperature, the temperature is multiplied by 10,
+        so 19.2 C becomes int(192)
+        
+        Humidity is usually provided as a percentage.
+        
+        :param temperature: integer of temperature value 
+        :type temperature: int
+        :param humidity: integer of humidity value
+        :type humidity: int
         :return: bool successful
         """
         telnet = self._connect_login()
         try:
 
-            set_commands = [bytes(self._set_temp.decode().format(temperature), encoding="UTF8"),
-                            bytes(self._set_humidity.decode().format(humidity), encoding="UTF8")]
+            set_commands = [bytes(self._set_temp.decode().format(int(temperature)), encoding="UTF8"),
+                            bytes(self._set_humidity.decode().format(int(humidity)), encoding="UTF8")]
             for cmd in self._init_sequence + set_commands + self._teardown_sequence:
                 self._run(telnet, cmd, shell_re)
             self._clear_write_unflag(telnet)
-
             time.sleep(2)
+
             for cmd in self._reload_sequence + self._teardown_sequence:
                 self._run(telnet, cmd, shell_re)
+
         except Exception as e:
-            self.logger.error("Error setting values {}".format(str(e)))
+            self.logger.error("Error running command {}".format(str(e)))
             return False
         finally:
             self._clear_write_unflag(telnet)
             self._clear_busy_unflag(telnet)
             time.sleep(2)
+            telnet.write(b'logout\n')
             telnet.close()
-
         return True
 
-    def get_values(self):
+    def get_values(self) -> dict:
+        """
+        gets humidity, temperature and par from a chamber
+        
+        :return: dict of values: temp_set, temp_recorded, humidity_set, humidity_recorded, par 
+        """
         telnet = self._connect_login()
-        values = {"temp_recorded": None,
-                  "temp_set": None,
-                  "humidity_recorded": None,
-                  "par": None}
+        values = {}
         try:
-            temp_resp = self._run(telnet, self._get_temp, re.compile(b"\d+"))
-            if temp_resp[0] <= 1:
+            # these always need to need with \r\n because otherwise they will match the chamber name in the
+            # telnet response
+            par_resp = self._run(telnet, self._get_par, re.compile(rb"\b(\d+)\b \r\n"))
+            par_groups = par_resp[1].groups()
+            if par_groups[0] is not None:
+                values['par'] = float(par_groups[0])
+            time.sleep(0.2)
+
+            temp_resp = self._run(telnet, self._get_temp, re.compile(rb"\b(\d+) (\d+)\b \r\n"))
+            temp_groups = temp_resp[1].groups()
+            if len(temp_groups) <= 1:
                 self.logger.error("Less than two values returned for temperature")
-            try:
-                values['temp_recorded'] = temp_resp[2][1]
-            except:
-                pass
-            try:
-                values['temp_set'] = temp_resp[2][0]
-            except:
-                pass
+            else:
+                values['temp_recorded'], values['temp_set'] = map(float, temp_groups[:2])
 
-            hum_resp = self._run(telnet, self._get_humidity, re.compile(b"\d+"))
-            if hum_resp[0] <= 1:
+            time.sleep(0.2)
+            hum_resp = self._run(telnet, self._get_humidity, re.compile(rb"\b(\d+) (\d+)\b \r\n"))
+            hum_groups = hum_resp[1].groups()
+            if len(hum_groups) < 0:
                 self.logger.error("Less than two values returned for humidity")
-            try:
-                values['humidity_recorded'], values['humidity_set'] = hum_resp[2]
-            except:
-                pass
+            else:
+                values['humidity_recorded'], values['humidity_set'] = map(float, hum_groups[:2])
 
-            par_resp = self._run(telnet, self._get_par, re.compile(b"\d+"))
-            if par_resp[0] <= 0:
-                self.logger.error("No values returned for par")
-            try:
-                values['par'] = par_resp[2][0]
-            except:
-                pass
-
-            time.sleep(2)
-            for cmd in self._reload_sequence + self._teardown_sequence:
-                self._run(telnet, cmd, shell_re)
         except Exception as e:
             self.logger.error("Error setting values {}".format(str(e)))
-            return values
+            raise e
         finally:
-            self._clear_write_unflag(telnet)
             self._clear_busy_unflag(telnet)
             time.sleep(2)
+            telnet.write(b'logout\n')
             telnet.close()
         return values
 
-
-class Chamber(object):
+class Chamber(Thread):
     """
     Schedule runner for a chamber.
     """
-    accuracy = 60
+    accuracy = 150
 
-    def __init__(self, identifier: str = None, config=None):
+    def __init__(self, identifier: str, config: dict = None):
         # identifier is NOT OPTIONAL!
         # init with name or not, just extending some of the functionality of Thread
-
+        super().__init__(name=identifier)
+        print("Thread started {}: {}".format(self.__class__, identifier))
         # self.communication_queue = queue or deque(tuple(), 256)
-        self.logger.info("Init...")
-        if not os.path.isdir("data"):
-            os.mkdir("data")
         self.logger = logging.getLogger(identifier)
+        self.logger.info("Init...")
         self.stopper = Event()
         self.identifier = identifier
         self.config = {}
@@ -251,8 +249,12 @@ class Chamber(object):
         self.lights = []
         light_configs = self.config.get("lights", [])
         for lc in light_configs:
-            l = HelioSpectra(lc)
-            self.lights.append(l)
+            try:
+                l = HelioSpectra(lc)
+                self.lights.append(l)
+            except Exception as e:
+                self.logger.error("Couldnt add light: {}".format(str(e)))
+                traceback.print_exc()
 
         self.datetimefmt = None
         self._current_temp = float()
@@ -261,140 +263,68 @@ class Chamber(object):
         self._current_csv_index = 0
 
         telnet_config = self.config.get('telnet', {})
-        data_fp = self.config.get("slc_datafile") or self.config.get("csv_datafile")
+        self.data_fp = self.config.get("datafile")
 
         self.controller = ConvironTelNetController(dict(telnet_config))
 
-        self.datetimefmt = None
-
-        self.csv = SysUtil.load_or_fix_solarcalc(data_fp)
-        self.logger.info("Loaded {}".format(data_fp))
-
-        self._current_csv_index = 0
-
-        def parse_datestring(datestring: str) -> datetime.datetime:
-            """
-            parses a datestring into a datetime.
-            first tries the member self.datetimefmt to speed it up.
-            Then tries getting it from timestamp (unix style)
-            and then descending accuracies (and standardisation) of timestamp.
-            the order and list is as follows:
-            iso8601 datetime accurate to microseconds with timezone
-            iso8601 datetime accurate to microseconds
-            iso8601 datetime accurate to seconds with timezone
-            iso8601 datetime accurate to seconds
-            iso8601 datetime accurate to minutes
-            timestream format (YY_mm_DD_HH_MM_SS) accurate to seconds
-            timestream format accurate to minutes
-            Alternate date format (YY/mm/DD) accurate to seconds
-            Alternate date format accurate to minutes
-            iso8601 with reverse ordered date part accurate to seconds
-            iso8601 with reverse ordered date part accurate to minutes
-            timestream format with reverse ordered date part accurate to seconds
-            timestream format with reverse ordered date part accurate to minutes
-            Alternate date format with reverse ordered date part accurate to seconds
-            Alternate date format with reverse ordered date part accurate to minutes
-
-            :param datestring: string to parse
-            :rtype datetime:
-            :return: datetime
-            """
-            datetime_fmts = ["%Y-%m-%dT%H:%M:%S.%f%z",
-                             "%Y-%m-%dT%H:%M:%S.%f",
-                             "%Y-%m-%dT%H:%M:%S%z",
-                             "%Y-%m-%dT%H:%M:%SZ",
-                             "%Y-%m-%d %H:%M:%S",
-                             "%Y-%m-%d %H:%M",
-                             "%Y_%m_%d_%H_%M_%S",
-                             "%Y_%m_%d_%H_%M",
-                             "%Y/%m/%d %H:%M:%S",
-                             "%Y/%m/%d %H:%M",
-                             "%d-%m-%Y %H:%M:%S",
-                             "%d-%m-%Y %H:%M",
-                             "%d_%m_%Y_%H_%M_%S",
-                             "%d_%m_%Y_%H_%M",
-                             "%d/%m/%Y %H:%M:%S",
-                             "%d/%m/%Y %H:%M"]
-
-            if self.datetimefmt:
-                try:
-                    return datetime.datetime.strptime(datestring, self.datetimefmt)
-                except:
-                    pass
-            try:
-                return datetime.datetime.fromtimestamp(datestring)
-            except:
-                pass
-            for fmt in datetime_fmts:
-                try:
-                    q = datetime.datetime.strptime(datestring, fmt)
-                    self.datetimefmt = fmt
-                    return q
-                except:
-                    pass
-            else:
-                raise ValueError("Error parsing {} to a valida datetime".format(str(datestring)))
-
         self.current_timepoint = datetime.datetime.now()
-        self.out_of_range = self.current_timepoint > self.csv[-1][0]
 
     def calculate_current_state(self):
         """
         determines the current state the chamber should be in.
         doesnt send the state.
         sets the internal state of the Light object
-        
-        :param nowdt:
-        :return:
         """
-
-        def nfunc(in_dt: datetime.datetime) -> bool:
-            """
-            returns true if the input time is greater than that of the current csv
-            :return:
-            """
-            csvdt = self.csv[self._current_csv_index][0]
-            return in_dt >= csvdt
 
         current_timepoint = self.current_timepoint
-
+        last = self.csv[-1][0]
+        csv_length = len(self.csv)
         if self.out_of_range:
-            last = self.csv[-1][0]
             current_timepoint = current_timepoint.replace(year=last.year, month=last.month, day=last.day)
 
-        while nfunc(current_timepoint):
-            # print(current_timepoint, self.csv[self._current_csv_index%len(self.csv)][0])
+        six_hours = 6 * 60 * 60
+        two_hours = 2 * 60 * 60
+        self.logger.info("Behind by {}".format(current_timepoint - self.csv[self._current_csv_index][0]))
+        while current_timepoint >= self.csv[self._current_csv_index][0]:
+            print("Behind by {}".format(current_timepoint - self.csv[self._current_csv_index][0]), end="\r")
+            # if ((current_timepoint-self.csv[self._current_csv_index][0]).days > 1):
+            #     self._current_csv_index += (current_timepoint-self.csv[self._current_csv_index][0]).days*60*60/10
+            #     continue
+            if ((current_timepoint - self.csv[self._current_csv_index][0]).days > 3):
+                self._current_csv_index += 500
+                continue
+            if ((current_timepoint - self.csv[self._current_csv_index][0]).total_seconds() > six_hours):
+                self._current_csv_index += 50
+                continue
+            if ((current_timepoint - self.csv[self._current_csv_index][0]).total_seconds() > two_hours):
+                self._current_csv_index += 10
+                continue
             self._current_csv_index += 1
-            if self._current_csv_index >= len(self.csv):
+
+            if self._current_csv_index >= csv_length:
                 self.out_of_range = True
-                self._current_csv_index = len(self.csv) - 1
-                while (self.csv[-1][0] - datetime.timedelta(hours=24)) < self.csv[self._current_csv_index][0]:
+                self._current_csv_index = csv_length - 1
+
+                while (last - datetime.timedelta(hours=24)) < self.csv[self._current_csv_index][0]:
                     self._current_csv_index -= 1
                 break
-        self._current_wavelength_intentisies = self.csv[self._current_csv_index][3:-1]
-        self._current_temp = self.csv[self._current_csv_index][1] * self.temperature_multiplier
-        self._current_humidity = self.csv[self._current_csv_index][2]
 
-    def test(self):
-        """
-        testing function, to test whether the chamber sends the correct values. 
-        """
-        self.current_timepoint = self.csv[-1][0] - datetime.timedelta(hours=12)
-        date_end = self.csv[-1][0] + datetime.timedelta(days=4)
-        self.logger.info("Running from {} to {}".format(self.current_timepoint.strftime("%Y-%m-%d %H:%M"),
-                                                        date_end.strftime("%Y-%m-%d %H:%M")))
-        while self.current_timepoint < date_end:
-            self.current_timepoint = self.current_timepoint + datetime.timedelta(minutes=5)
-            temp, hum = self._current_temp, self._current_humidity
-            self.calculate_current_state()
-            if temp != self._current_temp or hum != self._current_humidity:
-                if self.out_of_range:
-                    self.logger.warning("Running outside of Solarcalc file time range. Repeating the last 24 hours")
-                self.logger.info("#{0:05d} @ {1} - {2}:{3}".format(self._current_csv_index,
-                                                                   self.current_timepoint.strftime("%Y-%m-%d %H:%M"),
-                                                                   temp, hum))
-                self.controller.set(temperature=self._current_temp,
-                                    humidity=self._current_humidity)
+        # lights get third to -2nth because the last is simul-dt and second last is total watts
+        self._current_wavelength_intentisies = self.csv[self._current_csv_index][3:-2]
+        print("Time: {}\nTemp/hum: {}\nIntensities: {}".format(
+            self.csv[self._current_csv_index][0].isoformat(),
+            self.csv[self._current_csv_index][1:3],
+            self.csv[self._current_csv_index][3:-2]))
+        try:
+            self._current_temp = float(self.csv[self._current_csv_index][1])
+        except Exception as e:
+            self.logger.error("Error calculating temperature {}".format(str(e)))
+            traceback.print_exc()
+        try:
+            self._current_humidity = self.csv[self._current_csv_index][2]
+        except Exception as e:
+            self.logger.error("Error calculating humidity {}".format(str(e)))
+            traceback.print_exc()
 
     def stop(self):
         self.stopper.set()
@@ -403,58 +333,98 @@ class Chamber(object):
         """
         runs the chamber continuously.
         """
+        self.logger.info("Loading data file {}...".format(self.data_fp))
+        print("Loading data file {}...".format(self.data_fp))
+        self.csv = SysUtil.load_or_fix_solarcalc(self.data_fp)
+        self.current_timepoint = datetime.datetime.now()
+        self._current_csv_index = 0
+        csv_index = self._current_csv_index
+        self.out_of_range = self.current_timepoint > self.csv[-1][0]
+        self.logger.info("Loaded {}".format(self.data_fp))
         while True and not self.stopper.is_set():
+            self.logger.info("Updating Chamber {}".format(self.name))
             self.current_timepoint = datetime.datetime.now()
-            temp, hum = self._current_temp, self._current_humidity
-            wavelength_intensities = self._current_wavelength_intentisies
-            self.calculate_current_state()
 
-            if temp != self._current_temp or hum != self._current_humidity:
-                if self.out_of_range:
-                    self.logger.warning("Running outside of Solarcalc file time range. Repeating the last 24 hours")
-                self.logger.info("#{0:05d} @ {1} - {2}:{3}".format(self._current_csv_index,
-                                                                   self.current_timepoint.strftime("%Y-%m-%d %H:%M"),
-                                                                   temp, hum))
-                self.controller.set(temperature=self._current_temp,
-                                    humidity=self._current_humidity)
-            if wavelength_intensities != self._current_wavelength_intentisies:
-
-                telegraf_client = telegraf.TelegrafClient(host="localhost", port=8092)
-                for light in self.lights:
-                    try:
-                        lightvalues = light.set(self._current_wavelength_intentisies)
-                        telegraf_client.metric("lights", lightvalues, tags={"name": light.name})
-                    except Exception as e:
-                        self.logger.error("Error uopdating lights")
             try:
-                measurement = self.controller.get_values()
-                measurement['temp_target'] = self._current_temp
-                measurement['humidity_target'] = self._current_humidity
-                measurement['temp_recorded'] /= self.temperature_multiplier
+                self.calculate_current_state()
+            except Exception:
+                print("Couldnt calculate current state.")
+                traceback.print_exc()
+                self.logger.error(traceback.format_exc())
+            if csv_index == self._current_csv_index:
+                time.sleep(self.accuracy)
+                continue
+            csv_index = self._current_csv_index
+
+            chamber_metric = dict()
+            chamber_metric['temp_target'] = self._current_temp
+            chamber_metric['humidity_target'] = self._current_humidity
+
+            if self.out_of_range:
+                self.logger.warning("Running outside of Solarcalc file time range. Repeating the last 24 hours")
+
+            self.logger.info("RUNNING #{0:07d} @ {1} - {2}:{3}".format(self._current_csv_index,
+                                                                       self.current_timepoint.isoformat(),
+                                                                       self._current_temp, self._current_humidity))
+            for _ in range(10):
+                try:
+                    chamber_metric.update(self.controller.get_values())
+                    # collect chamber sensor metrics
+                    if type(chamber_metric.get("temp_recorded")) is float:
+                        chamber_metric['temp_recorded'] /= self.temperature_multiplier
+                    if type(chamber_metric.get("temp_set")) is float:
+                        chamber_metric['temp_set'] /= self.temperature_multiplier
+                    self.logger.info("Chamber metric: {}".format(str(chamber_metric)))
+                    print("Chamber metric: {}".format(str(chamber_metric)))
+                    break
+                except Exception as e:
+                    traceback.print_exc()
+                    self.logger.warning("Couldnt collect chamber sensor metric retrying: {}".format(str(e)))
+                    print("Failed, retrying ({}/10)".format(_))
+            else:
+                print("Totally failed getting chamber metrics")
+                self.logger.error("Totally failed getting chamber metrics")
+
+            for _ in range(10):
+                try:
+                    if self.controller.set(temperature=int(self._current_temp * self.temperature_multiplier),
+                                           humidity=int(self._current_humidity)):
+                        break
+                except:
+                    traceback.print_exc()
+                    self.logger.warning("Couldnt set controller, retrying", traceback.format_exc())
+                    print("Failed, retrying ({}/10)".format(_))
+            else:
+                print("Totally failed setting the chamber.")
+                self.logger.error("Totally Failed setting the chamber.")
+
+            light_metrics = list()
+            for light in self.lights:
+                for _ in range(5):
+                    try:
+                        metric = light.set(self._current_wavelength_intentisies)
+                        light_metrics.append((light.name, metric))
+                        break
+                    except Exception as e:
+                        traceback.print_exc()
+                        self.logger.warning(
+                            "Error updating lights/collecting light metrics, retrying {}".format(str(e)))
+                        print("Failed, retrying ({}/3)".format(_))
+                else:
+                    print("Totally failed setting lights or getting light metrics")
+                    self.logger.error("Totally failed setting lights or getting light metrics")
+            if len(light_metrics):
+                self.logger.info("light metrics {}".format(str(light_metrics)))
+                print("light metrics {}".format(str(light_metrics)))
+
+            try:
+                # send metrics.
                 telegraf_client = telegraf.TelegrafClient(host="localhost", port=8092)
-                telegraf_client.metric("conviron", measurement)
-
-                self.logger.debug("Communicated sesor data to telegraf")
+                if chamber_metric:
+                    telegraf_client.metric("conviron", chamber_metric)
+                for light_name, lm in light_metrics:
+                    telegraf_client.metric("lights", lm, tags={"light_name": light_name})
+                self.logger.debug("Communicated chamber and light metrics to telegraf")
             except Exception as exc:
-                self.logger.error("Couldnt communicate with telegraf client. {}".format(str(exc)))
-
+                self.logger.error("Couldn't communicate with telegraf client. {}".format(str(exc)))
             time.sleep(self.accuracy * 2)
-
-
-class ThreadedChamber(Thread, Chamber):
-    """
-    threaded implementation.
-    """
-
-    def __init__(self, *args, **kwargs):
-        if hasattr(self, "identifier"):
-            Thread.__init__(self, name=self.identifier)
-        else:
-            Thread.__init__(self)
-
-        print("Threaded startup < {} >".format(self.__class__))
-        super(self.__class__, self).__init__(*args, **kwargs)
-        self.daemon = True
-
-    def run(self):
-        super(Chamber, self).run()

@@ -19,7 +19,8 @@
 #
 # import os
 # import sys
-# sys.path.insert(0, os.path.abspath('.'))
+# sys.path.insert(0, os.path.abspath('../..'))
+# sys.path.insert(0, os.path.abspath('../../libs'))
 
 
 # -- General configuration ------------------------------------------------
@@ -41,7 +42,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.viewcode',
               # 'sphinx_autodoc_typehints',
               'sphinx.ext.githubpages'
-              # 'sphinxcontrib.fulltoc'
+              # 'sphinxcontrib.fulltoc'`
               ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -87,7 +88,14 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build',
+                    'Thumbs.db',
+                    '.DS_Store',
+                    "**/*.csv",
+                    "**/*.slc",
+                    "**/db*",
+                    "**/static",
+                    "doc"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'

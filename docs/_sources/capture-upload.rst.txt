@@ -1,7 +1,0 @@
-capture-upload module
-=====================
-
-.. automodule:: .capture_upload
-    :members:
-    :undoc-members:
-    :show-inheritance:
