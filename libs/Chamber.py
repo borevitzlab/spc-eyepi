@@ -140,13 +140,13 @@ class ConvironTelNetController(object):
     def set(self, temperature: int = None, humidity: int = None) -> bool:
         """
         Sets the chamber to a specific temperature and humidity.
-        
+
         Usually to get fine grained control of the temperature, the temperature is multiplied by 10,
         so 19.2 C becomes int(192)
-        
+
         Humidity is usually provided as a percentage.
-        
-        :param temperature: integer of temperature value 
+
+        :param temperature: integer of temperature value
         :type temperature: int
         :param humidity: integer of humidity value
         :type humidity: int
@@ -179,8 +179,8 @@ class ConvironTelNetController(object):
     def get_values(self) -> dict:
         """
         gets humidity, temperature and par from a chamber
-        
-        :return: dict of values: temp_set, temp_recorded, humidity_set, humidity_recorded, par 
+
+        :return: dict of values: temp_set, temp_recorded, humidity_set, humidity_recorded, par
         """
         telnet = self._connect_login()
         values = {}

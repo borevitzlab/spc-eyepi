@@ -227,9 +227,9 @@ def get_default_camera_conf(ident):
 def run_from_global_config(updater: Updater) -> tuple:
     """
     Runs the startup from a yaml file defining the devices connected to the raspberry pi.
-    
-    :param updater: 
-    :return: 
+
+    :param updater:
+    :return:
     """
     workers = []
     hostname = SysUtil.get_hostname()
@@ -345,10 +345,10 @@ def run_from_global_config(updater: Updater) -> tuple:
     """
     Sensor detect
     """
-    for type, section in config_data.get("sensors", dict()).items():
+    for sensor_type, section in config_data.get("sensors", dict()).items():
         try:
-            if type.lower() == "SenseHatMonitor":
-                sensor = SenseHatMonitor("{}-{}".format(SysUtil.get_hostname(), type),
+            if sensor_type.lower() == "SenseHatMonitor":
+                sensor = SenseHatMonitor("{}-{}".format(SysUtil.get_hostname(), sensor_type),
                                          config=section,
                                          queue=updater.communication_queue)
                 # ul = GenericUploader(sensor.identifier, sensor.output_dir, "sftp.traitcapture.org")

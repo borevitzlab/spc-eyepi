@@ -46,21 +46,9 @@ class Controller(object):
         unimplemented,
         override this to define how the controller should do things.
         
-        :param cmd: command to run
-        :return: true or false based on whether running the command was a success
-        
+        :return:
         """
         return False
-
-    def _run_command_return(self, cmd, regex):
-        """
-        unimplemented
-        override this to define a command that is meant to be run, but that also should return values matching the regex
-        
-        :param cmd: command to run
-        :param regex: regex to match return against
-        :return: list of values
-        """
 
     def set_all(self, power: int = None, percent: int = None):
         """
@@ -142,8 +130,8 @@ class Controller(object):
         if self._run_command(cmd):
             return dict([(str(k).lower(), int(v)) for k, v in sorted_values])
         return {}
-
-    def setget_all_wavelengths(self, values: dict, percent=True):
+    
+    def set_all_wavelengths(self, values: dict, percent=True):
         """
         sets all wavelengths to specific values.
         only absolute values may be specified
@@ -173,7 +161,6 @@ class Controller(object):
             sorted_values.extend(("padded", 0) for _ in range(diff))
         sorted_values = [(k, clamp(v, self.min, self.max)) for k, v in sorted_values]
         cmd = self.set_all_wavelength_command.format(*[v for k, v in sorted_values])
-        values = self._run_command_return(cmd, re.compile(rb'\b\d+\b'))
         if self._run_command(cmd):
             return dict([(str(k).lower(), int(v)) for k, v in sorted_values])
         return {}
@@ -204,21 +191,6 @@ class TelNetController(Controller):
         self.ip = \
             self.telnet_port = ""
         super(TelNetController, self).__init__(config_section)
-        self._telnet = None
-
-    def __enter__(self):
-        if self._telnet is None:
-            self._telnet = Telnet(self.ip, self.telnet_port, 60)
-        return self._telnet
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        try:
-            self._telnet.close()
-        except:
-            self.logger.error("__exit__ couldnt close telnet connection {}")
-            self.logger.error(traceback.format_exc())
-        finally:
-            self._telnet = None
 
     def _run_command(self, cmd: str, ok="OK") -> bool:
         """
@@ -226,48 +198,27 @@ class TelNetController(Controller):
         :param cmd:
         :return: bool successful
         """
-        with self:
-            try:
-                response = self._telnet.read_until(b'>', timeout=0.1)
-                self.logger.debug("Intial response is: {0!s}".format(response.decode()))
 
-                # we MUST wait a little bit before writing to ensure that the stream isnt being written to.
-                time.sleep(0.5)
-                # encode to ascii and add LF. unfortunately this is not to the telnet spec (it specifies CR LF or LF CR I'm ns)
-                self._telnet.write(cmd.encode("ascii") + b"\n")
-                ok_regex = re.compile(b'.*'+ok.encode("ascii")+b'.*')
-                response = self._telnet.expect([ok_regex], timeout=30)
-                if response[0] < 0:
-                    return False
-                else:
-                    return True
-            except:
-                self.logger.error(traceback.format_exc())
-                return False
-
-    def _run_command_return(self, cmd, regex, ok="OK") -> list:
-        """
-        
-        :param cmd: list of commands to run
-        :return: list of values from the regex.
-        """
+        telnet = Telnet(self.ip, self.telnet_port, 60)
         try:
-            response = self._telnet.read_until(b'>', timeout=0.1)
+            response = telnet.read_until(b'>', timeout=0.1)
             self.logger.debug("Intial response is: {0!s}".format(response.decode()))
 
             # we MUST wait a little bit before writing to ensure that the stream isnt being written to.
             time.sleep(0.5)
             # encode to ascii and add LF. unfortunately this is not to the telnet spec (it specifies CR LF or LF CR I'm ns)
-            self._telnet.write(cmd.encode("ascii") + b"\n")
-            ok_regex = re.compile(b'.*'+ok.encode("ascii"))
-            is_ok = self._telnet.expect([ok_regex], timeout=30)
-
-            if is_ok:
-                data = self._telnet.read_until(b'>', timeout=5)
-                return regex.findall(data)
-            return []
+            telnet.write(cmd.encode("ascii") + b"\n")
+            ok_regex = re.compile(b'.*'+ok.encode("ascii")+b'.*')
+            response = telnet.expect([ok_regex], timeout=30)
+            if response[0] < 0:
+                return False
+            else:
+                return True
         except:
             self.logger.error(traceback.format_exc())
+            return False
+        finally:
+            telnet.close()
 
 
 class HTTPController(Controller):
@@ -369,28 +320,6 @@ class HelioSpectra(object):
         If none of those conditions are met, returns an empty dict.
         
         :param intensities: intensities to set to
-        :return: 
-        """
-        intensities = list(map(float, intensities))
-
-        values = dict(zip(self.wavelengths, intensities))
-        if len(intensities) != len(self.wavelengths):
-            if len(intensities) == len(HelioSpectra.s10wls):
-                values = dict(zip(HelioSpectra.s10wls, intensities))
-            elif len(intensities) == len(HelioSpectra.s20wls):
-                values = dict(zip(HelioSpectra.s20wls, intensities))
-            else:
-                print("light values do not match length, {}".format(str(intensities)))
-                return {}
-        print("Setting light values: {}".format(str(values)))
-
-        return self.controller.set_all_wavelengths(values, percent=True)
-
-    # todo: here
-    def setget(self):
-        """
-        same as above but returns the actual values from the lights.
-        
         :return: 
         """
         intensities = list(map(float, intensities))
