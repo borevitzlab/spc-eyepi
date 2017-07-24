@@ -5,7 +5,7 @@
 
 - name: "Create wifi profiles"
   template:
-    src: templates/wpa2_passphrase_dhcp
+    src: templates/wpa2_passphrase_dhcp.j2
     dest: "/etc/netctl/wireless-{{ item.ssid }}"
     mode: 755
   with_items: "{{wireless_keys}}"

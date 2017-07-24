@@ -35,6 +35,7 @@ pacman_pkgs:
   - python-numpy
   - python-levenshtein
   - python-pillow
+  - hdf5 # without hdf5 opencv
   - opencv
   - python-cffi
   - python-cryptography
@@ -48,6 +49,7 @@ pacman_pkgs:
   - python-paramiko
   - python-pysocks
   - python-requests
+  - python-dateutil
 
 python_pkgs:
   - {name: ExifRead,            pythons: [3]}

@@ -200,7 +200,8 @@ class Camera(Thread):
         self._frame = None
         self._image = numpy.empty((Camera.default_width, Camera.default_height, 3), numpy.uint8)
         self.config = dict()
-        self.config = config.copy()
+        if config is not None:
+            self.config = config.copy()
         self.name = self.config.get("name", identifier)
 
         self.interval = int(self.config.get("interval", 300))
@@ -484,7 +485,7 @@ class Camera(Thread):
                 name=self.name,
                 identifier=self.identifier,
                 failed=self.failed,
-                last_capture=int(self.current_capture_time.strftime("%s")))
+                last_capture=self.current_capture_time.isoformat())
             # append our data dict to the communication_queue deque.
             self.communication_queue.append(data)
             self.failed = list()

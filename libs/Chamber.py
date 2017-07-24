@@ -6,6 +6,7 @@ from threading import Thread, Event
 from libs.SysUtil import SysUtil
 import re
 import os
+from collections import deque
 import traceback
 from .Light import HelioSpectra
 
@@ -224,12 +225,16 @@ class Chamber(Thread):
     """
     accuracy = 150
 
-    def __init__(self, identifier: str, config: dict = None):
+    def __init__(self, identifier: str, config: dict = None, queue: deque = None):
         # identifier is NOT OPTIONAL!
         # init with name or not, just extending some of the functionality of Thread
         super().__init__(name=identifier)
         print("Thread started {}: {}".format(self.__class__, identifier))
-        # self.communication_queue = queue or deque(tuple(), 256)
+
+        if queue is None:
+            queue = deque(tuple(), 256)
+        self.communication_queue = queue
+
         self.logger = logging.getLogger(identifier)
         self.logger.info("Init...")
         self.stopper = Event()
@@ -261,7 +266,7 @@ class Chamber(Thread):
         self._current_wavelength_intentisies = list()
         self._current_humidity = float()
         self._current_csv_index = 0
-
+        self.current_csv_timepoint = datetime.datetime.fromtimestamp(0)
         telnet_config = self.config.get('telnet', {})
         self.data_fp = self.config.get("datafile")
 
@@ -316,6 +321,10 @@ class Chamber(Thread):
             self.csv[self._current_csv_index][1:3],
             self.csv[self._current_csv_index][3:-2]))
         try:
+            self.current_csv_timepoint = self.csv[self._current_csv_index][0]
+        except:
+            pass
+        try:
             self._current_temp = float(self.csv[self._current_csv_index][1])
         except Exception as e:
             self.logger.error("Error calculating temperature {}".format(str(e)))
@@ -325,6 +334,22 @@ class Chamber(Thread):
         except Exception as e:
             self.logger.error("Error calculating humidity {}".format(str(e)))
             traceback.print_exc()
+
+    def communicate_with_updater(self):
+        """
+        Inter-thread communication method.
+        Communicates with this objects :class:`libs.Updater.Updater` by keeping a reference to its member
+        'communication_queue' and appending this objects current state to the queue.
+        """
+        try:
+            data = dict(
+                name=self.name,
+                identifier=self.identifier,
+                last_timepoint=self.current_csv_timepoint.isoformat())
+            # append our data dict to the communication_queue deque.
+            self.communication_queue.append(data)
+        except Exception as e:
+            self.logger.error("Inter-thread communication error: {}".format(str(e)))
 
     def stop(self):
         self.stopper.set()
@@ -376,6 +401,7 @@ class Chamber(Thread):
                         chamber_metric['temp_set'] /= self.temperature_multiplier
                     self.logger.info("Chamber metric: {}".format(str(chamber_metric)))
                     print("Chamber metric: {}".format(str(chamber_metric)))
+                    self.communicate_with_updater()
                     break
                 except Exception as e:
                     traceback.print_exc()
