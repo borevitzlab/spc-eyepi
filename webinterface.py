@@ -1153,8 +1153,7 @@ def pi_feed():
         cam = PiCamera("asdfhjgasdkf", noconf=True)
         return Response(gen(cam), mimetype='multipart/x-mixed-replace; boundary=frame')
     except Exception as e:
-        print("exception:" + str(e))
-        return ""
+        return "exception:" + str(e)
 
 
 @app.route('/ivport_switch/<int:cam_num>')

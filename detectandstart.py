@@ -8,8 +8,8 @@ import pyudev
 from libs.Camera import *
 from libs.Updater import Updater
 from libs.Uploader import Uploader, GenericUploader
-from libs.Chamber import ThreadedChamber
-from libs.Sensor import ThreadedSenseHat, ThreadedDHT
+from libs.Chamber import Chamber
+from libs.Sensor import SenseHatMonitor, DHTMonitor
 from threading import Lock
 import traceback
 
@@ -53,7 +53,7 @@ def detect_picam(updater: Updater) -> tuple:
     try:
         cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
         if "detected=1" in cmdret:
-            camera = ThreadedPiCamera(SysUtil.default_identifier(prefix="picam"), queue=updater.communication_queue)
+            camera = PiCamera(SysUtil.default_identifier(prefix="picam"), queue=updater.communication_queue)
             updater.add_to_identifiers(camera.identifier)
             workers = (camera, Uploader(SysUtil.default_identifier(prefix="picam"), queue=updater.communication_queue))
             return start_workers(workers)
@@ -88,9 +88,9 @@ def detect_gphoto(updater: Updater):
         for usb_add, serialnumber in info:
             try:
                 identifier = SysUtil.default_identifier(prefix=serialnumber)
-                camera = ThreadedGPCamera(identifier=identifier,
-                                          lock=lock,
-                                          queue=updater.communication_queue)
+                camera = GPCamera(identifier=identifier,
+                                  lock=lock,
+                                  queue=updater.communication_queue)
                 updater.add_to_temp_identifiers(camera.identifier)
                 uploader = Uploader(camera.identifier, queue=updater.communication_queue)
                 workers.extend([camera, uploader])
@@ -133,9 +133,9 @@ def detect_webcam(updater: Updater) -> tuple:
 
             try:
                 # logger.warning("adding {} on {}".format(identifier, sys_number))
-                camera = ThreadedUSBCamera(identifier=identifier,
-                                           sys_number=sys_number,
-                                           queue=updater.communication_queue)
+                camera = USBCamera(identifier=identifier,
+                                   sys_number=sys_number,
+                                   queue=updater.communication_queue)
                 updater.add_to_temp_identifiers(camera.identifier)
                 workers.append(camera)
                 workers.append(Uploader(identifier, queue=updater.communication_queue))
@@ -169,17 +169,17 @@ def detect_sensors(updater: Updater) -> tuple:
         for s in sensors_list:
             try:
                 i = s.lower().strip()
-                if i == "sensehat":
-                    shat = ThreadedSenseHat(identifier=SysUtil.get_hostname() + "-sensehat",
-                                            queue=updater.communication_queue)
-                    ul = GenericUploader(shat.identifier, shat.data_directory, "sftp.traitcapture.org")
+                if i == "SenseHatMonitor":
+                    shat = SenseHatMonitor(identifier=SysUtil.get_hostname() + "-SenseHatMonitor",
+                                           queue=updater.communication_queue)
+                    ul = GenericUploader(shat.identifier, shat.output_dir, "sftp.traitcapture.org")
                     ul.remove_source_files = False
                     workers.append(shat)
                     workers.append(ul)
                 else:
-                    shat = ThreadedDHT(identifier=SysUtil.get_hostname() + "-" + i,
-                                       queue=updater.communication_queue)
-                    ul = GenericUploader(shat.identifier, shat.data_directory, "sftp.traitcapture.org")
+                    shat = DHTMonitor(identifier=SysUtil.get_hostname() + "-" + i,
+                                      queue=updater.communication_queue)
+                    ul = GenericUploader(shat.identifier, shat.output_dir, "sftp.traitcapture.org")
                     ul.remove_source_files = False
                     workers.append(shat)
                     workers.append(ul)
@@ -189,6 +189,7 @@ def detect_sensors(updater: Updater) -> tuple:
     except Exception as e:
         logger.error("Couldnt detect sensors for some reason: {}".format(str(e)))
     return tuple()
+
 
 def detect_ivport(updater: Updater) -> tuple:
     """
@@ -205,7 +206,7 @@ def detect_ivport(updater: Updater) -> tuple:
     from glob import glob
     workers = []
     for iv_conf in list(glob("configs/ivport*.ini")):
-        camera = ThreadedIVPortCamera(SysUtil.default_identifier(prefix="ivport"), queue=updater.communication_queue)
+        camera = IVPortCamera(SysUtil.default_identifier(prefix="ivport"), queue=updater.communication_queue)
         updater.add_to_identifiers(camera.identifier)
         workers.append(camera)
         workers.append(Uploader(SysUtil.default_identifier(prefix="ivport"), queue=updater.communication_queue))
@@ -234,9 +235,10 @@ def run_from_global_config(updater: Updater) -> tuple:
     hostname = SysUtil.get_hostname()
     config_data = yaml.load(open("/home/spc-eyepi/{}.yml".format(hostname)))
     camera_confs = config_data.get("cameras", dict())
-    #
-    # Picamer detect
-    #
+
+    """
+    PiCamera detect
+    """
     logger.info("Detecting picamera")
     if not (os.path.exists("/opt/vc/bin/vcgencmd")):
         logger.error("vcgencmd not found, cannot detect picamera.")
@@ -246,12 +248,13 @@ def run_from_global_config(updater: Updater) -> tuple:
             section = camera_confs.get(ident, get_default_camera_conf(ident))
             cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
             if "detected=1" in cmdret:
-                camera = ThreadedPiCamera(identifier=ident,
-                                          config=section,
-                                          queue=updater.communication_queue)
+
+                camera = PiCamera(identifier=ident,
+                                  config=section,
+                                  queue=updater.communication_queue)
 
                 updater.add_to_identifiers(camera.identifier)
-                uploader = Uploader(SysUtil.default_identifier(prefix="picam"),
+                uploader = Uploader(identifier=ident,
                                     config=section,
                                     queue=updater.communication_queue)
                 workers.append(camera)
@@ -261,12 +264,13 @@ def run_from_global_config(updater: Updater) -> tuple:
                 logger.error("No picamera detected by /opt/vc/bin/vcgencmd, check /boot/config.txt and connections")
         except subprocess.CalledProcessError as e:
             logger.error("Couldn't detect picamera. Error calling vcgencmd. {}".format(str(e)))
-            pass
         except Exception as e:
             logger.error("General Exception in picamera detection. {}".format(str(e)))
-    #
-    # DSLR detect
-    #
+            logger.error(traceback.format_exc())
+
+    """
+    DSLR detect
+    """
     logger.info("Detecting DSLRs")
     lock = Lock()
     dslr_usb_addresses = dict()
@@ -282,26 +286,29 @@ def run_from_global_config(updater: Updater) -> tuple:
         try:
             section = camera_confs.get(ident, get_default_camera_conf(ident))
             usb_add = dslr_usb_addresses[ident]
-            camera = ThreadedGPCamera(identifier=ident,
-                                      usb_address=usb_add,
-                                      config=section,
-                                      lock=lock,
-                                      queue=updater.communication_queue)
+            camera = GPCamera(ident,
+                              usb_address=usb_add,
+                              config=section,
+                              lock=lock,
+                              queue=updater.communication_queue)
             updater.add_to_temp_identifiers(camera.identifier)
-            uploader = Uploader(camera.identifier,
-                                config=section,
-                                queue=updater.communication_queue)
-            workers.extend([camera, uploader])
+            workers.append(camera)
+            if section.get("upload", None) is not None:
+                uploader = Uploader(camera.identifier,
+                                    config=section,
+                                    queue=updater.communication_queue)
+                workers.append(uploader)
             camera_confs[ident] = section
             logger.debug("Sucessfully detected {} @ {}".format(ident, ":".join(map(str, usb_add))))
         except Exception as e:
             logger.error("Couldnt detect DSLR from global yaml {}".format(str(e)))
-    #
-    # Webcamera detect
-    #
+            logger.error(traceback.format_exc())
+
+    """
+    WebCamera detect
+    """
     try:
         logger.info("Detecting USB web cameras.")
-        workers = []
         for device in pyudev.Context().list_devices(subsystem="video4linux"):
             serial = device.get("ID_SERIAL_SHORT", None)
             if not serial:
@@ -317,56 +324,62 @@ def run_from_global_config(updater: Updater) -> tuple:
             section = camera_confs.get(identifier, get_default_camera_conf(identifier))
             try:
                 # logger.warning("adding {} on {}".format(identifier, sys_number))
-                camera = ThreadedUSBCamera(identifier=identifier,
-                                           sys_number=sys_number,
-                                           config=section,
-                                           queue=updater.communication_queue)
+                camera = USBCamera(identifier,
+                                   config=section,
+                                   sys_number=sys_number,
+                                   queue=updater.communication_queue)
                 updater.add_to_temp_identifiers(camera.identifier)
                 workers.append(camera)
-                workers.append(Uploader(identifier,
-                                        config=section,
-                                        queue=updater.communication_queue))
+                if section.get("upload", None) is not None:
+                    workers.append(Uploader(identifier,
+                                            config=section,
+                                            queue=updater.communication_queue))
                 camera_confs = config_data.get("cameras", dict())
             except Exception as e:
                 logger.error("Unable to start usb webcamera {} on {}".format(identifier, sys_number))
                 logger.error("{}".format(str(e)))
     except Exception as e:
         logger.error("couldnt detect usb cameras {}".format(str(e)))
-    #
-    # sensor detect
-    #
+        logger.error(traceback.format_exc())
+
+    """
+    Sensor detect
+    """
     for type, section in config_data.get("sensors", dict()).items():
         try:
-            if type.lower() == "sensehat":
-                sensor = ThreadedSenseHat(identifier="{}-{}".format(SysUtil.get_hostname(), type),
-                                          config_section=section,
-                                          queue=updater.communication_queue)
-                ul = GenericUploader(sensor.identifier, sensor.data_directory, "sftp.traitcapture.org")
+            if type.lower() == "SenseHatMonitor":
+                sensor = SenseHatMonitor("{}-{}".format(SysUtil.get_hostname(), type),
+                                         config=section,
+                                         queue=updater.communication_queue)
+                # ul = GenericUploader(sensor.identifier, sensor.output_dir, "sftp.traitcapture.org")
+                ul = GenericUploader(sensor.identifier, sensor.output_dir, "sftp.traitcapture.org")
                 ul.remove_source_files = False
                 workers.append(sensor)
                 workers.append(ul)
             else:
-                sensor = ThreadedDHT(identifier="{}-{}".format(SysUtil.get_hostname(), type),
-                                     config_section=section,
-                                     queue=updater.communication_queue)
-                ul = GenericUploader(sensor.identifier, sensor.data_directory, "sftp.traitcapture.org")
-                ul.remove_source_files = False
+                sensor = DHTMonitor("{}-{}".format(SysUtil.get_hostname(), type),
+                                    config=section,
+                                    queue=updater.communication_queue)
                 workers.append(sensor)
-                workers.append(ul)
+                if section.get("upload", None) is not None:
+                    ul = Uploader(sensor.identifier,
+                                  config=section,
+                                  queue=updater.communication_queue)
+                    ul.remove_source_files = False
+                    workers.append(ul)
         except Exception as e:
             logger.error("Couldnt create sensor from global yaml {}".format(str(e)))
+            logger.error(traceback.format_exc())
 
-    #
-    # Chamber detect
-    #
+    """
+    Chamber detect
+    """
     chamber_conf = config_data.get("chamber", None)
     if chamber_conf:
-        chamber = ThreadedChamber(identifier=chamber_conf.get("name"),
-                                  config=chamber_conf)
-
+        chamber = Chamber(identifier=chamber_conf.get("name"),
+                          config=chamber_conf)
+        workers.append(chamber)
     return start_workers(workers)
-
-
 
 
 def enumerate_usb_devices() -> set:
@@ -393,7 +406,7 @@ def start_workers(worker_objects: tuple or list) -> tuple:
             thread.daemon = True
             thread.start()
         except Exception as e:
-            print(str(e))
+            logger.error(traceback.format_exc())
             raise e
     return worker_objects
 
@@ -426,24 +439,49 @@ if __name__ == "__main__":
         logger.debug("Starting up the updater")
         updater = Updater()
         start_workers((updater,))
+        hostname = SysUtil.get_hostname()
+        mtime = os.stat("/home/spc-eyepi/{}.yml".format(hostname)).st_mtime
         workers = run_from_global_config(updater)
 
         # enumerate the usb devices to compare them later on.
-        usb_devices = enumerate_usb_devices()
+        glock = Lock()
+        recent = time.time()
+
+
+        def recreate(action, event):
+            # thes all need to be "globalised"
+            global glock
+            global workers
+            global recent
+
+            # use manual global lock.
+            # this callback is from the observer thread, so we need to lock shared resources.
+            if abs(time.time() - recent) > 10:
+                with glock:
+                    logger.warning("Recreating workers, {}".format(action))
+                    kill_workers(workers)
+                    workers = run_from_global_config(updater)
+                    recent = time.time()
+
+
+        context = pyudev.Context()
+        monitor = pyudev.Monitor.from_netlink(context)
+        observer = pyudev.MonitorObserver(monitor, recreate)
+        observer.start()
+        # usb_devices = enumerate_usb_devices()
 
         while True:
             try:
-                if usb_devices != enumerate_usb_devices():
-                    logger.warning("USB device list change. Killing camera threads")
-                    kill_workers(workers)
-                    workers = run_from_global_config(updater)
-                    usb_devices = enumerate_usb_devices()
+                if mtime != os.stat("/home/spc-eyepi/{}.yml".format(hostname)).st_mtime:
+                    recreate("config_change", None)
+                    mtime = os.stat("/home/spc-eyepi/{}.yml".format(hostname)).st_mtime
                 time.sleep(1)
             except (KeyboardInterrupt, SystemExit) as e:
                 kill_workers(workers)
                 kill_workers([updater])
                 raise e
             except Exception as e:
+                logger.fatal(traceback.format_exc())
                 logger.fatal("EMERGENCY! Other exception encountered. {}".format(str(e)))
 
     except (KeyboardInterrupt, SystemExit):
@@ -452,6 +490,7 @@ if __name__ == "__main__":
         kill_workers([updater])
         sys.exit()
     except Exception as e:
+        traceback.print_exc()
         logger.fatal("EMERGENCY! An exception occurred during worker dispatch: {}".format(str(e)))
 
 """

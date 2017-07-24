@@ -24,6 +24,7 @@ class Updater(Thread):
     def __init__(self):
         Thread.__init__(self, name="Updater")
         self.logger = logging.getLogger(self.getName())
+        print("Thread started {}: {}".format(self.__class__, "Updater"))
         self.communication_queue = deque(tuple(), 512)
         self.scheduler = Scheduler()
         self.scheduler.every(60).seconds.do(self.go)

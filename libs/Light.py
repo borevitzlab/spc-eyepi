@@ -1,3 +1,5 @@
+import re
+import traceback
 import datetime
 import operator
 import logging.config
@@ -5,9 +7,6 @@ import time
 from telnetlib import Telnet
 import json
 import requests
-from collections import deque
-from threading import Thread, Event
-from libs.SysUtil import SysUtil
 
 try:
     logging.config.fileConfig("logging.ini")
@@ -19,6 +18,7 @@ except:
 def clamp(v: float, minimum: float, maximum: float) -> float:
     """
     clamps a number to the minimum and maximum.
+    
     :param v:
     :param minimum:
     :param maximum:
@@ -100,27 +100,39 @@ class Controller(object):
             return None
         return self._run_command(cmd)
 
-    def set_all_wavelengths(self, values: dict):
+    def set_all_wavelengths(self, values: dict, percent=True):
         """
         sets all wavelengths to specific values.
         only absolute values may be specified
-        values should be specified as a dict of wavelength: value
+        values should be specified as a dict of wavelength: value pairs
+        
         :param values: dict of wavelengths and their respective values
+        :param percent: whether the values are expressed as 0-100 or absolute.
         :return:
         """
 
         if not self.set_all_wavelength_command:
             self.logger.error("set_all_wavelengths call without set_all_wavelength_command")
             return None
+        r = re.compile(r'\d+')
 
-        sorted_values = sorted(values.items(), key=operator.itemgetter(0))
+        def keygetter(it):
+            vs = r.search(it[0])
+            return 0 if not vs else int(vs.group())
+
+        sorted_values = sorted(values.items(), key=keygetter)
+        if percent:
+            sorted_values = [(k, int(self.max * (v / 100) + self.min)) for k, v in sorted_values]
+
         if len(values) < self.set_all_wavelength_command.count("{}"):
             self.logger.error("Not enough wavelengths specified for set_all_wavelengths, padding with 0s")
             diff = self.set_all_wavelength_command.count("{}") - len(values)
             sorted_values.extend(("padded", 0) for _ in range(diff))
-
-        cmd = self.set_all_wavelength_command.format(*(clamp(v[1], self.min, self.max) for v in sorted_values))
-        return self._run_command(cmd)
+        sorted_values = [(k, clamp(v, self.min, self.max)) for k,v in sorted_values]
+        cmd = self.set_all_wavelength_command.format(*[v for k,v in sorted_values])
+        if self._run_command(cmd):
+            return dict([(str(k).lower(), int(v)) for k, v in sorted_values])
+        return {}
 
     def get_wavelength(self, wavelength: str):
         """
@@ -141,7 +153,7 @@ class Controller(object):
 
 class TelNetController(Controller):
     """
-    controller for a telnet device
+    controller for a Light.
     """
 
     def __init__(self, config_section):
@@ -149,44 +161,33 @@ class TelNetController(Controller):
             self.telnet_port = ""
         super(TelNetController, self).__init__(config_section)
 
-    def _run_command(self, cmd: str) -> bool:
+    def _run_command(self, cmd: str, ok="OK") -> bool:
         """
         sends a telnet command to the host
         :param cmd:
         :return: bool successful
         """
+
         telnet = Telnet(self.ip, self.telnet_port, 60)
-        response = telnet.read_until(b'>', timeout=0.1)
-        self.logger.debug("Intial response is: {0!s}".format(response.decode()))
+        try:
+            response = telnet.read_until(b'>', timeout=0.1)
+            self.logger.debug("Intial response is: {0!s}".format(response.decode()))
 
-        # we MUST wait a little bit before writing to ensure that the stream isnt being written to.
-        time.sleep(0.5)
-        # encode to ascii and add LF. unfortunately this is not to the telnet spec (it specifies CR LF or LF CR I'm ns)
-        asciicmd = cmd.encode("ascii") + b"\n"
-        telnet.write(asciicmd)
-        # loopwait for 10 seconds with 0.01 second timeout until we have an actual response from the server
-        cmd_response = b''
-        for x in range(0, int(10.0 / 0.01)):
-            cmd_response = telnet.read_until(b'>', timeout=0.01)
-            if cmd_response:
-                break
-        else:
-            self.logger.error("no response from telnet.")
-
-        time.sleep(0.2)
-        cmd_response = cmd_response.decode('ascii')
-        if 'OK' in cmd_response:
-            self.logger.debug("cmd response: {}".format(cmd_response))
-            telnet.close()
-            return True
-        elif 'Error' in cmd_response:
-            # raise ValueError('Light parameter error.\ncmd: "{}"\nresponse: "{}"'.format(cmd_response, cmd))
-            self.logger.critical('Light parameter error.\ncmd: "{}"\nresponse: "{}"'.format(cmd_response, cmd))
-            telnet.close()
+            # we MUST wait a little bit before writing to ensure that the stream isnt being written to.
+            time.sleep(0.5)
+            # encode to ascii and add LF. unfortunately this is not to the telnet spec (it specifies CR LF or LF CR I'm ns)
+            telnet.write(cmd.encode("ascii") + b"\n")
+            ok_regex = re.compile(b'.*'+ok.encode("ascii")+b'.*')
+            response = telnet.expect([ok_regex], timeout=30)
+            if response[0] < 0:
+                return False
+            else:
+                return True
+        except:
+            self.logger.error(traceback.format_exc())
             return False
-        else:
+        finally:
             telnet.close()
-            return False
 
 
 class HTTPController(Controller):
@@ -200,7 +201,7 @@ class HTTPController(Controller):
 
     def _run_command(self, cmd):
         payload = json.loads("{" + cmd + "}")
-        response = requests.post(self.ip + self.control_uri, data=payload)
+        response = requests.post(self.ip + self.control_uri, data=payload, timeout=10)
         if response.status_code == 200:
             return True
         else:
@@ -229,10 +230,13 @@ class HTTPController(Controller):
             'A13': 0,
             'Submit': 'Set schedule'
         }
-        response = requests.post(self.ip + "/cgi-bin/sched.cgi", data=payload)
-        if response.status_code == 200:
-            return True
-        else:
+        try:
+            response = requests.post(self.ip + "/cgi-bin/sched.cgi", data=payload, timeout=10)
+            if response.status_code == 200:
+                return True
+            else:
+                return False
+        except:
             return False
 
 
@@ -242,7 +246,10 @@ class HelioSpectra(object):
     automatically scales the power from 0-100 to the provided min-max (0-1000) by default
     """
     accuracy = 3
+    # s10 wls
     s10wls = ["400nm", "420nm", "450nm", "530nm", "630nm", "660nm", "735nm"]
+
+    # these are the s20 wls.
     s20wls = ["370nm", "400nm", "420nm", "450nm", "530nm", "620nm", "660nm", "735nm", "850nm", "6500k"]
 
     def __init__(self, config):
@@ -253,6 +260,7 @@ class HelioSpectra(object):
         self.config = config.copy()
         self.failed = list()
 
+        self.percent = config.get("percent", True)
         telnet_config = self.config.get('telnet', {})
         telnet_config['ip'] = self.config.get('ip')
         telnet_config['max'] = self.config.get('max_power', 1000)
@@ -267,10 +275,7 @@ class HelioSpectra(object):
         HTTPController(http_config).kill_schedule()
         # self.wavelengths = self.config.get("wavelengths",
         #                                    fallback=["400nm", "420nm", "450nm", "530nm", "630nm", "660nm", "735nm"])
-        # these are the s20 wls.
-        self.wavelengths = self.config.get("wavelengths",
-                                           fallback=["370nm", "400nm", "420nm", "450nm", "530nm", "620nm", "660nm",
-                                                     "735nm", "850nm", "6500k"])
+        self.wavelengths = self.config.get("wavelengths", self.s20wls)
 
     def set(self, intensities: list) -> dict:
         """
@@ -286,6 +291,8 @@ class HelioSpectra(object):
         :param intensities: intensities to set to
         :return: 
         """
+        intensities = list(map(float, intensities))
+
         values = dict(zip(self.wavelengths, intensities))
         if len(intensities) != len(self.wavelengths):
             if len(intensities) == len(HelioSpectra.s10wls):
@@ -293,7 +300,8 @@ class HelioSpectra(object):
             elif len(intensities) == len(HelioSpectra.s20wls):
                 values = dict(zip(HelioSpectra.s20wls, intensities))
             else:
+                print("light values do not match length, {}".format(str(intensities)))
                 return {}
-        if self.controller.set_all_wavelengths(values):
-            return values
-        return {}
+        print("Setting light values: {}".format(str(values)))
+
+        return self.controller.set_all_wavelengths(values, percent=True)
