@@ -352,13 +352,15 @@ def run_from_global_config(updater: Updater) -> tuple:
                 sensor = SenseHatMonitor("{}-{}".format(SysUtil.get_hostname(), sensor_type),
                                          config=section,
                                          queue=updater.communication_queue)
-                # ul = GenericUploader(sensor.identifier, sensor.output_dir, "sftp.traitcapture.org")
-                ul = GenericUploader(sensor.identifier, sensor.output_dir, "sftp.traitcapture.org")
-                ul.remove_source_files = False
                 workers.append(sensor)
-                workers.append(ul)
+                if section.get("upload", None) is not None:
+                    ul = Uploader(sensor.identifier,
+                                  config=section,
+                                  queue=updater.communication_queue)
+                    ul.remove_source_files = False
+                    workers.append(ul)
             else:
-                sensor = DHTMonitor("{}-{}".format(SysUtil.get_hostname(), type),
+                sensor = DHTMonitor("{}-{}".format(SysUtil.get_hostname(), sensor_type),
                                     config=section,
                                     queue=updater.communication_queue)
                 workers.append(sensor)
