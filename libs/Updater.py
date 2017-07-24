@@ -76,7 +76,7 @@ class Updater(Thread):
             data["signature"] = self.sshkey.sign_message(json.dumps(data, sort_keys=True))
 
             uri = api_endpoint.format(SysUtil.get_machineid())
-            response = requests.post(uri, json=data)
+            response = requests.patch(uri, json=data)
             # do backwards change if response is valid later.
             try:
                 if response.status_code == 200:
