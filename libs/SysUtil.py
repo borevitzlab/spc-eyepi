@@ -12,10 +12,7 @@ import datetime
 import collections
 from dateutil import parser
 import traceback
-<<<<<<< HEAD
-=======
 
->>>>>>> d9f40274478f62cc87ed8ddafce80d684af10e68
 USBDEVFS_RESET = 21780
 try:
     logging.config.fileConfig("logging.ini")
