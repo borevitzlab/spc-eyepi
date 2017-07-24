@@ -282,7 +282,7 @@ class SysUtil(object):
         path = "/home/spc-eyepi/{}.yml".format(SysUtil.get_hostname())
         with open(path, 'r') as fh:
             current_config = yaml.load(fh.read())
-        recursive_update(current_config, data)
+        current_config = recursive_update(current_config, data)
         with open(path, 'w') as fh:
             yaml.dump(current_config, fh, default_flow_style=False)
 

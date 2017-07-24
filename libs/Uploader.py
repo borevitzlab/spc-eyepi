@@ -43,7 +43,7 @@ class Uploader(Thread):
 
         self.communication_queue = queue
         self.identifier = identifier
-        self.logger = logging.getLogger(self.getName())
+        self.logger = logging.getLogger("UPLOAD|{}".format(identifier))
         self.startup_time = datetime.datetime.now()
 
         self.ssh_manager = SSHManager()
