@@ -140,7 +140,7 @@ class Sensor(Thread):
         try:
             data = dict(
                 name=self.identifier,
-                last_measure=int(self.current_capture_time.strftime("%s")),
+                last_measure=self.current_capture_time.isoformat(),
                 identifier=self.identifier,
                 failed=self.failed
             )
