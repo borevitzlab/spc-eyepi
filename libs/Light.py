@@ -1,10 +1,7 @@
 import re
 import traceback
-<<<<<<< HEAD
 import datetime
 import operator
-=======
->>>>>>> d9f40274478f62cc87ed8ddafce80d684af10e68
 import logging.config
 import time
 from telnetlib import Telnet
@@ -107,48 +104,9 @@ class Controller(object):
         sets all wavelengths to specific values.
         only absolute values may be specified
         values should be specified as a dict of wavelength: value pairs
-        
+
         :param values: dict of wavelengths and their respective values
         :param percent: whether the values are expressed as 0-100 or absolute.
-        :return:
-        """
-
-        if not self.set_all_wavelength_command:
-            self.logger.error("set_all_wavelengths call without set_all_wavelength_command")
-            return None
-        r = re.compile(r'\d+')
-
-        def keygetter(it):
-            vs = r.search(it[0])
-            return 0 if not vs else int(vs.group())
-
-        sorted_values = sorted(values.items(), key=keygetter)
-        if percent:
-            sorted_values = [(k, int(self.max * (v / 100) + self.min)) for k, v in sorted_values]
-
-        if len(values) < self.set_all_wavelength_command.count("{}"):
-            self.logger.error("Not enough wavelengths specified for set_all_wavelengths, padding with 0s")
-            diff = self.set_all_wavelength_command.count("{}") - len(values)
-            sorted_values.extend(("padded", 0) for _ in range(diff))
-<<<<<<< HEAD
-        sorted_values = [(k, clamp(v, self.min, self.max)) for k,v in sorted_values]
-        cmd = self.set_all_wavelength_command.format(*[v for k,v in sorted_values])
-=======
-        sorted_values = [(k, clamp(v, self.min, self.max)) for k, v in sorted_values]
-        cmd = self.set_all_wavelength_command.format(*[v for k, v in sorted_values])
-        if self._run_command(cmd):
-            return dict([(str(k).lower(), int(v)) for k, v in sorted_values])
-        return {}
-    
-    def set_all_wavelengths(self, values: dict, percent=True):
-        """
-        sets all wavelengths to specific values.
-        only absolute values may be specified
-        values should be specified as a dict of wavelength: value pairs
-        
-        :param values: dict of wavelengths and their respective values
-        :param percent: whether the values are expressed as 0-100 or absolute.
-        :return:
         """
 
         if not self.set_all_wavelength_command:
@@ -170,7 +128,6 @@ class Controller(object):
             sorted_values.extend(("padded", 0) for _ in range(diff))
         sorted_values = [(k, clamp(v, self.min, self.max)) for k, v in sorted_values]
         cmd = self.set_all_wavelength_command.format(*[v for k, v in sorted_values])
->>>>>>> d9f40274478f62cc87ed8ddafce80d684af10e68
         if self._run_command(cmd):
             return dict([(str(k).lower(), int(v)) for k, v in sorted_values])
         return {}

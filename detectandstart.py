@@ -345,17 +345,11 @@ def run_from_global_config(updater: Updater) -> tuple:
     """
     Sensor detect
     """
-<<<<<<< HEAD
-    for type, section in config_data.get("sensors", dict()).items():
-        try:
-            if type.lower() == "SenseHatMonitor":
-                sensor = SenseHatMonitor("{}-{}".format(SysUtil.get_hostname(), type),
-=======
+
     for sensor_type, section in config_data.get("sensors", dict()).items():
         try:
             if sensor_type.lower() == "SenseHatMonitor":
                 sensor = SenseHatMonitor("{}-{}".format(SysUtil.get_hostname(), sensor_type),
->>>>>>> d9f40274478f62cc87ed8ddafce80d684af10e68
                                          config=section,
                                          queue=updater.communication_queue)
                 # ul = GenericUploader(sensor.identifier, sensor.output_dir, "sftp.traitcapture.org")

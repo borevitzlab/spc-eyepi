@@ -6,10 +6,7 @@ from threading import Thread, Event
 from libs.SysUtil import SysUtil
 import re
 import os
-<<<<<<< HEAD
-=======
 from collections import deque
->>>>>>> d9f40274478f62cc87ed8ddafce80d684af10e68
 import traceback
 from .Light import HelioSpectra
 
@@ -144,23 +141,14 @@ class ConvironTelNetController(object):
     def set(self, temperature: int = None, humidity: int = None) -> bool:
         """
         Sets the chamber to a specific temperature and humidity.
-<<<<<<< HEAD
-        
+
         Usually to get fine grained control of the temperature, the temperature is multiplied by 10,
         so 19.2 C becomes int(192)
         
         Humidity is usually provided as a percentage.
         
         :param temperature: integer of temperature value 
-=======
 
-        Usually to get fine grained control of the temperature, the temperature is multiplied by 10,
-        so 19.2 C becomes int(192)
-
-        Humidity is usually provided as a percentage.
-
-        :param temperature: integer of temperature value
->>>>>>> d9f40274478f62cc87ed8ddafce80d684af10e68
         :type temperature: int
         :param humidity: integer of humidity value
         :type humidity: int
@@ -193,13 +181,8 @@ class ConvironTelNetController(object):
     def get_values(self) -> dict:
         """
         gets humidity, temperature and par from a chamber
-<<<<<<< HEAD
-        
         :return: dict of values: temp_set, temp_recorded, humidity_set, humidity_recorded, par 
-=======
 
-        :return: dict of values: temp_set, temp_recorded, humidity_set, humidity_recorded, par
->>>>>>> d9f40274478f62cc87ed8ddafce80d684af10e68
         """
         telnet = self._connect_login()
         values = {}
@@ -243,24 +226,14 @@ class Chamber(Thread):
     """
     accuracy = 150
 
-<<<<<<< HEAD
-    def __init__(self, identifier: str, config: dict = None):
-=======
     def __init__(self, identifier: str, config: dict = None, queue: deque = None):
->>>>>>> d9f40274478f62cc87ed8ddafce80d684af10e68
         # identifier is NOT OPTIONAL!
         # init with name or not, just extending some of the functionality of Thread
         super().__init__(name=identifier)
         print("Thread started {}: {}".format(self.__class__, identifier))
-<<<<<<< HEAD
-        # self.communication_queue = queue or deque(tuple(), 256)
-=======
-
         if queue is None:
             queue = deque(tuple(), 256)
         self.communication_queue = queue
-
->>>>>>> d9f40274478f62cc87ed8ddafce80d684af10e68
         self.logger = logging.getLogger(identifier)
         self.logger.info("Init...")
         self.stopper = Event()
@@ -347,13 +320,10 @@ class Chamber(Thread):
             self.csv[self._current_csv_index][1:3],
             self.csv[self._current_csv_index][3:-2]))
         try:
-<<<<<<< HEAD
-=======
             self.current_csv_timepoint = self.csv[self._current_csv_index][0]
         except:
             pass
         try:
->>>>>>> d9f40274478f62cc87ed8ddafce80d684af10e68
             self._current_temp = float(self.csv[self._current_csv_index][1])
         except Exception as e:
             self.logger.error("Error calculating temperature {}".format(str(e)))
@@ -363,8 +333,7 @@ class Chamber(Thread):
         except Exception as e:
             self.logger.error("Error calculating humidity {}".format(str(e)))
             traceback.print_exc()
-<<<<<<< HEAD
-=======
+
 
     def communicate_with_updater(self):
         """
@@ -381,7 +350,6 @@ class Chamber(Thread):
             self.communication_queue.append(data)
         except Exception as e:
             self.logger.error("Inter-thread communication error: {}".format(str(e)))
->>>>>>> d9f40274478f62cc87ed8ddafce80d684af10e68
 
     def stop(self):
         self.stopper.set()
@@ -433,10 +401,7 @@ class Chamber(Thread):
                         chamber_metric['temp_set'] /= self.temperature_multiplier
                     self.logger.info("Chamber metric: {}".format(str(chamber_metric)))
                     print("Chamber metric: {}".format(str(chamber_metric)))
-<<<<<<< HEAD
-=======
                     self.communicate_with_updater()
->>>>>>> d9f40274478f62cc87ed8ddafce80d684af10e68
                     break
                 except Exception as e:
                     traceback.print_exc()

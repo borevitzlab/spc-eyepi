@@ -8,10 +8,7 @@ from threading import Thread, Event
 from libs.SysUtil import SysUtil
 import csv, json
 import traceback
-<<<<<<< HEAD
-=======
 
->>>>>>> d9f40274478f62cc87ed8ddafce80d684af10e68
 try:
     logging.config.fileConfig("logging.ini")
     logging.getLogger("paramiko").setLevel(logging.WARNING)
