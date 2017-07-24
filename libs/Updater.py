@@ -68,8 +68,6 @@ class Updater(Thread):
         self.logger.debug("Adding {} to list of transient identifiers.".format(temp_identifier))
         self.temp_identifiers.add(temp_identifier)
 
-
-
     def go(self):
         try:
             data = self.gather_data()
@@ -85,6 +83,11 @@ class Updater(Thread):
                     for key, value in data.copy().items():
                         if value == {}:
                             del data[str(key)]
+
+                    thed = data.pop("cameras", [])
+                    data['cameras'] = {}
+                    for cam in thed:
+                        data['cameras'][cam['identifier']] = cam
                     if len(data) > 0:
                         self.set_config_data(data)
                 else:
