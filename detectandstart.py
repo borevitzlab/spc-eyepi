@@ -254,7 +254,7 @@ def run_from_global_config(updater: Updater) -> tuple:
                                   queue=updater.communication_queue)
 
                 updater.add_to_identifiers(camera.identifier)
-                uploader = Uploader(identifier=ident,
+                uploader = Uploader(identifier=camera.identifier,
                                     config=section,
                                     queue=updater.communication_queue)
                 workers.append(camera)
