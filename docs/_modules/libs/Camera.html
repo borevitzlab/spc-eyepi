@@ -1,6 +1,6 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -34,7 +34,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
-  <body role="document">
+  <body>
   <div class="document">
     
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -90,6 +90,7 @@
 <span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">dateutil</span> <span class="k">import</span> <span class="n">parser</span>
 <span class="kn">from</span> <span class="nn">requests.auth</span> <span class="k">import</span> <span class="n">HTTPBasicAuth</span><span class="p">,</span> <span class="n">HTTPDigestAuth</span>
 <span class="kn">from</span> <span class="nn">xml.etree</span> <span class="k">import</span> <span class="n">ElementTree</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">deque</span>
@@ -107,7 +108,6 @@
 <span class="k">try</span><span class="p">:</span>
     <span class="c1"># improt yaml module and assert that it has a load function</span>
     <span class="kn">import</span> <span class="nn">yaml</span>
-
     <span class="k">assert</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span>
 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldnt import suitable yaml module, no IP camera support: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
@@ -123,6 +123,27 @@
 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldnt import picamera module, no picamera camera support: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
     <span class="k">pass</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">telegraf</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldnt import pytelegraf module, no telemetry: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+
+
+<div class="viewcode-block" id="TwentyFourHourTimeParserInfo"><a class="viewcode-back" href="../../libs.html#libs.Camera.TwentyFourHourTimeParserInfo">[docs]</a><span class="k">class</span> <span class="nc">TwentyFourHourTimeParserInfo</span><span class="p">(</span><span class="n">parser</span><span class="o">.</span><span class="n">parserinfo</span><span class="p">):</span>
+<div class="viewcode-block" id="TwentyFourHourTimeParserInfo.validate"><a class="viewcode-back" href="../../libs.html#libs.Camera.TwentyFourHourTimeParserInfo.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">res</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">year</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">time</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">year</span><span class="p">)</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">hour</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">minute</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
+        <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">tzoffset</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">res</span><span class="o">.</span><span class="n">tzname</span> <span class="ow">or</span> <span class="n">res</span><span class="o">.</span><span class="n">tzname</span> <span class="o">==</span> <span class="s1">&#39;Z&#39;</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">tzname</span> <span class="o">=</span> <span class="s2">&quot;UTC&quot;</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">tzoffset</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">res</span><span class="o">.</span><span class="n">tzoffset</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">res</span><span class="o">.</span><span class="n">tzname</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">utczone</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">tzname</span><span class="p">):</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">tzoffset</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="kc">True</span></div></div>
+
 
 <span class="n">USBDEVFS_RESET</span> <span class="o">=</span> <span class="mi">21780</span>
 
@@ -154,7 +175,7 @@
                         <span class="k">yield</span> <span class="n">result</span></div>
 
 
-<div class="viewcode-block" id="Camera"><a class="viewcode-back" href="../../libs.html#libs.Camera.Camera">[docs]</a><span class="k">class</span> <span class="nc">Camera</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Camera"><a class="viewcode-back" href="../../libs.html#libs.Camera.Camera">[docs]</a><span class="k">class</span> <span class="nc">Camera</span><span class="p">(</span><span class="n">Thread</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base Camera class.</span>
 
@@ -170,7 +191,6 @@
 <span class="sd">    :ivar str identifier: Unique identifier for the camera. Used to distinguish cameras from one another.</span>
 <span class="sd">    :ivar list failed: List of failed capture timepoints.</span>
 <span class="sd">    :ivar str config_filename: Confuguration file path, unused if camera is instantiated with the noconf init parameter.</span>
-<span class="sd">    :ivar configparser.ConfigParser config: Configuration object.</span>
 <span class="sd">    :ivar str camera_name: Human friendly name of the camera.</span>
 <span class="sd">    :ivar int interval: Capture interval (in seconds).</span>
 <span class="sd">    :ivar str spool_directory: Path to stream images into during the capture process.</span>
@@ -211,8 +231,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">init_stream</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">_frame</span></div>
 
-    <span class="nd">@classmethod</span>
-<div class="viewcode-block" id="Camera.stream_thread"><a class="viewcode-back" href="../../libs.html#libs.Camera.Camera.stream_thread">[docs]</a>    <span class="k">def</span> <span class="nf">stream_thread</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<div class="viewcode-block" id="Camera.stream_thread"><a class="viewcode-back" href="../../libs.html#libs.Camera.Camera.stream_thread">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">stream_thread</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Boilerplate stream thread.</span>
 <span class="sd">        Override this with the correct method of opening the camera, grabbing image data and closing the camera.</span>
@@ -234,90 +254,77 @@
                     <span class="k">break</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">_thread</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">queue</span><span class="p">:</span> <span class="n">deque</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">noconf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">queue</span><span class="p">:</span> <span class="n">deque</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">noconf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialiser for cameras...</span>
 
 <span class="sd">        :param identifier: unique identified for this camera, MANDATORY</span>
+<span class="sd">        :param config: Configuration section for this camera.</span>
 <span class="sd">        :param queue: deque to push info into</span>
 <span class="sd">        :param noconf: dont create a config, or watch anything. Used for temporarily streaming from a camera</span>
 <span class="sd">        :param kwargs:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Thread started </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">identifier</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">queue</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(),</span> <span class="mi">256</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">communication_queue</span> <span class="o">=</span> <span class="n">queue</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;init...&quot;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">stopper</span> <span class="o">=</span> <span class="n">Event</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span> <span class="o">=</span> <span class="n">identifier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">identifier</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">failed</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_exif</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">focus_position</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_frame</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">Camera</span><span class="o">.</span><span class="n">default_width</span><span class="p">,</span> <span class="n">Camera</span><span class="o">.</span><span class="n">default_height</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">noconf</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">config_filename</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">identifier_to_ini</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> \
-                <span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span> <span class="o">=</span> \
-                <span class="bp">self</span><span class="o">.</span><span class="n">interval</span> <span class="o">=</span> \
-                <span class="bp">self</span><span class="o">.</span><span class="n">spool_directory</span> <span class="o">=</span> \
-                <span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span> <span class="o">=</span> \
-                <span class="bp">self</span><span class="o">.</span><span class="n">begin_capture</span> <span class="o">=</span> \
-                <span class="bp">self</span><span class="o">.</span><span class="n">end_capture</span> <span class="o">=</span> \
-                <span class="bp">self</span><span class="o">.</span><span class="n">begin_capture</span> <span class="o">=</span> \
-                <span class="bp">self</span><span class="o">.</span><span class="n">end_capture</span> <span class="o">=</span> \
-                <span class="bp">self</span><span class="o">.</span><span class="n">current_capture_time</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">re_init</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Camera.re_init"><a class="viewcode-back" href="../../libs.html#libs.Camera.Camera.re_init">[docs]</a>    <span class="k">def</span> <span class="nf">re_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Re-initialisation method for updating configuration values.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interval</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;interval&quot;</span><span class="p">,</span> <span class="mi">300</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span> <span class="o">=</span> <span class="s2">&quot;/home/images/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;output_dir&quot;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
 
-<span class="sd">        The signature for this method is provided to :func:`libs.SysUtil.SysUtil.add_watch`, which calls it</span>
-<span class="sd">        when the config file has been modified.</span>
-
-<span class="sd">        This method should load all the configuration values from the config file into the Camera object.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Re-init...&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">ensure_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;camera&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">interval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;timelapse&quot;</span><span class="p">,</span> <span class="s2">&quot;interval&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">spool_directory</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;SPC-EYEPI&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;localfiles&quot;</span><span class="p">][</span><span class="s2">&quot;upload_dir&quot;</span><span class="p">]</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">begin_capture</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">end_capture</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">59</span><span class="p">)</span>
 
-        <span class="n">start_time_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;timelapse&#39;</span><span class="p">][</span><span class="s1">&#39;starttime&#39;</span><span class="p">])</span>
-        <span class="n">start_time_string</span> <span class="o">=</span> <span class="n">start_time_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-        <span class="n">end_time_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;timelapse&#39;</span><span class="p">][</span><span class="s1">&#39;stoptime&#39;</span><span class="p">])</span>
-        <span class="n">end_time_string</span> <span class="o">=</span> <span class="n">end_time_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">start_time_string</span> <span class="o">=</span> <span class="n">start_time_string</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span>
-            <span class="k">assert</span> <span class="n">end_time_string</span><span class="o">.</span><span class="n">isdigit</span><span class="p">(),</span> <span class="s2">&quot;Non numerical start time, </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">end_time_string</span><span class="p">))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">begin_capture</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">start_time_string</span><span class="p">,</span> <span class="s2">&quot;%H%M&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">begin_capture</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;starttime&quot;</span><span class="p">]),</span>
+                                              <span class="n">parserinfo</span><span class="o">=</span><span class="n">TwentyFourHourTimeParserInfo</span><span class="p">())</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Time conversion error starttime - </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format_map</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Time conversion error starttime - </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># cut string to max of 4.</span>
-            <span class="n">end_time_string</span> <span class="o">=</span> <span class="n">end_time_string</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span>
-            <span class="k">assert</span> <span class="n">end_time_string</span><span class="o">.</span><span class="n">isdigit</span><span class="p">(),</span> <span class="s2">&quot;Non numerical end time, </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">end_time_string</span><span class="p">))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">end_capture</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">end_time_string</span><span class="p">,</span> <span class="s2">&quot;%H%M&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end_capture</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;stoptime&quot;</span><span class="p">]),</span>
+                                            <span class="n">parserinfo</span><span class="o">=</span><span class="n">TwentyFourHourTimeParserInfo</span><span class="p">())</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Time conversion error stoptime - </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating upload dir </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating local output dir </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span><span class="p">))</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Creating directories </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_exif</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exif_fields</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">current_capture_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Capturing from </span><span class="si">{}</span><span class="s2"> to </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">begin_capture</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%H:%M&quot;</span><span class="p">),</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">end_capture</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%H:%M&quot;</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Interval: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_capture_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 
 <div class="viewcode-block" id="Camera.capture_image"><a class="viewcode-back" href="../../libs.html#libs.Camera.Camera.capture_image">[docs]</a>    <span class="k">def</span> <span class="nf">capture_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -330,7 +337,7 @@
 
 <span class="sd">        :param filename: image filename without extension</span>
 <span class="sd">        :return: :func:`numpy.array` if filename not specified, otherwise list of files.</span>
-<span class="sd">        :rtype: numpy.array</span>
+<span class="sd">        :rtype: numpy.array or list(str)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span></div>
 
@@ -407,8 +414,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="Camera.timestamp"><a class="viewcode-back" href="../../libs.html#libs.Camera.Camera.timestamp">[docs]</a>    <span class="k">def</span> <span class="nf">timestamp</span><span class="p">(</span><span class="n">tn</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<div class="viewcode-block" id="Camera.timestamp"><a class="viewcode-back" href="../../libs.html#libs.Camera.Camera.timestamp">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">timestamp</span><span class="p">(</span><span class="n">tn</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Creates a properly formatted timestamp from a datetime object.</span>
 
@@ -417,8 +424,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">tn</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y_%m_</span><span class="si">%d</span><span class="s1">_%H_%M_%S&#39;</span><span class="p">)</span></div>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="Camera.time2seconds"><a class="viewcode-back" href="../../libs.html#libs.Camera.Camera.time2seconds">[docs]</a>    <span class="k">def</span> <span class="nf">time2seconds</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="Camera.time2seconds"><a class="viewcode-back" href="../../libs.html#libs.Camera.Camera.time2seconds">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">time2seconds</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Converts a datetime to an integer of seconds since epoch</span>
 
@@ -440,7 +447,7 @@
 <span class="sd">        :return: image basename</span>
 <span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{camera_name}</span><span class="s1">_</span><span class="si">{timestamp}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">camera_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span><span class="p">,</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{camera_name}</span><span class="s1">_</span><span class="si">{timestamp}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">camera_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                                                   <span class="n">timestamp</span><span class="o">=</span><span class="n">Camera</span><span class="o">.</span><span class="n">timestamp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_capture_time</span><span class="p">))</span>
 
     <span class="nd">@property</span>
@@ -457,9 +464,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">current_naive_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_capture_time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;enabled&quot;</span><span class="p">):</span>
-            <span class="c1"># if the camera is disabled, never take photos</span>
-            <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># if not self.config.getboolean(&quot;camera&quot;, &quot;enabled&quot;):</span>
+        <span class="c1">#     # if the camera is disabled, never take photos</span>
+        <span class="c1">#     return False</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">begin_capture</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_capture</span><span class="p">:</span>
             <span class="c1"># where the start capture time is less than the end capture time</span>
@@ -558,7 +565,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-                <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                 <span class="n">identifier</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
                 <span class="n">failed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">failed</span><span class="p">,</span>
                 <span class="n">last_capture</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_capture_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">)))</span>
@@ -585,35 +592,36 @@
                     <span class="n">raw_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamped_imagename</span>
 
                     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Capturing for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">))</span>
-
+                    <span class="n">telemetry</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
                     <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">capture</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spool_directory</span><span class="p">,</span> <span class="n">raw_image</span><span class="p">))</span>
                     <span class="c1"># capture. if capture didnt happen dont continue with the rest.</span>
                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">failed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_capture_time</span><span class="p">)</span>
                         <span class="k">continue</span>
 
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s2">&quot;ftp&quot;</span><span class="p">,</span> <span class="s2">&quot;replace&quot;</span><span class="p">):</span>
-                        <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-                        <span class="n">resize_t</span> <span class="o">=</span> <span class="mf">0.0</span>
-                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s2">&quot;ftp&quot;</span><span class="p">,</span> <span class="s2">&quot;resize&quot;</span><span class="p">):</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="p">(</span><span class="n">Camera</span><span class="o">.</span><span class="n">default_width</span><span class="p">,</span> <span class="n">Camera</span><span class="o">.</span><span class="n">default_height</span><span class="p">),</span>
-                                                     <span class="n">interpolation</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_NEAREST</span><span class="p">)</span>
-                            <span class="n">resize_t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">st</span>
+                    <span class="n">telemetry</span><span class="p">[</span><span class="s2">&quot;timing_capture_s&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_capture_time</span><span class="p">)</span>
 
-                        <span class="n">cv2</span><span class="o">.</span><span class="n">putText</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span>
-                                    <span class="bp">self</span><span class="o">.</span><span class="n">timestamped_imagename</span><span class="p">,</span>
-                                    <span class="n">org</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">20</span><span class="p">),</span>
-                                    <span class="n">fontFace</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">FONT_HERSHEY_SIMPLEX</span><span class="p">,</span>
-                                    <span class="n">fontScale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                                    <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
-                                    <span class="n">thickness</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                                    <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">)</span>
+                    <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="n">resize_t</span> <span class="o">=</span> <span class="mf">0.0</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;resize_last&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="p">(</span><span class="n">Camera</span><span class="o">.</span><span class="n">default_width</span><span class="p">,</span> <span class="n">Camera</span><span class="o">.</span><span class="n">default_height</span><span class="p">),</span>
+                                                 <span class="n">interpolation</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_NEAREST</span><span class="p">)</span>
+                        <span class="n">resize_t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">st</span>
 
-                        <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;/dev/shm&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">+</span> <span class="s2">&quot;.jpg&quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">)</span>
-                        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;/dev/shm&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">+</span> <span class="s2">&quot;.jpg&quot;</span><span class="p">),</span>
-                                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span><span class="p">,</span> <span class="s2">&quot;last_image.jpg&quot;</span><span class="p">))</span>
+                    <span class="n">cv2</span><span class="o">.</span><span class="n">putText</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">timestamped_imagename</span><span class="p">,</span>
+                                <span class="n">org</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">20</span><span class="p">),</span>
+                                <span class="n">fontFace</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">FONT_HERSHEY_SIMPLEX</span><span class="p">,</span>
+                                <span class="n">fontScale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                                <span class="n">thickness</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">)</span>
 
-                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Resize </span><span class="si">{0:.3f}</span><span class="s2">s, total: </span><span class="si">{0:.3f}</span><span class="s2">s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">resize_t</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">st</span><span class="p">))</span>
+                    <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;/dev/shm&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">+</span> <span class="s2">&quot;.jpg&quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">)</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;/dev/shm&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">+</span> <span class="s2">&quot;.jpg&quot;</span><span class="p">),</span>
+                                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span><span class="p">,</span> <span class="s2">&quot;last_image.jpg&quot;</span><span class="p">))</span>
+                    <span class="n">telemetry</span><span class="p">[</span><span class="s2">&quot;timing_resize_s&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">resize_t</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Resize </span><span class="si">{0:.3f}</span><span class="s2">s, total: </span><span class="si">{0:.3f}</span><span class="s2">s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">resize_t</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">st</span><span class="p">))</span>
 
                     <span class="c1"># copying/renaming for files</span>
                     <span class="n">oldfiles</span> <span class="o">=</span> <span class="n">files</span><span class="p">[:]</span>
@@ -624,11 +632,14 @@
                             <span class="n">files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
-
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">telemetry</span><span class="p">[</span><span class="s2">&quot;num_files_created&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+                    <span class="k">except</span><span class="p">:</span>
+                        <span class="k">pass</span>
                     <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
                         <span class="c1"># move files to the upload directory</span>
                         <span class="k">try</span><span class="p">:</span>
-                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s2">&quot;ftp&quot;</span><span class="p">,</span> <span class="s2">&quot;timestamped&quot;</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;capture_timelapse&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
                                 <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span><span class="p">)</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Captured &amp; stored for upload - </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fn</span><span class="p">)))</span>
                         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -642,14 +653,23 @@
                         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t remove spooled when it still exists: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
                     <span class="c1"># log total capture time</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Total capture time: </span><span class="si">{0:.2f}</span><span class="s2">s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_capture_time</span><span class="p">))</span>
+                    <span class="n">total_capture_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_capture_time</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Total capture time: </span><span class="si">{0:.2f}</span><span class="s2">s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">total_capture_time</span><span class="p">))</span>
+                    <span class="n">telemetry</span><span class="p">[</span><span class="s2">&quot;timing_total_s&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">total_capture_time</span><span class="p">)</span>
                     <span class="c1"># communicate our success with the updater</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">telegraf_client</span> <span class="o">=</span> <span class="n">telegraf</span><span class="o">.</span><span class="n">TelegrafClient</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8092</span><span class="p">)</span>
+                        <span class="n">telegraf_client</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="n">telemetry</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;camera_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">})</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Communicated sesor data to telegraf&quot;</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldnt communicate with telegraf client. </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)))</span>
+
                     <span class="bp">self</span><span class="o">.</span><span class="n">communicate_with_updater</span><span class="p">()</span>
                     <span class="c1"># sleep for a little bit so we dont try and capture again so soon.</span>
                     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">Camera</span><span class="o">.</span><span class="n">accuracy</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Image Capture error - </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
-            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span></div></div>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="IPCamera"><a class="viewcode-back" href="../../libs.html#libs.Camera.IPCamera">[docs]</a><span class="k">class</span> <span class="nc">IPCamera</span><span class="p">(</span><span class="n">Camera</span><span class="p">):</span>
@@ -686,7 +706,7 @@
             <span class="k">assert</span> <span class="n">end_time_string</span><span class="o">.</span><span class="n">isdigit</span><span class="p">(),</span> <span class="s2">&quot;Non numerical start time, </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">end_time_string</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">begin_capture</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">start_time_string</span><span class="p">,</span> <span class="s2">&quot;%H%M&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Time conversion error starttime - </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format_map</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Time conversion error starttime - </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># cut string to max of 4.</span>
             <span class="n">end_time_string</span> <span class="o">=</span> <span class="n">end_time_string</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span>
@@ -725,8 +745,6 @@
                                                      <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">auth_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">auth_object_digest</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auth_type</span> <span class="o">==</span> <span class="s2">&quot;digest&quot;</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">auth_object</span>
 
-
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_HTTP_login</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;HTTP_login&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{user}</span><span class="s2">:</span><span class="si">{password}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">user</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">),</span>
             <span class="n">password</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">))</span>
@@ -760,7 +778,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">image_quality</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_quality</span>
 
-        <span class="nb">super</span><span class="p">(</span><span class="n">IPCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">IPCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
 
@@ -828,8 +846,8 @@
             <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">keys</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">cmd_str</span><span class="p">,</span> <span class="n">keys</span>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="IPCamera.get_value_from_xml"><a class="viewcode-back" href="../../libs.html#libs.Camera.IPCamera.get_value_from_xml">[docs]</a>    <span class="k">def</span> <span class="nf">get_value_from_xml</span><span class="p">(</span><span class="n">message_xml</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<div class="viewcode-block" id="IPCamera.get_value_from_xml"><a class="viewcode-back" href="../../libs.html#libs.Camera.IPCamera.get_value_from_xml">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_value_from_xml</span><span class="p">(</span><span class="n">message_xml</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        gets float, int or string values from a xml string where the key is the tag of the first element with value as</span>
 <span class="sd">        text.</span>
@@ -884,8 +902,8 @@
 
         <span class="k">return</span> <span class="n">return_values</span></div>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="IPCamera.get_value_from_plaintext"><a class="viewcode-back" href="../../libs.html#libs.Camera.IPCamera.get_value_from_plaintext">[docs]</a>    <span class="k">def</span> <span class="nf">get_value_from_plaintext</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<div class="viewcode-block" id="IPCamera.get_value_from_plaintext"><a class="viewcode-back" href="../../libs.html#libs.Camera.IPCamera.get_value_from_plaintext">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_value_from_plaintext</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        gets float, int or string values from a xml string where the key is the tag of the first element with value as</span>
 <span class="sd">        text.</span>
@@ -1010,8 +1028,8 @@
         <span class="k">if</span> <span class="n">cmd</span><span class="p">:</span>
             <span class="n">stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_stream</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
             <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_value_from_stream</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">keys</span><span class="p">)</span>
-            <span class="n">width</span><span class="p">,</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_size</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_size</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="s2">&quot;width&quot;</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
                     <span class="n">width</span> <span class="o">=</span> <span class="n">v</span>
                 <span class="k">if</span> <span class="s2">&quot;height&quot;</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
@@ -1200,45 +1218,59 @@
 <span class="sd">    identifier and usb_address are NOT OPTIONAL</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="n">Lock</span><span class="p">(),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">lock</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_serialnumber</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">usb_address</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">GPCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">exposure_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;camera&#39;</span><span class="p">,</span> <span class="s2">&quot;exposure&quot;</span><span class="p">)</span>
-
-<div class="viewcode-block" id="GPCamera.re_init"><a class="viewcode-back" href="../../libs.html#libs.Camera.GPCamera.re_init">[docs]</a>    <span class="k">def</span> <span class="nf">re_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">usb_address</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="n">Lock</span><span class="p">(),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        re initialises the camera.</span>
+<span class="sd">        Providing a usb address and no identifier or an identifier but no usb address will cause</span>
+<span class="sd">        </span>
+<span class="sd">        :param identifier: </span>
+<span class="sd">        :param lock: </span>
+<span class="sd">        :param usb_address: </span>
+<span class="sd">        :param kwargs: </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">GPCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">re_init</span><span class="p">()</span>
 
-        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
-            <span class="n">serialnumber</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="n">camera</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">cam</span> <span class="ow">in</span> <span class="n">gp</span><span class="o">.</span><span class="n">list_cameras</span><span class="p">():</span>
-                    <span class="n">serialnumber</span> <span class="o">=</span> <span class="n">cam</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">serialnumber</span>
-                    <span class="k">if</span> <span class="n">serialnumber</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">:</span>
-                        <span class="n">camera</span> <span class="o">=</span> <span class="n">cam</span>
-                        <span class="k">break</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">lock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">usb_address</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_serialnumber</span> <span class="o">=</span> <span class="n">identifier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">usb_address</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">usb_address</span><span class="p">)</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">usb_address</span> <span class="o">=</span> <span class="n">usb_address</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">usb_address</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+                <span class="n">serialnumber</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">camera</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">cam</span> <span class="ow">in</span> <span class="n">gp</span><span class="o">.</span><span class="n">list_cameras</span><span class="p">():</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">serialnumber</span> <span class="o">=</span> <span class="n">cam</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">serialnumber</span>
+                            <span class="k">if</span> <span class="n">serialnumber</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">:</span>
+                                <span class="n">camera</span> <span class="o">=</span> <span class="n">cam</span>
+                                <span class="k">break</span>
+                        <span class="k">except</span><span class="p">:</span>
+                            <span class="k">pass</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Camera not available or connected&quot;</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Camera not available or connected&quot;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">cam</span> <span class="ow">in</span> <span class="n">gp</span><span class="o">.</span><span class="n">list_cameras</span><span class="p">():</span>
-                    <span class="k">try</span><span class="p">:</span>
-                        <span class="n">serialnumber</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cam</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">serialnumber</span><span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">default_identifier</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">serialnumber</span><span class="p">)</span>
-                        <span class="n">camera</span> <span class="o">=</span> <span class="n">cam</span>
-                        <span class="k">break</span>
-                    <span class="k">except</span><span class="p">:</span>
-                        <span class="k">pass</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;No cameras available&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">usb_address</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">_usb_address</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_serialnumber</span> <span class="o">=</span> <span class="n">serialnumber</span>
+                    <span class="k">for</span> <span class="n">cam</span> <span class="ow">in</span> <span class="n">gp</span><span class="o">.</span><span class="n">list_cameras</span><span class="p">():</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">serialnumber</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cam</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">serialnumber</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">default_identifier</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">serialnumber</span><span class="p">)</span>
+                            <span class="n">camera</span> <span class="o">=</span> <span class="n">cam</span>
+                            <span class="k">break</span>
+                        <span class="k">except</span><span class="p">:</span>
+                            <span class="k">pass</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;No cameras available&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">usb_address</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">_usb_address</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_serialnumber</span> <span class="o">=</span> <span class="n">serialnumber</span>
+                <span class="n">camera</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Camera detected at usb port </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">usb_address</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">exposure_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;exposure&quot;</span><span class="p">)</span></div>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exposure_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;exposure&quot;</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
 
 <div class="viewcode-block" id="GPCamera.get_exif_fields"><a class="viewcode-back" href="../../libs.html#libs.Camera.GPCamera.get_exif_fields">[docs]</a>    <span class="k">def</span> <span class="nf">get_exif_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1264,7 +1296,7 @@
             <span class="k">except</span><span class="p">:</span>
                 <span class="k">pass</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldnt get full exif data. </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Couldnt get full exif data. </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
         <span class="k">return</span> <span class="n">exif</span></div>
 
     <span class="k">def</span> <span class="nf">_get_camera</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1275,14 +1307,15 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Camera matched for </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">usb_address</span><span class="p">))</span>
                     <span class="k">return</span> <span class="n">camera</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Camera wasnt at the correct usb address or something: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Camera wasnt at the correct usb address or usb address wasnt specified: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
 
             <span class="k">for</span> <span class="n">camera</span> <span class="ow">in</span> <span class="n">gp</span><span class="o">.</span><span class="n">list_cameras</span><span class="p">():</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">camera</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">serialnumber</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_serialnumber</span><span class="p">:</span>
                         <span class="k">return</span> <span class="n">camera</span>
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Couldnt acquire lock for camera. </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Couldnt acquire lock for camera: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Camera cannot be found&quot;</span><span class="p">)</span>
 
@@ -1306,7 +1339,7 @@
         <span class="c1"># camera is set to capture to.</span>
 
         <span class="c1"># this one shouldnt really be used.</span>
-        <span class="n">fn</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-temp.%C&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">camera_name</span><span class="p">)</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-temp.%C&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
             <span class="c1"># if target file path exists</span>
             <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spool_directory</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.%C&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
@@ -1389,7 +1422,8 @@
                             <span class="n">fn</span> <span class="o">=</span> <span class="p">(</span><span class="n">filename</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">filename</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">filename</span><span class="p">)[</span>
                                 <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
                             <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imdecode</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span> <span class="n">cv2</span><span class="o">.</span><span class="n">IMREAD_COLOR</span><span class="p">)</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imdecode</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span>
+                                                           <span class="n">cv2</span><span class="o">.</span><span class="n">IMREAD_COLOR</span><span class="p">)</span>
                             <span class="n">image</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
                             <span class="n">successes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
                             <span class="k">try</span><span class="p">:</span>
@@ -1471,8 +1505,8 @@
 <span class="sd">    USB Camera Class</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="nd">@classmethod</span>
-<div class="viewcode-block" id="USBCamera.stream_thread"><a class="viewcode-back" href="../../libs.html#libs.Camera.USBCamera.stream_thread">[docs]</a>    <span class="k">def</span> <span class="nf">stream_thread</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<div class="viewcode-block" id="USBCamera.stream_thread"><a class="viewcode-back" href="../../libs.html#libs.Camera.USBCamera.stream_thread">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">stream_thread</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        usb camera stream thread.</span>
 <span class="sd">        TODO: Needs to be aware of multiple cameras.</span>
@@ -1502,7 +1536,7 @@
                 <span class="k">break</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">_thread</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">sys_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sys_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        USB camera init. must have a sys_number (the 0 from /dev/video0) to capture from</span>
 
@@ -1518,14 +1552,6 @@
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s2">&quot;couldnt open video capture device on </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sys_number</span><span class="p">))</span>
 
-        <span class="nb">super</span><span class="p">(</span><span class="n">USBCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-<div class="viewcode-block" id="USBCamera.re_init"><a class="viewcode-back" href="../../libs.html#libs.Camera.USBCamera.re_init">[docs]</a>    <span class="k">def</span> <span class="nf">re_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        re-initialisation of webcamera</span>
-<span class="sd">        todo: fix release of camera otherwise it gets locked forever.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">USBCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">re_init</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_capture_device</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">video_capture</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sys_number</span><span class="p">):</span>
@@ -1536,7 +1562,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">video_capture</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FRAME_HEIGHT</span><span class="p">,</span> <span class="mi">100000</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">video_capture</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FRAME_WIDTH</span><span class="p">,</span> <span class="mi">100000</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Capturing at </span><span class="si">{w}</span><span class="s2">x</span><span class="si">{h}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video_capture</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FRAME_WIDTH</span><span class="p">),</span>
-                                                       <span class="n">h</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video_capture</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FRAME_HEIGHT</span><span class="p">)))</span></div>
+                                                       <span class="n">h</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video_capture</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FRAME_HEIGHT</span><span class="p">)))</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">USBCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="USBCamera.stop"><a class="viewcode-back" href="../../libs.html#libs.Camera.USBCamera.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1605,8 +1633,8 @@
 <span class="sd">    Picamera extension to the Camera abstract class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="nd">@classmethod</span>
-<div class="viewcode-block" id="PiCamera.stream_thread"><a class="viewcode-back" href="../../libs.html#libs.Camera.PiCamera.stream_thread">[docs]</a>    <span class="k">def</span> <span class="nf">stream_thread</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<div class="viewcode-block" id="PiCamera.stream_thread"><a class="viewcode-back" href="../../libs.html#libs.Camera.PiCamera.stream_thread">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">stream_thread</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Streaming thread member.</span>
 
@@ -1661,14 +1689,21 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">camera</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">MAX_RESOLUTION</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;height&quot;</span><span class="p">):</span>
-                <span class="n">camera</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">),</span>
-                                     <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;height&quot;</span><span class="p">))</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;shutter_speed&quot;</span><span class="p">):</span>
-                <span class="n">camera</span><span class="o">.</span><span class="n">shutter_speed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;shutter_speed&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;iso&quot;</span><span class="p">):</span>
-                <span class="n">camera</span><span class="o">.</span><span class="n">iso</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;iso&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;height&quot;</span><span class="p">):</span>
+                    <span class="n">camera</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">),</span>
+                                         <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">))</span>
 
+                <span class="n">camera</span><span class="o">.</span><span class="n">shutter_speed</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;shutter_speed&quot;</span><span class="p">,</span> <span class="n">camera</span><span class="o">.</span><span class="n">shutter_speed</span><span class="p">)</span>
+                <span class="n">camera</span><span class="o">.</span><span class="n">iso</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;iso&quot;</span><span class="p">,</span> <span class="n">camera</span><span class="o">.</span><span class="n">iso</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;height&quot;</span><span class="p">):</span>
+                    <span class="n">camera</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">),</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;height&quot;</span><span class="p">))</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;shutter_speed&quot;</span><span class="p">):</span>
+                    <span class="n">camera</span><span class="o">.</span><span class="n">shutter_speed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;shutter_speed&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;iso&quot;</span><span class="p">):</span>
+                    <span class="n">camera</span><span class="o">.</span><span class="n">iso</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;camera&quot;</span><span class="p">,</span> <span class="s2">&quot;iso&quot;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;error setting picamera settings: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span></div>
 
@@ -1725,16 +1760,15 @@
 
     <span class="n">TRUTH_TABLE</span> <span class="o">=</span> <span class="p">[</span>
         <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">],</span>
-        <span class="p">[</span><span class="kc">True</span><span class="p">,</span>  <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">],</span>
-        <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>  <span class="kc">False</span><span class="p">],</span>
-        <span class="p">[</span><span class="kc">True</span><span class="p">,</span>  <span class="kc">True</span><span class="p">,</span>  <span class="kc">False</span><span class="p">]</span>
+        <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">],</span>
+        <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">],</span>
+        <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">]</span>
     <span class="p">]</span>
     <span class="n">gpio_groups</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,)</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                 <span class="n">queue</span><span class="p">:</span> <span class="n">deque</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                 <span class="n">gpio_group</span><span class="p">:</span> <span class="nb">tuple</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,),</span>
+                 <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">gpio_group</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,),</span>
                  <span class="n">camera_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        special __init__ for the IVport to set the gpio enumeration</span>
@@ -1750,21 +1784,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">gpio_groups</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">gpio_group</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">camera_number</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="nb">super</span><span class="p">(</span><span class="n">IVPortCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="n">queue</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">IVPortCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">current_camera_index</span> <span class="o">=</span> <span class="n">camera_number</span>
             <span class="n">IVPortCamera</span><span class="o">.</span><span class="n">switch</span><span class="p">(</span><span class="n">idx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">current_camera_index</span><span class="p">)</span>
 
-<div class="viewcode-block" id="IVPortCamera.setup"><a class="viewcode-back" href="../../libs.html#libs.Camera.IVPortCamera.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        sets up gpio for IVPort</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">IVPortCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
-        <span class="c1"># switch to the current camera index.</span>
-        <span class="n">IVPortCamera</span><span class="o">.</span><span class="n">switch</span><span class="p">(</span><span class="n">idx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">current_camera_index</span><span class="p">)</span></div>
-
-    <span class="nd">@classmethod</span>
-<div class="viewcode-block" id="IVPortCamera.switch"><a class="viewcode-back" href="../../libs.html#libs.Camera.IVPortCamera.switch">[docs]</a>    <span class="k">def</span> <span class="nf">switch</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="IVPortCamera.switch"><a class="viewcode-back" href="../../libs.html#libs.Camera.IVPortCamera.switch">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">switch</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        switches the IVPort to a new camera</span>
 <span class="sd">        with no index, switches to the next camera, looping around from the beginning</span>
@@ -1778,13 +1804,13 @@
         <span class="k">if</span> <span class="n">idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">cls</span><span class="o">.</span><span class="n">current_camera_index</span> <span class="o">=</span> <span class="n">idx</span>
 
-        <span class="bp">cls</span><span class="o">.</span><span class="n">current_camera_index</span> <span class="o">%=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">IVPortCamera</span><span class="o">.</span><span class="n">TRUTH_TABLE</span><span class="p">)</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">gpio_groups</span><span class="p">))</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">current_camera_index</span> <span class="o">%=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">IVPortCamera</span><span class="o">.</span><span class="n">TRUTH_TABLE</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">gpio_groups</span><span class="p">))</span>
         <span class="c1"># GPIO.setwarnings(False)</span>
         <span class="c1"># GPIO.setmode(GPIO.BOARD)</span>
         <span class="c1"># GPIO.setup(IVPortCamera.select, GPIO.OUT)</span>
 
         <span class="c1"># current groups determined by the camera index / number of cameras per board (truth table len)</span>
-        <span class="n">current_group</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">gpio_groups</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">current_camera_index</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">IVPortCamera</span><span class="o">.</span><span class="n">TRUTH_TABLE</span><span class="p">))]</span>
+        <span class="n">current_group</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">gpio_groups</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">current_camera_index</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">IVPortCamera</span><span class="o">.</span><span class="n">TRUTH_TABLE</span><span class="p">))]</span>
         <span class="n">current_pins</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">enable_pins</span><span class="p">[</span><span class="n">current_group</span><span class="p">]</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Switching to camera </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">current_group</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">current_camera_index</span><span class="p">))</span>
 
@@ -1859,65 +1885,58 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Threaded implementations</span>
 <span class="sd">&quot;&quot;&quot;</span>
-
-
-<div class="viewcode-block" id="ThreadedCamera"><a class="viewcode-back" href="../../libs.html#libs.Camera.ThreadedCamera">[docs]</a><span class="k">class</span> <span class="nc">ThreadedCamera</span><span class="p">(</span><span class="n">Thread</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;identifier&quot;</span><span class="p">):</span>
-            <span class="n">Thread</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">Thread</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Threaded startup&quot;</span><span class="p">)</span>
-        <span class="c1"># super(self.__class__, self).__init__(*args, **kwargs)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;config_filename&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;re_init&quot;</span><span class="p">):</span>
-            <span class="n">SysUtil</span><span class="p">()</span><span class="o">.</span><span class="n">add_watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_filename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">re_init</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="ThreadedGPCamera"><a class="viewcode-back" href="../../libs.html#libs.Camera.ThreadedGPCamera">[docs]</a><span class="k">class</span> <span class="nc">ThreadedGPCamera</span><span class="p">(</span><span class="n">ThreadedCamera</span><span class="p">,</span> <span class="n">GPCamera</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">GPCamera</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">ThreadedGPCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-<div class="viewcode-block" id="ThreadedGPCamera.run"><a class="viewcode-back" href="../../libs.html#libs.Camera.ThreadedGPCamera.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">GPCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div></div>
-
-
-<div class="viewcode-block" id="ThreadedIPCamera"><a class="viewcode-back" href="../../libs.html#libs.Camera.ThreadedIPCamera">[docs]</a><span class="k">class</span> <span class="nc">ThreadedIPCamera</span><span class="p">(</span><span class="n">ThreadedCamera</span><span class="p">,</span> <span class="n">IPCamera</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">IPCamera</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">ThreadedIPCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-<div class="viewcode-block" id="ThreadedIPCamera.run"><a class="viewcode-back" href="../../libs.html#libs.Camera.ThreadedIPCamera.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">IPCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div></div>
-
-
-<div class="viewcode-block" id="ThreadedUSBCamera"><a class="viewcode-back" href="../../libs.html#libs.Camera.ThreadedUSBCamera">[docs]</a><span class="k">class</span> <span class="nc">ThreadedUSBCamera</span><span class="p">(</span><span class="n">ThreadedCamera</span><span class="p">,</span> <span class="n">USBCamera</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">USBCamera</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">ThreadedUSBCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-<div class="viewcode-block" id="ThreadedUSBCamera.run"><a class="viewcode-back" href="../../libs.html#libs.Camera.ThreadedUSBCamera.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">USBCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div></div>
-
-
-<div class="viewcode-block" id="ThreadedPiCamera"><a class="viewcode-back" href="../../libs.html#libs.Camera.ThreadedPiCamera">[docs]</a><span class="k">class</span> <span class="nc">ThreadedPiCamera</span><span class="p">(</span><span class="n">ThreadedCamera</span><span class="p">,</span> <span class="n">PiCamera</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">PiCamera</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">ThreadedPiCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-<div class="viewcode-block" id="ThreadedPiCamera.run"><a class="viewcode-back" href="../../libs.html#libs.Camera.ThreadedPiCamera.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">PiCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div></div>
-
-
-<div class="viewcode-block" id="ThreadedIVPortCamera"><a class="viewcode-back" href="../../libs.html#libs.Camera.ThreadedIVPortCamera">[docs]</a><span class="k">class</span> <span class="nc">ThreadedIVPortCamera</span><span class="p">(</span><span class="n">ThreadedCamera</span><span class="p">,</span> <span class="n">IVPortCamera</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">IVPortCamera</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">ThreadedIVPortCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-<div class="viewcode-block" id="ThreadedIVPortCamera.run"><a class="viewcode-back" href="../../libs.html#libs.Camera.ThreadedIVPortCamera.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">IVPortCamera</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div></div>
+<span class="c1">#</span>
+<span class="c1"># class ThreadedCamera(Camera, Thread):</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     threaded implementation of the Camera cclass.</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     def __init__(self, identifier, *args, **kwargs):</span>
+<span class="c1">#         Thread.__init__(self, name=identifier)</span>
+<span class="c1">#         self.daemon = True</span>
+<span class="c1">#         print(&quot;Threaded started {}: {}&quot;.format(self.__class__, identifier))</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># class ThreadedPiCamera(PiCamera, ThreadedCamera):</span>
+<span class="c1">#     def __init__(self, identifier, *args, **kwargs):</span>
+<span class="c1">#         super(ThreadedPiCamera, self).__init__(identifier, *args, **kwargs)</span>
+<span class="c1">#         super(ThreadedCamera, self).__init__(identifier, *args, **kwargs)</span>
+<span class="c1">#</span>
+<span class="c1">#     def run(self):</span>
+<span class="c1">#         super(PiCamera, self).run()</span>
+<span class="c1">#</span>
+<span class="c1"># class ThreadedGPCamera(GPCamera, ThreadedCamera):</span>
+<span class="c1">#     def __init__(self, identifier, *args, **kwargs):</span>
+<span class="c1">#         super(GPCamera, self).__init__(identifier, *args, **kwargs)</span>
+<span class="c1">#         super(ThreadedCamera, self).__init__(identifier, *args, **kwargs)</span>
+<span class="c1">#</span>
+<span class="c1">#     def run(self):</span>
+<span class="c1">#         super(GPCamera, self).run()</span>
+<span class="c1">#</span>
+<span class="c1"># class ThreadedIPCamera(IPCamera, ThreadedCamera):</span>
+<span class="c1">#     def __init__(self, identifier, *args, **kwargs):</span>
+<span class="c1">#         super(ThreadedIPCamera, self).__init__(identifier, *args, **kwargs)</span>
+<span class="c1">#         super(ThreadedCamera, self).__init__(identifier, *args, **kwargs)</span>
+<span class="c1">#</span>
+<span class="c1">#     def run(self):</span>
+<span class="c1">#         super(IPCamera, self).run()</span>
+<span class="c1">#</span>
+<span class="c1"># class ThreadedUSBCamera(USBCamera, ThreadedCamera):</span>
+<span class="c1">#     def __init__(self, identifier, *args, **kwargs):</span>
+<span class="c1">#         super(ThreadedUSBCamera, self).__init__(identifier, *args, **kwargs)</span>
+<span class="c1">#         super(ThreadedCamera, self).__init__(identifier, *args, **kwargs)</span>
+<span class="c1">#</span>
+<span class="c1">#     def run(self):</span>
+<span class="c1">#         super(USBCamera, self).run()</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># class ThreadedIVPortCamera(IVPortCamera, ThreadedCamera):</span>
+<span class="c1">#     def __init__(self, identifier, *args, **kwargs):</span>
+<span class="c1">#         super(ThreadedIVPortCamera, self).__init__(identifier, *args, **kwargs)</span>
+<span class="c1">#         super(ThreadedCamera, self).__init__(identifier, *args, **kwargs)</span>
+<span class="c1">#</span>
+<span class="c1">#     def run(self):</span>
+<span class="c1">#         super(IVPortCamera, self).run()</span>
+<span class="c1">#</span>
 </pre></div>
 
           </div>
@@ -1929,8 +1948,8 @@
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>
 

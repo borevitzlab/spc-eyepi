@@ -218,7 +218,7 @@ class Uploader(Thread):
                 identifier=self.identifier,
                 uploaded=SysUtil.sizeof_fmt(self.total_data_uploaded_b),
                 uploads=self.last_upload_list,
-                last_upload=int(self.last_upload_time.strftime("%s"))
+                last_upload=self.last_upload_time.isoformat()
             )
             self.communication_queue.append(data)
         except Exception as e:

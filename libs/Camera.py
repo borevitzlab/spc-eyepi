@@ -485,7 +485,7 @@ class Camera(Thread):
                 name=self.name,
                 identifier=self.identifier,
                 failed=self.failed,
-                last_capture=int(self.current_capture_time.strftime("%s")))
+                last_capture=self.current_capture_time.isoformat())
             # append our data dict to the communication_queue deque.
             self.communication_queue.append(data)
             self.failed = list()

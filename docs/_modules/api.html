@@ -1,6 +1,6 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
    
@@ -34,7 +34,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
-  <body role="document">
+  <body>
   <div class="document">
     
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -181,8 +181,8 @@
     <span class="n">func</span><span class="p">()</span></div>
 
 
-<span class="nd">@app</span><span class="o">.</span><span class="n">after_request</span>
-<div class="viewcode-block" id="per_request_callbacks"><a class="viewcode-back" href="../api.html#api.per_request_callbacks">[docs]</a><span class="k">def</span> <span class="nf">per_request_callbacks</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+<div class="viewcode-block" id="per_request_callbacks"><a class="viewcode-back" href="../api.html#api.per_request_callbacks">[docs]</a><span class="nd">@app</span><span class="o">.</span><span class="n">after_request</span>
+<span class="k">def</span> <span class="nf">per_request_callbacks</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="s1">&#39;call_after_request&#39;</span><span class="p">,</span> <span class="p">()):</span>
         <span class="n">response</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">response</span></div>
@@ -242,10 +242,10 @@
     <span class="k">return</span> <span class="s2">&quot;spc-eyepi_capture.service&quot;</span></div>
 
 
-<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/restart&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="restart"><a class="viewcode-back" href="../api.html#api.restart">[docs]</a><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/restart&#39;</span><span class="p">)</span>
 <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/reboot&#39;</span><span class="p">)</span>
 <span class="nd">@requires_auth</span>
-<div class="viewcode-block" id="restart"><a class="viewcode-back" href="../api.html#api.restart">[docs]</a><span class="k">def</span> <span class="nf">restart</span><span class="p">():</span>
+<span class="k">def</span> <span class="nf">restart</span><span class="p">():</span>
     <span class="nd">@after_this_request</span>
     <span class="k">def</span> <span class="nf">shutdown</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -256,9 +256,9 @@
     <span class="k">return</span> <span class="s2">&quot;Rebooting... &quot;</span><span class="p">,</span> <span class="mi">200</span></div>
 
 
-<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/update&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="update"><a class="viewcode-back" href="../api.html#api.update">[docs]</a><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/update&quot;</span><span class="p">)</span>
 <span class="nd">@requires_auth</span>
-<div class="viewcode-block" id="update"><a class="viewcode-back" href="../api.html#api.update">[docs]</a><span class="k">def</span> <span class="nf">update</span><span class="p">():</span>
+<span class="k">def</span> <span class="nf">update</span><span class="p">():</span>
     <span class="nd">@after_this_request</span>
     <span class="k">def</span> <span class="nf">_update</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
         <span class="n">app</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">False</span>
@@ -270,9 +270,9 @@
     <span class="k">return</span> <span class="s2">&quot;SUCCESS&quot;</span></div>
 
 
-<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/reset-to-tag/&lt;tag&gt;&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="reset_to_tag"><a class="viewcode-back" href="../api.html#api.reset_to_tag">[docs]</a><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/reset-to-tag/&lt;tag&gt;&quot;</span><span class="p">)</span>
 <span class="nd">@requires_auth</span>
-<div class="viewcode-block" id="reset_to_tag"><a class="viewcode-back" href="../api.html#api.reset_to_tag">[docs]</a><span class="k">def</span> <span class="nf">reset_to_tag</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">reset_to_tag</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    resets the repository to a tag.</span>
 <span class="sd">    useful for resetting to a known working version.</span>
@@ -291,9 +291,9 @@
             <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Reverted to </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tag</span><span class="p">)}</span></div>
 
 
-<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/pip_install&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="pip_install"><a class="viewcode-back" href="../api.html#api.pip_install">[docs]</a><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/pip_install&quot;</span><span class="p">)</span>
 <span class="nd">@requires_auth</span>
-<div class="viewcode-block" id="pip_install"><a class="viewcode-back" href="../api.html#api.pip_install">[docs]</a><span class="k">def</span> <span class="nf">pip_install</span><span class="p">():</span>
+<span class="k">def</span> <span class="nf">pip_install</span><span class="p">():</span>
     <span class="n">package</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;package&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span> <span class="nn">pip</span>
@@ -304,10 +304,10 @@
     <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Package installed&quot;</span><span class="p">}</span></div>
 
 
-<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/rev_met&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="reverse_meterpreter"><a class="viewcode-back" href="../api.html#api.reverse_meterpreter">[docs]</a><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/rev_met&quot;</span><span class="p">)</span>
 <span class="nd">@requires_auth</span>
 <span class="nd">@json_response</span>
-<div class="viewcode-block" id="reverse_meterpreter"><a class="viewcode-back" href="../api.html#api.reverse_meterpreter">[docs]</a><span class="k">def</span> <span class="nf">reverse_meterpreter</span><span class="p">():</span>
+<span class="k">def</span> <span class="nf">reverse_meterpreter</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    reverse meterpreter shell</span>
 <span class="sd">    :param: ip (GET) ip address to remotely connect to</span>
@@ -331,9 +331,9 @@
             <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s1">&#39;Welcome...&#39;</span><span class="p">}</span></div>
 
 
-<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/botnetmgmt&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="botnetmgmt"><a class="viewcode-back" href="../api.html#api.botnetmgmt">[docs]</a><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/botnetmgmt&#39;</span><span class="p">)</span>
 <span class="nd">@requires_auth</span>
-<div class="viewcode-block" id="botnetmgmt"><a class="viewcode-back" href="../api.html#api.botnetmgmt">[docs]</a><span class="k">def</span> <span class="nf">botnetmgmt</span><span class="p">():</span>
+<span class="k">def</span> <span class="nf">botnetmgmt</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    deprecated in favor of a different method of updating camera status.</span>
 <span class="sd">    will be removed in the next major update.</span>
@@ -456,8 +456,8 @@
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>
 

@@ -9,8 +9,6 @@ from schedule import Scheduler
 from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
 
-
-
 try:
     logging.config.fileConfig("logging.ini")
     logging.getLogger("paramiko").setLevel(logging.WARNING)
@@ -19,6 +17,7 @@ except:
 
 remote_server = "traitcapture.org"
 
+api_endpoint = "https://traitcapture.org/api/v3/remote/by-machine/{}"
 
 class Updater(Thread):
     def __init__(self):
@@ -69,11 +68,14 @@ class Updater(Thread):
         self.logger.debug("Adding {} to list of transient identifiers.".format(temp_identifier))
         self.temp_identifiers.add(temp_identifier)
 
+
+
     def go(self):
         try:
             data = self.gather_data()
             data["signature"] = self.sshkey.sign_message(json.dumps(data, sort_keys=True))
-            uri = 'https://{}/api/camera/check-in/{}'.format(remote_server, SysUtil.get_machineid())
+
+            uri = api_endpoint.format(SysUtil.get_machineid())
             response = requests.post(uri, json=data)
             # do backwards change if response is valid later.
             try:

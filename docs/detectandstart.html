@@ -1,6 +1,6 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
@@ -34,7 +34,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
-  <body role="document">
+  <body>
   <div class="document">
     
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -85,6 +85,185 @@
 <h1>Starting point for capture<a class="headerlink" href="#starting-point-for-capture" title="Permalink to this headline">§</a></h1>
 <p>This python script serves as the entry point for capturing and uploading.</p>
 <p>It detects cameras, creates uploaders and an updater, starts threads etc.</p>
+<span class="target" id="module-detectandstart"></span><dl class="function">
+<dt id="detectandstart.detect_picam">
+<code class="descclassname">detectandstart.</code><code class="descname">detect_picam</code><span class="sig-paren">(</span><em>updater: libs.Updater.Updater</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/detectandstart.html#detect_picam"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#detectandstart.detect_picam" title="Permalink to this definition">§</a></dt>
+<dd><p>Detects the existence of a picam
+on all SPC-OS devices this will return true if the picam is installed
+on other rpis it may return false if the raspberrypi-firmware-tools is not installed or the boot.cfg flag
+for the camera is not set.</p>
+<p>todo: this shoud return an empty tuple if an ivport is detected.
+todo: clean this up so that it doesnt require subprocess.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Creates:</th><td class="field-body"><a class="reference internal" href="libs.html#libs.Camera.PiCamera" title="libs.Camera.PiCamera"><code class="xref py py-mod docutils literal"><span class="pre">libs.Camera.PiCamera</span></code></a>, <a class="reference internal" href="libs.html#libs.Uploader.Uploader" title="libs.Uploader.Uploader"><code class="xref py py-mod docutils literal"><span class="pre">libs.Uploader.Uploader</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>updater</strong> (<a class="reference internal" href="libs.html#module-libs.Updater" title="libs.Updater"><em>Updater</em></a>) – instance that has a <cite>communication_queue</cite> member that implements an <cite>append</cite> method</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">tuple of raspberry pi camera thread and uploader.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a>(<a class="reference internal" href="libs.html#libs.Camera.PiCamera" title="libs.Camera.PiCamera">PiCamera</a>, <a class="reference internal" href="libs.html#module-libs.Uploader" title="libs.Uploader">Uploader</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="detectandstart.detect_gphoto">
+<code class="descclassname">detectandstart.</code><code class="descname">detect_gphoto</code><span class="sig-paren">(</span><em>updater: libs.Updater.Updater</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/detectandstart.html#detect_gphoto"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#detectandstart.detect_gphoto" title="Permalink to this definition">§</a></dt>
+<dd><p>Detects DSLRs using <a class="reference external" href="https://github.com/borevitzlab/gphoto2-cffi">borevitzlab/gphoto2-cffi</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Creates:</th><td class="field-body"><a class="reference internal" href="libs.html#libs.Camera.GPCamera" title="libs.Camera.GPCamera"><code class="xref py py-mod docutils literal"><span class="pre">libs.Camera.GPCamera</span></code></a>, <a class="reference internal" href="libs.html#libs.Uploader.Uploader" title="libs.Uploader.Uploader"><code class="xref py py-mod docutils literal"><span class="pre">libs.Uploader.Uploader</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>updater</strong> (<a class="reference internal" href="libs.html#module-libs.Updater" title="libs.Updater"><em>Updater</em></a>) – instance that has a <cite>communication_queue</cite> member that implements an <cite>append</cite> method</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">tuple of camera thread objects and associated uploader thread objects.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a>(<a class="reference internal" href="libs.html#libs.Camera.GPCamera" title="libs.Camera.GPCamera">GPCamera</a>, <a class="reference internal" href="libs.html#module-libs.Uploader" title="libs.Uploader">Uploader</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="detectandstart.detect_webcam">
+<code class="descclassname">detectandstart.</code><code class="descname">detect_webcam</code><span class="sig-paren">(</span><em>updater: libs.Updater.Updater</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/detectandstart.html#detect_webcam"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#detectandstart.detect_webcam" title="Permalink to this definition">§</a></dt>
+<dd><p>Detects usb web camers using the video4linux pyudev subsystem.</p>
+<p>i.e. if the camera shows up as a /dev/videoX device, it sould be detected here.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Creates:</th><td class="field-body"><a class="reference internal" href="libs.html#libs.Camera.USBCamera" title="libs.Camera.USBCamera"><code class="xref py py-mod docutils literal"><span class="pre">libs.Camera.USBCamera</span></code></a>, <a class="reference internal" href="libs.html#libs.Uploader.Uploader" title="libs.Uploader.Uploader"><code class="xref py py-mod docutils literal"><span class="pre">libs.Uploader.Uploader</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>updater</strong> (<a class="reference internal" href="libs.html#module-libs.Updater" title="libs.Updater"><em>Updater</em></a>) – instance that has a <cite>communication_queue</cite> member that implements an <cite>append</cite> method</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">tuple of camera thread objects and associated uploader thread objects.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a>(<a class="reference internal" href="libs.html#libs.Camera.USBCamera" title="libs.Camera.USBCamera">USBCamera</a>, <a class="reference internal" href="libs.html#module-libs.Uploader" title="libs.Uploader">Uploader</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="detectandstart.detect_sensors">
+<code class="descclassname">detectandstart.</code><code class="descname">detect_sensors</code><span class="sig-paren">(</span><em>updater: libs.Updater.Updater</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/detectandstart.html#detect_sensors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#detectandstart.detect_sensors" title="Permalink to this definition">§</a></dt>
+<dd><p>Detects sensors from sensor_list file. This is stupid, hacky and awful.</p>
+<p>TODO: make this better and not permanently linked to sftp.traitcapture.org</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Creates:</th><td class="field-body"><a class="reference internal" href="libs.html#libs.Sensor.Sensor" title="libs.Sensor.Sensor"><code class="xref py py-mod docutils literal"><span class="pre">libs.Sensor.Sensor</span></code></a>, <a class="reference internal" href="libs.html#libs.Uploader.Uploader" title="libs.Uploader.Uploader"><code class="xref py py-mod docutils literal"><span class="pre">libs.Uploader.Uploader</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>updater</strong> (<a class="reference internal" href="libs.html#module-libs.Updater" title="libs.Updater"><em>Updater</em></a>) – instance that has a <cite>communication_queue</cite> member that implements an <cite>append</cite> method</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">tuple of started sensor objects and uploaders for their data</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a>(<a class="reference internal" href="libs.html#module-libs.Sensor" title="libs.Sensor">Sensor</a>, <a class="reference internal" href="libs.html#module-libs.Uploader" title="libs.Uploader">Uploader</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="detectandstart.detect_ivport">
+<code class="descclassname">detectandstart.</code><code class="descname">detect_ivport</code><span class="sig-paren">(</span><em>updater: libs.Updater.Updater</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/detectandstart.html#detect_ivport"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#detectandstart.detect_ivport" title="Permalink to this definition">§</a></dt>
+<dd><p>Method to detect IVport multiplexer.
+Its difficult to actually detect the existence of an ivport so we must just assume taht it exists if there is a
+config file matching the right pattern</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Creates:</th><td class="field-body"><a class="reference internal" href="libs.html#libs.Camera.IVPortCamera" title="libs.Camera.IVPortCamera"><code class="xref py py-mod docutils literal"><span class="pre">libs.Camera.IVPortCamera</span></code></a>, <a class="reference internal" href="libs.html#libs.Uploader.Uploader" title="libs.Uploader.Uploader"><code class="xref py py-mod docutils literal"><span class="pre">libs.Uploader.Uploader</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>updater</strong> (<a class="reference internal" href="libs.html#module-libs.Updater" title="libs.Updater"><em>Updater</em></a>) – instance that has a <cite>communication_queue</cite> member that implements an <cite>append</cite> method</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">tuple of camera thread objects and associated uploader thread objects.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a>(<a class="reference internal" href="libs.html#module-libs.Camera" title="libs.Camera">Camera</a>, <a class="reference internal" href="libs.html#module-libs.Uploader" title="libs.Uploader">Uploader</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="detectandstart.get_default_camera_conf">
+<code class="descclassname">detectandstart.</code><code class="descname">get_default_camera_conf</code><span class="sig-paren">(</span><em>ident</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/detectandstart.html#get_default_camera_conf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#detectandstart.get_default_camera_conf" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="detectandstart.run_from_global_config">
+<code class="descclassname">detectandstart.</code><code class="descname">run_from_global_config</code><span class="sig-paren">(</span><em>updater: libs.Updater.Updater</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/detectandstart.html#run_from_global_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#detectandstart.run_from_global_config" title="Permalink to this definition">§</a></dt>
+<dd><p>Runs the startup from a yaml file defining the devices connected to the raspberry pi.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>updater</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="detectandstart.enumerate_usb_devices">
+<code class="descclassname">detectandstart.</code><code class="descname">enumerate_usb_devices</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; set<a class="reference internal" href="_modules/detectandstart.html#enumerate_usb_devices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#detectandstart.enumerate_usb_devices" title="Permalink to this definition">§</a></dt>
+<dd><p>Gets a set of the current usb devices from pyudev</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">set of pyudev usb device objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="libs.html#libs.Light.HelioSpectra.set" title="libs.Light.HelioSpectra.set">set</a>(<a class="reference external" href="https://pyudev.readthedocs.io/en/latest/api/pyudev.html#pyudev.Device" title="(in pyudev v0.21)">pyudev.Device</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="detectandstart.start_workers">
+<code class="descclassname">detectandstart.</code><code class="descname">start_workers</code><span class="sig-paren">(</span><em>worker_objects: tuple</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/detectandstart.html#start_workers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#detectandstart.start_workers" title="Permalink to this definition">§</a></dt>
+<dd><p>Starts threaded workers</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>worker_objects</strong> – tuple of worker objects (threads)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple of started worker objects</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)">tuple</a>(<a class="reference external" href="https://docs.python.org/3.5/library/threading.html#threading.Thread" title="(in Python v3.5)">threading.Thread</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="detectandstart.kill_workers">
+<code class="descclassname">detectandstart.</code><code class="descname">kill_workers</code><span class="sig-paren">(</span><em>worker_objects: tuple</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/detectandstart.html#kill_workers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#detectandstart.kill_workers" title="Permalink to this definition">§</a></dt>
+<dd><p>stops all workers</p>
+<p>calls the stop method of the workers (they should all implement this as they are threads).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>worker_objects</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#tuple" title="(in Python v3.5)"><em>tuple</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3.5/library/threading.html#threading.Thread" title="(in Python v3.5)"><em>threading.Thread</em></a><em>)</em>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 
 
@@ -97,7 +276,7 @@
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.5</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>
