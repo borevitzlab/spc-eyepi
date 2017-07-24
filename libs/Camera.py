@@ -1461,6 +1461,9 @@ class USBCamera(Camera):
         :param sys_number: system device number of device to use
         :param kwargs:
         """
+
+
+        self.logger = logging.getLogger(identifier)
         # only webcams have a v4l sys_number.
         self.sys_number = int(sys_number)
         self.video_capture = None
