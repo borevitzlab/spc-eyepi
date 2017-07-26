@@ -77,6 +77,8 @@ class Updater(Thread):
             uri = api_endpoint.format(SysUtil.get_machineid())
             response = requests.patch(uri, json=data)
             # do backwards change if response is valid later.
+            current_config = yaml.load(open("{}.yml".format(SysUtil.get_hostname()))) or dict()
+
             try:
                 if response.status_code == 200:
                     # do config modify/parse of command here.
@@ -84,6 +86,20 @@ class Updater(Thread):
                     for key, value in data.copy().items():
                         if value == {}:
                             del data[str(key)]
+
+                    if "chamber" in data.keys():
+                        chamberconf = current_config.get("chamber", {})
+                        newchamberconf = data.get("chamber", {})
+                        datafile_uri = newchamberconf.get("datafile_uri", None)
+                        if chamberconf.get("datafile_md5") != newchamberconf.get("datafile_md5") and datafile_uri:
+                            req = requests.get("https://traitcapture.org{}".format(datafile_uri))
+                            if req.ok:
+                                fn = "{}.csv".format(SysUtil.get_hostname())
+                                with open(fn, 'w') as f:
+                                    f.write(req.text)
+                                data['chamber']['datafile'] = fn
+                            else:
+                                self.logger.warning("Couldnt download new solarcalc file. {}".format(req.reason))
 
                     thed = data.pop("cameras", [])
                     data['cameras'] = {}
@@ -107,9 +123,6 @@ class Updater(Thread):
 
         except Exception as e:
             self.logger.error("Error collecting data to post to server: {}".format(str(e)))
-
-    def set_yaml_data(self, data):
-        pass
 
     def process_deque(self, cameras=None):
         if not cameras:
