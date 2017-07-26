@@ -2,6 +2,7 @@ import json
 import logging
 import logging.config
 import time
+import yaml
 from collections import deque
 from threading import Thread, Event
 import requests
@@ -98,7 +99,7 @@ class Updater(Thread):
                         data['cameras'][cam['identifier']] = cam
 
                     if len(data) > 0:
-                        self.set_config_data(data)
+                        SysUtil.write_global_config(data)
                 else:
                     self.logger.error("Unable to authenticate with the server.")
             except Exception as e:
@@ -106,31 +107,6 @@ class Updater(Thread):
 
         except Exception as e:
             self.logger.error("Error collecting data to post to server: {}".format(str(e)))
-
-    def set_config_data(self, data: dict):
-        SysUtil.write_global_config(data)
-
-        for identifier, update_data in data.items():
-            # dont rewrite empty...
-            if not len(update_data):
-                continue
-
-            if identifier == "meta":
-                hostname = update_data.get("hostname", None)
-                if hostname:
-                    SysUtil.set_hostname(hostname)
-                if update_data.get("update", False):
-                    SysUtil.update_from_git()
-
-            config = SysUtil.ensure_config(identifier)
-            sections = set(config.sections()).intersection(set(update_data.keys()))
-            for section in sections:
-                update_section = update_data[section]
-                options = set(config.options(section)).intersection(set(update_section.keys()))
-                for option in options:
-                    config.set(section, option, str(update_section[option]))
-
-            SysUtil.write_config(config, identifier)
 
     def set_yaml_data(self, data):
         pass
@@ -156,8 +132,10 @@ class Updater(Thread):
         free_mb, total_mb = SysUtil.get_fs_space_mb()
         onion_address, cookie_auth, cookie_client = SysUtil.get_tor_host()
 
-        cameras = SysUtil.configs_from_identifiers(self.identifiers | self.temp_identifiers)
+        # cameras = SysUtil.configs_from_identifiers(self.identifiers | self.temp_identifiers)
         self.logger.debug("Announcing for {}".format(str(list(self.identifiers | self.temp_identifiers))))
+        conf = yaml.load(open("{}.yml".format(SysUtil.get_hostname()))) or dict()
+        cameras = conf.get("cameras", dict())
 
         camera_data = dict(
             meta=dict(
