@@ -11,7 +11,11 @@ from libs.Uploader import Uploader, GenericUploader
 from libs.Chamber import Chamber
 from libs.Sensor import SenseHatMonitor, DHTMonitor
 from threading import Lock
+from zlib import adler32
+import string
+import random
 import traceback
+
 
 __author__ = "Gareth Dunstone"
 __copyright__ = "Copyright 2016, Borevitz Lab"
@@ -427,6 +431,16 @@ def kill_workers(worker_objects: tuple):
     for thread in worker_objects:
         thread.stop()
 
+def get_checksum(hostname):
+    fp = "/home/spc-eyepi/{}.yml".format(hostname)
+
+    if not os.path.exists(fp):
+        with open(fp, 'w') as f:
+            f.write("")
+    checksum = "".join([random.choice(string.ascii_letters) for _ in range(8)])
+    with open(fp, 'rb') as f:
+        checksum = "{:X}".format(adler32(f.read()))
+    return checksum
 
 if __name__ == "__main__":
 
@@ -443,7 +457,8 @@ if __name__ == "__main__":
         updater = Updater()
         start_workers((updater,))
         hostname = SysUtil.get_hostname()
-        mtime = os.stat("/home/spc-eyepi/{}.yml".format(hostname)).st_mtime
+        checksum = get_checksum(hostname)
+        recent = time.time()
         try:
             workers = run_from_global_config(updater)
         except Exception as e:
@@ -452,23 +467,24 @@ if __name__ == "__main__":
 
         # enumerate the usb devices to compare them later on.
         glock = Lock()
-        recent = time.time()
 
 
         def recreate(action, event):
             # thes all need to be "globalised"
             global glock
             global workers
+            global checksum
+            global hostname
             global recent
             try:
                 # use manual global lock.
                 # this callback is from the observer thread, so we need to lock shared resources.
-                if abs(time.time() - recent) > 10:
+                if time.time() - 10 > recent:
                     with glock:
                         logger.warning("Recreating workers, {}".format(action))
                         kill_workers(workers)
                         workers = run_from_global_config(updater)
-                        recent = time.time()
+                        checksum = get_checksum(hostname)
             except Exception as e:
                 logger.fatal(e)
                 traceback.print_exc()
@@ -477,13 +493,12 @@ if __name__ == "__main__":
         monitor = pyudev.Monitor.from_netlink(context)
         observer = pyudev.MonitorObserver(monitor, recreate)
         observer.start()
-        # usb_devices = enumerate_usb_devices()
 
         while True:
             try:
-                if mtime != os.stat("/home/spc-eyepi/{}.yml".format(hostname)).st_mtime:
+                if checksum != get_checksum(hostname):
                     recreate("config_change", None)
-                    mtime = os.stat("/home/spc-eyepi/{}.yml".format(hostname)).st_mtime
+                    checksum = get_checksum(hostname)
                 time.sleep(1)
             except (KeyboardInterrupt, SystemExit) as e:
                 kill_workers(workers)
