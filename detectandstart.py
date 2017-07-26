@@ -233,7 +233,7 @@ def run_from_global_config(updater: Updater) -> tuple:
     """
     workers = []
     hostname = SysUtil.get_hostname()
-    config_data = yaml.load(open("/home/spc-eyepi/{}.yml".format(hostname)))
+    config_data = yaml.load(open("/home/spc-eyepi/{}.yml".format(hostname))) or dict()
     camera_confs = config_data.get("cameras", dict())
 
     """
