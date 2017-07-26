@@ -12,6 +12,7 @@ import datetime
 import collections
 from dateutil import parser
 import traceback
+from zlib import crc32
 
 USBDEVFS_RESET = 21780
 try:
@@ -285,8 +286,11 @@ class SysUtil(object):
         with open(path, 'r') as fh:
             current_config = yaml.load(fh.read())
         current_config = recursive_update(current_config, data)
-        with open(path, 'w') as fh:
-            yaml.dump(current_config, fh, default_flow_style=False)
+        yml = yaml.dump(current_config, default_flow_style=False)
+        if SysUtil.get_checksum(path) != SysUtil.get_checksum_from_str(yml):
+            with open(path, 'w') as fh:
+                fh.write(yml)
+
 
     @staticmethod
     def reset_usb_device(bus: int, dev: int) -> bool:
@@ -305,6 +309,35 @@ class SysUtil(object):
             return True
         except Exception as e:
             SysUtil.logger.error("Couldnt reset usb device (possible filenotfound): {}".format(str(e)))
+
+    @staticmethod
+    def get_checksum(fp: str) -> str:
+        """
+        gets the string checksum for a file, or returns random if the file doesnt exist
+
+        :param fp: file path of the file.
+        :return: crc32 checksum of the file at fp, or random letters
+        """
+        checksum = "".join([random.choice(string.ascii_letters) for _ in range(8)])
+        if not os.path.exists(fp):
+            return checksum
+        with open(fp, 'rb') as f:
+            checksum = "{:X}".format(crc32(f.read()))
+        return checksum
+
+    @staticmethod
+    def get_checksum_from_str(input_data) -> str:
+        """
+        gets the string checksum for some bytes (or a string).
+
+        coerces strings using utf-8
+
+        :param input_data: file path of the file.
+        :return: crc32 checksum of the bytes
+        """
+        if type(input_data) is str:
+            input_data = bytes(input_data, 'utf-8')
+        return "{:X}".format(crc32(input_data))
 
     @staticmethod
     def default_identifier(prefix=None):

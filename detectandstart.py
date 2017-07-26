@@ -11,7 +11,7 @@ from libs.Uploader import Uploader, GenericUploader
 from libs.Chamber import Chamber
 from libs.Sensor import SenseHatMonitor, DHTMonitor
 from threading import Lock
-from zlib import adler32
+from zlib import crc32
 import string
 import random
 import traceback
@@ -431,16 +431,6 @@ def kill_workers(worker_objects: tuple):
     for thread in worker_objects:
         thread.stop()
 
-def get_checksum(hostname):
-    fp = "/home/spc-eyepi/{}.yml".format(hostname)
-
-    if not os.path.exists(fp):
-        with open(fp, 'w') as f:
-            f.write("")
-    checksum = "".join([random.choice(string.ascii_letters) for _ in range(8)])
-    with open(fp, 'rb') as f:
-        checksum = "{:X}".format(adler32(f.read()))
-    return checksum
 
 if __name__ == "__main__":
 
@@ -457,7 +447,7 @@ if __name__ == "__main__":
         updater = Updater()
         start_workers((updater,))
         hostname = SysUtil.get_hostname()
-        checksum = get_checksum(hostname)
+        checksum = SysUtil.get_checksum("{}.yml".format(hostname))
         recent = time.time()
         try:
             workers = run_from_global_config(updater)
@@ -484,7 +474,7 @@ if __name__ == "__main__":
                         logger.warning("Recreating workers, {}".format(action))
                         kill_workers(workers)
                         workers = run_from_global_config(updater)
-                        checksum = get_checksum(hostname)
+                        checksum = SysUtil.get_checksum("{}.yml".format(hostname))
             except Exception as e:
                 logger.fatal(e)
                 traceback.print_exc()
@@ -496,9 +486,9 @@ if __name__ == "__main__":
 
         while True:
             try:
-                if checksum != get_checksum(hostname):
+                if checksum != SysUtil.get_checksum("{}.yml".format(hostname)):
                     recreate("config_change", None)
-                    checksum = get_checksum(hostname)
+                    checksum = SysUtil.get_checksum("{}.yml".format(hostname))
                 time.sleep(1)
             except (KeyboardInterrupt, SystemExit) as e:
                 kill_workers(workers)
