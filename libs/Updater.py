@@ -104,13 +104,6 @@ class Updater(Thread):
                     thed = data.pop("cameras", [])
                     data['cameras'] = {}
                     for cam in thed:
-                        if cam['upload']:
-                            cam['upload'] = {
-                                'host': cam.pop("server"),
-                                'username': cam.pop("username"),
-                                'password': cam.pop("password"),
-                                'server_dir': '/picam'
-                            }
                         cam['output_dir'] = "/home/images/{}".format(cam['identifier'])
                         data['cameras'][cam['identifier']] = cam
 
