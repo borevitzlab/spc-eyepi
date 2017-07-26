@@ -210,8 +210,9 @@ class Camera(Thread):
             self.upload_directory = self.config["output_dir"]
         except:
             pass
-
-        self.spool_directory = tempfile.mkdtemp(prefix="SPC-EYEPI")
+        self.spool_directory = None
+        if self.config.get("disable_ram_spooling", False):
+            self.spool_directory = tempfile.mkdtemp(prefix="SPC-EYEPI")
 
         self.begin_capture = datetime.time(0, 0)
         self.end_capture = datetime.time(23, 59)
@@ -492,6 +493,7 @@ class Camera(Thread):
         except Exception as e:
             self.logger.error("Inter-thread communication error: {}".format(str(e)))
 
+
     def run(self):
         """
         Main method. continuously captures and stores images.
@@ -505,85 +507,86 @@ class Camera(Thread):
 
             if self.time_to_capture:
                 try:
-                    start_capture_time = time.time()
-                    raw_image = self.timestamped_imagename
+                    with tempfile.TemporaryDirectory(prefix=self.name) as spool:
+                        start_capture_time = time.time()
+                        raw_image = self.timestamped_imagename
 
-                    self.logger.info("Capturing for {}".format(self.identifier))
-                    telemetry = dict()
-                    files = self.capture(filename=os.path.join(self.spool_directory, raw_image))
-                    # capture. if capture didnt happen dont continue with the rest.
-                    if len(files) == 0:
-                        self.failed.append(self.current_capture_time)
-                        continue
+                        self.logger.info("Capturing for {}".format(self.identifier))
+                        telemetry = dict()
+                        files = self.capture(filename=os.path.join(spool, raw_image))
+                        # capture. if capture didnt happen dont continue with the rest.
+                        if len(files) == 0:
+                            self.failed.append(self.current_capture_time)
+                            continue
 
-                    telemetry["timing_capture_s"] = float(time.time() - start_capture_time)
+                        telemetry["timing_capture_s"] = float(time.time() - start_capture_time)
 
-                    st = time.time()
-                    resize_t = 0.0
-                    if self.config.get("resize_last", False):
-                        self._image = cv2.resize(self._image, (Camera.default_width, Camera.default_height),
-                                                 interpolation=cv2.INTER_NEAREST)
-                        resize_t = time.time() - st
+                        st = time.time()
+                        resize_t = 0.0
+                        if self.config.get("resize_last", False):
+                            self._image = cv2.resize(self._image, (Camera.default_width, Camera.default_height),
+                                                     interpolation=cv2.INTER_NEAREST)
+                            resize_t = time.time() - st
 
-                    cv2.putText(self._image,
-                                self.timestamped_imagename,
-                                org=(20, self._image.shape[0] - 20),
-                                fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                                fontScale=1,
-                                color=(0, 0, 255),
-                                thickness=2,
-                                lineType=cv2.LINE_AA)
+                        cv2.putText(self._image,
+                                    self.timestamped_imagename,
+                                    org=(20, self._image.shape[0] - 20),
+                                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                                    fontScale=1,
+                                    color=(0, 0, 255),
+                                    thickness=2,
+                                    lineType=cv2.LINE_AA)
 
-                    cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"), self._image)
-                    shutil.copy(os.path.join("/dev/shm", self.identifier + ".jpg"),
-                                os.path.join(self.upload_directory, "last_image.jpg"))
-                    telemetry["timing_resize_s"] = float(resize_t)
-                    self.logger.info("Resize {0:.3f}s, total: {0:.3f}s".format(resize_t, time.time() - st))
+                        cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"), self._image)
+                        shutil.copy(os.path.join("/dev/shm", self.identifier + ".jpg"),
+                                    os.path.join(self.upload_directory, "last_image.jpg"))
+                        telemetry["timing_resize_s"] = float(resize_t)
+                        self.logger.info("Resize {0:.3f}s, total: {0:.3f}s".format(resize_t, time.time() - st))
 
-                    # copying/renaming for files
-                    oldfiles = files[:]
-                    files = []
+                        # copying/renaming for files
+                        oldfiles = files[:]
+                        files = []
 
-                    for fn in oldfiles:
-                        if type(fn) is list:
-                            files.extend(fn)
-                        else:
-                            files.append(fn)
-                    try:
-                        telemetry["num_files_created"] = len(files)
-                    except:
-                        pass
-                    for fn in files:
-                        # move files to the upload directory
+                        for fn in oldfiles:
+                            if type(fn) is list:
+                                files.extend(fn)
+                            else:
+                                files.append(fn)
                         try:
-                            if self.config.get("capture_timelapse", False):
-                                shutil.move(fn, self.upload_directory)
-                                self.logger.info("Captured & stored for upload - {}".format(os.path.basename(fn)))
-                        except Exception as e:
-                            self.logger.error("Couldn't move for timestamped: {}".format(str(e)))
+                            telemetry["num_files_created"] = len(files)
+                        except:
+                            pass
+                        for fn in files:
+                            # move files to the upload directory
+                            try:
+                                if self.config.get("capture_timelapse", False):
+                                    shutil.move(fn, self.upload_directory)
+                                    self.logger.info("Captured & stored for upload - {}".format(os.path.basename(fn)))
+                            except Exception as e:
+                                self.logger.error("Couldn't move for timestamped: {}".format(str(e)))
 
-                        # remove the spooled files that remain
+                            # remove the spooled files that remain
+                            try:
+                                if os.path.isfile(fn):
+                                    self.logger.info("File remaining in spool directory, removing: {}".format(fn))
+                                    os.remove(fn)
+                            except Exception as e:
+                                self.logger.error("Couldn't remove spooled when it still exists: {}".format(str(e)))
+                        # log total capture time
+                        total_capture_time = time.time() - start_capture_time
+                        self.logger.info("Total capture time: {0:.2f}s".format(total_capture_time))
+                        telemetry["timing_total_s"] = float(total_capture_time)
+                        # communicate our success with the updater
                         try:
-                            if os.path.isfile(fn):
-                                self.logger.info("File remaining in spool directory, removing: {}".format(fn))
-                                os.remove(fn)
-                        except Exception as e:
-                            self.logger.error("Couldn't remove spooled when it still exists: {}".format(str(e)))
-                    # log total capture time
-                    total_capture_time = time.time() - start_capture_time
-                    self.logger.info("Total capture time: {0:.2f}s".format(total_capture_time))
-                    telemetry["timing_total_s"] = float(total_capture_time)
-                    # communicate our success with the updater
-                    try:
-                        telegraf_client = telegraf.TelegrafClient(host="localhost", port=8092)
-                        telegraf_client.metric("camera", telemetry, tags={"camera_name": self.name})
-                        self.logger.debug("Communicated sesor data to telegraf")
-                    except Exception as exc:
-                        self.logger.error("Couldnt communicate with telegraf client. {}".format(str(exc)))
+                            telegraf_client = telegraf.TelegrafClient(host="localhost", port=8092)
+                            telegraf_client.metric("camera", telemetry, tags={"camera_name": self.name})
+                            self.logger.debug("Communicated sesor data to telegraf")
+                        except Exception as exc:
+                            self.logger.error("Couldnt communicate with telegraf client. {}".format(str(exc)))
 
-                    self.communicate_with_updater()
-                    # sleep for a little bit so we dont try and capture again so soon.
-                    time.sleep(Camera.accuracy * 2)
+                        self.communicate_with_updater()
+                        # sleep for a little bit so we dont try and capture again so soon.
+                        time.sleep(Camera.accuracy * 2)
                 except Exception as e:
                     self.logger.critical("Image Capture error - {}".format(str(e)))
             time.sleep(1)

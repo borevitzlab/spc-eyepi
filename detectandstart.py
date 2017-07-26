@@ -444,7 +444,11 @@ if __name__ == "__main__":
         start_workers((updater,))
         hostname = SysUtil.get_hostname()
         mtime = os.stat("/home/spc-eyepi/{}.yml".format(hostname)).st_mtime
-        workers = run_from_global_config(updater)
+        try:
+            workers = run_from_global_config(updater)
+        except Exception as e:
+            logger.fatal(e)
+            traceback.print_exc()
 
         # enumerate the usb devices to compare them later on.
         glock = Lock()
@@ -456,16 +460,18 @@ if __name__ == "__main__":
             global glock
             global workers
             global recent
-
-            # use manual global lock.
-            # this callback is from the observer thread, so we need to lock shared resources.
-            if abs(time.time() - recent) > 10:
-                with glock:
-                    logger.warning("Recreating workers, {}".format(action))
-                    kill_workers(workers)
-                    workers = run_from_global_config(updater)
-                    recent = time.time()
-
+            try:
+                # use manual global lock.
+                # this callback is from the observer thread, so we need to lock shared resources.
+                if abs(time.time() - recent) > 10:
+                    with glock:
+                        logger.warning("Recreating workers, {}".format(action))
+                        kill_workers(workers)
+                        workers = run_from_global_config(updater)
+                        recent = time.time()
+            except Exception as e:
+                logger.fatal(e)
+                traceback.print_exc()
 
         context = pyudev.Context()
         monitor = pyudev.Monitor.from_netlink(context)
@@ -481,7 +487,6 @@ if __name__ == "__main__":
                 time.sleep(1)
             except (KeyboardInterrupt, SystemExit) as e:
                 kill_workers(workers)
-                kill_workers([updater])
                 raise e
             except Exception as e:
                 logger.fatal(traceback.format_exc())

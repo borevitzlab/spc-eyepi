@@ -345,7 +345,8 @@ class Chamber(Thread):
             data = dict(
                 name=self.name,
                 identifier=self.identifier,
-                last_timepoint=self.current_csv_timepoint.isoformat())
+                last_timepoint=self.current_csv_timepoint.isoformat()
+            )
             # append our data dict to the communication_queue deque.
             self.communication_queue.append(data)
         except Exception as e:
