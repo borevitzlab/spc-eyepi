@@ -383,8 +383,9 @@ def run_from_global_config(updater: Updater) -> tuple:
     """
     chamber_conf = config_data.get("chamber", None)
     if chamber_conf:
-        chamber = Chamber(identifier=chamber_conf.get("name"),
-                          config=chamber_conf)
+        if chamber_conf.get("datafile",None):
+            chamber = Chamber(identifier=chamber_conf.get("name"),
+                              config=chamber_conf)
         workers.append(chamber)
     return start_workers(workers)
 

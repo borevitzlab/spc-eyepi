@@ -39,7 +39,7 @@ class Updater(Thread):
 
     def handle_mqtt_message(self, client, userdata, message):
         payload = message.payload.decode("utf-8").strip()
-
+        self.logger.debug("topic: {} payload: {}".format(message.topic, payload))
         if message.topic == "rpi/{}/operation".format(SysUtil.get_machineid()):
             if payload == "UPDATECONF":
                 self.go()
@@ -47,6 +47,7 @@ class Updater(Thread):
                 SysUtil.reboot()
 
     def setupmqtt(self):
+
         self.mqtt = client.Client(client_id=SysUtil.get_hostname()+"-Updater",
                                   clean_session=False,
                                   protocol=client.MQTTv311,
@@ -57,11 +58,10 @@ class Updater(Thread):
         except:
             self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password="INVALIDPASSWORD")
 
-        self.mqtt.connect_async("10.8.0.1", port=1883)
-
+        self.mqtt.connect("10.8.0.1", port=1883)
+        self.logger.debug("Subscribing to rpi/{}/operation".format(SysUtil.get_machineid()))
         self.mqtt.subscribe("rpi/{}/operation".format(SysUtil.get_machineid()), qos=1)
         self.mqtt.on_message = self.handle_mqtt_message
-
         self.mqtt.loop_start()
 
     def updatemqtt(self, message: bytes):
