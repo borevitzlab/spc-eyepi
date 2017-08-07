@@ -57,11 +57,10 @@ class Updater(Thread):
                 self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password=f.read().strip())
         except:
             self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password="INVALIDPASSWORD")
-
+        self.mqtt.on_message = self.handle_mqtt_message
         self.mqtt.connect("10.8.0.1", port=1883)
         self.logger.debug("Subscribing to rpi/{}/operation".format(SysUtil.get_machineid()))
         self.mqtt.subscribe("rpi/{}/operation".format(SysUtil.get_machineid()), qos=1)
-        self.mqtt.on_message = self.handle_mqtt_message
         self.mqtt.loop_start()
 
     def updatemqtt(self, message: bytes):
