@@ -61,7 +61,7 @@ class Updater(Thread):
         self.mqtt.connect("10.8.0.1", port=1883)
         self.logger.debug("Subscribing to rpi/{}/operation".format(SysUtil.get_machineid()))
         self.mqtt.subscribe("rpi/{}/operation".format(SysUtil.get_machineid()), qos=1)
-        self.mqtt.loop_start()
+        self.mqtt.loop_forever()
 
     def updatemqtt(self, message: bytes):
         # update mqtt
