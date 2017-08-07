@@ -490,7 +490,7 @@ if __name__ == "__main__":
                 if checksum != SysUtil.get_checksum("{}.yml".format(hostname)):
                     recreate("config_change", None)
                     checksum = SysUtil.get_checksum("{}.yml".format(hostname))
-                time.sleep(1)
+                time.sleep(60*60*12)
             except (KeyboardInterrupt, SystemExit) as e:
                 kill_workers(workers)
                 raise e

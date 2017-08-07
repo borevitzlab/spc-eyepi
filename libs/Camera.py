@@ -6,7 +6,8 @@ import time
 import tempfile
 import numpy
 import requests
-from dateutil import parser
+from dateutil import zoneinfo, parser
+
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from xml.etree import ElementTree
 from collections import deque
@@ -15,20 +16,21 @@ import threading
 from threading import Thread, Event, Lock
 from libs.SysUtil import SysUtil
 import paho.mqtt.client as client
+from paho.mqtt.publish import single
+from libs.SysUtil import recursive_update
+import json
 import cv2
+from zlib import crc32
+import yaml
+
+timezone = zoneinfo.get_zonefile_instance().get("Australia/Canberra")
+
 
 try:
     logging.config.fileConfig("logging.ini")
     logging.getLogger("paramiko").setLevel(logging.WARNING)
 except:
     pass
-try:
-    # improt yaml module and assert that it has a load function
-    import yaml
-
-    assert yaml.load
-except Exception as e:
-    logging.error("Couldnt import suitable yaml module, no IP camera support: {}".format(str(e)))
 
 try:
     import gphoto2cffi as gp
@@ -247,28 +249,106 @@ class Camera(Thread):
         self.current_capture_time = datetime.datetime.now()
         self.setupmqtt()
 
+    def set_config(self, pdict):
+
+        default_conf = {
+            'name': self.identifier,
+            "capture": True,
+            'interval': 300,
+            'starttime': "5AM",
+            'stoptime': "10PM",
+            'resize': True,
+            'output_dir': "/home/images/{}".format(self.identifier)
+        }
+        global_conf = yaml.load(open("{}.yml".format(SysUtil.get_hostname())))
+        camera_conf = global_conf['cameras'].get(self.identifier, default_conf)
+        camera_conf = recursive_update(camera_conf, pdict)
+        global_conf['cameras'][self.identifier] = camera_conf
+        SysUtil.write_global_config(global_conf)
+
+    def mqtt_on_message(self, client, userdata, msg):
+        """
+        handler for mqtt messages on a per camera basis.
+
+        :param client: mqtt client
+        :param userdata: mqtt userdata
+        :param msg: message to be decoded
+        """
+
+        payload = msg.payload.decode("utf-8").strip()
+        self.logger.debug("topic: {} payload: {}".format(msg.topic, payload))
+        if msg.topic == "camera/{}/config".format(self.identifier):
+            data = json.loads(payload)
+            uploaddict = {}
+            if "server_dir" in data.keys():
+                uploaddict["server_dir"] = data.pop('server_dir')
+            if "username" in data.keys():
+                uploaddict["username"] = data.pop('username')
+            if "password" in data.keys():
+                uploaddict["password"] = data.pop('password')
+            if "server" in data.keys():
+                uploaddict["host"] = data.pop('server')
+
+            if "starttime" in data.keys():
+                try:
+                    parsed = parser.parse(data["starttime"],
+                                          parserinfo=TwentyFourHourTimeParserInfo())
+                    self.begin_capture = parsed.time()
+                except:
+                    pass
+
+            if "stoptime" in data.keys():
+                try:
+                    parsed = parser.parse(data["stoptime"],
+                                          parserinfo=TwentyFourHourTimeParserInfo())
+                    self.end_capture = parsed.time()
+                except:
+                    pass
+            if "timestamped" in data.keys():
+                data['capture_timelapse'] = data.pop('timestamped')
+
+            self.config = recursive_update(self.config, data)
+            for k, v in data.items():
+                if hasattr(self, k) and not callable(getattr(self, k)):
+                    setattr(self, k, v)
+
+            data['upload'] = uploaddict
+            self.set_config(data)
+
+        if msg.topic == "camera/{}/capture".format(self.identifier):
+            if payload == "CAPTURE_NOW":
+                self.capture_image(self.timestamped_imagename)
+
+    def mqtt_on_connect(self, client, *args):
+        self.mqtt.subscribe("camera/{}/config".format(self.identifier), qos=1)
+        self.mqtt.subscribe("camera/{}/operation".format(self.identifier), qos=1)
+
     def setupmqtt(self):
-        self.mqtt = client.Client(client_id=SysUtil.get_hostname(),
-                                  clean_session=False,
+        client_id = str(crc32(bytes(self.identifier, 'utf8')))
+        self.mqtt = client.Client(client_id=client_id,
+                                  clean_session=True,
                                   protocol=client.MQTTv311,
                                   transport="tcp")
+
+        self.mqtt.on_message = self.mqtt_on_message
+        self.mqtt.on_connect = self.mqtt_on_connect
         try:
             with open("mqttpassword") as f:
-                self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password=f.read().strip())
+                self.mqtt.username_pw_set(username=SysUtil.get_hostname()+self.identifier, password=f.read().strip())
         except:
-            self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password="INVALIDPASSWORD")
+            self.mqtt.username_pw_set(username=SysUtil.get_hostname()+self.identifier, password="INVALIDPASSWORD")
 
         self.mqtt.connect_async("10.8.0.1", port=1883)
         self.mqtt.loop_start()
 
-    def updatemqtt(self, message: bytes):
+    def updatemqtt(self, msg: bytes):
         # update mqtt
-        message = self.mqtt.publish(payload=message,
-                                    topic="camera/{}/capture".format(self.identifier),
-                                    qos=1)
-
+        self.logger.debug("Updating mqtt")
+        msg = self.mqtt.publish(payload=msg,
+                                topic="camera/{}/capture".format(self.identifier),
+                                qos=1)
         time.sleep(0.5)
-        if not message.is_published():
+        if not msg.is_published():
             self.mqtt.loop_stop()
             self.mqtt.loop_start()
 
@@ -410,10 +490,6 @@ class Camera(Thread):
         """
         current_naive_time = self.current_capture_time.time()
 
-        # if not self.config.getboolean("camera", "enabled"):
-        #     # if the camera is disabled, never take photos
-        #     return False
-
         if self.begin_capture < self.end_capture:
             # where the start capture time is less than the end capture time
             if not self.begin_capture <= current_naive_time <= self.end_capture:
@@ -538,48 +614,49 @@ class Camera(Thread):
                     with tempfile.TemporaryDirectory(prefix=self.name) as spool:
                         start_capture_time = time.time()
                         raw_image = self.timestamped_imagename
-
-                        self.logger.info("Capturing for {}".format(self.identifier))
-                        telemetry = dict()
-                        files = self.capture(filename=os.path.join(spool, raw_image))
-                        # capture. if capture didnt happen dont continue with the rest.
-                        if len(files) == 0:
-                            self.failed.append(self.current_capture_time)
-                            continue
-
-                        telemetry["timing_capture_s"] = float(time.time() - start_capture_time)
-
-                        st = time.time()
-                        resize_t = 0.0
-                        if self.config.get("resize_last", False):
-                            self._image = cv2.resize(self._image, (Camera.default_width, Camera.default_height),
-                                                     interpolation=cv2.INTER_NEAREST)
-                            resize_t = time.time() - st
-
-                        cv2.putText(self._image,
-                                    self.timestamped_imagename,
-                                    org=(20, self._image.shape[0] - 20),
-                                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                                    fontScale=1,
-                                    color=(0, 0, 255),
-                                    thickness=2,
-                                    lineType=cv2.LINE_AA)
-
-                        cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"), self._image)
-                        shutil.copy(os.path.join("/dev/shm", self.identifier + ".jpg"),
-                                    os.path.join(self.upload_directory, "last_image.jpg"))
-                        telemetry["timing_resize_s"] = float(resize_t)
-                        self.logger.info("Resize {0:.3f}s, total: {0:.3f}s".format(resize_t, time.time() - st))
-
-                        # copying/renaming for files
-                        oldfiles = files[:]
                         files = []
+                        if self.config.get("capture", True):
+                            self.logger.info("Capturing for {}".format(self.identifier))
+                            telemetry = dict()
+                            files = self.capture(filename=os.path.join(spool, raw_image))
+                            # capture. if capture didnt happen dont continue with the rest.
+                            if len(files) == 0:
+                                self.failed.append(self.current_capture_time)
+                                continue
 
-                        for fn in oldfiles:
-                            if type(fn) is list:
-                                files.extend(fn)
-                            else:
-                                files.append(fn)
+                            telemetry["timing_capture_s"] = float(time.time() - start_capture_time)
+
+                            st = time.time()
+                            resize_t = 0.0
+                            if self.config.get("resize_last", False):
+                                self._image = cv2.resize(self._image, (Camera.default_width, Camera.default_height),
+                                                         interpolation=cv2.INTER_NEAREST)
+                                resize_t = time.time() - st
+
+                            cv2.putText(self._image,
+                                        self.timestamped_imagename,
+                                        org=(20, self._image.shape[0] - 20),
+                                        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                                        fontScale=1,
+                                        color=(0, 0, 255),
+                                        thickness=2,
+                                        lineType=cv2.LINE_AA)
+
+                            cv2.imwrite(os.path.join("/dev/shm", self.identifier + ".jpg"), self._image)
+                            shutil.copy(os.path.join("/dev/shm", self.identifier + ".jpg"),
+                                        os.path.join(self.upload_directory, "last_image.jpg"))
+                            telemetry["timing_resize_s"] = float(resize_t)
+                            self.logger.info("Resize {0:.3f}s, total: {0:.3f}s".format(resize_t, time.time() - st))
+
+                            # copying/renaming for files
+                            oldfiles = files[:]
+                            files = []
+
+                            for fn in oldfiles:
+                                if type(fn) is list:
+                                    files.extend(fn)
+                                else:
+                                    files.append(fn)
                         try:
                             telemetry["num_files_created"] = len(files)
                         except:
@@ -612,10 +689,10 @@ class Camera(Thread):
                         except Exception as exc:
                             self.logger.error("Couldnt communicate with telegraf client. {}".format(str(exc)))
                         try:
-                            self.updatemqtt(bytes(datetime.datetime.fromtimestamp(0).isoformat(), 'utf-8'))
+                            self.updatemqtt(bytes(self.current_capture_time.replace(tzinfo=timezone).isoformat(), 'utf-8'))
                         except:
                             pass
-                        self.communicate_with_updater()
+                        # self.communicate_with_updater()
                         # sleep for a little bit so we dont try and capture again so soon.
                         time.sleep(Camera.accuracy * 2)
                 except Exception as e:

@@ -10,6 +10,7 @@ from schedule import Scheduler
 from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
 import paho.mqtt.client as client
+from zlib import crc32
 
 try:
     logging.config.fileConfig("logging.ini")
@@ -21,6 +22,7 @@ remote_server = "traitcapture.org"
 
 api_endpoint = "https://traitcapture.org/api/v3/remote/by-machine/{}"
 
+client_id = str(crc32(bytes(SysUtil.get_hostname() + "-Updater", 'utf8')))
 
 
 class Updater(Thread):
@@ -30,7 +32,7 @@ class Updater(Thread):
         print("Thread started {}: {}".format(self.__class__, "Updater"))
         self.communication_queue = deque(tuple(), 512)
         self.scheduler = Scheduler()
-        self.scheduler.every(1).hours.do(self.go)
+        self.scheduler.every(12).hours.do(self.go)
         # self.scheduler.every(30).minutes.do(self.upload_log)
         self.stopper = Event()
         self.sshkey = SSHManager()
@@ -38,7 +40,7 @@ class Updater(Thread):
         self.temp_identifiers = set()
         self.setupmqtt()
 
-    def handle_mqtt_message(self, *args):
+    def mqtt_on_message(self, *args):
         message = args[-1]
         payload = message.payload.decode("utf-8").strip()
         self.logger.debug("topic: {} payload: {}".format(message.topic, payload))
@@ -48,30 +50,36 @@ class Updater(Thread):
             if payload == "REBOOT":
                 SysUtil.reboot()
 
+    def mqtt_on_connect(self, client, *args):
+        self.logger.debug("Subscribing to rpi/{}/operation".format(SysUtil.get_machineid()))
+        self.mqtt.subscribe("rpi/{}/operation".format(SysUtil.get_machineid()), qos=1)
 
     def setupmqtt(self):
-
-        self.mqtt = client.Client(client_id=SysUtil.get_hostname()+"-Updater",
+        self.mqtt = client.Client(client_id=client_id,
+                                  clean_session=True,
                                   protocol=client.MQTTv311,
                                   transport="tcp")
+
+        self.mqtt.on_message = self.mqtt_on_message
+        self.mqtt.on_connect = self.mqtt_on_connect
+
         try:
             with open("mqttpassword") as f:
                 self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password=f.read().strip())
         except:
             self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password="INVALIDPASSWORD")
 
-        self.mqtt.on_message = self.handle_mqtt_message
+        self.mqtt.connect_async("10.8.0.1", port=1883)
 
-        self.mqtt.connect("10.8.0.1", port=1883)
-
-        self.logger.debug("Subscribing to rpi/{}/operation".format(SysUtil.get_machineid()))
-        self.mqtt.subscribe("rpi/{}/operation".format(SysUtil.get_machineid()), qos=1)
         self.mqtt.loop_start()
 
-    def updatemqtt(self, message: bytes):
+    def updatemqtt(self, parameter: str, message: bytes):
         # update mqtt
+        self.logger.debug("Updating mqtt")
         message = self.mqtt.publish(payload=message,
-                                    topic="camera/{}/capture".format(self.identifier),
+                                    topic="rpi/{}/status/{}".format(
+                                        SysUtil.get_machineid(),
+                                        parameter),
                                     qos=1)
         time.sleep(0.5)
         if not message.is_published():
@@ -84,7 +92,7 @@ class Updater(Thread):
         :return:
         """
         isonow = SysUtil.get_isonow()
-        validation_msg = isonow+","+self.sshkey.sign_message(isonow)
+        validation_msg = isonow + "," + self.sshkey.sign_message(isonow)
         logs_fp = SysUtil.get_log_files()
         files = {l: open(l, 'rb') for l in logs_fp}
         a = requests.post("https://{}/raspberrypi{}/logs",
@@ -112,7 +120,6 @@ class Updater(Thread):
         """
         self.logger.debug("Adding {} to list of transient identifiers.".format(temp_identifier))
         self.temp_identifiers.add(temp_identifier)
-
 
     def go(self):
         try:

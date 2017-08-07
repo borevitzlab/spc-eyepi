@@ -7,16 +7,19 @@ from glob import glob
 from collections import deque
 from threading import Thread, Event
 import pysftp
+from dateutil import zoneinfo
 from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
 import paho.mqtt.client as client
-
+import json
+from zlib import crc32
 try:
     logging.config.fileConfig("logging.ini")
     logging.getLogger("paramiko").setLevel(logging.WARNING)
 except:
     pass
 
+timezone = zoneinfo.get_zonefile_instance().get("Australia/Canberra")
 
 class Uploader(Thread):
     """ Uploader class,
@@ -81,28 +84,60 @@ class Uploader(Thread):
         self.last_upload_list = []
         self.setupmqtt()
 
+    def mqtt_on_message(self, client, userdata, msg):
+        """
+        handler for mqtt messages on a per camera basis.
+
+        :param client: mqtt client
+        :param userdata: mqtt userdata
+        :param msg: message to be decoded
+        """
+
+        payload = msg.payload.decode("utf-8").strip()
+        self.logger.debug("topic: {} payload: {}".format(msg.topic, payload))
+        if msg.topic == "camera/{}/config".format(self.identifier):
+            data = json.loads(payload)
+            uploaddict = {}
+            self.server_dir = data.get('server_dir', self.server_dir)
+            self.username = data.get('username', self.username)
+            self.password = data.get('password', self.password)
+            self.host = data.get('server', self.host)
+            self.source_dir = data.get("output_dir", self.source_dir)
+            for k, v in data.items():
+                if hasattr(self, k) and not callable(getattr(self, k)):
+                    setattr(self, k, v)
+
+    def mqtt_on_connect(self, client, *args):
+        self.mqtt.subscribe("camera/{}/config".format(self.identifier), qos=1)
+
     def setupmqtt(self):
-        self.mqtt = client.Client(client_id=SysUtil.get_hostname(),
-                                  clean_session=False,
+        client_id = str(crc32(bytes(self.identifier+"-Uploader", 'utf8')))
+        self.mqtt = client.Client(client_id=client_id,
+                                  clean_session=True,
                                   protocol=client.MQTTv311,
                                   transport="tcp")
+
+        self.mqtt.on_message = self.mqtt_on_message
+        self.mqtt.on_connect = self.mqtt_on_connect
         try:
             with open("mqttpassword") as f:
-                self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password=f.read().strip())
+                self.mqtt.username_pw_set(username=SysUtil.get_hostname()+self.identifier+"-Uploader",
+                                          password=f.read().strip())
         except:
-            self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password="INVALIDPASSWORD")
+            self.mqtt.username_pw_set(username=SysUtil.get_hostname()+self.identifier+"-Uploader",
+                                      password="INVALIDPASSWORD")
 
         self.mqtt.connect_async("10.8.0.1", port=1883)
         self.mqtt.loop_start()
 
-    def updatemqtt(self, message: bytes):
+    def updatemqtt(self, msg: bytes):
+        self.logger.debug("Updating mqtt")
         # update mqtt
-        message = self.mqtt.publish(payload=message,
-                                    topic="camera/{}/capture".format(self.identifier),
-                                    qos=1)
-
+        msg = self.mqtt.publish(payload=msg,
+                                topic="camera/{}/upload".format(self.identifier),
+                                qos=1)
         time.sleep(0.5)
-        if not message.is_published():
+        if not msg.is_published():
             self.mqtt.loop_stop()
             self.mqtt.loop_start()
 
@@ -275,7 +310,7 @@ class Uploader(Thread):
                     self.upload(upload_list)
                     self.communicate_with_updater()
                     try:
-                        self.updatemqtt(bytes(self.last_upload_time.isoformat(), 'utf-8'))
+                        self.updatemqtt(bytes(self.last_upload_time.replace(tzinfo=timezone).isoformat(), 'utf-8'))
                     except:
                         pass
                     self.logger.info(
