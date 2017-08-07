@@ -386,7 +386,7 @@ def run_from_global_config(updater: Updater) -> tuple:
         if chamber_conf.get("datafile",None):
             chamber = Chamber(identifier=chamber_conf.get("name"),
                               config=chamber_conf)
-        workers.append(chamber)
+            workers.append(chamber)
     return start_workers(workers)
 
 
