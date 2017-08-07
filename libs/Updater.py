@@ -22,7 +22,6 @@ remote_server = "traitcapture.org"
 api_endpoint = "https://traitcapture.org/api/v3/remote/by-machine/{}"
 
 
-
 class Updater(Thread):
     def __init__(self):
         Thread.__init__(self, name="Updater")
@@ -30,13 +29,50 @@ class Updater(Thread):
         print("Thread started {}: {}".format(self.__class__, "Updater"))
         self.communication_queue = deque(tuple(), 512)
         self.scheduler = Scheduler()
-        self.scheduler.every(60).seconds.do(self.go)
+        self.scheduler.every(1).hours.do(self.go)
         # self.scheduler.every(30).minutes.do(self.upload_log)
         self.stopper = Event()
         self.sshkey = SSHManager()
         self.identifiers = set()
         self.temp_identifiers = set()
+        self.setupmqtt()
 
+    def handle_mqtt_message(self, client, userdata, message):
+        payload = message.payload.decode("utf-8").strip()
+
+        if message.topic == "rpi/{}/operation".format(SysUtil.get_machineid()):
+            if payload == "UPDATECONF":
+                self.go()
+            if payload == "REBOOT":
+                SysUtil.reboot()
+
+    def setupmqtt(self):
+        self.mqtt = client.Client(client_id=SysUtil.get_hostname()+"-Updater",
+                                  clean_session=False,
+                                  protocol=client.MQTTv311,
+                                  transport="tcp")
+        try:
+            with open("mqttpassword") as f:
+                self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password=f.read().strip())
+        except:
+            self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password="INVALIDPASSWORD")
+
+        self.mqtt.connect_async("10.8.0.1", port=1883)
+
+        self.mqtt.subscribe("rpi/{}/operation".format(SysUtil.get_machineid()), qos=1)
+        self.mqtt.on_message = self.handle_mqtt_message
+
+        self.mqtt.loop_start()
+
+    def updatemqtt(self, message: bytes):
+        # update mqtt
+        message = self.mqtt.publish(payload=message,
+                                    topic="camera/{}/capture".format(self.identifier),
+                                    qos=1)
+        time.sleep(0.5)
+        if not message.is_published():
+            self.mqtt.loop_stop()
+            self.mqtt.loop_start()
 
     def upload_logs(self):
         """
@@ -72,6 +108,7 @@ class Updater(Thread):
         """
         self.logger.debug("Adding {} to list of transient identifiers.".format(temp_identifier))
         self.temp_identifiers.add(temp_identifier)
+
 
     def go(self):
         try:

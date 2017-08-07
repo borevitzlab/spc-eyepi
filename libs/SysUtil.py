@@ -340,6 +340,10 @@ class SysUtil(object):
         return "{:X}".format(crc32(input_data))
 
     @staticmethod
+    def reboot():
+        os.system("reboot")
+
+    @staticmethod
     def default_identifier(prefix=None):
         """
         returns an identifier, If no prefix available, generates something.
