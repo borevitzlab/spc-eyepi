@@ -22,6 +22,7 @@ remote_server = "traitcapture.org"
 api_endpoint = "https://traitcapture.org/api/v3/remote/by-machine/{}"
 
 
+
 class Updater(Thread):
     def __init__(self):
         Thread.__init__(self, name="Updater")
@@ -37,7 +38,8 @@ class Updater(Thread):
         self.temp_identifiers = set()
         self.setupmqtt()
 
-    def handle_mqtt_message(self, client, userdata, message):
+    def handle_mqtt_message(self, *args):
+        message = args[-1]
         payload = message.payload.decode("utf-8").strip()
         self.logger.debug("topic: {} payload: {}".format(message.topic, payload))
         if message.topic == "rpi/{}/operation".format(SysUtil.get_machineid()):
@@ -46,10 +48,10 @@ class Updater(Thread):
             if payload == "REBOOT":
                 SysUtil.reboot()
 
+
     def setupmqtt(self):
 
         self.mqtt = client.Client(client_id=SysUtil.get_hostname()+"-Updater",
-                                  clean_session=False,
                                   protocol=client.MQTTv311,
                                   transport="tcp")
         try:
@@ -57,11 +59,14 @@ class Updater(Thread):
                 self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password=f.read().strip())
         except:
             self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password="INVALIDPASSWORD")
+
         self.mqtt.on_message = self.handle_mqtt_message
+
         self.mqtt.connect("10.8.0.1", port=1883)
+
         self.logger.debug("Subscribing to rpi/{}/operation".format(SysUtil.get_machineid()))
         self.mqtt.subscribe("rpi/{}/operation".format(SysUtil.get_machineid()), qos=1)
-        self.mqtt.loop_forever()
+        self.mqtt.loop_start()
 
     def updatemqtt(self, message: bytes):
         # update mqtt
