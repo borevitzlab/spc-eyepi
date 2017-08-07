@@ -4,11 +4,12 @@ import logging.config
 import time
 import yaml
 from collections import deque
-from threading import Thread, Event
+from threading import Thread, Event, Lock
 import requests
 from schedule import Scheduler
 from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
+import paho.mqtt.client as client
 
 try:
     logging.config.fileConfig("logging.ini")
@@ -19,6 +20,8 @@ except:
 remote_server = "traitcapture.org"
 
 api_endpoint = "https://traitcapture.org/api/v3/remote/by-machine/{}"
+
+
 
 class Updater(Thread):
     def __init__(self):
@@ -33,6 +36,7 @@ class Updater(Thread):
         self.sshkey = SSHManager()
         self.identifiers = set()
         self.temp_identifiers = set()
+
 
     def upload_logs(self):
         """

@@ -308,7 +308,7 @@ class SysUtil(object):
                 fcntl.ioctl(f, USBDEVFS_RESET, 0)
             return True
         except Exception as e:
-            SysUtil.logger.error("Couldnt reset usb device (possible filenotfound): {}".format(str(e)))
+            SysUtil.logger.error("Couldnt reset usb device (possible FileNotFound error): {}".format(str(e)))
 
     @staticmethod
     def get_checksum(fp: str) -> str:

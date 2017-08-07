@@ -9,6 +9,7 @@ from threading import Thread, Event
 import pysftp
 from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
+import paho.mqtt.client as client
 
 try:
     logging.config.fileConfig("logging.ini")
@@ -78,6 +79,32 @@ class Uploader(Thread):
         self.machine_id = SysUtil.get_machineid()
 
         self.last_upload_list = []
+        self.setupmqtt()
+
+    def setupmqtt(self):
+        self.mqtt = client.Client(client_id=SysUtil.get_hostname(),
+                                  clean_session=False,
+                                  protocol=client.MQTTv311,
+                                  transport="tcp")
+        try:
+            with open("mqttpassword") as f:
+                self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password=f.read().strip())
+        except:
+            self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password="INVALIDPASSWORD")
+
+        self.mqtt.connect_async("10.8.0.1", port=1883)
+        self.mqtt.loop_start()
+
+    def updatemqtt(self, message: bytes):
+        # update mqtt
+        message = self.mqtt.publish(payload=message,
+                                    topic="camera/{}/capture".format(self.identifier),
+                                    qos=1)
+
+        time.sleep(0.5)
+        if not message.is_published():
+            self.mqtt.loop_stop()
+            self.mqtt.loop_start()
 
     def upload(self, file_names):
         """
@@ -247,6 +274,10 @@ class Uploader(Thread):
                             "Something went wrong sorting the last image to the front of the list: {}".format(str(e)))
                     self.upload(upload_list)
                     self.communicate_with_updater()
+                    try:
+                        self.updatemqtt(bytes(self.last_upload_time.isoformat(), 'utf-8'))
+                    except:
+                        pass
                     self.logger.info(
                         "Average upload time: {0:.2f}s".format((time.time() - start_upload_time) / len(upload_list)))
                     self.logger.info("Total upload time: {0:.2f}s".format(time.time() - start_upload_time))

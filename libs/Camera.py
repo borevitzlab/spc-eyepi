@@ -14,6 +14,7 @@ from io import BytesIO
 import threading
 from threading import Thread, Event, Lock
 from libs.SysUtil import SysUtil
+import paho.mqtt.client as client
 import cv2
 
 try:
@@ -24,6 +25,7 @@ except:
 try:
     # improt yaml module and assert that it has a load function
     import yaml
+
     assert yaml.load
 except Exception as e:
     logging.error("Couldnt import suitable yaml module, no IP camera support: {}".format(str(e)))
@@ -243,6 +245,32 @@ class Camera(Thread):
         self.logger.info("Interval: {}".format(self.interval))
 
         self.current_capture_time = datetime.datetime.now()
+        self.setupmqtt()
+
+    def setupmqtt(self):
+        self.mqtt = client.Client(client_id=SysUtil.get_hostname(),
+                                  clean_session=False,
+                                  protocol=client.MQTTv311,
+                                  transport="tcp")
+        try:
+            with open("mqttpassword") as f:
+                self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password=f.read().strip())
+        except:
+            self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password="INVALIDPASSWORD")
+
+        self.mqtt.connect_async("10.8.0.1", port=1883)
+        self.mqtt.loop_start()
+
+    def updatemqtt(self, message: bytes):
+        # update mqtt
+        message = self.mqtt.publish(payload=message,
+                                    topic="camera/{}/capture".format(self.identifier),
+                                    qos=1)
+
+        time.sleep(0.5)
+        if not message.is_published():
+            self.mqtt.loop_stop()
+            self.mqtt.loop_start()
 
     def capture_image(self, filename: str = None) -> numpy.array:
         """
@@ -481,6 +509,7 @@ class Camera(Thread):
         Communicates with this objects :class:`libs.Updater.Updater` by keeping a reference to its member
         'communication_queue' and appending this objects current state to the queue.
         """
+
         try:
             data = dict(
                 name=self.name,
@@ -492,7 +521,6 @@ class Camera(Thread):
             self.failed = list()
         except Exception as e:
             self.logger.error("Inter-thread communication error: {}".format(str(e)))
-
 
     def run(self):
         """
@@ -583,7 +611,10 @@ class Camera(Thread):
                             self.logger.debug("Communicated sesor data to telegraf")
                         except Exception as exc:
                             self.logger.error("Couldnt communicate with telegraf client. {}".format(str(exc)))
-
+                        try:
+                            self.updatemqtt(bytes(datetime.datetime.fromtimestamp(0).isoformat(), 'utf-8'))
+                        except:
+                            pass
                         self.communicate_with_updater()
                         # sleep for a little bit so we dont try and capture again so soon.
                         time.sleep(Camera.accuracy * 2)
@@ -611,7 +642,6 @@ class IPCamera(Camera):
 
         self.camera_name = config.get("camera_name", identifier)
         self.interval = int(config.get("interval", 300))
-        self.spool_directory = tempfile.mkdtemp()
 
         self.upload_directory = config.get("upload_dir", os.path.join(os.getcwd(), identifier))
         self.begin_capture = datetime.time(0, 0)
@@ -637,7 +667,6 @@ class IPCamera(Camera):
 
         self.failed = list()
         self._image = numpy.empty((Camera.default_width, Camera.default_height, 3), numpy.uint8)
-        self.spool_directory = tempfile.mkdtemp(prefix='GIGAVISION')
 
         try:
             if not os.path.exists(self.upload_directory):
@@ -1464,7 +1493,6 @@ class USBCamera(Camera):
         :param sys_number: system device number of device to use
         :param kwargs:
         """
-
 
         self.logger = logging.getLogger(identifier)
         # only webcams have a v4l sys_number.
