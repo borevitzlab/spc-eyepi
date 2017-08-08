@@ -282,7 +282,7 @@ def run_from_global_config(updater: Updater) -> tuple:
         with lock:
             for c in gp.list_cameras():
                 identif = SysUtil.get_identifier_from_name(str(c.status.serialnumber))
-                dslr_usb_addresses[str(c.status.serialnumber)] = c._usb_address
+                dslr_usb_addresses[identifier] = c._usb_address
     except Exception as e:
         logger.error("Couldnt enumberate DSLRs {}".format(str(e)))
     logger.debug("List of cameras is {} long".format(str(len(dslr_usb_addresses))))
