@@ -6,6 +6,7 @@ import time
 import tempfile
 import numpy
 import requests
+import traceback
 from dateutil import zoneinfo, parser
 from libs.CryptUtil import SSHManager
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
@@ -718,6 +719,7 @@ class Camera(Thread):
                         time.sleep(Camera.accuracy * 2)
                 except Exception as e:
                     self.logger.critical("Image Capture error - {}".format(str(e)))
+                    self.logger.critical(traceback.format_exc())
             if self.time_to_report:
                 try:
                     self.updatemqtt(last_captured_b)
