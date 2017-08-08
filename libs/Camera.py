@@ -1308,7 +1308,7 @@ class GPCamera(Camera):
                     for cam in gp.list_cameras():
                         try:
                             serialnumber = str(cam.status.serialnumber)
-                            self.identifier = SysUtil.default_identifier(prefix=serialnumber)
+                            self.identifier = SysUtil.get_identifier_from_name(serialnumber)
                             camera = cam
                             break
                         except:
