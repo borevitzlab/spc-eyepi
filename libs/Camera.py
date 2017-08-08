@@ -636,6 +636,7 @@ class Camera(Thread):
             if self.time_to_capture:
                 try:
                     with tempfile.TemporaryDirectory(prefix=self.name) as spool:
+                        self.spool_directory = spool
                         start_capture_time = time.time()
                         raw_image = self.timestamped_imagename
                         files = []

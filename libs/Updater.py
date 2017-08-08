@@ -41,7 +41,6 @@ class Updater(Thread):
         self.sshkey = SSHManager()
         self.identifiers = set()
         self.temp_identifiers = set()
-        self.go()
         self.setupmqtt()
 
 
