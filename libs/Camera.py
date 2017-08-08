@@ -632,7 +632,7 @@ class Camera(Thread):
             if self.__class__._thread is not None:
                 self.logger.critical("Camera live view thread is not closed, camera lock cannot be acquired.")
                 continue
-
+            last_captured_b = b'asdhjkasdfhjklasdfhjklasdf'
             if self.time_to_capture:
                 try:
                     with tempfile.TemporaryDirectory(prefix=self.name) as spool:
@@ -713,6 +713,7 @@ class Camera(Thread):
                         except Exception as exc:
                             self.logger.error("Couldnt communicate with telegraf client. {}".format(str(exc)))
 
+                        last_captured_b = bytes(self.current_capture_time.replace(tzinfo=timezone).isoformat(), 'utf-8')
                         # self.communicate_with_updater()
                         # sleep for a little bit so we dont try and capture again so soon.
                         time.sleep(Camera.accuracy * 2)
@@ -720,7 +721,7 @@ class Camera(Thread):
                     self.logger.critical("Image Capture error - {}".format(str(e)))
             if self.time_to_report:
                 try:
-                    self.updatemqtt(bytes(self.current_capture_time.replace(tzinfo=timezone).isoformat(), 'utf-8'))
+                    self.updatemqtt(last_captured_b)
                 except:
                     pass
             time.sleep(1)
