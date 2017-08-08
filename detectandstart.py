@@ -456,7 +456,7 @@ if __name__ == "__main__":
         except Exception as e:
             logger.fatal(e)
             traceback.print_exc()
-
+        updater.go()
         # enumerate the usb devices to compare them later on.
         glock = Lock()
 
