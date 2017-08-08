@@ -139,7 +139,7 @@ class Updater(Thread):
             data["signature"] = self.sshkey.sign_message(json.dumps(data, sort_keys=True))
 
             uri = api_endpoint.format(SysUtil.get_machineid())
-            response = requests.patch(uri, json=data, verify=False)
+            response = requests.patch(uri, json=data)
             # do backwards change if response is valid later.
             current_config = yaml.load(open("{}.yml".format(SysUtil.get_hostname()))) or dict()
 
