@@ -350,7 +350,6 @@ class Camera(Thread):
 
     def updatemqtt(self, msg: bytes):
         # update mqtt
-        self.logger.debug("Updating mqtt")
         msg = self.mqtt.publish(payload=msg,
                                 topic="camera/{}/capture".format(self.identifier),
                                 qos=1)
