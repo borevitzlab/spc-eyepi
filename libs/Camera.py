@@ -7,7 +7,7 @@ import tempfile
 import numpy
 import requests
 from dateutil import zoneinfo, parser
-
+from libs.CryptUtil import SSHManager
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from xml.etree import ElementTree
 from collections import deque
@@ -334,10 +334,17 @@ class Camera(Thread):
         self.mqtt.on_connect = self.mqtt_on_connect
         try:
             with open("mqttpassword") as f:
-                self.mqtt.username_pw_set(username=SysUtil.get_hostname()+self.identifier, password=f.read().strip())
+                self.mqtt.username_pw_set(username=self.identifier,
+                                          password=f.read().strip())
+        except FileNotFoundError:
+            auth = SSHManager().sign_message_PSS(datetime.datetime.now().replace(tzinfo=timezone).isoformat())
+            if not auth:
+                raise ValueError
+            self.mqtt.username_pw_set(username=SysUtil.get_machineid(),
+                                      password=auth)
         except:
-            self.mqtt.username_pw_set(username=SysUtil.get_hostname()+self.identifier, password="INVALIDPASSWORD")
-
+            self.mqtt.username_pw_set(username=self.identifier,
+                                      password="INVALIDPASSWORD")
         self.mqtt.connect_async("10.8.0.1", port=1883)
         self.mqtt.loop_start()
 
@@ -502,6 +509,23 @@ class Camera(Thread):
 
         # capture interval
         if not (self.time2seconds(self.current_capture_time) % self.interval < Camera.accuracy):
+            return False
+        return True
+
+    @property
+    def time_to_report(self) -> bool:
+        """
+        Filters out times for reporting.
+
+        returns True by default.
+
+        returns False if the conditions where the camera should capture are NOT met.
+
+        :return: whether or not it is time to capture
+        :rtype: bool
+        """
+        # capture interval
+        if not (self.time2seconds(self.current_capture_time) % 30 < 1):
             return False
         return True
 
@@ -688,15 +712,17 @@ class Camera(Thread):
                             self.logger.debug("Communicated sesor data to telegraf")
                         except Exception as exc:
                             self.logger.error("Couldnt communicate with telegraf client. {}".format(str(exc)))
-                        try:
-                            self.updatemqtt(bytes(self.current_capture_time.replace(tzinfo=timezone).isoformat(), 'utf-8'))
-                        except:
-                            pass
+
                         # self.communicate_with_updater()
                         # sleep for a little bit so we dont try and capture again so soon.
                         time.sleep(Camera.accuracy * 2)
                 except Exception as e:
                     self.logger.critical("Image Capture error - {}".format(str(e)))
+            if self.time_to_report:
+                try:
+                    self.updatemqtt(bytes(self.current_capture_time.replace(tzinfo=timezone).isoformat(), 'utf-8'))
+                except:
+                    pass
             time.sleep(1)
 
 

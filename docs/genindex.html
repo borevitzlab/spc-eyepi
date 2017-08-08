@@ -6,12 +6,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>Index &#8212; SPC-EyePi 3.2 documentation</title>
-    
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -25,7 +22,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
    
@@ -344,6 +341,10 @@
 </li>
       <li><a href="libs.html#libs.Uploader.GenericUploader">GenericUploader (class in libs.Uploader)</a>
 </li>
+      <li><a href="libs.html#libs.SysUtil.SysUtil.get_checksum">get_checksum() (libs.SysUtil.SysUtil static method)</a>
+</li>
+      <li><a href="libs.html#libs.SysUtil.SysUtil.get_checksum_from_str">get_checksum_from_str() (libs.SysUtil.SysUtil static method)</a>
+</li>
       <li><a href="detectandstart.html#detectandstart.get_default_camera_conf">get_default_camera_conf() (in module detectandstart)</a>
 </li>
       <li><a href="libs.html#libs.Camera.Camera.get_exif_fields">get_exif_fields() (libs.Camera.Camera method)</a>
@@ -384,6 +385,8 @@
 </li>
       <li><a href="libs.html#libs.SysUtil.SysUtil.get_machineid">get_machineid() (libs.SysUtil.SysUtil class method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="libs.html#libs.Sensor.ConvironChamberSensor.get_measurement">get_measurement() (libs.Sensor.ConvironChamberSensor method)</a>
 
       <ul>
@@ -394,8 +397,6 @@
         <li><a href="libs.html#libs.Sensor.Sensor.get_measurement">(libs.Sensor.Sensor method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="webinterface.html#webinterface.get_net_size">get_net_size() (in module webinterface)</a>
 </li>
       <li><a href="libs.html#libs.CryptUtil.SSHManager.get_new_key_from_server">get_new_key_from_server() (libs.CryptUtil.SSHManager method)</a>
@@ -556,10 +557,26 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="webinterface.html#webinterface.make_dynamic">make_dynamic() (in module webinterface)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="libs.html#libs.Uploader.Uploader.mkdir_recursive">mkdir_recursive() (libs.Uploader.Uploader method)</a>
 </li>
+      <li><a href="libs.html#libs.Camera.Camera.mqtt_on_connect">mqtt_on_connect() (libs.Camera.Camera method)</a>
+
+      <ul>
+        <li><a href="libs.html#libs.Updater.Updater.mqtt_on_connect">(libs.Updater.Updater method)</a>
+</li>
+        <li><a href="libs.html#libs.Uploader.Uploader.mqtt_on_connect">(libs.Uploader.Uploader method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="libs.html#libs.Camera.Camera.mqtt_on_message">mqtt_on_message() (libs.Camera.Camera method)</a>
+
+      <ul>
+        <li><a href="libs.html#libs.Updater.Updater.mqtt_on_message">(libs.Updater.Updater method)</a>
+</li>
+        <li><a href="libs.html#libs.Uploader.Uploader.mqtt_on_message">(libs.Uploader.Uploader method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -641,6 +658,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="libs.html#libs.Uploader.GenericUploader.re_init">re_init() (libs.Uploader.GenericUploader method)</a>
+</li>
+      <li><a href="libs.html#libs.SysUtil.SysUtil.reboot">reboot() (libs.SysUtil.SysUtil static method)</a>
 </li>
       <li><a href="api.html#api.reconfigure_systemd">reconfigure_systemd() (in module api)</a>
 </li>
@@ -732,7 +751,7 @@
 </li>
       <li><a href="libs.html#libs.Camera.PiCamera.set_camera_settings">set_camera_settings() (libs.Camera.PiCamera method)</a>
 </li>
-      <li><a href="libs.html#libs.Updater.Updater.set_config_data">set_config_data() (libs.Updater.Updater method)</a>
+      <li><a href="libs.html#libs.Camera.Camera.set_config">set_config() (libs.Camera.Camera method)</a>
 </li>
       <li><a href="libs.html#libs.SysUtil.SysUtil.set_hostname">set_hostname() (libs.SysUtil.SysUtil class method)</a>
 </li>
@@ -742,10 +761,16 @@
 </li>
       <li><a href="libs.html#libs.Light.Controller.set_wavelength">set_wavelength() (libs.Light.Controller method)</a>
 </li>
-      <li><a href="libs.html#libs.Updater.Updater.set_yaml_data">set_yaml_data() (libs.Updater.Updater method)</a>
-</li>
       <li><a href="webinterface.html#webinterface.setup_ap">setup_ap() (in module webinterface)</a>
 </li>
+      <li><a href="libs.html#libs.Camera.Camera.setupmqtt">setupmqtt() (libs.Camera.Camera method)</a>
+
+      <ul>
+        <li><a href="libs.html#libs.Updater.Updater.setupmqtt">(libs.Updater.Updater method)</a>
+</li>
+        <li><a href="libs.html#libs.Uploader.Uploader.setupmqtt">(libs.Uploader.Uploader method)</a>
+</li>
+      </ul></li>
       <li><a href="libs.html#libs.Sensor.SenseHatMonitor.show_data">show_data() (libs.Sensor.SenseHatMonitor method)</a>
 </li>
   </ul></td>
@@ -757,6 +782,8 @@
 </li>
       </ul></li>
       <li><a href="libs.html#libs.CryptUtil.SSHManager.sign_message">sign_message() (libs.CryptUtil.SSHManager method)</a>
+</li>
+      <li><a href="libs.html#libs.CryptUtil.SSHManager.sign_message_raw">sign_message_raw() (libs.CryptUtil.SSHManager method)</a>
 </li>
       <li><a href="libs.html#libs.SysUtil.sizeof_fmt">sizeof_fmt() (in module libs.SysUtil)</a>
 
@@ -880,6 +907,14 @@
 </li>
       <li><a href="webinterface.html#webinterface.update_tag">update_tag() (in module webinterface)</a>
 </li>
+      <li><a href="libs.html#libs.Camera.Camera.updatemqtt">updatemqtt() (libs.Camera.Camera method)</a>
+
+      <ul>
+        <li><a href="libs.html#libs.Updater.Updater.updatemqtt">(libs.Updater.Updater method)</a>
+</li>
+        <li><a href="libs.html#libs.Uploader.Uploader.updatemqtt">(libs.Uploader.Uploader method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="libs.html#libs.Updater.Updater">Updater (class in libs.Updater)</a>
@@ -960,7 +995,7 @@
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>

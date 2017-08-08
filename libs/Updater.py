@@ -11,7 +11,10 @@ from .CryptUtil import SSHManager
 from .SysUtil import SysUtil
 import paho.mqtt.client as client
 from zlib import crc32
+import datetime
 
+from dateutil import zoneinfo, parser
+timezone = zoneinfo.get_zonefile_instance().get("Australia/Canberra")
 try:
     logging.config.fileConfig("logging.ini")
     logging.getLogger("paramiko").setLevel(logging.WARNING)
@@ -40,6 +43,7 @@ class Updater(Thread):
         self.temp_identifiers = set()
         self.setupmqtt()
 
+
     def mqtt_on_message(self, *args):
         message = args[-1]
         payload = message.payload.decode("utf-8").strip()
@@ -65,9 +69,17 @@ class Updater(Thread):
 
         try:
             with open("mqttpassword") as f:
-                self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password=f.read().strip())
+                self.mqtt.username_pw_set(username=SysUtil.get_hostname()+"-Updater",
+                                          password=f.read().strip())
+        except FileNotFoundError:
+            auth = SSHManager().sign_message_PSS(datetime.datetime.now().replace(tzinfo=timezone).isoformat())
+            if not auth:
+                raise ValueError
+            self.mqtt.username_pw_set(username=SysUtil.get_machineid(),
+                                      password=auth)
         except:
-            self.mqtt.username_pw_set(username=SysUtil.get_hostname(), password="INVALIDPASSWORD")
+            self.mqtt.username_pw_set(username=SysUtil.get_hostname()+"-Updater",
+                                      password="INVALIDPASSWORD")
 
         self.mqtt.connect_async("10.8.0.1", port=1883)
 

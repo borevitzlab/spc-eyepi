@@ -121,10 +121,16 @@ class Uploader(Thread):
         self.mqtt.on_connect = self.mqtt_on_connect
         try:
             with open("mqttpassword") as f:
-                self.mqtt.username_pw_set(username=SysUtil.get_hostname()+self.identifier+"-Uploader",
+                self.mqtt.username_pw_set(username=self.getName(),
                                           password=f.read().strip())
+        except FileNotFoundError:
+            auth = self.ssh_manager.sign_message_PSS(datetime.datetime.now().replace(tzinfo=timezone).isoformat())
+            if not auth:
+                raise ValueError
+            self.mqtt.username_pw_set(username=SysUtil.get_machineid(),
+                                      password=auth)
         except:
-            self.mqtt.username_pw_set(username=SysUtil.get_hostname()+self.identifier+"-Uploader",
+            self.mqtt.username_pw_set(username=self.getName(),
                                       password="INVALIDPASSWORD")
 
         self.mqtt.connect_async("10.8.0.1", port=1883)

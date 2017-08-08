@@ -179,6 +179,31 @@ class SSHManager(object):
             authorized_keys.write(ssh_key_string)
         os.chmod(self.authorized_keys_path, 0o744)
 
+    def sign_message_PKCS1v15(self, message) -> bytes:
+        if not self._key:
+            return b''
+        msgbytes = bytes(message, "utf-8")
+        signer = self._key.signer(
+            padding.PKCS1v15(),
+            hashes.SHA1())
+        signer.update(msgbytes)
+        # signature = b64encode(signer.finalize()).decode("utf-8")
+        return msgbytes + b"|" + signer.finalize()
+
+    def sign_message_PSS(self, message) -> bytes:
+        if not self._key:
+            return b''
+        msgbytes = bytes(message, "utf-8")
+        signer = self._key.signer(
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=32
+            ),
+            hashes.SHA256())
+        signer.update(msgbytes)
+        # signature = b64encode(signer.finalize()).decode("utf-8")
+        return msgbytes + b"|" + signer.finalize()
+
     def sign_message(self, message) -> str:
         """
         signs a text message using the internal key

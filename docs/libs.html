@@ -5,12 +5,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>SubModules &#8212; SPC-EyePi 3.2 documentation</title>
-    
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -24,7 +21,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
    
@@ -268,7 +265,7 @@ also tries to add exif data to the images</p>
 
 <dl class="attribute">
 <dt id="libs.Camera.Camera.file_types">
-<code class="descname">file_types</code><em class="property"> = [‘CR2’, ‘RAW’, ‘NEF’, ‘JPG’, ‘JPEG’, ‘PPM’, ‘TIF’, ‘TIFF’]</em><a class="headerlink" href="#libs.Camera.Camera.file_types" title="Permalink to this definition">§</a></dt>
+<code class="descname">file_types</code><em class="property"> = ['CR2', 'RAW', 'NEF', 'JPG', 'JPEG', 'PPM', 'TIF', 'TIFF']</em><a class="headerlink" href="#libs.Camera.Camera.file_types" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -330,9 +327,33 @@ Unimplemented.</p>
 <dd><p>Initialises a video stream class thread.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="libs.Camera.Camera.mqtt_on_connect">
+<code class="descname">mqtt_on_connect</code><span class="sig-paren">(</span><em>client</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.mqtt_on_connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.mqtt_on_connect" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.mqtt_on_message">
+<code class="descname">mqtt_on_message</code><span class="sig-paren">(</span><em>client</em>, <em>userdata</em>, <em>msg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.mqtt_on_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.mqtt_on_message" title="Permalink to this definition">§</a></dt>
+<dd><p>handler for mqtt messages on a per camera basis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>client</strong> – mqtt client</li>
+<li><strong>userdata</strong> – mqtt userdata</li>
+<li><strong>msg</strong> – message to be decoded</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="libs.Camera.Camera.output_types">
-<code class="descname">output_types</code><em class="property"> = [‘tif’, ‘jpg’]</em><a class="headerlink" href="#libs.Camera.Camera.output_types" title="Permalink to this definition">§</a></dt>
+<code class="descname">output_types</code><em class="property"> = ['tif', 'jpg']</em><a class="headerlink" href="#libs.Camera.Camera.output_types" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -340,6 +361,16 @@ Unimplemented.</p>
 <code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.run" title="Permalink to this definition">§</a></dt>
 <dd><p>Main method. continuously captures and stores images.</p>
 </dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.set_config">
+<code class="descname">set_config</code><span class="sig-paren">(</span><em>pdict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.set_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.set_config" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.setupmqtt">
+<code class="descname">setupmqtt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.setupmqtt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.setupmqtt" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="libs.Camera.Camera.stop">
@@ -419,6 +450,11 @@ Override this with the correct method of opening the camera, grabbing image data
 </tbody>
 </table>
 </dd></dl>
+
+<dl class="method">
+<dt id="libs.Camera.Camera.updatemqtt">
+<code class="descname">updatemqtt</code><span class="sig-paren">(</span><em>msg: bytes</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#Camera.updatemqtt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.Camera.updatemqtt" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -776,7 +812,7 @@ text.</p>
 
 <dl class="class">
 <dt id="libs.Camera.IVPortCamera">
-<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">IVPortCamera</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>gpio_group: tuple = (‘B’</em>, <em>)</em>, <em>camera_number: int = None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IVPortCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IVPortCamera" title="Permalink to this definition">§</a></dt>
+<em class="property">class </em><code class="descclassname">libs.Camera.</code><code class="descname">IVPortCamera</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>gpio_group: tuple = ('B'</em>, <em>)</em>, <em>camera_number: int = None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Camera.html#IVPortCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Camera.IVPortCamera" title="Permalink to this definition">§</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#libs.Camera.PiCamera" title="libs.Camera.PiCamera"><code class="xref py py-class docutils literal"><span class="pre">libs.Camera.PiCamera</span></code></a></p>
 <p>IVPort class for multiple capture.
 the 4 tags on the IVport are setout below.</p>
@@ -809,12 +845,12 @@ iterates over the number of vameras</p>
 
 <dl class="attribute">
 <dt id="libs.Camera.IVPortCamera.enable_pins">
-<code class="descname">enable_pins</code><em class="property"> = {‘A’: [11, 12], ‘B’: [15, 16], ‘C’: [21, 22], ‘D’: [23, 24]}</em><a class="headerlink" href="#libs.Camera.IVPortCamera.enable_pins" title="Permalink to this definition">§</a></dt>
+<code class="descname">enable_pins</code><em class="property"> = {'A': [11, 12], 'B': [15, 16], 'C': [21, 22], 'D': [23, 24]}</em><a class="headerlink" href="#libs.Camera.IVPortCamera.enable_pins" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="libs.Camera.IVPortCamera.gpio_groups">
-<code class="descname">gpio_groups</code><em class="property"> = (‘B’,)</em><a class="headerlink" href="#libs.Camera.IVPortCamera.gpio_groups" title="Permalink to this definition">§</a></dt>
+<code class="descname">gpio_groups</code><em class="property"> = ('B',)</em><a class="headerlink" href="#libs.Camera.IVPortCamera.gpio_groups" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -969,7 +1005,7 @@ works on dicts and lists</p>
 <span id="libs-cryptutil"></span><h2>libs.CryptUtil<a class="headerlink" href="#module-libs.CryptUtil" title="Permalink to this headline">§</a></h2>
 <dl class="class">
 <dt id="libs.CryptUtil.SSHManager">
-<em class="property">class </em><code class="descclassname">libs.CryptUtil.</code><code class="descname">SSHManager</code><span class="sig-paren">(</span><em>path=’/home/.ssh’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager" title="Permalink to this definition">§</a></dt>
+<em class="property">class </em><code class="descclassname">libs.CryptUtil.</code><code class="descname">SSHManager</code><span class="sig-paren">(</span><em>path='/home/.ssh'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager" title="Permalink to this definition">§</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>a manager of ssh keys, with the ability to sign messages using them.</p>
 <dl class="method">
@@ -1040,6 +1076,11 @@ works on dicts and lists</p>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="libs.CryptUtil.SSHManager.sign_message_raw">
+<code class="descname">sign_message_raw</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span> &#x2192; bytes<a class="reference internal" href="_modules/libs/CryptUtil.html#SSHManager.sign_message_raw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.CryptUtil.SSHManager.sign_message_raw" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
 <dl class="attribute">
 <dt id="libs.CryptUtil.SSHManager.ssh_key">
 <code class="descname">ssh_key</code><a class="headerlink" href="#libs.CryptUtil.SSHManager.ssh_key" title="Permalink to this definition">§</a></dt>
@@ -1079,7 +1120,7 @@ sets the internal rsa key and the agentKey for use by paramiko.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keypair</strong> (<a class="reference external" href="https://cryptography.io/en/latest/hazmat/primitives/asymmetric/rsa/#cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKeyWithSerialization" title="(in Cryptography v2.0.dev1)"><em>cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKeyWithSerialization</em></a>) – keypair.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keypair</strong> (<a class="reference external" href="https://cryptography.io/en/latest/hazmat/primitives/asymmetric/rsa/#cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKeyWithSerialization" title="(in Cryptography v2.1.dev1)"><em>cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKeyWithSerialization</em></a>) – keypair.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">string of public key</td>
 </tr>
@@ -1134,13 +1175,10 @@ values should be specified as a dict of wavelength: value pairs</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>values</strong> – dict of wavelengths and their respective values</li>
 <li><strong>percent</strong> – whether the values are expressed as 0-100 or absolute.</li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
 </td>
 </tr>
 </tbody>
@@ -1156,14 +1194,11 @@ either a power or a percent must be specified</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>wl</strong> – string of wavelength name (eg 400nm)</li>
 <li><strong>power</strong> – absolute power value</li>
 <li><strong>percent</strong> – percent value, calculated from min/max.</li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
 </td>
 </tr>
 </tbody>
@@ -1198,12 +1233,12 @@ automatically scales the power from 0-100 to the provided min-max (0-1000) by de
 
 <dl class="attribute">
 <dt id="libs.Light.HelioSpectra.s10wls">
-<code class="descname">s10wls</code><em class="property"> = [‘400nm’, ‘420nm’, ‘450nm’, ‘530nm’, ‘630nm’, ‘660nm’, ‘735nm’]</em><a class="headerlink" href="#libs.Light.HelioSpectra.s10wls" title="Permalink to this definition">§</a></dt>
+<code class="descname">s10wls</code><em class="property"> = ['400nm', '420nm', '450nm', '530nm', '630nm', '660nm', '735nm']</em><a class="headerlink" href="#libs.Light.HelioSpectra.s10wls" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="libs.Light.HelioSpectra.s20wls">
-<code class="descname">s20wls</code><em class="property"> = [‘370nm’, ‘400nm’, ‘420nm’, ‘450nm’, ‘530nm’, ‘620nm’, ‘660nm’, ‘735nm’, ‘850nm’, ‘6500k’]</em><a class="headerlink" href="#libs.Light.HelioSpectra.s20wls" title="Permalink to this definition">§</a></dt>
+<code class="descname">s20wls</code><em class="property"> = ['370nm', '400nm', '420nm', '450nm', '530nm', '620nm', '660nm', '735nm', '850nm', '6500k']</em><a class="headerlink" href="#libs.Light.HelioSpectra.s20wls" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1547,7 +1582,7 @@ doesnt work…
 <dd><p>Bases: <a class="reference internal" href="#libs.Sensor.Sensor" title="libs.Sensor.Sensor"><code class="xref py py-class docutils literal"><span class="pre">libs.Sensor.Sensor</span></code></a></p>
 <dl class="attribute">
 <dt id="libs.Sensor.ConvironChamberSensor.data_headers">
-<code class="descname">data_headers</code><em class="property"> = (‘temp_set’, ‘humidity_set’, ‘temp_recorded’, ‘humidity_recorded’, ‘par’)</em><a class="headerlink" href="#libs.Sensor.ConvironChamberSensor.data_headers" title="Permalink to this definition">§</a></dt>
+<code class="descname">data_headers</code><em class="property"> = ('temp_set', 'humidity_set', 'temp_recorded', 'humidity_recorded', 'par')</em><a class="headerlink" href="#libs.Sensor.ConvironChamberSensor.data_headers" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1559,14 +1594,14 @@ doesnt work…
 
 <dl class="class">
 <dt id="libs.Sensor.DHTMonitor">
-<em class="property">class </em><code class="descclassname">libs.Sensor.</code><code class="descname">DHTMonitor</code><span class="sig-paren">(</span><em>identifier</em>, <em>pin: int = 14</em>, <em>sensor_type=’AM2302’</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#DHTMonitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.DHTMonitor" title="Permalink to this definition">§</a></dt>
+<em class="property">class </em><code class="descclassname">libs.Sensor.</code><code class="descname">DHTMonitor</code><span class="sig-paren">(</span><em>identifier</em>, <em>pin: int = 14</em>, <em>sensor_type='AM2302'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Sensor.html#DHTMonitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.DHTMonitor" title="Permalink to this definition">§</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#libs.Sensor.Sensor" title="libs.Sensor.Sensor"><code class="xref py py-class docutils literal"><span class="pre">libs.Sensor.Sensor</span></code></a></p>
 <p>Data logger class for DHT11, DHT22 &amp; AM2302 GPIO temperature &amp; humidity sensors from Adafruit.</p>
 <p>supply the identifier and the gpio pi that the sensor is connected to, along with the type of sensor.
 defaults to pin 14, DHT22</p>
 <dl class="attribute">
 <dt id="libs.Sensor.DHTMonitor.data_headers">
-<code class="descname">data_headers</code><em class="property"> = (‘humidity’, ‘temperature’)</em><a class="headerlink" href="#libs.Sensor.DHTMonitor.data_headers" title="Permalink to this definition">§</a></dt>
+<code class="descname">data_headers</code><em class="property"> = ('humidity', 'temperature')</em><a class="headerlink" href="#libs.Sensor.DHTMonitor.data_headers" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1585,7 +1620,7 @@ defaults to pin 14, DHT22</p>
 No need to supply anything except the identifier as the SenseHad uses some kind of black sorcery to work it out.</p>
 <dl class="attribute">
 <dt id="libs.Sensor.SenseHatMonitor.data_headers">
-<code class="descname">data_headers</code><em class="property"> = (‘temperature’, ‘humidity’, ‘pressure’)</em><a class="headerlink" href="#libs.Sensor.SenseHatMonitor.data_headers" title="Permalink to this definition">§</a></dt>
+<code class="descname">data_headers</code><em class="property"> = ('temperature', 'humidity', 'pressure')</em><a class="headerlink" href="#libs.Sensor.SenseHatMonitor.data_headers" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1694,7 +1729,7 @@ used for threaded sensors
 
 <dl class="staticmethod">
 <dt id="libs.Sensor.Sensor.time2seconds">
-<em class="property">static </em><code class="descname">time2seconds</code><span class="sig-paren">(</span><em>t: &lt;module ‘datetime’ from ‘/usr/lib/python3.6/datetime.py’&gt;</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/libs/Sensor.html#Sensor.time2seconds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.time2seconds" title="Permalink to this definition">§</a></dt>
+<em class="property">static </em><code class="descname">time2seconds</code><span class="sig-paren">(</span><em>t: &lt;module 'datetime' from '/usr/lib/python3.6/datetime.py'&gt;</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/libs/Sensor.html#Sensor.time2seconds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Sensor.Sensor.time2seconds" title="Permalink to this definition">§</a></dt>
 <dd><p>converts a datetime to an integer of seconds since epoch</p>
 </dd></dl>
 
@@ -1716,7 +1751,7 @@ returns False if the conditions where the sensor should NOT capture are met.
 
 <dl class="attribute">
 <dt id="libs.Sensor.Sensor.timestamp_format">
-<code class="descname">timestamp_format</code><em class="property"> = ‘%Y-%m-%dT%H:%M:%S’</em><a class="headerlink" href="#libs.Sensor.Sensor.timestamp_format" title="Permalink to this definition">§</a></dt>
+<code class="descname">timestamp_format</code><em class="property"> = '%Y-%m-%dT%H:%M:%S'</em><a class="headerlink" href="#libs.Sensor.Sensor.timestamp_format" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1759,7 +1794,7 @@ returns False if the conditions where the sensor should NOT capture are met.
 Helper class to cache various things like the hostname, machine-id, amount of space in the filesystem.</p>
 <dl class="attribute">
 <dt id="libs.SysUtil.SysUtil.a_statvfs">
-<code class="descname">a_statvfs</code><em class="property"> = os.statvfs_result(f_bsize=4096, f_frsize=4096, f_blocks=28682898, f_bfree=5527711, f_bavail=4064927, f_files=7299072, f_ffree=6405762, f_favail=6405762, f_flag=1024, f_namemax=255)</em><a class="headerlink" href="#libs.SysUtil.SysUtil.a_statvfs" title="Permalink to this definition">§</a></dt>
+<code class="descname">a_statvfs</code><em class="property"> = os.statvfs_result(f_bsize=4096, f_frsize=4096, f_blocks=28682898, f_bfree=10504229, f_bavail=9041445, f_files=7299072, f_ffree=6364701, f_favail=6364701, f_flag=1024, f_namemax=255)</em><a class="headerlink" href="#libs.SysUtil.SysUtil.a_statvfs" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="classmethod">
@@ -1846,6 +1881,39 @@ if a config file doesnt exist then it will create a default one.</p>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the configuration file dict or configparser object.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#dict" title="(in Python v3.5)">dict</a> or <a class="reference external" href="https://docs.python.org/3.5/library/configparser.html#configparser.ConfigParser" title="(in Python v3.5)">configparser.ConfigParser</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.SysUtil.SysUtil.get_checksum">
+<em class="property">static </em><code class="descname">get_checksum</code><span class="sig-paren">(</span><em>fp: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_checksum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_checksum" title="Permalink to this definition">§</a></dt>
+<dd><p>gets the string checksum for a file, or returns random if the file doesnt exist</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fp</strong> – file path of the file.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">crc32 checksum of the file at fp, or random letters</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.SysUtil.SysUtil.get_checksum_from_str">
+<em class="property">static </em><code class="descname">get_checksum_from_str</code><span class="sig-paren">(</span><em>input_data</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.get_checksum_from_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.get_checksum_from_str" title="Permalink to this definition">§</a></dt>
+<dd><p>gets the string checksum for some bytes (or a string).</p>
+<p>coerces strings using utf-8</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>input_data</strong> – file path of the file.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">crc32 checksum of the bytes</td>
 </tr>
 </tbody>
 </table>
@@ -2051,7 +2119,7 @@ clamps to 32 characters.</p>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.identifier_to_ini">
-<em class="property">classmethod </em><code class="descname">identifier_to_ini</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>prefix=’configs_byserial’</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.identifier_to_ini"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.identifier_to_ini" title="Permalink to this definition">§</a></dt>
+<em class="property">classmethod </em><code class="descname">identifier_to_ini</code><span class="sig-paren">(</span><em>identifier: str</em>, <em>prefix='configs_byserial'</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.identifier_to_ini"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.identifier_to_ini" title="Permalink to this definition">§</a></dt>
 <dd><p>gets a valid .ini path for an identifier.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2105,7 +2173,7 @@ clamps to 32 characters.</p>
 
 <dl class="attribute">
 <dt id="libs.SysUtil.SysUtil.logger">
-<code class="descname">logger</code><em class="property"> = &lt;Logger SysUtil (NOTSET)&gt;</em><a class="headerlink" href="#libs.SysUtil.SysUtil.logger" title="Permalink to this definition">§</a></dt>
+<code class="descname">logger</code><em class="property"> = &lt;Logger SysUtil (DEBUG)&gt;</em><a class="headerlink" href="#libs.SysUtil.SysUtil.logger" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="classmethod">
@@ -2125,6 +2193,11 @@ clamps to 32 characters.</p>
 </tbody>
 </table>
 </dd></dl>
+
+<dl class="staticmethod">
+<dt id="libs.SysUtil.SysUtil.reboot">
+<em class="property">static </em><code class="descname">reboot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.reboot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.reboot" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
 
 <dl class="staticmethod">
 <dt id="libs.SysUtil.SysUtil.reset_usb_device">
@@ -2160,7 +2233,7 @@ clamps to 32 characters.</p>
 
 <dl class="staticmethod">
 <dt id="libs.SysUtil.SysUtil.sizeof_fmt">
-<em class="property">static </em><code class="descname">sizeof_fmt</code><span class="sig-paren">(</span><em>num</em>, <em>suffix=’B’</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.sizeof_fmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.sizeof_fmt" title="Permalink to this definition">§</a></dt>
+<em class="property">static </em><code class="descname">sizeof_fmt</code><span class="sig-paren">(</span><em>num</em>, <em>suffix='B'</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.sizeof_fmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.sizeof_fmt" title="Permalink to this definition">§</a></dt>
 <dd><p>formats a number of bytes in to a human readable string.
 returns in SI units
 eg sizeof_fmt(1234) returns ‘1.2KiB’</p>
@@ -2202,7 +2275,7 @@ eg sizeof_fmt(1234) returns ‘1.2KiB’</p>
 
 <dl class="classmethod">
 <dt id="libs.SysUtil.SysUtil.write_config">
-<em class="property">classmethod </em><code class="descname">write_config</code><span class="sig-paren">(</span><em>config: configparser.ConfigParser</em>, <em>identifier: str</em>, <em>prefix=’configs_byserial’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.write_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.write_config" title="Permalink to this definition">§</a></dt>
+<em class="property">classmethod </em><code class="descname">write_config</code><span class="sig-paren">(</span><em>config: configparser.ConfigParser</em>, <em>identifier: str</em>, <em>prefix='configs_byserial'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#SysUtil.write_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.SysUtil.write_config" title="Permalink to this definition">§</a></dt>
 <dd><p>writes a configuration file to an correct config file path.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2251,7 +2324,7 @@ eg sizeof_fmt(1234) returns ‘1.2KiB’</p>
 
 <dl class="function">
 <dt id="libs.SysUtil.sizeof_fmt">
-<code class="descclassname">libs.SysUtil.</code><code class="descname">sizeof_fmt</code><span class="sig-paren">(</span><em>num</em>, <em>suffix=’B’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#sizeof_fmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.sizeof_fmt" title="Permalink to this definition">§</a></dt>
+<code class="descclassname">libs.SysUtil.</code><code class="descname">sizeof_fmt</code><span class="sig-paren">(</span><em>num</em>, <em>suffix='B'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/SysUtil.html#sizeof_fmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.SysUtil.sizeof_fmt" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -2288,6 +2361,16 @@ eg sizeof_fmt(1234) returns ‘1.2KiB’</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="libs.Updater.Updater.mqtt_on_connect">
+<code class="descname">mqtt_on_connect</code><span class="sig-paren">(</span><em>client</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.mqtt_on_connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.mqtt_on_connect" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.mqtt_on_message">
+<code class="descname">mqtt_on_message</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.mqtt_on_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.mqtt_on_message" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="libs.Updater.Updater.process_deque">
 <code class="descname">process_deque</code><span class="sig-paren">(</span><em>cameras=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.process_deque"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.process_deque" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
@@ -2298,18 +2381,18 @@ eg sizeof_fmt(1234) returns ‘1.2KiB’</p>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="libs.Updater.Updater.set_config_data">
-<code class="descname">set_config_data</code><span class="sig-paren">(</span><em>data: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.set_config_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.set_config_data" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="libs.Updater.Updater.set_yaml_data">
-<code class="descname">set_yaml_data</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.set_yaml_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.set_yaml_data" title="Permalink to this definition">§</a></dt>
+<dt id="libs.Updater.Updater.setupmqtt">
+<code class="descname">setupmqtt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.setupmqtt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.setupmqtt" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="libs.Updater.Updater.stop">
 <code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.stop" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Updater.Updater.updatemqtt">
+<code class="descname">updatemqtt</code><span class="sig-paren">(</span><em>parameter: str</em>, <em>message: bytes</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Updater.html#Updater.updatemqtt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Updater.Updater.updatemqtt" title="Permalink to this definition">§</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2388,6 +2471,30 @@ used to upload,</p>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="libs.Uploader.Uploader.mqtt_on_connect">
+<code class="descname">mqtt_on_connect</code><span class="sig-paren">(</span><em>client</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.mqtt_on_connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.mqtt_on_connect" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="libs.Uploader.Uploader.mqtt_on_message">
+<code class="descname">mqtt_on_message</code><span class="sig-paren">(</span><em>client</em>, <em>userdata</em>, <em>msg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.mqtt_on_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.mqtt_on_message" title="Permalink to this definition">§</a></dt>
+<dd><p>handler for mqtt messages on a per camera basis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>client</strong> – mqtt client</li>
+<li><strong>userdata</strong> – mqtt userdata</li>
+<li><strong>msg</strong> – message to be decoded</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="libs.Uploader.Uploader.remove_source_files">
 <code class="descname">remove_source_files</code><em class="property"> = True</em><a class="headerlink" href="#libs.Uploader.Uploader.remove_source_files" title="Permalink to this definition">§</a></dt>
@@ -2401,10 +2508,20 @@ main loop for Uploaders.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="libs.Uploader.Uploader.setupmqtt">
+<code class="descname">setupmqtt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.setupmqtt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.setupmqtt" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="libs.Uploader.Uploader.stop">
 <code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.stop" title="Permalink to this definition">§</a></dt>
 <dd><p>stopper method</p>
 </dd></dl>
+
+<dl class="method">
+<dt id="libs.Uploader.Uploader.updatemqtt">
+<code class="descname">updatemqtt</code><span class="sig-paren">(</span><em>msg: bytes</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libs/Uploader.html#Uploader.updatemqtt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libs.Uploader.Uploader.updatemqtt" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="libs.Uploader.Uploader.upload">
@@ -2441,7 +2558,7 @@ deletes the files as they are uploaded, creates new directories if needed.</p>
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>
