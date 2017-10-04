@@ -632,7 +632,7 @@ class Camera(Thread):
             if self.__class__._thread is not None:
                 self.logger.critical("Camera live view thread is not closed, camera lock cannot be acquired.")
                 continue
-            last_captured_b = b'asdhjkasdfhjklasdfhjklasdf'
+            last_captured_b = b''
             if self.time_to_capture:
                 try:
                     with tempfile.TemporaryDirectory(prefix=self.name) as spool:
@@ -723,7 +723,8 @@ class Camera(Thread):
                     self.logger.critical(traceback.format_exc())
             if self.time_to_report:
                 try:
-                    self.updatemqtt(last_captured_b)
+                    if last_captured_b:
+                        self.updatemqtt(last_captured_b)
                 except:
                     pass
             time.sleep(1)
