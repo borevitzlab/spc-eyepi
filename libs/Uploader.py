@@ -206,8 +206,8 @@ class Uploader(Thread):
                             size = os.path.getsize(f)
                             total_size += size
                             mbps = (size/(time.time() - onefile_time))/1024/1024
-
-                            os.remove(f)
+                            if not os.path.basename(f) == "last_image.jpg":
+                                os.remove(f)
                             self.logger.debug(
                                 "Uploaded file {0}/{1} through sftp and removed from local filesystem, {2:.2f}Mb/s".format(idx, len(file_names), mbps))
                         else:
@@ -238,7 +238,8 @@ class Uploader(Thread):
                 # dump ze files.
                 for f in file_names:
                     ftp.storbinary('stor ' + os.path.basename(f), open(f, 'rb'), 1024)
-                    os.remove(f)
+                    if not os.path.basename(f) == "last_image.jpg":
+                        os.remove(f)
                     self.logger.debug("Successfuly uploaded {} through ftp and removed from local filesystem".format(f))
                     self.last_upload_time = datetime.datetime.now()
             except Exception as e:

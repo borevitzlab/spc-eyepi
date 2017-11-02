@@ -275,16 +275,19 @@ class SysUtil(object):
         pass
 
     @staticmethod
-    def write_global_config(data: dict):
+    def write_global_config(data: dict, path_override=None):
         """
         Writes a global configuration to the global_config.yml 
         
         :param data: dict of data to write to the config
-        :return: 
         """
         path = "/home/spc-eyepi/{}.yml".format(SysUtil.get_hostname())
+        if path_override:
+            path = path_override
         with open(path, 'r') as fh:
             current_config = yaml.load(fh.read())
+        if not type(current_config) is dict:
+            current_config = {}
         current_config = recursive_update(current_config, data)
         yml = yaml.dump(current_config, default_flow_style=False)
         if SysUtil.get_checksum(path) != SysUtil.get_checksum_from_str(yml):
