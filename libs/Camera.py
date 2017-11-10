@@ -634,6 +634,7 @@ class Camera(Thread):
                 continue
             last_captured_b = b''
             if self.time_to_capture:
+                telemetry = dict()
                 try:
                     with tempfile.TemporaryDirectory(prefix=self.name) as spool:
                         self.spool_directory = spool
@@ -642,7 +643,6 @@ class Camera(Thread):
                         files = []
                         if self.config.get("capture", True):
                             self.logger.info("Capturing for {}".format(self.identifier))
-                            telemetry = dict()
                             files = self.capture(filename=os.path.join(spool, raw_image))
                             # capture. if capture didnt happen dont continue with the rest.
                             if len(files) == 0:
