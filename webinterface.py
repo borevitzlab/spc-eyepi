@@ -8,6 +8,7 @@ import dbm
 import logging
 import re
 from jinja2 import Environment, FileSystemLoader
+from markupsafe import Markup
 from configparser import ConfigParser
 from datetime import datetime
 from functools import wraps
@@ -23,6 +24,9 @@ from libs.Camera import *
 from flask import g
 
 import browsepy
+
+import random
+import string
 
 try:
     # generate a new machine id if one does not already exist
@@ -705,37 +709,6 @@ def update_camera_config(serialnumber: str):
     return "", 405
 
 
-@app.route("/fix_configs")
-@requires_auth
-def fix_confs():
-    """
-    Edits all config files, removing any sections that arent in example.ini
-
-    todo: this is unneccesary, and what the hell is going on with the return? ???
-
-    :return: string response of ???
-    """
-    configs = {}
-    default = ConfigParser()
-    default.read("example.ini")
-    defaultsections = set(default.sections())
-    confs = glob("configs_byserial/*.ini")
-    returnvalues = []
-    confs.append("picam.ini")
-    confs.append("eyepi.ini")
-    for conff in confs:
-        configs[conff] = ConfigParser()
-        configs[conff].read(conff)
-
-    for path, config in configs.items():
-        for section in set(configs[conff].sections()) - defaultsections:
-            a = config.remove_section(section)
-            returnvalues.append(section + "?" + str(a))
-        with open(conff, 'wb') as configfile:
-            config.write(configfile)
-    return a.join("--")
-
-
 @app.route("/command", methods=["POST"])
 @requires_auth
 def run_command() -> str:
@@ -814,6 +787,7 @@ def commit_ip(ipaddress: str = None, subnet: str = None, gateway: str = None, de
     # this is blank on purpose. It needs fixing so its not so shit.
     pass
 
+
 def make_dynamic(dev: str):
     """
     disable static ip addressing using systemctl.
@@ -825,7 +799,7 @@ def make_dynamic(dev: str):
     os.system("systemctl disable network@{}".format(dev))
 
 
-def set_ip(ipaddress: str=None, subnet: str=None, gateway: str=None, dev: str="eth0"):
+def set_ip(ipaddress: str = None, subnet: str = None, gateway: str = None, dev: str = "eth0"):
     """
     sets a static ip address manually to the device specified.
 
@@ -868,8 +842,8 @@ def set_ips():
                 socket.inet_aton(request.form["ip-form-subnet"])
                 socket.inet_aton(request.form["ip-form-gateway"])
                 set_ip(ipaddress=request.form["ip-form-ipaddress"],
-                          subnet=request.form["ip-form-subnet"],
-                          gateway=request.form["ip-form-gateway"])
+                       subnet=request.form["ip-form-subnet"],
+                       gateway=request.form["ip-form-gateway"])
                 return 'success'
             except Exception as e:
                 return "fail"
@@ -1008,6 +982,104 @@ def change_hostname():
     except Exception as e:
         abort(500)
 
+
+def wrap_field(name, field, display_name=None):
+    if not display_name:
+        display_name = name
+    return '''<div class="input-group">
+        <div class="input-group-addon" style="text-align: left;">
+            {name}
+        </div>
+        <div class="input-group-addon">
+            {f}
+        </div></div>
+        '''.format(name=display_name, f=render_field(name, field))
+
+
+def render_field(name, field):
+    if type(field) in {str, float, int}:
+        return Markup('<input class="form-control" style="min-width:120px;" name="{name}" value="{value}" />'.format(
+            name=name,
+            value=field))
+    elif type(field) is bool:
+        true_options = """<option selected>True</option>
+                    <option>False</option>"""
+        false_options = """<option>True</option>
+                    <option selected>False</option>"""
+
+        return Markup('''
+                    <select style="width:150px" class="form-control" name="{name}">
+                    {options}
+                    </select>
+                      '''.format(
+            options=false_options if not field else true_options,
+            name=name))
+    elif type(field) is list:
+        fields = [wrap_field(name + "-{}".format(i), f) for i, f in enumerate(field)]
+        return Markup("<br>".join(fields))
+    elif type(field) is dict:
+        fields = [wrap_field(name+"-"+n, f, display_name=n) for n, f in field.items()]
+        return Markup("<br>".join(fields))
+
+    return ""
+
+from pprint import pprint as print
+import yaml
+
+def translate_bool(string_in):
+    return True if string_in.lower() in ("true", "on") else False
+
+def update_section(section, key, value):
+    """
+    recurses into a nested dictionary or nested list and changes a value
+    uses the "key" parameter thusly:
+        "somekey-1-2" would update the 3 in {"somekey": [10, [1, 2, 3]]}
+
+
+    :param section: nested dictionary or list
+    :param key: string of recurse keys
+    :param value: value to set the searched value for.
+    """
+
+    splitted = key.split("-", 1)
+    if len(splitted) == 1:
+        if type(section) is list:
+            key = int(key)
+
+        if type(section[key]) is bool or value.lower() in ("true", "false", "on", "off"):
+            section[key] = translate_bool(value)
+        else:
+            section[key] = type(section[key])(value)
+        print(section[key])
+    else:
+        sectkey, key = splitted
+        if type(section) is list:
+            sectkey = int(sectkey)
+        update_section(section[sectkey], key, value)
+
+
+@app.route("/form/submit/<section>", methods=['GET', 'POST'])
+def formaccept(section):
+    config = yaml.load(open(SysUtil.get_hostname()+".yml"))
+    print(request.form)
+    for key, value in request.form.items():
+        try:
+            update_section(config[section], key, value)
+        except:
+            traceback.print_exc()
+    SysUtil.write_global_config(config, path_override=SysUtil.get_hostname()+".yml")
+
+    return redirect(url_for("config"))
+
+
+def random_char(length):
+    return "".join(random.choice(string.ascii_lowercase) for _ in range(length))
+
+
+app.jinja_env.globals.update(random_char=random_char)
+app.jinja_env.globals.update(render_field=render_field)
+
+
 @app.route('/')
 @requires_auth
 def config():
@@ -1016,14 +1088,8 @@ def config():
 
     Configuration page for Cameras.
     """
-    example = ConfigParser()
-    rpiconfig = ConfigParser()
-    example.read("example.ini")
-    configs = {}
-    for file in glob(os.path.join("configs_byserial", "*.ini")):
-        configs[os.path.basename(file)[:-4]] = ConfigParser()
-        configs[os.path.basename(file)[:-4]].read(file)
-    return render_template("config.html", configs=configs, example=example)
+    config = yaml.load(open(SysUtil.get_hostname() + ".yml"))
+    return render_template("config.html", config=config)
 
 
 @app.route('/filemanagement')
@@ -1038,7 +1104,18 @@ def filemanagement():
     return render_template("filemgmt.html", fsinfo=fsinfo)
 
 
-@app.route("/images")
+def detect_picam():
+    try:
+        cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
+        if "detected=1" in cmdret:
+            return True
+    except:
+        pass
+    return False
+
+
+
+@app.route("/live")
 def images():
     """
     Image preview view.
@@ -1046,19 +1123,10 @@ def images():
     Allows the capture of a new image and replace in the client
     """
 
-    example = ConfigParser()
-    example.read("example.ini")
+    image_paths = list(glob("/home/images/**/last_image.*", recursive=True))
+    image_paths = [x.replace("/home/images/", "/filesystem/open/") for x in image_paths]
 
-    configs = {}
-    for file in glob(os.path.join("configs_byserial", "*.ini")):
-        configs[os.path.basename(file)[:-4]] = ConfigParser()
-        configs[os.path.basename(file)[:-4]].read(file)
-    urls = []
-    #
-    # TODO: this is hella broken. need to find a better way of doing this....
-    for file in glob(os.path.join("static", "temp", "*.jpg")):
-        urls.append(os.path.basename(file)[:-4])
-    return render_template("images.html", configs=configs, image_urls=urls, example=example)
+    return render_template("images.html", image_urls=image_paths, picam=detect_picam())
 
 
 @app.route("/getfilteredlog", methods=["POST"])
@@ -1103,6 +1171,7 @@ def stream(lt, lc):
     :param str lc: number of results
     :return:
     """
+
     def generate():
         line = 1
         with open("spc-eyepi.log") as f:
@@ -1119,7 +1188,7 @@ def stream(lt, lc):
     return Response(generate(), mimetype='text/plain')
 
 
-def gen(camera)->bytes:
+def gen(camera) -> bytes:
     """
     Video streaming generator function.
 
@@ -1157,7 +1226,7 @@ def pi_feed():
 
 
 @app.route('/ivport_switch/<int:cam_num>')
-def ivport_switch(cam_num)->str:
+def ivport_switch(cam_num) -> str:
     """
     Switch the current ivport picamera thread
 
@@ -1211,6 +1280,8 @@ def get_resource(selector, path):
 if os.system("ping -c 1 8.8.8.8") != 0:
     # setup the access point if we cannot get online.
     setup_ap()
+
+
     def cleanup():
         """
         stops create_ap service on exit.
@@ -1219,7 +1290,9 @@ if os.system("ping -c 1 8.8.8.8") != 0:
         os.system("systemctl stop create_ap.service")
         print("create_ap stopped gracefully")
 
+
     import atexit
+
     # register the exit callback
     atexit.register(cleanup)
 
@@ -1229,4 +1302,4 @@ application = DispatcherMiddleware(app, mounts={
 })
 
 if __name__ == "__main__":
-    run_simple("0.0.0.0", 80, application, use_debugger=True, use_reloader=True, threaded=True)
+    run_simple("0.0.0.0", 5000, application, use_debugger=True, use_reloader=True, threaded=True)
