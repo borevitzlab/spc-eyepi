@@ -362,7 +362,8 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">gp</span><span class="o">.</span><span class="n">list_cameras</span><span class="p">():</span>
-                <span class="n">dslr_usb_addresses</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">serialnumber</span><span class="p">)]</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">_usb_address</span>
+                <span class="n">identif</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">get_identifier_from_name</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">serialnumber</span><span class="p">))</span>
+                <span class="n">dslr_usb_addresses</span><span class="p">[</span><span class="n">identif</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">_usb_address</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldnt enumberate DSLRs </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;List of cameras is </span><span class="si">{}</span><span class="s2"> long&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dslr_usb_addresses</span><span class="p">))))</span>
@@ -536,7 +537,7 @@
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
-
+        <span class="n">updater</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
         <span class="c1"># enumerate the usb devices to compare them later on.</span>
         <span class="n">glock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
 
@@ -626,7 +627,7 @@
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>

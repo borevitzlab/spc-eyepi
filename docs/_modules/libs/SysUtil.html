@@ -356,16 +356,19 @@
         <span class="k">pass</span>
 
 <div class="viewcode-block" id="SysUtil.write_global_config"><a class="viewcode-back" href="../../libs.html#libs.SysUtil.SysUtil.write_global_config">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">write_global_config</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">write_global_config</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">path_override</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Writes a global configuration to the global_config.yml </span>
 <span class="sd">        </span>
 <span class="sd">        :param data: dict of data to write to the config</span>
-<span class="sd">        :return: </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;/home/spc-eyepi/</span><span class="si">{}</span><span class="s2">.yml&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SysUtil</span><span class="o">.</span><span class="n">get_hostname</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">path_override</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">path_override</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
             <span class="n">current_config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">current_config</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="n">current_config</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">current_config</span> <span class="o">=</span> <span class="n">recursive_update</span><span class="p">(</span><span class="n">current_config</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
         <span class="n">yml</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">current_config</span><span class="p">,</span> <span class="n">default_flow_style</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">get_checksum</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">!=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">get_checksum_from_str</span><span class="p">(</span><span class="n">yml</span><span class="p">):</span>
@@ -937,7 +940,7 @@
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>

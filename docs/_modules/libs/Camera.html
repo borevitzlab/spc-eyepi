@@ -87,8 +87,9 @@
 <span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
 <span class="kn">from</span> <span class="nn">dateutil</span> <span class="k">import</span> <span class="n">zoneinfo</span><span class="p">,</span> <span class="n">parser</span>
-
+<span class="kn">from</span> <span class="nn">libs.CryptUtil</span> <span class="k">import</span> <span class="n">SSHManager</span>
 <span class="kn">from</span> <span class="nn">requests.auth</span> <span class="k">import</span> <span class="n">HTTPBasicAuth</span><span class="p">,</span> <span class="n">HTTPDigestAuth</span>
 <span class="kn">from</span> <span class="nn">xml.etree</span> <span class="k">import</span> <span class="n">ElementTree</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">deque</span>
@@ -415,16 +416,22 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">mqtt</span><span class="o">.</span><span class="n">on_connect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mqtt_on_connect</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;mqttpassword&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">mqtt</span><span class="o">.</span><span class="n">username_pw_set</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">SysUtil</span><span class="o">.</span><span class="n">get_hostname</span><span class="p">()</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mqtt</span><span class="o">.</span><span class="n">username_pw_set</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+                                          <span class="n">password</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="n">auth</span> <span class="o">=</span> <span class="n">SSHManager</span><span class="p">()</span><span class="o">.</span><span class="n">sign_message_PSS</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">auth</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mqtt</span><span class="o">.</span><span class="n">username_pw_set</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">SysUtil</span><span class="o">.</span><span class="n">get_machineid</span><span class="p">(),</span>
+                                      <span class="n">password</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mqtt</span><span class="o">.</span><span class="n">username_pw_set</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">SysUtil</span><span class="o">.</span><span class="n">get_hostname</span><span class="p">()</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;INVALIDPASSWORD&quot;</span><span class="p">)</span>
-
+            <span class="bp">self</span><span class="o">.</span><span class="n">mqtt</span><span class="o">.</span><span class="n">username_pw_set</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+                                      <span class="n">password</span><span class="o">=</span><span class="s2">&quot;INVALIDPASSWORD&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mqtt</span><span class="o">.</span><span class="n">connect_async</span><span class="p">(</span><span class="s2">&quot;10.8.0.1&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">1883</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mqtt</span><span class="o">.</span><span class="n">loop_start</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Camera.updatemqtt"><a class="viewcode-back" href="../../libs.html#libs.Camera.Camera.updatemqtt">[docs]</a>    <span class="k">def</span> <span class="nf">updatemqtt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
         <span class="c1"># update mqtt</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Updating mqtt&quot;</span><span class="p">)</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mqtt</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">payload</span><span class="o">=</span><span class="n">msg</span><span class="p">,</span>
                                 <span class="n">topic</span><span class="o">=</span><span class="s2">&quot;camera/</span><span class="si">{}</span><span class="s2">/capture&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">),</span>
                                 <span class="n">qos</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -586,6 +593,23 @@
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="kc">True</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">time_to_report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filters out times for reporting.</span>
+
+<span class="sd">        returns True by default.</span>
+
+<span class="sd">        returns False if the conditions where the camera should capture are NOT met.</span>
+
+<span class="sd">        :return: whether or not it is time to capture</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># capture interval</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time2seconds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_capture_time</span><span class="p">)</span> <span class="o">%</span> <span class="mi">30</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
 <div class="viewcode-block" id="Camera.get_exif_fields"><a class="viewcode-back" href="../../libs.html#libs.Camera.Camera.get_exif_fields">[docs]</a>    <span class="k">def</span> <span class="nf">get_exif_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get default fields for exif dict, this should be overriden and super-ed if you want to add custom exif tags.</span>
@@ -689,16 +713,17 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">_thread</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Camera live view thread is not closed, camera lock cannot be acquired.&quot;</span><span class="p">)</span>
                 <span class="k">continue</span>
-
+            <span class="n">last_captured_b</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_to_capture</span><span class="p">:</span>
+                <span class="n">telemetry</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">as</span> <span class="n">spool</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">spool_directory</span> <span class="o">=</span> <span class="n">spool</span>
                         <span class="n">start_capture_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
                         <span class="n">raw_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamped_imagename</span>
                         <span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;capture&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Capturing for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">))</span>
-                            <span class="n">telemetry</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
                             <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">capture</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">spool</span><span class="p">,</span> <span class="n">raw_image</span><span class="p">))</span>
                             <span class="c1"># capture. if capture didnt happen dont continue with the rest.</span>
                             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -769,15 +794,20 @@
                             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Communicated sesor data to telegraf&quot;</span><span class="p">)</span>
                         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldnt communicate with telegraf client. </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)))</span>
-                        <span class="k">try</span><span class="p">:</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">updatemqtt</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_capture_time</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
-                        <span class="k">except</span><span class="p">:</span>
-                            <span class="k">pass</span>
+
+                        <span class="n">last_captured_b</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_capture_time</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
                         <span class="c1"># self.communicate_with_updater()</span>
                         <span class="c1"># sleep for a little bit so we dont try and capture again so soon.</span>
                         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">Camera</span><span class="o">.</span><span class="n">accuracy</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Image Capture error - </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">())</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_to_report</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">last_captured_b</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">updatemqtt</span><span class="p">(</span><span class="n">last_captured_b</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">pass</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div></div>
 
 
@@ -1360,7 +1390,7 @@
                     <span class="k">for</span> <span class="n">cam</span> <span class="ow">in</span> <span class="n">gp</span><span class="o">.</span><span class="n">list_cameras</span><span class="p">():</span>
                         <span class="k">try</span><span class="p">:</span>
                             <span class="n">serialnumber</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cam</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">serialnumber</span><span class="p">)</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">default_identifier</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">serialnumber</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">SysUtil</span><span class="o">.</span><span class="n">get_identifier_from_name</span><span class="p">(</span><span class="n">serialnumber</span><span class="p">)</span>
                             <span class="n">camera</span> <span class="o">=</span> <span class="n">cam</span>
                             <span class="k">break</span>
                         <span class="k">except</span><span class="p">:</span>
@@ -2057,7 +2087,7 @@
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>

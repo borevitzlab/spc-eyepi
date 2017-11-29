@@ -69,9 +69,11 @@
 <li><a class="reference internal" href="#">Ansible Deployment</a><ul>
 <li><a class="reference internal" href="#requirements">Requirements</a></li>
 <li><a class="reference internal" href="#setup">Setup</a></li>
-<li><a class="reference internal" href="#traitcapture-org-integration">Traitcapture.org integration</a></li>
 <li><a class="reference internal" href="#openvpn">OpenVPN</a></li>
 <li><a class="reference internal" href="#setting-up-the-raspberry-pi">Setting up the Raspberry Pi</a></li>
+<li><a class="reference internal" href="#traitcapture-org-integration">Traitcapture.org integration</a></li>
+<li><a class="reference internal" href="#extra-options">Extra Options</a></li>
+<li><a class="reference internal" href="#running-the-play">Running the play</a></li>
 </ul>
 </li>
 </ul>
@@ -112,33 +114,23 @@
 </div>
 <div class="section" id="setup">
 <h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">§</a></h2>
-<p>Add add your ssh public key to the <em>ansible/keys</em> folder (you can also delete ours from there, unless you <strong>really</strong> trust us).</p>
-<p>If you want a local user account make sure there is an entry in <em>ansible/vars/userlist.yml</em> and with a reference to your ssh key.
+<p>Add your ssh public key to the <em>ansible/keys</em> folder (you can also delete ours from there, unless you <strong>really</strong> trust us).</p>
+<p>For a local user account to be made there must be an entry in <em>ansible/vars/userlist.yml</em> and with a reference to your ssh key.
 You need to add your ssh key to the list of keys for the user “alarm”, as this is the user that ansible needs to install things.</p>
+<p>Do not remove <em>clear_password</em> from the alarm user!</p>
 <p>The contents of users file should look something like this:</p>
 <div class="literal-block-wrapper docutils container" id="userlist">
 <div class="code-block-caption"><span class="caption-text"><em>ansible/vars/userlist.yml</em></span><a class="headerlink" href="#userlist" title="Permalink to this code">§</a></div>
-<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">users</span><span class="p p-Indicator">:</span>
-  <span class="p p-Indicator">-</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">alarm</span><span class="p p-Indicator">,</span>  <span class="nv">shell</span><span class="p p-Indicator">:</span> <span class="nv">/bin/bash</span><span class="p p-Indicator">,</span> <span class="nv">groups</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">wheel</span><span class="p p-Indicator">,</span> <span class="nv">adm</span><span class="p p-Indicator">,</span> <span class="nv">users</span><span class="p p-Indicator">],</span>
-      <span class="nv">clear_password</span><span class="p p-Indicator">:</span> <span class="nv">yes</span><span class="p p-Indicator">,</span>
-      <span class="nv">keys</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">your_key.pub</span><span class="p p-Indicator">]}</span>
-  <span class="p p-Indicator">-</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">your_username</span><span class="p p-Indicator">,</span>  <span class="nv">shell</span><span class="p p-Indicator">:</span> <span class="nv">/bin/bash</span><span class="p p-Indicator">,</span> <span class="nv">groups</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">wheel</span><span class="p p-Indicator">,</span> <span class="nv">adm</span><span class="p p-Indicator">,</span> <span class="nv">users</span><span class="p p-Indicator">],</span>
-      <span class="nv">keys</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">your_key.pub</span><span class="p p-Indicator">]}</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span>users:
+  - name: alarm,  shell: /bin/bash, groups: [wheel, adm, users],
+      clear_password: yes,
+      keys: [your_key.pub]}
+  - {name: your_username,  shell: /bin/bash, groups: [wheel, adm, users],
+      keys: [your_key.pub]}
 </pre></div>
 </div>
 </div>
 <p>After the first login this playbook locks down authentication (including disabling password logins) and doesn’t check to see whether an ssh key has been added, so you could lock yourself out.</p>
-</div>
-<div class="section" id="traitcapture-org-integration">
-<h2>Traitcapture.org integration<a class="headerlink" href="#traitcapture-org-integration" title="Permalink to this headline">§</a></h2>
-<p>If you have an api key for traitcapture.org, put it in <em>ansible/secure/api_key.yml</em> in this format (dont forget the quotation marks!):</p>
-<div class="literal-block-wrapper docutils container" id="api-key">
-<div class="code-block-caption"><span class="caption-text"><em>ansible/secure/api_key.yml</em></span><a class="headerlink" href="#api-key" title="Permalink to this code">§</a></div>
-<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">api_key</span><span class="p p-Indicator">:</span>
-    <span class="s">&quot;your_api_key&quot;</span>
-</pre></div>
-</div>
-</div>
 </div>
 <div class="section" id="openvpn">
 <h2>OpenVPN<a class="headerlink" href="#openvpn" title="Permalink to this headline">§</a></h2>
@@ -156,8 +148,11 @@ You need to add your ssh key to the list of keys for the user “alarm”, as th
 <p>Add the ip address of the RPi to the list in the <em>ansible/hosts</em> file so that it looks like this:</p>
 <div class="literal-block-wrapper docutils container" id="hosts">
 <div class="code-block-caption"><span class="caption-text"><em>ansible/hosts</em></span><a class="headerlink" href="#hosts" title="Permalink to this code">§</a></div>
-<div class="highlight-guess"><div class="highlight"><pre><span></span><span class="k">[rpis]</span>
-<span class="na">your_rpi_ip_address</span>
+<div class="highlight-guess"><div class="highlight"><pre><span></span><span class="k">[all:vars]</span>
+<span class="na">build_gphoto2</span><span class="o">=</span><span class="s">False</span>
+
+<span class="k">[rpis]</span>
+<span class="na">rpi_name ansible_host</span><span class="o">=</span><span class="s">your_rpi_ip_address</span>
 
 <span class="k">[rpis:vars]</span>
 <span class="na">ansible_user</span><span class="o">=</span><span class="s">alarm</span>
@@ -170,31 +165,33 @@ You need to add your ssh key to the list of keys for the user “alarm”, as th
 </pre></div>
 </div>
 </div>
-<p>If you would like to assign the RPi a persistent hostname (that isnt its ip address) you must have something to identify it by.</p>
-<p>CPU serial number:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="o">[</span>alarm@alarm ~<span class="o">]</span>$ grep -Eor <span class="s2">&quot;Serial.*([[:xdigit:]])&quot;</span> /proc/cpuinfo <span class="p">|</span> cut -d <span class="s2">&quot; &quot;</span> -f2
+</div>
+<div class="section" id="traitcapture-org-integration">
+<h2>Traitcapture.org integration<a class="headerlink" href="#traitcapture-org-integration" title="Permalink to this headline">§</a></h2>
+<p>If you have an api key for traitcapture.org you can put it in the [all:vars] section of <em>hosts</em></p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text"><em>ansible/hosts</em></span><a class="headerlink" href="#id1" title="Permalink to this code">§</a></div>
+<div class="highlight-guess"><div class="highlight"><pre><span></span><span class="k">[all:vars]</span>
+<span class="na">api_key</span><span class="o">=</span><span class="s">eyJhbGciOiJIUzI1NiIsImV4cCI6MTUxMTkzNTA3MywiaWF0IjoxNTExOTMxNDczfQ.eyJpZCI6IjU1ODdiZDhjZDEzMTQ0MjNiN2FhYzk0NyJ9.IauJ-suCv60iCGxKe4S6XYSnNT5WYHNHZ1azyMbfzSw</span>
+<span class="na">build_gphoto2</span><span class="o">=</span><span class="s">False</span>
+
+<span class="k">[rpis]</span>
+<span class="na">...</span>
 </pre></div>
 </div>
-<p>Machine id:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="o">[</span>alarm@alarm ~<span class="o">]</span>$ cat /etc/machine-id
-</pre></div>
-</div>
-<p>You can use either of those to create a new entry in the <em>ansible/vars/hostmap.yml</em> using this syntax:</p>
-<div class="literal-block-wrapper docutils container" id="hostmap">
-<div class="code-block-caption"><span class="caption-text"><em>ansible/vars/hostmap.yml</em></span><a class="headerlink" href="#hostmap" title="Permalink to this code">§</a></div>
-<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">hostnames</span><span class="p p-Indicator">:</span>
-    <span class="l l-Scalar l-Scalar-Plain">your_machine_id</span><span class="p p-Indicator">:</span> <span class="s">&quot;your_desired_hostname&quot;</span>
-</pre></div>
 </div>
 </div>
-<p>Run the play</p>
+<div class="section" id="extra-options">
+<h2>Extra Options<a class="headerlink" href="#extra-options" title="Permalink to this headline">§</a></h2>
+<p>You can opt to build gphoto2 and libgphoto2 by setting the <em>build_gphoto2</em> to True in the [all:vars] section</p>
+</div>
+<div class="section" id="running-the-play">
+<h2>Running the play<a class="headerlink" href="#running-the-play" title="Permalink to this headline">§</a></h2>
+<p>To run the play</p>
 <div class="highlight-bash"><div class="highlight"><pre><span></span>$ ansible-playbook -i hosts eyepi.yml
 </pre></div>
 </div>
-<p>You can use the same command to update the software on the RPi.</p>
-<p>The play builds libgphoto2 and gphoto2 from source, which can take a while, you can skip this process by using the
-<code class="code docutils literal"><span class="pre">--skip-tags</span> <span class="pre">gphoto2</span></code> directive. You can also run a specific tags with the <code class="code docutils literal"><span class="pre">--tags</span> <span class="pre">[tag,...]</span></code> directive.
-The full list of tags that can be used are in <em>ansible/eyepi.yml</em>.</p>
+<p>You can use the same command to update the software on the RPi if it has the same ip address.</p>
 </div>
 </div>
 
@@ -208,7 +205,7 @@ The full list of tags that can be used are in <em>ansible/eyepi.yml</em>.</p>
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>

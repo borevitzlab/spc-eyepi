@@ -314,25 +314,15 @@ Username and password are checked against the bcrypt password hash in the databa
 </dd></dl>
 
 <dl class="function">
+<dt id="webinterface.detect_picam">
+<code class="descclassname">webinterface.</code><code class="descname">detect_picam</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#detect_picam"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.detect_picam" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="webinterface.filemanagement">
 <code class="descclassname">webinterface.</code><code class="descname">filemanagement</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#filemanagement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.filemanagement" title="Permalink to this definition">§</a></dt>
 <dd><p>file management view</p>
 <p>Information about the system storage status per block device, allows transfer of files to usb etc.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="webinterface.fix_confs">
-<code class="descclassname">webinterface.</code><code class="descname">fix_confs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#fix_confs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.fix_confs" title="Permalink to this definition">§</a></dt>
-<dd><p>Edits all config files, removing any sections that arent in example.ini</p>
-<p>todo: this is unneccesary, and what the hell is going on with the return? ???</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">string response of ???</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="function">
@@ -341,6 +331,11 @@ Username and password are checked against the bcrypt password hash in the databa
 <dd><p>view function to focus the cameras.</p>
 <p>todo: move to <a class="reference internal" href="api.html#module-api" title="api"><code class="xref py py-mod docutils literal"><span class="pre">api</span></code></a></p>
 </dd></dl>
+
+<dl class="function">
+<dt id="webinterface.formaccept">
+<code class="descclassname">webinterface.</code><code class="descname">formaccept</code><span class="sig-paren">(</span><em>section</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#formaccept"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.formaccept" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="webinterface.gen">
@@ -643,6 +638,16 @@ last image.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="webinterface.random_char">
+<code class="descclassname">webinterface.</code><code class="descname">random_char</code><span class="sig-paren">(</span><em>length</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#random_char"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.random_char" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="webinterface.render_field">
+<code class="descclassname">webinterface.</code><code class="descname">render_field</code><span class="sig-paren">(</span><em>name</em>, <em>field</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#render_field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.render_field" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="webinterface.require_login">
 <code class="descclassname">webinterface.</code><code class="descname">require_login</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#require_login"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.require_login" title="Permalink to this definition">§</a></dt>
 <dd><p>Hackery to make browsepy work with login.</p>
@@ -853,6 +858,11 @@ command: space separayed list of arguments</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="webinterface.translate_bool">
+<code class="descclassname">webinterface.</code><code class="descname">translate_bool</code><span class="sig-paren">(</span><em>string_in</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#translate_bool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.translate_bool" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="webinterface.trunc_at">
 <code class="descclassname">webinterface.</code><code class="descname">trunc_at</code><span class="sig-paren">(</span><em>s: str</em>, <em>d: str</em>, <em>n: int</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/webinterface.html#trunc_at"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.trunc_at" title="Permalink to this definition">§</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -913,6 +923,28 @@ command: space separayed list of arguments</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="webinterface.update_section">
+<code class="descclassname">webinterface.</code><code class="descname">update_section</code><span class="sig-paren">(</span><em>section</em>, <em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#update_section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.update_section" title="Permalink to this definition">§</a></dt>
+<dd><p>recurses into a nested dictionary or nested list and changes a value
+uses the “key” parameter thusly:</p>
+<blockquote>
+<div>“somekey-1-2” would update the 3 in {“somekey”: [10, [1, 2, 3]]}</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>section</strong> – nested dictionary or list</li>
+<li><strong>key</strong> – string of recurse keys</li>
+<li><strong>value</strong> – value to set the searched value for.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="webinterface.update_tag">
 <code class="descclassname">webinterface.</code><code class="descname">update_tag</code><span class="sig-paren">(</span><em>tag: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#update_tag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.update_tag" title="Permalink to this definition">§</a></dt>
 <dd><p>the same as update, except this can take a git tag to update to.</p>
@@ -955,6 +987,11 @@ Accepts a POST request with ‘ssid’ and ‘key’ which are used to create a 
 </dd></dl>
 
 <dl class="function">
+<dt id="webinterface.wrap_field">
+<code class="descclassname">webinterface.</code><code class="descname">wrap_field</code><span class="sig-paren">(</span><em>name</em>, <em>field</em>, <em>display_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#wrap_field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.wrap_field" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="webinterface.writecfg">
 <code class="descclassname">webinterface.</code><code class="descname">writecfg</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webinterface.html#writecfg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webinterface.writecfg" title="Permalink to this definition">§</a></dt>
 <dd><p>Writes the data contained within the post form to a configuration file.</p>
@@ -982,7 +1019,7 @@ Accepts a POST request with ‘ssid’ and ‘key’ which are used to create a 
       &copy;2016, Gareth Dunstone, Kevin Murray, Tim Brown.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>

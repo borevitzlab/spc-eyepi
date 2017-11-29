@@ -36,6 +36,8 @@ Add your ssh public key to the *ansible/keys* folder (you can also delete ours f
 For a local user account to be made there must be an entry in *ansible/vars/userlist.yml* and with a reference to your ssh key.
 You need to add your ssh key to the list of keys for the user "alarm", as this is the user that ansible needs to install things.
 
+Do not remove *clear_password* from the alarm user!
+
 
 The contents of users file should look something like this:
 
@@ -44,7 +46,7 @@ The contents of users file should look something like this:
     :name: userlist
 
     users:
-      - {name: alarm,  shell: /bin/bash, groups: [wheel, adm, users],
+      - name: alarm,  shell: /bin/bash, groups: [wheel, adm, users],
           clear_password: yes,
           keys: [your_key.pub]}
       - {name: your_username,  shell: /bin/bash, groups: [wheel, adm, users],
@@ -81,6 +83,7 @@ Add the ip address of the RPi to the list in the *ansible/hosts* file so that it
     :name: hosts
 
     [all:vars]
+    build_gphoto2=False
 
     [rpis]
     rpi_name ansible_host=your_rpi_ip_address
@@ -99,6 +102,7 @@ Traitcapture.org integration
 ----------------------------
 
 If you have an api key for traitcapture.org you can put it in the [all:vars] section of *hosts*
+
 .. code-block:: guess
     :caption: *ansible/hosts*
     :name: hosts
@@ -110,10 +114,17 @@ If you have an api key for traitcapture.org you can put it in the [all:vars] sec
     [rpis]
     ...
 
+
+Extra Options
+-------------
+
+You can opt to build gphoto2 and libgphoto2 by setting the *build_gphoto2* to True in the [all:vars] section
+
+
 Running the play
 ----------------
 
-Run the play
+To run the play
 
 .. code-block:: bash
 
@@ -121,9 +132,4 @@ Run the play
 
 You can use the same command to update the software on the RPi if it has the same ip address.
 
-
-Extra Options
--------------
-
-You can opt to build gphoto2 and libgphoto2 by setting the *build_gphoto2* to True in the [all:vars] section
 
