@@ -20,20 +20,6 @@
     regexp: "^.*sftp.traitcapture.org.*"
     dest: /home/.ssh/known_hosts
 
-- name: Get a token from the server
-  uri:
-    url: "https://traitcapture.org/api/code/new/1.jsonp?token={{api_key}}"
-    return_content: True
-  register: reg_code
-  when: api_key is defined
-
-- debug: msg="API token worked, using temporary registration token {{(reg_code.content|from_json)['code']}}"
-  when: reg_code.content is defined and reg_code.content|from_json is defined
-
-- name: "API token acquire failure."
-  debug: msg="API token has probably expired or is wrong. Skipping.{{reg_code.content|from_json}}"
-  when: reg_code.content is defined and reg_code.content|from_json is not defined
-
 - file:
     path: /home/.ssh
     owner: root
@@ -41,15 +27,31 @@
     mode: 700
 
 - name: Get a new ssh key from the server.
-  get_url:
-    url: "https://traitcapture.org/api/camera/id_rsa/{{(reg_code.content|from_json)['code']}}/{{ansible_machine_id}}/{{inventory_hostname}}"
-    force: yes
+  uri:
+    url: "https://traitcapture.org/api/v3/remote/by-machine/{{ansible_machine_id}}?token={{api_key}}"
+    method: POST
+    body: "hostname={{inventory_hostname}}&token={{api_key}}"
+    return_content: yes
+  register: sshkey
+  when: api_key is defined
+
+- copy:
+    content: "{{(sshkey.content|from_json)['id_rsa']}}"
     dest: /home/.ssh/id_rsa
-  when: reg_code.content is defined and reg_code.content|from_json is defined
+  when: sshkey.content is defined and sshkey.content|from_json is defined
+
+- copy:
+    content: "{{(sshkey.content|from_json)['id_rsa.pub']}}"
+    dest: /home/.ssh/id_rsa.pub
+  when: sshkey.content is defined and sshkey.content|from_json is defined
 
 - stat:
     path: /home/.ssh/id_rsa
   register: stat_id_rsa
+
+- stat:
+    path: /home/.ssh/id_rsa.pub
+  register: stat_id_rsa_pub
 
 - file:
     path: /home/.ssh/id_rsa

@@ -1,6 +1,10 @@
+[all:vars]
+api_key=eyJhbGciOiJIUzI1NiIsImV4cCI6MTUxMTkzNTA3MywiaWF0IjoxNTExOTMxNDczfQ.eyJpZCI6IjU1ODdiZDhjZDEzMTQ0MjNiN2FhYzk0NyJ9.IauJ-suCv60iCGxKe4S6XYSnNT5WYHNHZ1azyMbfzSw
+build_gphoto2=False
+
 [rpis]
-192.168.1.47
-#192.168.1.83
+APPF01 ansible_host=192.168.1.7
+APPF02 ansible_host=192.168.1.8
 
 [rpis:vars]
 ansible_user=alarm

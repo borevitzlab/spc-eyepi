@@ -8,22 +8,10 @@
   no_log: yes
   changed_when: True
 
-- name: Use machine id
-  set_fact:
-    hostname: "{{hostnames[ansible_machine_id]|default(inventory_hostname)}}"
-    hostname_short: "{{hostnames[ansible_machine_id]|default(inventory_hostname_short)}}"
-    when: "{{hostnames[ansible_machine_id]|default(False)}}"
-
-- name: Use cpuid
-  set_fact:
-    hostname: "{{hostnames[check_serial.stdout]|default(hostname or inventory_hostname)}}"
-    hostname_short: "{{hostnames[check_serial.stdout]|default(hostname or inventory_hostname_short)}}"
-    when: "{{hostnames[check_serial.stdout]|default(False)}}"
-
-- debug: msg="{{ansible_machine_id}}:{{check_serial.stdout}} using name {{hostname}}"
+- debug: msg="{{ansible_machine_id}}:{{check_serial.stdout}} using name {{inventory_hostname}}"
 
 - name: Set hostname
-  hostname: name="{{hostname}}"
+  hostname: name="{{inventory_hostname}}"
 
 - name: Set /etc/hosts
   template:
@@ -72,3 +60,14 @@
   with_items:
     - {line: "PasswordAuthentication no", regexp: "^.*PasswordAuthentication .*"}
     - {line: "PermitRootLogin prohibit-password", regexp: "^.*PermitRootLogin .*"}
+
+
+- name: Create source_dir
+  file:
+    path: "{{source_dir}}"
+    state: directory
+
+- name: Create build_dir
+  file:
+    path: "{{build_dir}}"
+    state: directory

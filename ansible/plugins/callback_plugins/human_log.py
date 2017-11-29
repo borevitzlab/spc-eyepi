@@ -14,64 +14,89 @@
 # Inspired from: https://github.com/redhat-openstack/khaleesi/blob/master/plugins/callbacks/human_log.py
 # Further improved support Ansible 2.0
 
-# Modified by Gareth Dunstone for python3 compatibility
-
-
-try:
-    from imp import reload
-except:
-    pass
-
-try:
-    from importlib import reload
-except:
-    pass
-
+from __future__ import (absolute_import, division, print_function)
+__metaclass__ = type
 
 import sys
 reload(sys)
-from pprint import pformat
-# this doesnt exist in python3
-# sys.setdefaultencoding('utf-8')
+sys.setdefaultencoding('utf-8')
 
 try:
     import simplejson as json
 except ImportError:
     import json
 
-# Fields to reformat output for
-FIELDS = ['cmd',
-          'command',
-          'start',
-          'end',
-          'delta',
-          'msg',
-          'stdout',
-          'stderr',
-          'results']
 from pprint import pformat
 
-class CallbackModule(object):
+# Fields to reformat output for
+FIELDS = ['cmd', 'command', 'start', 'end', 'delta', 'msg', 'stdout',
+          'stderr', 'results']
+
+from ansible.plugins.callback import CallbackBase
+class CallbackModule(CallbackBase):
+
     """
     Ansible callback plugin for human-readable result logging
     """
-    CALLBACK_VERSION = 2.3
+    CALLBACK_VERSION = 2.0
     CALLBACK_TYPE = 'notification'
     CALLBACK_NAME = 'human_log'
     CALLBACK_NEEDS_WHITELIST = False
 
     def human_log(self, data):
-        if type(data) is dict:
+        if type(data) == dict:
             for field in FIELDS:
                 no_log = data.get('_ansible_no_log')
-                if field in data.keys() and data[field] and no_log is not True:
+                if field in data.keys() and data[field] and no_log != True:
+                    if type(data[field]) == unicode:
+                        data[field] = data[field].encode(sys.getdefaultencoding(), 'replace')
                     output = self._format_output(data[field])
-                    print("\n{0}:\n{1}".format(field, output.replace("\\n", "\n")))
+                    print("=] {0}: {1}".format(field, output.replace("\\n","\n")))
+    # def _format_output(self, output):
+    #     # Strip unicode
+    #     if type(output) == unicode:
+    #         output = output.encode(sys.getdefaultencoding(), 'replace')
+    #
+    #     # If output is a dict
+    #     if type(output) == dict:
+    #         return json.dumps(output, indent=2)
+    #
+    #     # If output is a list of dicts
+    #     if type(output) == list and type(output[0]) == dict:
+    #         # This gets a little complicated because it potentially means
+    #         # nested results, usually because of with_items.
+    #         real_output = list()
+    #         for index, item in enumerate(output):
+    #             copy = item
+    #             if type(item) == dict:
+    #                 for field in FIELDS:
+    #                     if field in item.keys():
+    #                         copy[field] = self._format_output(item[field])
+    #             real_output.append(copy)
+    #         return json.dumps(output, indent=2)
+    #
+    #     # If output is a list of strings
+    #     if type(output) == list and type(output[0]) != dict:
+    #         # Strip newline characters
+    #         real_output = list()
+    #         for item in output:
+    #             if "\n" in item:
+    #                 for string in item.split("\n"):
+    #                     real_output.append(string)
+    #             else:
+    #                 real_output.append(item)
+    #
+    #         # Reformat lists with line breaks only if the total length is
+    #         # >75 chars
+    #         if len("".join(real_output)) > 75:
+    #             return "\n" + "\n".join(real_output)
+    #         else:
+    #             return " ".join(real_output)
+    #
+    #     # Otherwise it's a string, (or an int, float, etc.) just return it
+    #     return str(output)
 
     def _format_output(self, output):
-        if type(output) is bytes:
-            return output.decode("utf-8")
-        # Strip unicode
         if type(output) is str:
             return output
         return pformat(output, indent=2, width=75)
@@ -138,7 +163,6 @@ class CallbackModule(object):
 
     def on_file_diff(self, host, diff):
         pass
-
 
     ####### V2 METHODS ######
     def v2_on_any(self, *args, **kwargs):

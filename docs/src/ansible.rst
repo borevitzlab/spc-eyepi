@@ -31,9 +31,9 @@ or if you are using Ubuntu/Debian
 Setup
 -----
 
-Add add your ssh public key to the *ansible/keys* folder (you can also delete ours from there, unless you **really** trust us).
+Add your ssh public key to the *ansible/keys* folder (you can also delete ours from there, unless you **really** trust us).
 
-If you want a local user account make sure there is an entry in *ansible/vars/userlist.yml* and with a reference to your ssh key.
+For a local user account to be made there must be an entry in *ansible/vars/userlist.yml* and with a reference to your ssh key.
 You need to add your ssh key to the list of keys for the user "alarm", as this is the user that ansible needs to install things.
 
 
@@ -51,19 +51,6 @@ The contents of users file should look something like this:
           keys: [your_key.pub]}
 
 After the first login this playbook locks down authentication (including disabling password logins) and doesn't check to see whether an ssh key has been added, so you could lock yourself out.
-
-
-Traitcapture.org integration
-----------------------------
-
-If you have an api key for traitcapture.org, put it in *ansible/secure/api_key.yml* in this format (dont forget the quotation marks!):
-
-.. code-block:: yaml
-    :caption: *ansible/secure/api_key.yml*
-    :name: api-key
-
-    api_key:
-        "your_api_key"
 
 
 OpenVPN
@@ -93,8 +80,10 @@ Add the ip address of the RPi to the list in the *ansible/hosts* file so that it
     :caption: *ansible/hosts*
     :name: hosts
 
+    [all:vars]
+
     [rpis]
-    your_rpi_ip_address
+    rpi_name ansible_host=your_rpi_ip_address
 
     [rpis:vars]
     ansible_user=alarm
@@ -106,28 +95,23 @@ Add the ip address of the RPi to the list in the *ansible/hosts* file so that it
     ansible_python_interpreter=/usr/bin/python2
 
 
-If you would like to assign the RPi a persistent hostname (that isnt its ip address) you must have something to identify it by.
+Traitcapture.org integration
+----------------------------
 
-CPU serial number:
+If you have an api key for traitcapture.org you can put it in the [all:vars] section of *hosts*
+.. code-block:: guess
+    :caption: *ansible/hosts*
+    :name: hosts
 
-.. code-block:: bash
+    [all:vars]
+    api_key=eyJhbGciOiJIUzI1NiIsImV4cCI6MTUxMTkzNTA3MywiaWF0IjoxNTExOTMxNDczfQ.eyJpZCI6IjU1ODdiZDhjZDEzMTQ0MjNiN2FhYzk0NyJ9.IauJ-suCv60iCGxKe4S6XYSnNT5WYHNHZ1azyMbfzSw
+    build_gphoto2=False
 
-    [alarm@alarm ~]$ grep -Eor "Serial.*([[:xdigit:]])" /proc/cpuinfo | cut -d " " -f2
+    [rpis]
+    ...
 
-Machine id:
-
-.. code-block:: bash
-
-    [alarm@alarm ~]$ cat /etc/machine-id
-
-You can use either of those to create a new entry in the *ansible/vars/hostmap.yml* using this syntax:
-
-.. code-block:: yaml
-    :caption: *ansible/vars/hostmap.yml*
-    :name: hostmap
-
-    hostnames:
-        your_machine_id: "your_desired_hostname"
+Running the play
+----------------
 
 Run the play
 
@@ -135,8 +119,11 @@ Run the play
 
     $ ansible-playbook -i hosts eyepi.yml
 
-You can use the same command to update the software on the RPi.
+You can use the same command to update the software on the RPi if it has the same ip address.
 
-The play builds libgphoto2 and gphoto2 from source, which can take a while, you can skip this process by using the
-:code:`--skip-tags gphoto2` directive. You can also run a specific tags with the :code:`--tags [tag,...]` directive.
-The full list of tags that can be used are in *ansible/eyepi.yml*.
+
+Extra Options
+-------------
+
+You can opt to build gphoto2 and libgphoto2 by setting the *build_gphoto2* to True in the [all:vars] section
+

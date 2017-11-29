@@ -21,13 +21,16 @@
 
   tasks:
     - include: tasks/base_setup.yml
-      tags: base,setup
+      tags: base,setup, always
 
     - include: tasks/rpi_config.yml
       tags: base,setup
 
     - include: tasks/users.yml
       tags: base,users
+
+    - include: tasks/sftp_key.yml
+      tags: network,sftp
 
     - include: tasks/updatepkgs.yml
       tags: base
@@ -48,14 +51,17 @@
       tags: network,wireless
       when: wireless_keys is defined
 
-    - include: tasks/sftp_key.yml
-      tags: network,sftp
 
     - include: software_modules/butterfly.yml
       tags: network,shell
 
     - include: software_modules/gphoto2.yml version=HEAD
       tags: modules,gphoto2
+      when: build_gphoto2 is defined and build_gphoto2 == True
+
+    - include: tasks/installpkgs.yml suite="gphoto2/libgphoto2" pkgs="libgphoto2 gphoto2"
+      tags: modules,gphoto2
+      when: build_gphoto2 is not defined or build_gphoto2 == False
 
     - include: tasks/python_modules.yml modules="{{python_pkgs}}"
       tags: pkgs,python
