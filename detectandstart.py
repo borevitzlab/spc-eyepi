@@ -35,6 +35,31 @@ except Exception as e:
     print("COULDNT SET UP LOGGING WTF")
     pass
 
+def detect_picam_info():
+    """
+    Detects the existence of a picam
+
+    returns only the info to create a thread.
+    """
+    logger.info("Detecting picamera")
+    if not (os.path.exists("/opt/vc/bin/vcgencmd")):
+        logger.error("vcgencmd not found, cannot detect picamera.")
+        return dict()
+
+
+    try:
+        cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
+        if "detected=1" in cmdret:
+            return {SysUtil.default_identifier(prefix="picam"): True}
+        else:
+            return dict()
+    except subprocess.CalledProcessError as e:
+        logger.error("Couldn't detect picamera. Error calling vcgencmd. {}".format(str(e)))
+        pass
+    except Exception as e:
+        logger.error("General Exception in picamera info detection. {}".format(str(e)))
+    return dict()
+
 
 def detect_picam(updater: Updater) -> tuple:
     """
@@ -73,7 +98,7 @@ def detect_picam(updater: Updater) -> tuple:
     return tuple()
 
 
-def detect_gphoto(updater):
+def detect_gphoto_info():
     """
     detects cameras connected via gphoto2 command line.
 
@@ -84,7 +109,7 @@ def detect_gphoto(updater):
     :return: a dict of port:serialnumber values corresponding to the currently connected gphoto2 cameras.
     """
     try:
-        workers = []
+        cams = {}
         # check output of the --auto-detect gphoto2 command.
         detect_ret = subprocess.check_output(["/usr/bin/gphoto2",
                                               "--auto-detect"],
@@ -128,6 +153,36 @@ def detect_gphoto(updater):
 
                 # pad the serialnumber to 32
                 identifier = SysUtil.default_identifier(prefix=sn)
+                cams[identifier] = (bus, addr)
+
+            except:
+                traceback.print_exc()
+                logger.error("Exception detecting gphoto2 camera")
+                logger.error(traceback.format_exc())
+            return cams
+    except subprocess.CalledProcessError as e:
+        traceback.print_exc()
+        logger.error("Subprocess error detecting gphoto2 cameras")
+        logger.error(traceback.format_exc())
+    return dict()
+
+def detect_gphoto(updater):
+    """
+    detects cameras connected via gphoto2 command line.
+
+    this can potentially cause long wait times if a camera is attempting to capture for the split second that it tries
+    to gphoto2, however it is the preferred method because it is the most robust and comparmentalised.
+
+    :param type:
+    :return: a dict of port:serialnumber values corresponding to the currently connected gphoto2 cameras.
+    """
+    try:
+        workers = []
+        # check output of the --auto-detect gphoto2 command.
+        cams = detect_gphoto_info()
+        for identifier, (bus, addr) in cams.items():
+            try:
+                port = "usb:{},{}".format(bus, addr)
 
                 # create the camera with the specific bus and addr
                 camera = GPCamera(identifier=identifier,
@@ -142,7 +197,7 @@ def detect_gphoto(updater):
                 print("Sucessfully detected {} @ {}".format(identifier, port))
             except:
                 traceback.print_exc()
-                logger.error("Exception detecting gphoto2 camera")
+                logger.error("Exception creating gphoto2 camera threads")
                 logger.error(traceback.format_exc())
 
         # return start_workers(tuple(workers))
@@ -322,37 +377,34 @@ def run_from_global_config(updater: Updater) -> tuple:
     """
     workers = []
     hostname = SysUtil.get_hostname()
-    config_data = yaml.load(open("/home/spc-eyepi/{}.yml".format(hostname))) or dict()
+    config_path = "/home/spc-eyepi/{}.yml".format(hostname)
+    if not os.path.isfile(config_path):
+        with open(config_path, 'w') as f:
+            f.write("")
+    config_data = yaml.load(open(config_path)) or dict()
     camera_confs = config_data.get("cameras", dict())
 
     """
     PiCamera detect
     """
     logger.info("Detecting picamera")
-    if not (os.path.exists("/opt/vc/bin/vcgencmd")):
-        logger.error("vcgencmd not found, cannot detect picamera.")
-    else:
+    picamera_info = detect_picam_info()
+    if picamera_info:
         try:
-            ident = SysUtil.default_identifier(prefix="picam")
+            ident = list(picamera_info.keys())[0]
             section = camera_confs.get(ident, get_default_camera_conf(ident))
-            cmdret = subprocess.check_output("/opt/vc/bin/vcgencmd get_camera", shell=True).decode()
-            if "detected=1" in cmdret:
 
-                camera = PiCamera(identifier=ident,
-                                  config=section,
-                                  queue=updater.communication_queue)
+            camera = PiCamera(identifier=ident,
+                              config=section,
+                              queue=updater.communication_queue)
 
-                updater.add_to_identifiers(camera.identifier)
-                uploader = Uploader(identifier=camera.identifier,
-                                    config=section,
-                                    queue=updater.communication_queue)
-                workers.append(camera)
-                workers.append(uploader)
-                camera_confs[ident] = section
-            else:
-                logger.error("No picamera detected by /opt/vc/bin/vcgencmd, check /boot/config.txt and connections")
-        except subprocess.CalledProcessError as e:
-            logger.error("Couldn't detect picamera. Error calling vcgencmd. {}".format(str(e)))
+            updater.add_to_identifiers(camera.identifier)
+            uploader = Uploader(identifier=camera.identifier,
+                                config=section,
+                                queue=updater.communication_queue)
+            workers.append(camera)
+            workers.append(uploader)
+            camera_confs[ident] = section
         except Exception as e:
             logger.error("General Exception in picamera detection. {}".format(str(e)))
             logger.error(traceback.format_exc())
@@ -361,25 +413,16 @@ def run_from_global_config(updater: Updater) -> tuple:
     DSLR detect
     """
     logger.info("Detecting DSLRs")
-    lock = Lock()
-    dslr_usb_addresses = dict()
-    try:
-        with lock:
-            for c in gp.list_cameras():
-                identif = SysUtil.get_identifier_from_name(str(c.status.serialnumber))
-                dslr_usb_addresses[identif] = c._usb_address
-    except Exception as e:
-        logger.error("Couldnt enumberate DSLRs {}".format(str(e)))
-    logger.debug("List of cameras is {} long".format(str(len(dslr_usb_addresses))))
 
-    for ident, usb_add in dslr_usb_addresses.items():
+    dslr_info = detect_gphoto_info()
+
+    for ident, (bus, addr) in dslr_info.items():
         try:
             section = camera_confs.get(ident, get_default_camera_conf(ident))
-            usb_add = dslr_usb_addresses[ident]
+
             camera = GPCamera(ident,
-                              usb_address=usb_add,
+                              usb_address=(bus, addr),
                               config=section,
-                              lock=lock,
                               queue=updater.communication_queue)
             updater.add_to_temp_identifiers(camera.identifier)
             workers.append(camera)
