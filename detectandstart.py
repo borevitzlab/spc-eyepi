@@ -367,6 +367,21 @@ def get_default_camera_conf(ident):
         'output_dir': "/home/images/{}".format(ident)
     }
 
+def load_config(data: dict = dict()):
+    """
+    loads a configuration file
+
+    :param data: data to write to the config file before reload/
+    :return:
+    """
+    hostname = SysUtil.get_hostname()
+    config_path = "/home/spc-eyepi/{}.yml".format(hostname)
+    if not os.path.isfile(config_path):
+        SysUtil.write_global_config(data)
+    if data:
+        SysUtil.write_global_config(data)
+    return yaml.load(open(config_path)) or dict()
+
 
 def run_from_global_config(updater: Updater) -> tuple:
     """
@@ -378,10 +393,8 @@ def run_from_global_config(updater: Updater) -> tuple:
     workers = []
     hostname = SysUtil.get_hostname()
     config_path = "/home/spc-eyepi/{}.yml".format(hostname)
-    if not os.path.isfile(config_path):
-        with open(config_path, 'w') as f:
-            f.write("")
-    config_data = yaml.load(open(config_path)) or dict()
+
+    config_data = load_config()
     camera_confs = config_data.get("cameras", dict())
 
     """
@@ -404,7 +417,11 @@ def run_from_global_config(updater: Updater) -> tuple:
                                 queue=updater.communication_queue)
             workers.append(camera)
             workers.append(uploader)
-            camera_confs[ident] = section
+            if not config_data.get("cameras"):
+                config_data['cameras'] = dict()
+            config_data['cameras'][ident] = section
+            config_data = load_config(config_data)
+
         except Exception as e:
             logger.error("General Exception in picamera detection. {}".format(str(e)))
             logger.error(traceback.format_exc())
@@ -431,7 +448,10 @@ def run_from_global_config(updater: Updater) -> tuple:
                                     config=section,
                                     queue=updater.communication_queue)
                 workers.append(uploader)
-            camera_confs[ident] = section
+            if not config_data.get("cameras"):
+                config_data['cameras'] = dict()
+            config_data['cameras'][ident] = section
+            config_data = load_config(config_data)
             logger.debug("Sucessfully detected {} @ {}".format(ident, ":".join(map(str, usb_add))))
         except Exception as e:
             logger.error("Couldnt detect DSLR from global yaml {}".format(str(e)))
@@ -467,7 +487,10 @@ def run_from_global_config(updater: Updater) -> tuple:
                     workers.append(Uploader(identifier,
                                             config=section,
                                             queue=updater.communication_queue))
-                camera_confs = config_data.get("cameras", dict())
+                if not config_data.get("cameras"):
+                    config_data['cameras'] = dict()
+                config_data['cameras'][ident] = section
+                config_data = load_config(config_data)
             except Exception as e:
                 logger.error("Unable to start usb webcamera {} on {}".format(identifier, sys_number))
                 logger.error("{}".format(str(e)))
