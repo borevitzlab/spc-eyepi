@@ -155,7 +155,7 @@ class Updater(Thread):
 
                 if "chamber" in data.keys():
                     chamberconf = current_config.get("chamber", {})
-                    newchamberconf = data.get("chamber", {})
+                    newchamberconf = data.get("chamber", dict()) or dict()
                     datafile_uri = newchamberconf.get("datafile_uri", None)
                     if chamberconf.get("datafile_md5") != newchamberconf.get("datafile_md5") and datafile_uri:
                         req = requests.get("https://traitcapture.org{}".format(datafile_uri))
