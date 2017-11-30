@@ -141,7 +141,7 @@ class Updater(Thread):
             uri = api_endpoint.format(SysUtil.get_machineid())
             response = requests.patch(uri, json=data)
             # do backwards change if response is valid later.
-            current_config = yaml.load(open("{}.yml".format(SysUtil.get_hostname()))) or dict()
+            current_config = yaml.load(open("/home/spc-eyepi/{}.yml".format(SysUtil.get_hostname()))) or dict()
 
             try:
                 if response.status_code == 200:
