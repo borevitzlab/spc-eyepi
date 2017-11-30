@@ -36,7 +36,7 @@ except:
 try:
     import gphoto2cffi as gp
 except Exception as e:
-    logging.error("Couldnt import gphoto2-cffi module, no DSLR support: {}".format(str(e)))
+    logging.error("Couldnt import gphoto2-cffi module, no libgphoto2 support: {}".format(str(e)))
 
 try:
     import picamera
