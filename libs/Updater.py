@@ -143,40 +143,38 @@ class Updater(Thread):
             # do backwards change if response is valid later.
             current_config = yaml.load(open("/home/spc-eyepi/{}.yml".format(SysUtil.get_hostname()))) or dict()
 
-            try:
-                if response.status_code == 200:
-                    # do config modify/parse of command here.
-                    data = response.json()
-                    for key, value in data.copy().items():
-                        if value == {}:
-                            del data[str(key)]
 
-                    if "chamber" in data.keys():
-                        chamberconf = current_config.get("chamber", {})
-                        newchamberconf = data.get("chamber", {})
-                        datafile_uri = newchamberconf.get("datafile_uri", None)
-                        if chamberconf.get("datafile_md5") != newchamberconf.get("datafile_md5") and datafile_uri:
-                            req = requests.get("https://traitcapture.org{}".format(datafile_uri))
-                            if req.ok:
-                                fn = "{}.csv".format(SysUtil.get_hostname())
-                                with open(fn, 'w') as f:
-                                    f.write(req.text)
-                                data['chamber']['datafile'] = fn
-                            else:
-                                self.logger.warning("Couldnt download new solarcalc file. {}".format(req.reason))
+            if response.status_code == 200:
+                # do config modify/parse of command here.
+                data = response.json()
+                for key, value in data.copy().items():
+                    if value == {}:
+                        del data[str(key)]
 
-                    thed = data.pop("cameras", [])
-                    data['cameras'] = {}
-                    for cam in thed:
-                        cam['output_dir'] = "/home/images/{}".format(cam['identifier'])
-                        data['cameras'][cam['identifier']] = cam
+                if "chamber" in data.keys():
+                    chamberconf = current_config.get("chamber", {})
+                    newchamberconf = data.get("chamber", {})
+                    datafile_uri = newchamberconf.get("datafile_uri", None)
+                    if chamberconf.get("datafile_md5") != newchamberconf.get("datafile_md5") and datafile_uri:
+                        req = requests.get("https://traitcapture.org{}".format(datafile_uri))
+                        if req.ok:
+                            fn = "{}.csv".format(SysUtil.get_hostname())
+                            with open(fn, 'w') as f:
+                                f.write(req.text)
+                            data['chamber']['datafile'] = fn
+                        else:
+                            self.logger.warning("Couldnt download new solarcalc file. {}".format(req.reason))
 
-                    if len(data) > 0:
-                        SysUtil.write_global_config(data)
-                else:
-                    self.logger.error("Unable to authenticate with the server.")
-            except Exception as e:
-                self.logger.error("Error getting data from config/status server: {}".format(str(e)))
+                thed = data.pop("cameras", [])
+                data['cameras'] = {}
+                for cam in thed:
+                    cam['output_dir'] = "/home/images/{}".format(cam['identifier'])
+                    data['cameras'][cam['identifier']] = cam
+
+                if len(data) > 0:
+                    SysUtil.write_global_config(data)
+            else:
+                self.logger.error("Unable to authenticate with the server.")
 
         except Exception as e:
             self.logger.error("Error collecting data to post to server: {}".format(str(e)))
