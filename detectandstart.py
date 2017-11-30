@@ -11,11 +11,11 @@ from libs.Uploader import Uploader, GenericUploader
 from libs.Chamber import Chamber
 from libs.Sensor import SenseHatMonitor, DHTMonitor
 from threading import Lock
+import re
 from zlib import crc32
 import string
 import random
 import traceback
-
 
 __author__ = "Gareth Dunstone"
 __copyright__ = "Copyright 2016, Borevitz Lab"
@@ -30,7 +30,9 @@ __status__ = "Feature rollout"
 try:
     logging.config.fileConfig("logging.ini")
     logging.getLogger("paramiko").setLevel(logging.WARNING)
-except:
+    logger = logging.getLogger("WORKER_DISPATCH")
+except Exception as e:
+    print("COULDNT SET UP LOGGING WTF")
     pass
 
 
@@ -71,8 +73,91 @@ def detect_picam(updater: Updater) -> tuple:
     return tuple()
 
 
-def detect_gphoto(updater: Updater):
+def detect_gphoto(updater):
     """
+    detects cameras connected via gphoto2 command line.
+
+    this can potentially cause long wait times if a camera is attempting to capture for the split second that it tries
+    to gphoto2, however it is the preferred method because it is the most robust and comparmentalised.
+
+    :param type:
+    :return: a dict of port:serialnumber values corresponding to the currently connected gphoto2 cameras.
+    """
+    try:
+        workers = []
+        # check output of the --auto-detect gphoto2 command.
+        detect_ret = subprocess.check_output(["/usr/bin/gphoto2",
+                                              "--auto-detect"],
+                                             universal_newlines=True)
+        # iterate over the results, should be in the format of [(bus, addr), (bus, addr) ...] for usb connected dslrs
+        # this regex matches occurrences of "usb:" followed by 2 comma separated digits.
+        for bus, addr in re.findall(r'usb:(\d+),(\d+)', detect_ret):
+            try:
+                # findall returns strings...
+                bus, addr = int(bus), int(addr)
+                # this is the format that gphoto2 expects the port to be in.
+                port = "usb:{},{}".format(bus, addr)
+
+                # gphoto2 command to get the serial number for the DSLR
+                # WARNING: when the port here needs to be correct, because otherwise gphoto2 will return values from
+                # an arbitrary camera
+                sn_detect_ret = subprocess.check_output(['/usr/bin/gphoto2',
+                                                         '--port={}'.format(port),
+                                                         '--get-config=serialnumber'],
+                                                        universal_newlines=True)
+
+                # Match the serial number.
+                # this regex can also be used to parse the values from --get-config as all results are returned like this:
+                # Label: Serial Number
+                # Type: TEXT
+                # Current: 4fffa81fed8f40d286a63fce62598ef0
+                sn_match = re.search(r'Current: (.*)$', sn_detect_ret)
+
+                if not sn_match:
+                    # we didnt match any output from the command
+                    logger.error("Couldnt match serial number from gphoto2 output. {}".format(port))
+                    continue
+                sn = sn_match.group(1)
+
+                if sn.lower() == 'none':
+                    # there is a bug in a specific version of gphoto2 that causes it to return 'None' for the camera serial
+                    # number. If we cant get a unique serial number, we are screwed for multicamera
+                    # todo: allow this if there is only one camera.
+                    logger.error("serial number matched with value of 'none' {}".format(port))
+                    continue
+
+                # pad the serialnumber to 32
+                identifier = SysUtil.default_identifier(prefix=sn)
+
+                # create the camera with the specific bus and addr
+                camera = GPCamera(identifier=identifier,
+                                  usb_address=(bus, addr),
+                                  queue=updater.communication_queue)
+                # make sure the updater knows whats going on
+                updater.add_to_temp_identifiers(camera.identifier)
+                # create an uploader
+                uploader = Uploader(camera.identifier, queue=updater.communication_queue)
+                workers.extend([camera, uploader])
+                logger.debug("Sucessfully detected {} @ {}".format(identifier, port))
+                print("Sucessfully detected {} @ {}".format(identifier, port))
+            except:
+                traceback.print_exc()
+                logger.error("Exception detecting gphoto2 camera")
+                logger.error(traceback.format_exc())
+
+        # return start_workers(tuple(workers))
+    except subprocess.CalledProcessError as e:
+        traceback.print_exc()
+        logger.error("Subprocess error detecting gphoto2 cameras")
+        logger.error(traceback.format_exc())
+    return tuple
+
+
+def detect_libgphoto(updater: Updater):
+    """
+    this method has been deprecated until there is a better method of avoiding horrible memory leaks and issue with
+    libgphoto2 and gphoto2-cffi.
+
     Detects DSLRs using `borevitzlab/gphoto2-cffi <https://github.com/borevitzlab/gphoto2-cffi>`_.
 
     :creates: :mod:`libs.Camera.GPCamera`, :mod:`libs.Uploader.Uploader`
@@ -436,7 +521,6 @@ def kill_workers(worker_objects: tuple):
 
 if __name__ == "__main__":
 
-    logger = logging.getLogger("Worker_dispatch")
     logger.info("Program startup...")
     # The main loop for capture
 
@@ -481,6 +565,7 @@ if __name__ == "__main__":
                 logger.fatal(e)
                 traceback.print_exc()
 
+
         context = pyudev.Context()
         monitor = pyudev.Monitor.from_netlink(context)
         observer = pyudev.MonitorObserver(monitor, recreate)
@@ -491,7 +576,7 @@ if __name__ == "__main__":
                 if checksum != SysUtil.get_checksum("{}.yml".format(hostname)):
                     recreate("config_change", None)
                     checksum = SysUtil.get_checksum("{}.yml".format(hostname))
-                time.sleep(60*60*12)
+                time.sleep(60 * 60 * 12)
             except (KeyboardInterrupt, SystemExit) as e:
                 kill_workers(workers)
                 raise e
