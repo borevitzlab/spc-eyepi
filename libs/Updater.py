@@ -1,3 +1,4 @@
+
 import json
 import logging
 import logging.config
@@ -14,6 +15,7 @@ from zlib import crc32
 import datetime
 
 from dateutil import zoneinfo, parser
+import traceback
 timezone = zoneinfo.get_zonefile_instance().get("Australia/Canberra")
 try:
     logging.config.fileConfig("logging.ini")
@@ -177,7 +179,9 @@ class Updater(Thread):
                 self.logger.error("Unable to authenticate with the server.")
 
         except Exception as e:
+            traceback.print_exc()
             self.logger.error("Error collecting data to post to server: {}".format(str(e)))
+            self.logger.error(traceback.format_exc())
 
     def process_deque(self, cameras=None):
         if not cameras:
