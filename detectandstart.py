@@ -154,12 +154,11 @@ def detect_gphoto_info():
                 # pad the serialnumber to 32
                 identifier = SysUtil.default_identifier(prefix=sn)
                 cams[identifier] = (bus, addr)
-
             except:
                 traceback.print_exc()
                 logger.error("Exception detecting gphoto2 camera")
                 logger.error(traceback.format_exc())
-            return cams
+        return cams
     except subprocess.CalledProcessError as e:
         traceback.print_exc()
         logger.error("Subprocess error detecting gphoto2 cameras")
