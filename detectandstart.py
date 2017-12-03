@@ -452,7 +452,7 @@ def run_from_global_config(updater: Updater) -> tuple:
                 config_data['cameras'] = dict()
             config_data['cameras'][ident] = section
             config_data = load_config(config_data)
-            logger.debug("Sucessfully detected {} @ {}".format(ident, ":".join(map(str, usb_add))))
+            logger.debug("Sucessfully detected {} @ {}:{}".format(ident, bus, addr))
         except Exception as e:
             logger.error("Couldnt detect DSLR from global yaml {}".format(str(e)))
             logger.error(traceback.format_exc())
