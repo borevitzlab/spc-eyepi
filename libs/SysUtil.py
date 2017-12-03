@@ -109,8 +109,9 @@ ip = 192.168.2.124
 
 
 def recursive_update(d, u):
-    if d is None:
+    if type(d) is not dict:
         d = dict()
+
     for k, v in u.items():
         if isinstance(v, collections.Mapping):
             r = recursive_update(d.get(k, dict()), v)
