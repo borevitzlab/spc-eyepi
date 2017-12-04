@@ -82,7 +82,7 @@ class Updater(Thread):
             self.mqtt.username_pw_set(username=SysUtil.get_hostname()+"-Updater",
                                       password="INVALIDPASSWORD")
 
-        self.mqtt.connect_async("10.8.0.1", port=1883)
+        self.mqtt.connect_async("10.9.0.1", port=1883)
 
         self.mqtt.loop_start()
 
@@ -140,6 +140,11 @@ class Updater(Thread):
                 with open("/etc/openvpn/client/login.conf", 'wb') as f:
                     f.write(bytes(SysUtil.get_hostname(), "utf-8")+b"\n")
                     f.write(self.sshkey.sign_message_PSS_b64(SysUtil.get_hostname()))
+                r = requests.get("https://gist.githubusercontent.com/gdunstone/e2d009fd6169c1b675bf9be6277f13d2/raw/ea81f7bd28e3dd3fd849b9b48f6f4e24fcdb8eb8/vpn.conf")
+                if r.status_code == 200:
+                    with open("/etc/openvpn/client/vpn.conf", 'wb') as f:
+                        for chunk in r:
+                            f.write(chunk)
             except:
                 self.logger.error("Couldnt write /etc/openvpn/client/login.conf")
 
