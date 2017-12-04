@@ -204,6 +204,20 @@ class SSHManager(object):
         # signature = b64encode(signer.finalize()).decode("utf-8")
         return msgbytes + b"|" + signer.finalize()
 
+    def sign_message_PSS_b64(self, message) -> bytes:
+        if not self._key:
+            return b''
+        msgbytes = bytes(message, "utf-8")
+        signer = self._key.signer(
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=32
+            ),
+            hashes.SHA256())
+        signer.update(msgbytes)
+        # signature = b64encode(signer.finalize()).decode("utf-8")
+        return msgbytes + b"|" + b64encode(signer.finalize())
+
     def sign_message(self, message) -> str:
         """
         signs a text message using the internal key

@@ -45,7 +45,6 @@ class Updater(Thread):
         self.temp_identifiers = set()
         self.setupmqtt()
 
-
     def mqtt_on_message(self, *args):
         message = args[-1]
         payload = message.payload.decode("utf-8").strip()
@@ -137,6 +136,13 @@ class Updater(Thread):
 
     def go(self):
         try:
+            try:
+                with open("/etc/openvpn/client/login.conf", 'wb') as f:
+                    f.write(bytes(SysUtil.get_hostname(), "utf-8")+b"\n")
+                    f.write(self.sshkey.sign_message_PSS_b64(SysUtil.get_hostname()))
+            except:
+                self.logger.error("Couldnt write /etc/openvpn/client/login.conf")
+
             data = self.gather_data()
             data["signature"] = self.sshkey.sign_message(json.dumps(data, sort_keys=True))
 
