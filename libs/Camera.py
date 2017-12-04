@@ -1,5 +1,7 @@
 import datetime
 import logging.config
+import glob
+import re
 import os
 import shutil
 import time
@@ -7,6 +9,7 @@ import tempfile
 import numpy
 import requests
 import traceback
+import subprocess
 from dateutil import zoneinfo, parser
 from libs.CryptUtil import SSHManager
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
@@ -1288,37 +1291,10 @@ class GPCamera(Camera):
         self.usb_address = [None, None]
         self._serialnumber = identifier
         self.identifier = identifier
-        if type(usb_address) is tuple and len(usb_address) is 2:
+        if type(usb_address) is tuple and len(usb_address) is 2 and self.usb_address[0] is not None:
             self.usb_address = usb_address
-        if self.usb_address[0] is None:
-            with self.lock:
-                serialnumber = None
-                camera = None
-                if self.identifier is not None:
-                    for cam in gp.list_cameras():
-                        try:
-                            serialnumber = cam.status.serialnumber
-                            if serialnumber in self.identifier:
-                                camera = cam
-                                break
-                        except:
-                            pass
-                    else:
-                        raise IOError("Camera not available or connected")
-                else:
-                    for cam in gp.list_cameras():
-                        try:
-                            serialnumber = str(cam.status.serialnumber)
-                            self.identifier = SysUtil.get_identifier_from_name(serialnumber)
-                            camera = cam
-                            break
-                        except:
-                            pass
-                    else:
-                        raise IOError("No cameras available")
-                self.usb_address = camera._usb_address
-                self._serialnumber = serialnumber
-                camera.release()
+        else:
+            self.usb_address = self.usb_address_detect()
 
         super().__init__(self.identifier, **kwargs)
 
@@ -1328,52 +1304,126 @@ class GPCamera(Camera):
         except:
             pass
 
-    def get_exif_fields(self):
+    def usb_address_detect(self):
         """
-        This is meant to get the exif fields for the image if we want to manually save them.
-        This is incomplete.
 
-        :return: dictionary of exif fields.
-        :rtype: dict
+        :return:
         """
-        exif = super(GPCamera, self).get_exif_fields()
-        try:
-            camera = self._get_camera()
-            exif['Exif.Image.Make'] = getattr(camera.status, 'manufacturer', 'Make')
-            exif['Exif.Image.Model'] = getattr(camera.status, 'cameramodel', 'Model')
-            exif['Exif.Image.BodySerialNumber'] = self.eos_serial_number
-            exif['Exif.Image.CameraSerialNumber'] = self.serial_number
-            try:
-                exif['Exif.Photo.ISOSpeed'] = self['iso'].value
-            except:
-                pass
-            try:
-                exif['Exif.Photo.Aperture'] = self['aperture'].value
-            except:
-                pass
-        except Exception as e:
-            self.logger.warning("Couldnt get full exif data. {}".format(str(e)))
-        return exif
 
-    def _get_camera(self):
+        detect_ret = subprocess.check_output(["/usr/bin/gphoto2",
+                                              "--auto-detect"],
+                                             universal_newlines=True)
+        detected_usb_ports = re.findall(r'usb:(\d+),(\d+)', detect_ret)
+        for bus, addr in detected_usb_ports:
+            try:
+                # findall returns strings...
+                bus, addr = int(bus), int(addr)
+                # this is the format that gphoto2 expects the port to be in.
+                port = "usb:{},{}".format(bus, addr)
+
+
+                # gphoto2 command to get the serial number for the DSLR
+                # WARNING: when the port here needs to be correct, because otherwise gphoto2 will return values from
+                # an arbitrary camera
+                sn_detect_ret = subprocess.check_output(['/usr/bin/gphoto2',
+                                                         '--port={}'.format(port),
+                                                         '--get-config=serialnumber'],
+                                                        universal_newlines=True)
+
+                # Match the serial number.
+                # this regex can also be used to parse the values from --get-config as all results are returned like this:
+                # Label: Serial Number
+                # Type: TEXT
+                # Current: 4fffa81fed8f40d286a63fce62598ef0
+                sn_match = re.search(r'Current: (.*)$', sn_detect_ret)
+
+                if not sn_match:
+                    # we didnt match any output from the command
+                    self.logger.error("Couldnt match serial number from gphoto2 output. {}".format(port))
+                    continue
+                sn = sn_match.group(1)
+
+                if sn.lower() == 'none':
+                    # there is a bug in a specific version of gphoto2 that causes it to return 'None' for the camera serial
+                    # number. If we cant get a unique serial number, we are screwed for multicamera
+                    # todo: allow this if there is only one camera.
+                    self.logger.error("serial number matched with value of 'none' {}".format(port))
+                    continue
+
+                # pad the serialnumber to 32
+                identifier = SysUtil.default_identifier(prefix=sn)
+                if self.identifier == identifier:
+                    return (bus, addr)
+
+            except:
+                traceback.print_exc()
+                self.logger.error("Exception detecting gphoto2 camera")
+                self.logger.error(traceback.format_exc())
+        else:
+            self.logger.error("No identifier from detected cameras ({}) matched desired: {}".format(len(detected_usb_ports),self.identifier))
+            return None
+
+    def _self_detect_cffi(self):
+        """
+        old method of detecting usb address of cameras, very buggy.
+        """
         with self.lock:
-            try:
-                camera = gp.Camera(bus=self.usb_address[0], device=self.usb_address[1])
-                if self._serialnumber == camera.status.serialnumber:
-                    self.logger.debug("Camera matched for {}:{}".format(*self.usb_address))
-                    return camera
-            except Exception as e:
-                self.logger.warning(
-                    "Camera wasnt at the correct usb address or usb address wasnt specified: {}".format(str(e)))
-
-            for camera in gp.list_cameras():
-                try:
-                    if camera.status.serialnumber == self._serialnumber:
-                        return camera
-                except Exception as e:
-                    self.logger.warning("Couldnt acquire lock for camera: {}".format(str(e)))
+            serialnumber = None
+            camera = None
+            if self.identifier is not None:
+                for cam in gp.list_cameras():
+                    try:
+                        serialnumber = cam.status.serialnumber
+                        if serialnumber in self.identifier:
+                            camera = cam
+                            break
+                    except:
+                        pass
+                else:
+                    raise IOError("Camera not available or connected")
             else:
-                raise FileNotFoundError("Camera cannot be found")
+                for cam in gp.list_cameras():
+                    try:
+                        serialnumber = str(cam.status.serialnumber)
+                        self.identifier = SysUtil.get_identifier_from_name(serialnumber)
+                        camera = cam
+                        break
+                    except:
+                        pass
+                else:
+                    raise IOError("No cameras available")
+            self.usb_address = camera._usb_address
+            self._serialnumber = serialnumber
+            camera.release()
+
+    # def get_exif_fields(self):
+    #     """
+    #     DEPRECATED BECAUSE IT USES _get_camera
+    #
+    #     This is meant to get the exif fields for the image if we want to manually save them.
+    #     This is incomplete.
+    #
+    #     :return: dictionary of exif fields.
+    #     :rtype: dict
+    #     """
+    #     exif = super(GPCamera, self).get_exif_fields()
+    #     try:
+    #         camera = self._get_camera()
+    #         exif['Exif.Image.Make'] = getattr(camera.status, 'manufacturer', 'Make')
+    #         exif['Exif.Image.Model'] = getattr(camera.status, 'cameramodel', 'Model')
+    #         exif['Exif.Image.BodySerialNumber'] = self.eos_serial_number
+    #         exif['Exif.Image.CameraSerialNumber'] = self.serial_number
+    #         try:
+    #             exif['Exif.Photo.ISOSpeed'] = self['iso'].value
+    #         except:
+    #             pass
+    #         try:
+    #             exif['Exif.Photo.Aperture'] = self['aperture'].value
+    #         except:
+    #             pass
+    #     except Exception as e:
+    #         self.logger.warning("Couldnt get full exif data. {}".format(str(e)))
+    #     return exif
 
     def capture_image(self, filename=None):
         """
@@ -1388,8 +1438,7 @@ class GPCamera(Camera):
         :return: list of filenames (of captured images) if filename was specified, otherwise a numpy array of the image.
         :rtype: numpy.array or list
         """
-        import subprocess
-        import glob
+
 
         # the %C filename parameter given to gphoto2 will automatically expand the number of image types that the
         # camera is set to capture to.
@@ -1454,6 +1503,29 @@ class GPCamera(Camera):
             if filename:
                 return []
         return None
+
+    def _get_camera(self):
+        """
+        DO NOT USE THIS!
+        """
+        with self.lock:
+            try:
+                camera = gp.Camera(bus=self.usb_address[0], device=self.usb_address[1])
+                if self._serialnumber == camera.status.serialnumber:
+                    self.logger.debug("Camera matched for {}:{}".format(*self.usb_address))
+                    return camera
+            except Exception as e:
+                self.logger.warning(
+                    "Camera wasnt at the correct usb address or usb address wasnt specified: {}".format(str(e)))
+
+            for camera in gp.list_cameras():
+                try:
+                    if camera.status.serialnumber == self._serialnumber:
+                        return camera
+                except Exception as e:
+                    self.logger.warning("Couldnt acquire lock for camera: {}".format(str(e)))
+            else:
+                raise FileNotFoundError("Camera cannot be found")
 
     def _cffi_capture(self, filename=None):
         """
@@ -1523,37 +1595,33 @@ class GPCamera(Camera):
         """
         this is meant to trigger the autofocus. currently not in use because it causes some distortion in the images.
         """
-        camera = self._get_camera()
-        try:
-            pass
-            # camera._get_config()['actions']['eosremoterelease'].set("Release Full")
-            # camera._get_config()['actions']['eosremoterelease'].set("Press 1")
-            # camera._get_config()['actions']['eosremoterelease'].set("Release Full")
-        except Exception as e:
-            print(str(e))
+        pass
 
-    @property
-    def eos_serial_number(self) -> str or None:
-        """
-        returns the eosserialnumber of supported cameras, otherwise the normal serialnumber
-        """
-        camera = self._get_camera()
-        sn = vars(camera.status).get("eosserialnumber", self.serial_number)
-        camera.release()
-        return sn
-
-    def _config(self, field: str) -> list:
+    def _config(self, field: str) -> str:
         """
         searches for a field from the camera config.
 
-        :param field: string to search
-        :return: list of matching fields, should mostly be len 1
+        :param field: string to find property
+        :return: value
         """
-        fields_found = []
-        camera = self._get_camera()
-        config = camera._get_config()
-        camera.release()
-        return list(nested_lookup(field, config))
+
+        config_detect_ret = subprocess.check_output(['/usr/bin/gphoto2',
+                                                 '--port={}:{}'.format(*self.usb_address),
+                                                 '--get-config={}'.format(field)],
+                                                universal_newlines=True)
+
+        # Match the serial number.
+        # this regex can also be used to parse the values from --get-config as all results are returned like this:
+        # Label: Serial Number
+        # Type: TEXT
+        # Current: 4fffa81fed8f40d286a63fce62598ef0
+        config_match = re.search(r'Current: (.*)$', config_detect_ret)
+
+        if not config_match:
+            # we didnt match any output from the command
+            self.logger.error("Couldnt match config property from gphoto2 output. {}:{}".format(*self.usb_address))
+            return None
+        return config_match.group(1)
 
 
 class USBCamera(Camera):
