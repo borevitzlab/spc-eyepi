@@ -1,5 +1,4 @@
 - name: Install python packages
-  pip: "name={{item.0.name}} executable='pip{{item.1}}' state=latest"
-  with_subelements:
+  pip: "name={{item}} executable='pip{{python_version}}' state=latest"
+  with_items:
     - "{{modules}}"
-    - pythons

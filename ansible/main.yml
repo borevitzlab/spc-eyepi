@@ -20,54 +20,53 @@
         }
 
   tasks:
-    - include: tasks/base_setup.yml
+    - include_tasks: tasks/base_setup.yml
       tags: base,setup, always
 
-    - include: tasks/rpi_config.yml
+    - include_tasks: tasks/rpi_config.yml
       tags: base,setup
 
-    - include: tasks/users.yml
+    - include_tasks: tasks/users.yml
       tags: base,users
 
-    - include: tasks/sftp_key.yml
+    - include_tasks: tasks/sftp_key.yml
       tags: network,sftp
 
-    - include: tasks/updatepkgs.yml
+    - include_tasks: tasks/updatepkgs.yml
       tags: base
 
-    - include: tasks/installpkgs.yml suite="Base" pkgs="{{packages_base}}"
+    - include_tasks: tasks/installpkgs.yml suite="Base" pkgs="{{packages_base}}"
       tags: pkgs,base
 
-    - include: tasks/installpkgs.yml suite="Eyepi" pkgs="{{pacman_pkgs}}"
+    - include_tasks: tasks/installpkgs.yml suite="Eyepi" pkgs="{{pacman_pkgs}}"
       tags: pkgs,dist
 
-    - include: tasks/openvpn.yml vpn_config_file="{{vpn_conf}}"
+    - include_tasks: tasks/openvpn.yml vpn_config_file="{{vpn_conf}}"
       tags: network
 
-    - include: tasks/tor.yml
+    - include_tasks: tasks/tor.yml
       tags: network
 
-    - include: tasks/wireless.yml interface="wlan0"
+    - include_tasks: tasks/wireless.yml interface="wlan0"
       tags: network,wireless
       when: wireless_keys is defined
 
-
-    - include: software_modules/butterfly.yml
+    - include_tasks: software_modules/butterfly.yml
       tags: network,shell
 
-    - include: software_modules/gphoto2.yml version=HEAD
+    - include_tasks: software_modules/gphoto2.yml version=HEAD
       tags: modules,gphoto2
       when: build_gphoto2 is defined and build_gphoto2 == True
 
-    - include: tasks/installpkgs.yml suite="gphoto2/libgphoto2" pkgs="libgphoto2 gphoto2"
+    - include_tasks: tasks/installpkgs.yml suite="gphoto2/libgphoto2" pkgs="libgphoto2 gphoto2"
       tags: modules,gphoto2
       when: build_gphoto2 is not defined or build_gphoto2 == False
 
-    - include: tasks/python_modules.yml modules="{{python_pkgs}}"
+    - include_tasks: tasks/python_modules.yml modules="{{python3_pkgs}}" python_version=3
       tags: pkgs,python
 
-    - include: software_modules/telegraf.yml
+    - include_tasks: software_modules/telegraf.yml
       tags: telegraf,metrics
 
-    - include: software_modules/spc-eyepi.yml
+    - include_tasks: software_modules/spc-eyepi.yml
       tags: modules,eyepi

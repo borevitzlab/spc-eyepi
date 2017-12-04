@@ -51,26 +51,27 @@ pacman_pkgs:
   - python-requests
   - python-dateutil
 
-python_pkgs:
-  - {name: ExifRead,            pythons: [3]}
-  - {name: netifaces,           pythons: [3]}
-  - {name: "requests[socks]",   pythons: [3]}
-  - {name: py3exiv2,            pythons: [3]}
-  - {name: pysftp,              pythons: [3]}
-  - {name: Flask-Bcrypt,        pythons: [3]}
-  - {name: Flask-Login,         pythons: [3]}
-  - {name: WTForms,             pythons: [3]}
-  - {name: browsepy,            pythons: [3]}
-  - {name: pyudev,              pythons: [3]}
-  - {name: picamera,            pythons: [3]}
-  - {name: pexif,               pythons: [3]}
-  - {name: twilio,              pythons: [3]}
-  - {name: opbeat,              pythons: [3]}
-  - {name: psutil,              pythons: [3]}
-  - {name: schedule,            pythons: [3]}
-  - {name: fuzzywuzzy,          pythons: [3]}
-  - {name: RPi.GPIO,            pythons: [3]}
-  - {name: "sense-hat",         pythons: [3]}
-  - {name: "pytelegraf",        pythons: [3]}
-# - {name: imreg-dft,           pythons: [3]}
-# - {name: ImageHash,           pythons: [3]}
+python3_pkgs:
+  - ExifRead
+  - netifaces
+  - "requests[socks]"
+  - paho-mqtt
+  - py3exiv2
+  - pysftp
+  - Flask-Bcrypt
+  - Flask-Login
+  - WTForms
+  - browsepy
+  - pyudev
+  - picamera
+  - pexif
+  - twilio
+  - opbeat
+  - psutil
+  - schedule
+  - fuzzywuzzy
+  - RPi.GPIO
+  - "sense-hat"
+  - "pytelegraf"
+# - imreg-dft
+# - ImageHash
