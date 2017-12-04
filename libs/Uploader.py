@@ -155,7 +155,6 @@ class Uploader(Thread):
         :param file_names: filenames to upload
         """
         try:
-            self.logger.debug("Connecting sftp and uploading buddy")
             # open link and create directory if for some reason it doesnt exist
             params = dict(host=self.host, username=self.username)
             params['cnopts'] = pysftp.CnOpts(knownhosts=self.ssh_manager.known_hosts_path)
@@ -177,11 +176,10 @@ class Uploader(Thread):
                     self.mkdir_recursive(link, root)
                 link.chdir(root)
                 root = os.path.join(link.getcwd())
-                self.logger.info(root)
-                self.logger.debug("Uploading...")
                 # dump ze files.
                 total_time = time.time()
                 total_size = 0
+                failed = []
                 for idx, f in enumerate(file_names):
                     try:
                         onefile_time = time.time()
@@ -210,13 +208,18 @@ class Uploader(Thread):
                                 os.remove(f)
                             self.logger.debug(
                                 "Uploaded file {0}/{1} through sftp and removed from local filesystem, {2:.2f}Mb/s".format(idx, len(file_names), mbps))
-                        else:
-                            self.logger.debug("Successfully uploaded {}/{} through sftp".format(idx, len(file_names)))
+
                         self.last_upload_time = datetime.datetime.now()
                     except Exception as e:
                         self.logger.error("sftp:{}".format(str(e)))
+                        failed.append(f)
                     finally:
                         link.chdir(root)
+                if not self.remove_source_files:
+                    if not len(failed):
+                        self.logger.debug("Uploaded {} files through sftp".format(len(file_names)))
+                    else:
+                        self.logger.debug("Failed uploading {} files through sftp - {}".format(len(failed), str(failed)))
 
                 mbps = (total_size/(time.time() - total_time))/1024/1024
                 self.logger.debug("Finished uploading, {0:.2f}Mb/s".format(mbps))
@@ -234,7 +237,6 @@ class Uploader(Thread):
                 ftp = ftplib.FTP(self.host)
                 ftp.login(self.username, self.password)
                 self.mkdir_recursive(ftp, os.path.join(self.server_dir, self.name))
-                self.logger.info("Uploading")
                 # dump ze files.
                 for f in file_names:
                     ftp.storbinary('stor ' + os.path.basename(f), open(f, 'rb'), 1024)

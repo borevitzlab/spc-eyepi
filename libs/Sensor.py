@@ -258,13 +258,11 @@ class Sensor(Thread):
             # checking if enabled and other stuff
             if self.time_to_measure:
                 try:
-                    self.logger.info("Capturing data for {}".format(self.identifier))
                     measurement = self.get_measurement()
-                    self.logger.info("Got Measurement {}".format(str(measurement)))
                     try:
                         telegraf_client = telegraf.TelegrafClient(host="localhost", port=8092)
                         telegraf_client.metric("env_sensors", measurement)
-                        self.logger.debug("Communicated sensor data to telegraf")
+                        self.logger.info("Sensors: {}".format(str(measurement)))
                     except Exception as exc:
                         self.logger.error("Couldnt communicate with telegraf client. {}".format(str(exc)))
                     # make ordered list of the data for writing. to disk.
@@ -272,7 +270,6 @@ class Sensor(Thread):
                     self.measurements.append([self.current_capture_time.strftime(self.timestamp_format), *measurement])
                     self.append_to_alltime(self.measurements[-1])
                     self.write_daily_rolling()
-                    # self.communicate_with_updater()
                 except Exception as e:
                     self.logger.critical("Sensor data error - {}".format(str(e)))
                 # make sure we cannot record twice.
