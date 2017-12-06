@@ -3,8 +3,16 @@ api_key=eyJhbGciOiJIUzI1NiIsImV4cCI6MTUxMTkzNTA3MywiaWF0IjoxNTExOTMxNDczfQ.eyJpZ
 build_gphoto2=False
 
 [rpis]
-APPF01 ansible_host=192.168.1.7
-APPF02 ansible_host=192.168.1.8
+#APPF01 ansible_host=192.168.1.7
+#APPF02 ansible_host=192.168.1.8
+GC02 ansible_host=10.9.0.2
+GC03 ansible_host=10.9.0.3
+GC04 ansible_host=10.9.0.4
+GC05 ansible_host=10.9.0.5
+#GC35 ansible_host=10.9.0.35
+GC36 ansible_host=10.9.0.36
+#GC37 ansible_host=10.9.0.37
+
 
 [rpis:vars]
 ansible_user=alarm
