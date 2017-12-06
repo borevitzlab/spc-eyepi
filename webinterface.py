@@ -1123,7 +1123,7 @@ def images():
     Allows the capture of a new image and replace in the client
     """
 
-    image_paths = list(glob("/home/images/**/last_image.*", recursive=True))
+    image_paths = list(glob.glob("/home/images/**/last_image.*", recursive=True))
     image_paths = [x.replace("/home/images/", "/filesystem/open/") for x in image_paths]
 
     return render_template("images.html", image_urls=image_paths, picam=detect_picam())
