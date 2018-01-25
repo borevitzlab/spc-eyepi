@@ -1280,11 +1280,11 @@ class GPCamera(Camera):
     def __init__(self, identifier: str, usb_address: tuple = None, lock=Lock(), **kwargs):
         """
         Providing a usb address and no identifier or an identifier but no usb address will cause
-        
-        :param identifier: 
-        :param lock: 
-        :param usb_address: 
-        :param kwargs: 
+
+        :param identifier:
+        :param lock:
+        :param usb_address:
+        :param kwargs:
         """
 
         self.lock = lock
@@ -1335,7 +1335,7 @@ class GPCamera(Camera):
                 # Label: Serial Number
                 # Type: TEXT
                 # Current: 4fffa81fed8f40d286a63fce62598ef0
-                sn_match = re.search(r'Current: (.*)$', sn_detect_ret)
+                sn_match = re.search(r'Current: (\w+)', sn_detect_ret)
 
                 if not sn_match:
                     # we didnt match any output from the command

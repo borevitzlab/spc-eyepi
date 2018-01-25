@@ -136,7 +136,7 @@ def detect_gphoto_info():
                 # Label: Serial Number
                 # Type: TEXT
                 # Current: 4fffa81fed8f40d286a63fce62598ef0
-                sn_match = re.search(r'Current: (.*)', sn_detect_ret)
+                sn_match = re.search(r'Current: (\w+)', sn_detect_ret)
 
                 if not sn_match:
                     # we didnt match any output from the command
