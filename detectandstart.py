@@ -121,7 +121,7 @@ def detect_gphoto_info():
                 # findall returns strings...
                 bus, addr = int(bus), int(addr)
                 # this is the format that gphoto2 expects the port to be in.
-                port = "usb:{},{}".format(bus, addr)
+                port = "usb:{0:03d},{1:03d}".format(bus, addr)
 
                 # gphoto2 command to get the serial number for the DSLR
                 # WARNING: when the port here needs to be correct, because otherwise gphoto2 will return values from
@@ -136,7 +136,7 @@ def detect_gphoto_info():
                 # Label: Serial Number
                 # Type: TEXT
                 # Current: 4fffa81fed8f40d286a63fce62598ef0
-                sn_match = re.search(r'Current: (.*)$', sn_detect_ret)
+                sn_match = re.search(r'Current: (.*)', sn_detect_ret)
 
                 if not sn_match:
                     # we didnt match any output from the command

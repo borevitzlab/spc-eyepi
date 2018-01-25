@@ -42,7 +42,7 @@
       tags: pkgs,dist
 
     - include_tasks: tasks/openvpn.yml vpn_config_file="{{vpn_conf}}"
-      tags: network
+      tags: network,vpn
 
     - include_tasks: tasks/tor.yml
       tags: network
