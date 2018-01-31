@@ -9,6 +9,8 @@ import os
 from collections import deque
 import traceback
 from .Light import HelioSpectra
+from .Light import PSILight
+
 
 try:
     logging.config.fileConfig("logging.ini")
@@ -254,7 +256,10 @@ class Chamber(Thread):
         light_configs = self.config.get("lights", [])
         for lc in light_configs:
             try:
-                l = HelioSpectra(lc)
+                if lc.get("address", None) is not None:
+                    l = PSILight(lc)
+                else:
+                    l = HelioSpectra(lc)
                 self.lights.append(l)
             except Exception as e:
                 self.logger.error("Couldnt add light: {}".format(str(e)))
