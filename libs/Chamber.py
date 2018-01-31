@@ -258,7 +258,7 @@ class Chamber(Thread):
             try:
                 if lc.get("address", None) is not None:
                     l = PSILight(lc)
-                else:
+                elif lc.get("ip", None) is not None:
                     l = HelioSpectra(lc)
                 self.lights.append(l)
             except Exception as e:
