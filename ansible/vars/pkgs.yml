@@ -50,6 +50,7 @@ pacman_pkgs:
   - python-pysocks
   - python-requests
   - python-dateutil
+  - python-pyserial
 
 python3_pkgs:
   - ExifRead

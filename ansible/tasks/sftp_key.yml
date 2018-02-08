@@ -16,7 +16,7 @@
   lineinfile:
     create: yes
     state: present
-    line: "sftp.traitcapture.org ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBNCe/FWooJca3g/YcOFNtIrph1HC0DlGaJM5cFzkrb/eeGe9OFQUmLTaR3bfAexaeXMqGTC1KxtS/mhOb/I4ZZs="
+    line: "sftp.traitcapture.org,130.56.244.172 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBMPadBuXC+ewb6a4j/fej04jQQzsXN7M8XOMugSUIc1Z4m2DNcMLzZileNWVkwzebLBTEvx7oQ6UFh2XVwG56Cc"
     regexp: "^.*sftp.traitcapture.org.*"
     dest: /home/.ssh/known_hosts
 

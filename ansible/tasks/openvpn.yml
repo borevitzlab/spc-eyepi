@@ -8,6 +8,12 @@
   local_action: stat path="{{vpn_config_file}}"
   register: ovpn_conf
 
+
+- name: "check local for vpn login.conf"
+  stat:
+    path: "/etc/openvpn/client/login.conf"
+  register: ovpn_login
+
 - debug: msg="OpenVPN configuration file exists, using {{vpn_config_file}}"
   when: ovpn_conf.stat.exists
 
@@ -30,4 +36,4 @@
     daemon_reload: yes
     enabled: yes
     masked: no
-  when: ovpn_conf.stat.exists
+  when: ovpn_conf.stat.exists and ovpn_login.stat.exists

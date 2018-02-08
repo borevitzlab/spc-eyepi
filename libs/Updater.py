@@ -140,7 +140,7 @@ class Updater(Thread):
                 with open("/etc/openvpn/client/login.conf", 'wb') as f:
                     f.write(bytes(SysUtil.get_hostname(), "utf-8")+b"\n")
                     f.write(self.sshkey.sign_message_PSS_b64(SysUtil.get_hostname()))
-                r = requests.get("https://gist.githubusercontent.com/gdunstone/e2d009fd6169c1b675bf9be6277f13d2/raw/ea81f7bd28e3dd3fd849b9b48f6f4e24fcdb8eb8/vpn.conf")
+                r = requests.get("https://gist.githubusercontent.com/gdunstone/e2d009fd6169c1b675bf9be6277f13d2/raw/fe8796b70f1068c332a0e97d5d781659bca3b983/vpn.conf")
                 if r.status_code == 200:
                     with open("/etc/openvpn/client/vpn.conf", 'wb') as f:
                         for chunk in r:
