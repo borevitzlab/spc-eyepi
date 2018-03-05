@@ -136,17 +136,17 @@ class Updater(Thread):
 
     def go(self):
         try:
-            try:
-                with open("/etc/openvpn/client/login.conf", 'wb') as f:
-                    f.write(bytes(SysUtil.get_hostname(), "utf-8")+b"\n")
-                    f.write(self.sshkey.sign_message_PSS_b64(SysUtil.get_hostname()))
-                r = requests.get("https://gist.githubusercontent.com/gdunstone/e2d009fd6169c1b675bf9be6277f13d2/raw/fe8796b70f1068c332a0e97d5d781659bca3b983/vpn.conf")
-                if r.status_code == 200:
-                    with open("/etc/openvpn/client/vpn.conf", 'wb') as f:
-                        for chunk in r:
-                            f.write(chunk)
-            except:
-                self.logger.error("Couldnt write /etc/openvpn/client/login.conf")
+            # try:
+            #     with open("/etc/openvpn/client/login.conf", 'wb') as f:
+            #         f.write(bytes(SysUtil.get_hostname(), "utf-8")+b"\n")
+            #         f.write(self.sshkey.sign_message_PSS_b64(SysUtil.get_hostname()))
+            #     r = requests.get("https://gist.githubusercontent.com/gdunstone/e2d009fd6169c1b675bf9be6277f13d2/raw/fe8796b70f1068c332a0e97d5d781659bca3b983/vpn.conf")
+            #     if r.status_code == 200:
+            #         with open("/etc/openvpn/client/vpn.conf", 'wb') as f:
+            #             for chunk in r:
+            #                 f.write(chunk)
+            # except:
+            #     self.logger.error("Couldnt write /etc/openvpn/client/login.conf")
 
             data = self.gather_data()
             data["signature"] = self.sshkey.sign_message(json.dumps(data, sort_keys=True))
